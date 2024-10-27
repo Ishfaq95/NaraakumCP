@@ -1,0 +1,118 @@
+{
+  "project_info": {
+    "project_number": "1060639338997",
+    "project_id": "naraakum-c8d6a",
+    "storage_bucket": "naraakum-c8d6a.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1060639338997:android:b1ffafc266edeee75cb0bc",
+        "android_client_info": {
+          "package_name": "com.innotech.naraakum"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1060639338997-bu8p0ksr9rak5k2u8gtdb0oo2qbuq06u.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBmZEGo2Wm4AYHMdvNKNjPpGJb-zkFBqL8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1060639338997-296fl0l13uc6o4jc8349cscmmbk8hhct.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1060639338997-ur76dj8polae4vkkclj64gb3nf99dt38.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.naraakum.naraakum"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1060639338997:android:1b530949193d91585cb0bc",
+        "android_client_info": {
+          "package_name": "com.naraakum_cp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1060639338997-bu8p0ksr9rak5k2u8gtdb0oo2qbuq06u.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBmZEGo2Wm4AYHMdvNKNjPpGJb-zkFBqL8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1060639338997-296fl0l13uc6o4jc8349cscmmbk8hhct.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1060639338997-ur76dj8polae4vkkclj64gb3nf99dt38.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.naraakum.naraakum"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1060639338997:android:9657bf66091d42d05cb0bc",
+        "android_client_info": {
+          "package_name": "com.naraakum_patient"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1060639338997-bu8p0ksr9rak5k2u8gtdb0oo2qbuq06u.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBmZEGo2Wm4AYHMdvNKNjPpGJb-zkFBqL8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1060639338997-296fl0l13uc6o4jc8349cscmmbk8hhct.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1060639338997-ur76dj8polae4vkkclj64gb3nf99dt38.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.naraakum.naraakum"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

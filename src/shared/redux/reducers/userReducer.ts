@@ -25,7 +25,6 @@ export const userReducer = createSlice({
       state.userinfo = action.payload;
     },
     setToken:(state = initialState, action)=>{
-      console.log('Action=>',action)
       return {
         ...state,
         token: action.payload.token,

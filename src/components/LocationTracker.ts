@@ -1,4 +1,3 @@
-// Path: src/components/LocationService.ts
 import { NativeModules, NativeEventEmitter, PermissionsAndroid, Platform } from 'react-native';
 
 const { LocationModule } = NativeModules;
@@ -12,10 +11,10 @@ class LocationService {
     this.subscribeToLocationUpdates();
   }
 
-  // Function to request location permissions
+  // Function to request location permissions (iOS will automatically handle permissions)
   async requestLocationPermission(): Promise<boolean> {
-    try {
-      if (Platform.OS === 'android') {
+    if (Platform.OS === 'android') {
+      try {
         const granted = await PermissionsAndroid.requestMultiple([
           PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
           PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
@@ -27,11 +26,12 @@ class LocationService {
           granted[PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION] === PermissionsAndroid.RESULTS.GRANTED &&
           granted[PermissionsAndroid.PERMISSIONS.ACCESS_BACKGROUND_LOCATION] === PermissionsAndroid.RESULTS.GRANTED
         );
+      } catch (err) {
+        console.warn(err);
+        return false;
       }
-      return true;
-    } catch (err) {
-      console.warn(err);
-      return false;
+    } else {
+      return true; // iOS permissions are automatically handled
     }
   }
 

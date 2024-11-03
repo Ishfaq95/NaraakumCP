@@ -2,6 +2,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { persistor, store } from './shared/redux/store';
 import { navigationRef } from './shared/services/nav.service';
 import React, { useEffect } from 'react';
+import { Text, View } from 'react-native';
 import 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Provider } from 'react-redux';

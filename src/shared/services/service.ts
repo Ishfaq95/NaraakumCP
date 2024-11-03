@@ -19,5 +19,8 @@ export const InvokeSocket=async ()=>{
 }
 
 export const isTokenExpired = (expiresAt:any) => {
+  if(expiresAt==null || expiresAt==undefined){
+    return true
+  }
   return new Date() > new Date(expiresAt);
 };

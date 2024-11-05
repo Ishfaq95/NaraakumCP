@@ -1,11 +1,18 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { StyleSheet, View, Alert, Platform, PermissionsAndroid } from 'react-native';
+import React, {useEffect, useRef, useState} from 'react';
+import {
+  StyleSheet,
+  View,
+  Alert,
+  Platform,
+  PermissionsAndroid,
+} from 'react-native';
 import LoaderKit from 'react-native-loader-kit';
-import { WebView } from 'react-native-webview';
+import {WebView} from 'react-native-webview';
 import InAppBrowser from 'react-native-inappbrowser-reborn';
 import messaging from '@react-native-firebase/messaging';
-import { useDispatch, useSelector } from 'react-redux';
-import { setTopic, setUserInfo } from '../shared/redux/reducers/userReducer';
+import {useDispatch, useSelector} from 'react-redux';
+import {setTopic, setUserInfo} from '../shared/redux/reducers/userReducer';
+import {check, request, PERMISSIONS, RESULTS} from 'react-native-permissions';
 import RNFetchBlob from 'rn-fetch-blob';
 import WebSocketService from './WebSocketService';
 import { getLocationPermission } from './LocationService';
@@ -25,16 +32,16 @@ const WebViewComponent = ({ uri }:any) => {
     new Promise<void>(resolve => setTimeout(resolve, timeout));
   
   useEffect(()=>{
-    
+   
     if(userinfo){
       const presence = 1; 
-      const communicationKey = userinfo.CommunicationKey; 
-      const UserId=userinfo.Id;
+      const communicationKey = userinfo.communicationKey; 
+      const UserId=userinfo.id;
       webSocketService.connect(presence, communicationKey,UserId);
     }else{
       webSocketService.disconnect()
     }
-  },[userinfo])
+  },[userinfo,userInformation])
 
   const subsribeTopic = (Id: any) => {
     const topicName = `serviceprovider_${Id}`;
@@ -42,21 +49,21 @@ const WebViewComponent = ({ uri }:any) => {
       if (topic != topicName) {
         messaging()
           .unsubscribeFromTopic(topic)
-          .then(() => { })
+          .then(() => {});
 
-        dispatch(setTopic(topicName))
+        dispatch(setTopic(topicName));
 
         messaging()
           .subscribeToTopic(topicName)
-          .then(() => { });
+          .then(() => {});
       }
     } else {
-      dispatch(setTopic(topicName))
+      dispatch(setTopic(topicName));
       messaging()
         .subscribeToTopic(topicName)
-        .then(() => { });
+        .then(() => {});
     }
-  }
+  };
 
   const INJECTED_JAVASCRIPT = `
   (function() {
@@ -72,10 +79,7 @@ const WebViewComponent = ({ uri }:any) => {
       if (userInfo) {
         data.userInfo = userInfo;
       }
-      if (token) {
-        logToReactNative('Sending token and user info');
-        window.ReactNativeWebView.postMessage(JSON.stringify(data));
-      }
+       window.ReactNativeWebView.postMessage(JSON.stringify(data));
     }
 
     // Overwrite window.open to send the full URL and query params to React Native app
@@ -88,76 +92,103 @@ const WebViewComponent = ({ uri }:any) => {
   })();
   true;
 `;
-  const getFileNameFromUrl = (url:any) => {
+  const getFileNameFromUrl = (url: any) => {
     // Split the URL by '/'
     const parts = url.split('/');
     // Get the last part, which is the filename
     return parts.pop();
   };
 
-  const handleMessage = async (event:any) => {
-    const { url, userInfo, event: eventHandler,data,fileName,status } = JSON.parse(event.nativeEvent.data);
-
+  const handleMessage = async (event: any) => {
+    const {
+      url,
+      event: eventHandler,
+      data,
+      fileName,
+    } = JSON.parse(event.nativeEvent.data);
+    
     if(eventHandler=='logout'){
       dispatch(setUserInfo(null))
       webSocketService.disconnect()
     }
-    
     if (eventHandler == 'download') {
-      
-      let isPermissionGrandted = await getStoragePermission()
+      let isPermissionGrandted = await getStoragePermission();
       if (isPermissionGrandted) {
-        setLoading(true)
+        setLoading(true);
         let pdfUrl = data;
-        let fileName = getFileNameFromUrl(pdfUrl)
-
-        downloadFile(pdfUrl, fileName);
-
+        let fileName = getFileNameFromUrl(pdfUrl);
+        if(Platform.OS === 'ios'){
+          downloadFIleForIOS(pdfUrl, fileName);
+        }else{
+          downloadFile(pdfUrl, fileName);
+        }
+        
       } else {
-        showAlert("Allow Media Access.", "Allow media access to download the file.")
+        showAlert(
+          'Allow Media Access.',
+          'Allow media access to download the file.',
+        );
       }
 
       return;
-    }else if (eventHandler == 'downloadFromBase64') {
-      let isPermissionGrandted = await getStoragePermission()
+    } else if (eventHandler == 'downloadFromBase64') {
+      let isPermissionGrandted = await getStoragePermission();
       if (isPermissionGrandted) {
-        setLoading(true)
-        downloadPDFFromBase64(data,fileName)
-
+        setLoading(true);
+        downloadPDFFromBase64(data, fileName);
       } else {
-        showAlert("Allow Media Access.", "Allow media access to download the file.")
+        showAlert(
+          'Allow Media Access.',
+          'Allow media access to download the file.',
+        );
       }
-    }else if(eventHandler== 'statusChange'){
-      
-    }
-
-    if (userInfo) {
-      dispatch(setUserInfo(userInfo))
-      setUserInformation(userInfo)
-      subsribeTopic(userInfo.Id)
+    } else if (eventHandler == 'userLoggedIn') {
+      const userInfo = data;
+      setUserInformation(userInfo);
+      subsribeTopic(userInfo.id);
+      dispatch(setUserInfo(userInfo));
+      // getReminderListFromApi()
     }
 
     if (url && url.includes('OnlineSessionRoom')) {
-      setCallConnected(true)
-      let urlComplete = `https://dev2.innotech-sa.com${url}`;
       // let urlComplete = `https://staging.innotech-sa.com${url}`;
+      let urlComplete = `https://dev2.innotech-sa.com${url}`;
       // let urlComplete = `https://nkapps.innotech-sa.com${url}`;
+
       const redirectUrl = getDeepLink();
+
+      console.log('urlCompleteurlComplete', urlComplete);
       try {
         if (await InAppBrowser.isAvailable()) {
-          const result = await InAppBrowser.openAuth(urlComplete, redirectUrl, {
+          // const result = await InAppBrowser.open(urlComplete, {
+          //   showTitle: true,
+          //   toolbarColor: '#6200EE',
+          //   enableDefaultShare: true,
+          //   animations: {
+          //     startEnter: 'slide_in_right',
+          //     startExit: 'slide_out_left',
+          //     endEnter: 'slide_in_left',
+          //     endExit: 'slide_out_right',
+          //   },
+          // });
+          const result = await InAppBrowser.open(urlComplete,  {
             forceCloseOnRedirection: false,
             showInRecents: true,
             showTitle: true,
             enableUrlBarHiding: true,
             enableDefaultShare: false,
+            modalPresentationStyle:'overFullScreen',
+
+            ephemeralWebSession: false,
+            enableBarCollapsing: true,
+            modalEnabled: true,
           });
           await sleep(800);
-          setCurrentUrl(latestUrl)
-          setReloadWebView(true)
-          setTimeout(()=>{
-            setReloadWebView(false)
-          },100)
+          setCurrentUrl(latestUrl);
+          setReloadWebView(true);
+          setTimeout(() => {
+            setReloadWebView(false);
+          }, 100);
         }
       } catch (error) {
         Alert.alert('Error', 'Failed to open the in-app browser');
@@ -172,8 +203,35 @@ const WebViewComponent = ({ uri }:any) => {
     return prefix + path;
   };
 
-  const downloadFile = (url:any, fileName:any) => {
-    const { config, fs } = RNFetchBlob;
+  const downloadFIleForIOS = (url: any, fileName: any) => {
+    const {config, fs} = RNFetchBlob;
+    const DocumentDir = fs.dirs.DocumentDir; // Use DocumentDir for iOS
+    const filePath = `${DocumentDir}/${fileName}`; // Set the file path to DocumentDir for iOS
+
+    // Use config to set the download path and file handling
+    config({
+      fileCache: true,
+      path: filePath, // Use the correct file path
+    })
+      .fetch('GET', url)
+      .then(res => {
+        setLoading(false);
+        Alert.alert(
+          'File downloaded successfully',
+          'The file is saved to your device.',
+        );
+
+        // Optional: Preview the document after downloading
+        RNFetchBlob.ios.previewDocument(filePath); // Preview the downloaded document on iOS
+      })
+      .catch(error => {
+        setLoading(false);
+        Alert.alert('File downloading error.');
+      });
+  };
+
+  const downloadFile = (url: any, fileName: any) => {
+    const {config, fs} = RNFetchBlob;
     const DownloadDir = fs.dirs.DownloadDir;
     // Create a path where the file will be saved
     const filePath = `${DownloadDir}/${fileName}`;
@@ -191,18 +249,21 @@ const WebViewComponent = ({ uri }:any) => {
     })
       .fetch('GET', url)
       .then(res => {
-        setLoading(false)
-        Alert.alert('File downloaded successfully')
+        setLoading(false);
+        Alert.alert('File downloaded successfully');
       })
       .catch(error => {
-        setLoading(false)
-        Alert.alert('File downloading error.')
+        setLoading(false);
+        Alert.alert('File downloading error.');
       });
   };
 
-  const getUniqueFilePath = async (filePath:any) => {
+  const getUniqueFilePath = async (filePath: any) => {
     const extension = filePath.substring(filePath.lastIndexOf('.'));
-    const fileNameWithoutExtension = filePath.substring(0, filePath.lastIndexOf('.'));
+    const fileNameWithoutExtension = filePath.substring(
+      0,
+      filePath.lastIndexOf('.'),
+    );
     let uniqueFilePath = filePath;
     let counter = 1;
 
@@ -217,104 +278,131 @@ const WebViewComponent = ({ uri }:any) => {
   const downloadPDFFromBase64 = async (base64: string, fileName: any) => {
     const base64String = base64;
     const base64Data = base64String.split(',')[1]; // Remove data URL prefix if present
-    // const filePath = `${RNFetchBlob.fs.dirs.DocumentDir}/downloaded.pdf`;
     const filePath = `${RNFetchBlob.fs.dirs.DownloadDir}/${fileName}.pdf`;
     const uniqueFilePath = await getUniqueFilePath(filePath);
 
-    RNFetchBlob.fs.writeFile(uniqueFilePath, base64Data, 'base64')
+    RNFetchBlob.fs
+      .writeFile(uniqueFilePath, base64Data, 'base64')
       .then(async () => {
-        setLoading(false)
-        Alert.alert('File downloaded successfully.')
-        // await FileViewer.open(filePath);
+        setLoading(false);
+        Alert.alert('File downloaded successfully.');
       })
-      .catch((error) => {
-        setLoading(false)
-        Alert.alert('File downloading error.')
+      .catch(error => {
+        setLoading(false);
+        Alert.alert('File downloading error.');
       });
   };
 
   const showAlert = (title: any, body: any) => {
-    Alert.alert(
-      title,
-      body,
-    );
+    Alert.alert(title, body);
   };
 
   const getStoragePermission = async () => {
-    const granted = await PermissionsAndroid.requestMultiple([
-      PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES,
-      PermissionsAndroid.PERMISSIONS.READ_MEDIA_VIDEO,
-      PermissionsAndroid.PERMISSIONS.READ_MEDIA_AUDIO,
-      PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-      PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE
-    ]);
-    
-    if (
-      (granted['android.permission.READ_MEDIA_IMAGES'] === PermissionsAndroid.RESULTS.GRANTED &&
-      granted['android.permission.READ_MEDIA_VIDEO'] === PermissionsAndroid.RESULTS.GRANTED &&
-      granted['android.permission.READ_MEDIA_AUDIO'] === PermissionsAndroid.RESULTS.GRANTED) || (granted['android.permission.WRITE_EXTERNAL_STORAGE'] === PermissionsAndroid.RESULTS.GRANTED)
-    ) {
-      return true
+    if (Platform.OS === 'ios') {
+      return requestiOSPermissions();
     } else {
-      return false
-    }
-  }
+      const granted = await PermissionsAndroid.requestMultiple([
+        PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES,
+        PermissionsAndroid.PERMISSIONS.READ_MEDIA_VIDEO,
+        PermissionsAndroid.PERMISSIONS.READ_MEDIA_AUDIO,
+        PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+        PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
+      ]);
 
-  const handleLoadError = (event:any) => {
-    setLoading(false)
+      if (
+        (granted['android.permission.READ_MEDIA_IMAGES'] ===
+          PermissionsAndroid.RESULTS.GRANTED &&
+          granted['android.permission.READ_MEDIA_VIDEO'] ===
+            PermissionsAndroid.RESULTS.GRANTED &&
+          granted['android.permission.READ_MEDIA_AUDIO'] ===
+            PermissionsAndroid.RESULTS.GRANTED) ||
+        granted['android.permission.WRITE_EXTERNAL_STORAGE'] ===
+          PermissionsAndroid.RESULTS.GRANTED
+      ) {
+        return true;
+      } else {
+        return false;
+      }
+    }
   };
 
-  const onNavigationStateChange=(event:any)=>{
-    const url = event.url;
-    setLatestUrl(url)
-  }
+  const requestiOSPermissions = async () => {
+    const photoLibraryPermission = await request(PERMISSIONS.IOS.PHOTO_LIBRARY);
+    const mediaLibraryPermission = await request(PERMISSIONS.IOS.MEDIA_LIBRARY);
+
+    if (
+      photoLibraryPermission === RESULTS.GRANTED &&
+      mediaLibraryPermission === RESULTS.GRANTED
+    ) {
+      console.log('All necessary permissions granted');
+      return true;
+    } else {
+      console.log('Some permissions were denied');
+      return false;
+    }
+  };
+
+  const handleLoadError = (event: any) => {
+    setLoading(false);
+    Alert.alert('Something went wrong. Please try again.');
+  };
+
+  const onNavigationStateChange = (url: any) => {
+    console.log('url.url==>', url.url);
+    setLatestUrl(url.url);
+  };
 
   return (
     <View style={styles.container}>
       <View style={styles.webviewContainer}>
-        {
-        reloadWebView?
-        <View style={styles.loader}>
-          <LoaderKit
-            style={{ width: 100, height: 100 }}
-            name={'BallSpinFadeLoader'}
-            color={'green'}
+        {reloadWebView ? (
+          <View style={styles.loader}>
+            <LoaderKit
+              style={{width: 100, height: 100}}
+              name={'BallSpinFadeLoader'}
+              color={'green'}
+            />
+          </View>
+        ) : (
+          <WebView
+            source={{uri: currentUrl}}
+            useWebKit={true}
+            javaScriptEnabled={true}
+            domStorageEnabled={true}
+            startInLoadingState={true}
+            cacheEnabled={false}
+            cacheMode={'LOAD_CACHE_ELSE_NETWORK'}
+            onLoadStart={() => {
+              setLoading(true);
+            }}
+            onLoadEnd={() => {
+              setLoading(false);
+            }}
+            mediaPlaybackRequiresUserAction={false}
+            allowsInlineMediaPlayback={true}
+            // originWhitelist={['*']}
+            userAgent={
+              Platform.OS === 'android'
+                ? 'Chrome/18.0.1025.133 Mobile Safari/535.19'
+                : 'Mozilla/5.0 (iPhone; CPU iPhone OS 10_3 like Mac OS X) AppleWebKit/602.1.50 (KHTML, like Gecko) CriOS/56.0.2924.75 Mobile/14E5239e Safari/602.1'
+            }
+            // originWhitelist={["https://*", "http://*", "file://*", "sms://*"]}
+            originWhitelist={['*']}
+            geolocationEnabled={true}
+            javaScriptEnabledAndroid={true}
+            injectedJavaScript={INJECTED_JAVASCRIPT}
+            injectedJavaScriptBeforeContentLoaded={INJECTED_JAVASCRIPT}
+            onMessage={handleMessage}
+            onError={handleLoadError}
+            onNavigationStateChange={onNavigationStateChange}
+            style={styles.webview}
           />
-        </View> :
-        <WebView
-          source={{ uri: currentUrl }}
-          useWebKit={true}
-          javaScriptEnabled={true}
-          domStorageEnabled={true}
-          startInLoadingState={true}
-          cacheEnabled={true}
-          cacheMode={'LOAD_CACHE_ELSE_NETWORK'}
-          onLoadStart={() => {
-            setLoading(true);
-          }}
-          onLoadEnd={() => {
-            setLoading(false);
-          }}
-          thirdPartyCookiesEnabled={true}
-          mediaPlaybackRequiresUserAction={false}
-          allowsInlineMediaPlayback={true}
-          // originWhitelist={['*']}
-          geolocationEnabled={true}
-          javaScriptEnabledAndroid={true}
-          injectedJavaScript={INJECTED_JAVASCRIPT}
-          onMessage={handleMessage}
-          onError={handleLoadError}
-          userAgent={Platform.OS === 'android' ? 'Chrome/18.0.1025.133 Mobile Safari/535.19' : 'AppleWebKit/602.1.50 (KHTML, like Gecko) CriOS/56.0.2924.75'}
-          originWhitelist={["https://*", "http://*", "file://*", "sms://*"]}
-          onNavigationStateChange={onNavigationStateChange}
-          style={styles.webview}
-        />
-        }
+        )}
       </View>
       {loading && (
         <View style={styles.loader}>
           <LoaderKit
-            style={{ width: 100, height: 100 }}
+            style={{width: 100, height: 100}}
             name={'BallSpinFadeLoader'}
             color={'green'}
           />
@@ -349,4 +437,3 @@ const styles = StyleSheet.create({
 });
 
 export default WebViewComponent;
-

@@ -1,7 +1,7 @@
 import { NativeModules, NativeEventEmitter, PermissionsAndroid, Platform } from 'react-native';
 
 const { LocationModule } = NativeModules;
-const eventEmitter = new NativeEventEmitter(LocationModule);
+const eventEmitter = LocationModule? new NativeEventEmitter(LocationModule):null;
 
 class LocationService {
   private location = { latitude: null, longitude: null };
@@ -39,6 +39,7 @@ class LocationService {
   async startTracking(): Promise<void> {
     const hasPermission = await this.requestLocationPermission();
     if (hasPermission) {
+      console.log('Tracking location');
       LocationModule.startTracking();
     } else {
       console.log('Location permission denied');
@@ -52,7 +53,8 @@ class LocationService {
 
   // Subscribe to location updates
   private subscribeToLocationUpdates(): void {
-    eventEmitter.addListener('locationUpdate', (event: { latitude: number; longitude: number }) => {
+    eventEmitter?.addListener('locationUpdate', (event: { latitude: number; longitude: number }) => {
+      console.log('Received location update:', event);
       this.location = {
         latitude: event.latitude,
         longitude: event.longitude,

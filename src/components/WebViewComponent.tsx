@@ -139,9 +139,9 @@ const WebViewComponent = ({ uri }:any) => {
 
     if (url && url.includes('OnlineSessionRoom')) {
       setCallConnected(true)
-      let urlComplete = `https://dvx.innotech-sa.com${url}`;
+      // let urlComplete = `https://dvx.innotech-sa.com${url}`;
       // let urlComplete = `https://staging.innotech-sa.com${url}`;
-      // let urlComplete = `https://nkapps.innotech-sa.com${url}`;
+      let urlComplete = `https://nkapps.innotech-sa.com${url}`;
       const redirectUrl = getDeepLink();
       try {
         if (await InAppBrowser.isAvailable()) {

@@ -304,7 +304,9 @@ const WebViewComponent = ({ uri }:any) => {
           injectedJavaScript={INJECTED_JAVASCRIPT}
           onMessage={handleMessage}
           onError={handleLoadError}
-          userAgent={Platform.OS === 'android' ? 'Chrome/18.0.1025.133 Mobile Safari/535.19' : 'AppleWebKit/602.1.50 (KHTML, like Gecko) CriOS/56.0.2924.75'}
+          setSupportMultipleWindows={true}
+          userAgent={Platform.OS === 'android' ? 'Mozilla/5.0 (Linux; Android 10; Mobile; rv:79.0) Gecko/79.0 Firefox/79.0' : 'Mozilla/5.0 (iPhone; CPU iPhone OS 13_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Safari/605.1.15'}
+          // userAgent={Platform.OS === 'android' ? 'Chrome/18.0.1025.133 Mobile Safari/535.19' : 'AppleWebKit/602.1.50 (KHTML, like Gecko) CriOS/56.0.2924.75'}
           originWhitelist={["https://*", "http://*", "file://*", "sms://*"]}
           onNavigationStateChange={onNavigationStateChange}
           style={styles.webview}

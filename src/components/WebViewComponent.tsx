@@ -381,11 +381,8 @@ const WebViewComponent = ({ uri }:any) => {
             mediaPlaybackRequiresUserAction={false}
             allowsInlineMediaPlayback={true}
             // originWhitelist={['*']}
-            userAgent={
-              Platform.OS === 'android'
-                ? 'Chrome/18.0.1025.133 Mobile Safari/535.19'
-                : 'Mozilla/5.0 (iPhone; CPU iPhone OS 10_3 like Mac OS X) AppleWebKit/602.1.50 (KHTML, like Gecko) CriOS/56.0.2924.75 Mobile/14E5239e Safari/602.1'
-            }
+            setSupportMultipleWindows={true}
+            userAgent={Platform.OS === 'android' ? 'Mozilla/5.0 (Linux; Android 10; Mobile; rv:79.0) Gecko/79.0 Firefox/79.0' : 'Mozilla/5.0 (iPhone; CPU iPhone OS 13_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Safari/605.1.15'}
             // originWhitelist={["https://*", "http://*", "file://*", "sms://*"]}
             originWhitelist={['*']}
             geolocationEnabled={true}

@@ -188,18 +188,22 @@ class WebSocketService {
   private sendLocation(latitude: number, longitude: number): void {
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
       const locationData = JSON.stringify({latitude, longitude});
-      const UserId = this.taskList[0].ServiceProviderUserLoginInfoId;
+      if(this.taskList && this.taskList.length>0){
+        const UserId = this.taskList[0].ServiceProviderUserLoginInfoId;
 
-      let data = {
-        ConnectionMode: 1,
-        Command: 66,
-        Message: locationData,
-        latlong: this.taskList,
-        FromUser: {Id: UserId},
-      };
-
-      console.log('data==>', data);
-      this.socket.send(JSON.stringify(data));
+        let data = {
+          ConnectionMode: 1,
+          Command: 66,
+          Message: locationData,
+          latlong: this.taskList,
+          FromUser: {Id: UserId},
+        };
+  
+        this.socket.send(JSON.stringify(data));
+      }else{
+        console.log('this.taskList',this.taskList)
+      }
+      
     } else {
       console.log('WebSocket is not connected');
     }

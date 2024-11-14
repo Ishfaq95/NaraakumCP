@@ -152,8 +152,8 @@ const WebViewComponent = ({ uri }:any) => {
 
     if (url && url.includes('OnlineSessionRoom')) {
       // let urlComplete = `https://staging.innotech-sa.com${url}`;
-      let urlComplete = `https://dvx.innotech-sa.com${url}`;
-      // let urlComplete = `https://nkapps.innotech-sa.com${url}`;
+      // let urlComplete = `https://dvx.innotech-sa.com${url}`;
+      let urlComplete = `https://nkapps.innotech-sa.com${url}`;
 
       const redirectUrl = getDeepLink();
 

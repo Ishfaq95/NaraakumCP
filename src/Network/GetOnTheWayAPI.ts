@@ -4,8 +4,8 @@ import { store } from "../shared/redux/store";
 
 export const GetOnTheWayTasks = async (UserProfileId:any) => {
   const token = store.getState().root.user.token;
-  const url='https://hhcnode.innotech-sa.com/api/user/GetServiceProviderOnthewayTaskList'
-  // const url='https://nk-pro-apis.innotech-sa.com/api/user/GetServiceProviderOnthewayTaskList';
+  // const url='https://hhcnode.innotech-sa.com/api/user/GetServiceProviderOnthewayTaskList'
+  const url='https://nk-pro-apis.innotech-sa.com/api/user/GetServiceProviderOnthewayTaskList';
   // const url='https://stghhcapis.innotech-sa.com/api/user/GetServiceProviderOnthewayTaskList';
   
   // const UserProfileId=store.getState().root.user.userinfo.Id;

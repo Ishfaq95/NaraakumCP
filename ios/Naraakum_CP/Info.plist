@@ -2,8 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>NSMotionUsageDescription</key>
-	<string>Motion always</string>
 	<key>BGTaskSchedulerPermittedIdentifiers</key>
 	<array>
 		<string>com.transistorsoft.customtask</string>
@@ -38,27 +36,49 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
-	<key>NSAppleMusicUsageDescription</key>
-	<string>We require access to your media library to provide in-app audio playback features.</string>
+	<!-- <key>NSAppleMusicUsageDescription</key>
+	<string>We require access to your media library to provide in-app audio playback features.</string> -->
 	<key>NSCameraUsageDescription</key>
-	<string>Camera access is required to allow users to capture photos or videos within the app.</string>
-	<key>NSDocumentsFolderUsageDescription</key>
-	<string>We need access to the Documents folder to save and manage user files securely within the app.</string>
-	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>Continuous location access is necessary to provide location-based features and background tracking for accurate navigation and location services.</string>
-	<key>NSLocationAlwaysUsageDescription</key>
-	<string>Location access in the background is required for ongoing tracking features, even when the app is not active, to ensure consistent and accurate service.</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Location access while using the app is necessary to enable real-time location-based features, like navigation and tracking.</string>
+	<string>Camera access is required to allow users to capture images of medical reports for upload and record essential patient data.</string>
+
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Microphone access is required for audio recording features, allowing users to capture sound within the app.</string>
-	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>Access to your photo library is needed to save images or media files generated within the app directly to your device.</string>
+	<string>Microphone access is required for voice-to-text input in fields and for recording patient complaints to enhance user experience.</string>
+
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Photo library access is required for viewing and selecting media files from your library to use within the app.</string>
+	<string>Photo library access is required to select medical report images from the gallery for uploading to the patient's record.</string>
+
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Access to the photo library is needed to save images or media files related to medical reports and patient records directly to the device.</string>
+
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Location access while using the app is necessary to share the doctor's real-time location with patients for live tracking purposes.</string>
+
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Continuous location access is required for live tracking of the doctor to ensure accurate and consistent navigation services for the patient.</string>
+
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Location access in the background is essential for continuous live tracking of the doctor to improve patient visibility and ensure timely updates.</string><key>NSCameraUsageDescription</key>
+	<string>Camera access is required to allow users to capture images of medical reports for upload and record essential patient data.</string>
+
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Microphone access is required for voice-to-text input in fields and for recording patient complaints to enhance user experience.</string>
+
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Photo library access is required to select medical report images from the gallery for uploading to the patient's record.</string>
+
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Access to the photo library is needed to save images or media files related to medical reports and patient records directly to the device.</string>
+
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Location access while using the app is necessary to share the doctor's real-time location with patients for live tracking purposes.</string>
+
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Continuous location access is required for live tracking of the doctor to ensure accurate and consistent navigation services for the patient.</string>
+
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Location access in the background is essential for continuous live tracking of the doctor to improve patient visibility and ensure timely updates.</string>
 	<key>UIBackgroundModes</key>
 	<array>
-		<string>audio</string>
 		<string>fetch</string>
 		<string>location</string>
 		<string>processing</string>

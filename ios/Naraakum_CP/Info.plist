@@ -39,7 +39,7 @@
 	<key>NSMotionUsageDescription</key>
 	<string>Motion data access is required to monitor activity levels or steps, enabling enhanced features for tracking patient mobility and ensuring a better healthcare experience.</string>
 	<key>NSAppleMusicUsageDescription</key>
-	<string>We require access to your media library to provide in-app audio playback features.</string>
+	<string>Media library access is required to select and manage audio files related to patient guidance, ensuring a seamless experience for in-app playback and healthcare education.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Camera access is required to allow users to capture images of medical reports for upload and record essential patient data.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>

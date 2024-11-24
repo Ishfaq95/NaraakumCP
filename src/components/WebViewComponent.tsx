@@ -278,7 +278,13 @@ const WebViewComponent = ({ uri }:any) => {
   const downloadPDFFromBase64 = async (base64: string, fileName: any) => {
     const base64String = base64;
     const base64Data = base64String.split(',')[1]; // Remove data URL prefix if present
-    const filePath = `${RNFetchBlob.fs.dirs.DownloadDir}/${fileName}.pdf`;
+    let filePath=null;
+     
+    if(Platform.OS=='ios'){
+      filePath = `${RNFetchBlob.fs.dirs.DocumentDir}/${fileName}.pdf`;
+    }else{
+      filePath = `${RNFetchBlob.fs.dirs.DownloadDir}/${fileName}.pdf`;
+    }
     const uniqueFilePath = await getUniqueFilePath(filePath);
 
     RNFetchBlob.fs

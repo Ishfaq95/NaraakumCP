@@ -17,20 +17,20 @@
                         <rect key="frame" x="0.0" y="0.0" width="414" height="736"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="launch_screen" translatesAutoresizingMaskIntoConstraints="NO" id="nCW-rR-EFN">
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="launch_screen" translatesAutoresizingMaskIntoConstraints="NO" id="zN7-9V-KWh">
                                 <rect key="frame" x="0.0" y="20" width="414" height="716"/>
                                 <constraints>
-                                    <constraint firstAttribute="width" secondItem="nCW-rR-EFN" secondAttribute="height" multiplier="207:358" id="Yju-gm-HbM"/>
+                                    <constraint firstAttribute="height" constant="800" id="tQE-Hv-Tl8"/>
                                 </constraints>
                             </imageView>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="Bcu-3y-fUS"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                         <constraints>
-                            <constraint firstItem="nCW-rR-EFN" firstAttribute="leading" secondItem="Bcu-3y-fUS" secondAttribute="leading" id="C1i-PZ-da4"/>
-                            <constraint firstItem="nCW-rR-EFN" firstAttribute="top" secondItem="Bcu-3y-fUS" secondAttribute="top" id="T1s-WA-plH"/>
-                            <constraint firstItem="Bcu-3y-fUS" firstAttribute="bottom" secondItem="nCW-rR-EFN" secondAttribute="bottom" id="Wiy-ZS-qsg"/>
-                            <constraint firstItem="Bcu-3y-fUS" firstAttribute="trailing" secondItem="nCW-rR-EFN" secondAttribute="trailing" id="ojT-Yh-RBH"/>
+                            <constraint firstItem="Bcu-3y-fUS" firstAttribute="trailing" secondItem="zN7-9V-KWh" secondAttribute="trailing" id="3sv-hu-E8t"/>
+                            <constraint firstItem="Bcu-3y-fUS" firstAttribute="bottom" secondItem="zN7-9V-KWh" secondAttribute="bottom" id="SlG-Hs-bnw"/>
+                            <constraint firstItem="zN7-9V-KWh" firstAttribute="leading" secondItem="Bcu-3y-fUS" secondAttribute="leading" id="k7z-X8-3AE"/>
+                            <constraint firstItem="zN7-9V-KWh" firstAttribute="top" secondItem="Bcu-3y-fUS" secondAttribute="top" id="vN8-gj-Cfo"/>
                         </constraints>
                     </view>
                 </viewController>
@@ -40,7 +40,7 @@
         </scene>
     </scenes>
     <resources>
-        <image name="launch_screen" width="860" height="1864"/>
+        <image name="launch_screen" width="400" height="640"/>
         <systemColor name="systemBackgroundColor">
             <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
         </systemColor>

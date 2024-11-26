@@ -1,10 +1,12 @@
 import {createSlice} from '@reduxjs/toolkit';
+import { Platform } from 'react-native';
 
 interface State {
   userinfo: any;
   topic:any;
   token:any;
   expiresAt:any;
+  appVersionCode:any;
 }
 
 const initialState: State = {
@@ -12,6 +14,7 @@ const initialState: State = {
   topic: null,
   token: null,
   expiresAt: null,
+  appVersionCode: Platform.OS=="android"? "1.0.0":"1.0.0"
 };
 
 export const userReducer = createSlice({

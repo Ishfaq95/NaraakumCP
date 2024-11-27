@@ -75,7 +75,7 @@ const HomeScreen = () => {
       }else if(Platform.OS=='ios'){
         getVersionCodeFN({
           "GroupId": 14,
-          "Title":"IOS App Version - Patient"
+          "Title":"IOS App Version-CP"
          })
       }
     }

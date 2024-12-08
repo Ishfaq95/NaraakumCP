@@ -5,11 +5,13 @@ import BackgroundTimer from 'react-native-background-timer';
 import Geolocation from 'react-native-geolocation-service';
 // import BackgroundFetch from 'react-native-background-fetch';
 import {GetOnTheWayTasks} from '../Network/GetOnTheWayAPI';
-// const WEBSOCKET_URL='wss://nodedev01.innotech-sa.com:6223/'
+// const WEBSOCKET_URL = 'wss://nodedev01.innotech-sa.com:6223/';
 // const WEBSOCKET_URL = 'wss://nodedev01.innotech-sa.com:8112/';
 const WEBSOCKET_URL = 'wss://nk-pro-presense.innotech-sa.com:8202/';
 import LocationService from './LocationTracker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {ContinousBaseGesture} from 'react-native-gesture-handler/lib/typescript/handlers/gestures/gesture';
+import BackgroundGeolocation from 'react-native-background-geolocation';
 
 class WebSocketService {
   private static instance: WebSocketService;
@@ -20,7 +22,7 @@ class WebSocketService {
   private locationUpdateInfo = {};
   private watchId: number | null = null;
   private taskList: any[] = [];
-  private userId:any=null;
+  private userId: any = null;
 
   private constructor() {
     // Private constructor to enforce singleton pattern
@@ -37,14 +39,14 @@ class WebSocketService {
   public async connect(
     presence: number,
     communicationKey: string,
-    userId:any
+    userId: any,
   ): Promise<void> {
     if (!this.socket || this.socket.readyState === WebSocket.CLOSED) {
       const deviceId = await this.getDeviceId();
       const url = `${WEBSOCKET_URL}connectionMode=${presence}&deviceId=${deviceId}&communicationKey=${communicationKey}`;
-      console.log('url',url)
+      console.log('url', url);
       this.socket = new WebSocket(url);
-      this.userId=userId;
+      this.userId = userId;
       this.socket.onopen = async () => {
         this.isConnected = true;
         await this.handleOnTheWayTasks(); // Check tasks initially after connection
@@ -52,7 +54,7 @@ class WebSocketService {
 
       this.socket.onmessage = async event => {
         const socketEvent = JSON.parse(event.data);
-        console.log('socketEvent.Command',socketEvent.Command)
+
         if (socketEvent.Command === 67 || socketEvent.Command === 68) {
           await this.handleOnTheWayTasks(); // Call API and handle tracking on Command 67 or 68
         }
@@ -64,12 +66,11 @@ class WebSocketService {
         setTimeout(async () => {
           const persistedState = await AsyncStorage.getItem('persist:root');
           if (persistedState) {
-            const parsedState = JSON.parse(persistedState); 
+            const parsedState = JSON.parse(persistedState);
             const rootState = JSON.parse(parsedState.user);
-            const {CommunicationKey,Id}=rootState.userinfo
-            this.connect(presence, communicationKey,Id)
+            const {CommunicationKey, Id} = rootState.userinfo;
+            this.connect(presence, communicationKey, Id);
           }
-         
         }, 5000); // Attempt to reconnect
       };
 
@@ -80,24 +81,22 @@ class WebSocketService {
   }
 
   private async handleOnTheWayTasks(): Promise<void> {
-    this.taskList=[]
+    this.taskList = [];
     try {
-      console.log('this.userId',this.userId)
-      if(this.userId){
+      if (this.userId) {
         const result = await GetOnTheWayTasks(this.userId);
-        
-      console.log('result',result.ResponseStatus.STATUSCODE)
-      if (result.ResponseStatus.STATUSCODE == 200) {
-        this.taskList = result.Tasks || []; // Save the result to taskList
-      }else{
-        this.taskList = []; // Save the result to taskList
-      }
 
-      if (this.taskList.length > 0) {
-        this.startLocationUpdates();
-      } else {
-        this.stopLocationUpdates();
-      }
+        if (result.ResponseStatus.STATUSCODE == 200) {
+          this.taskList = result.Tasks || []; // Save the result to taskList
+        } else {
+          this.taskList = []; // Save the result to taskList
+        }
+
+        if (this.taskList.length > 0) {
+          this.startLocationUpdates();
+        } else {
+          this.stopLocationUpdates();
+        }
       }
     } catch (error) {
       console.error('Error fetching on the way tasks:', error);
@@ -149,17 +148,41 @@ class WebSocketService {
         }
       } else {
       }
-    }
 
-     // Start tracking
-     LocationService.startTracking();
-  
-     // Register a listener for location updates
-     LocationService.onLocationUpdate((location) => {
-      console.log('location==>',location)
-        const {latitude,longitude}=location;
-       this.sendLocation(latitude, longitude);
-     });
+      console.log('i am here for location');
+
+      // Start tracking
+      LocationService.startTracking();
+
+      // Register a listener for location updates
+      LocationService.onLocationUpdate(location => {
+        console.log('location==>', location);
+        const {latitude, longitude} = location;
+        this.sendLocation(latitude, longitude);
+      });
+    } else {
+      console.log('i am here for location');
+      BackgroundGeolocation.start(() => {
+        console.log('- Tracking started');
+      });
+
+      BackgroundGeolocation.onLocation(
+        location => {
+          
+          const {latitude, longitude} = location.coords;
+          this.sendLocation(latitude, longitude);
+          // Handle location updates
+        },
+        error => {
+          console.error('[location] ERROR -', error);
+        },
+      );
+
+      BackgroundGeolocation.onActivityChange(activity => {
+        console.log('[activitychange] - ', activity);
+        // Handle activity change if needed
+      });
+    }
   }
 
   private sendLocation(latitude: number, longitude: number): void {
@@ -191,7 +214,14 @@ class WebSocketService {
   }
 
   private stopLocationUpdates(): void {
-    LocationService.stopTracking();
+    if (Platform.OS === 'android') {
+      LocationService.stopTracking();
+    } else {
+      BackgroundGeolocation.stop(() => {
+        console.log('- Tracking stopped');
+      });
+    }
+
     if (this.locationInterval) {
       BackgroundTimer.clearInterval(this.locationInterval);
       this.locationInterval = null;

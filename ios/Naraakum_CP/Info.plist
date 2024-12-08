@@ -2,10 +2,15 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>com.transistorsoft.customtask</string>
+		<string>com.transistorsoft.fetch</string>
+	</array>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-	<string>Naraakum_CP</string>
+	<string>Naraakum Provider</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -26,20 +31,46 @@
 	<true/>
 	<key>NSAppTransportSecurity</key>
 	<dict>
-	  <!-- Do not change NSAllowsArbitraryLoads to true, or you will risk app rejection! -->
 		<key>NSAllowsArbitraryLoads</key>
 		<false/>
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
+	<key>NSAppleMusicUsageDescription</key>
+	<string>Media library access is required to select and manage audio files related to patient guidance, ensuring a seamless experience for in-app playback and healthcare education.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Camera access is required to allow users to capture images of medical reports for upload and record essential patient data.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Continuous location access is required for live tracking of the doctor to ensure accurate and consistent navigation services for the patient.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Location access in the background is essential for continuous live tracking of the doctor to improve patient visibility and ensure timely updates.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string></string>
+	<string>Location access while using the app is necessary to share the doctor's real-time location with patients for live tracking purposes.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Microphone access is required for voice-to-text input in fields and for recording patient complaints to enhance user experience.</string>
+	<key>NSMotionUsageDescription</key>
+	<string>Motion data access is required to monitor activity levels or steps, enabling enhanced features for tracking patient mobility and ensuring a better healthcare experience.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Access to the photo library is needed to save images or media files related to medical reports and patient records directly to the device.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Photo library access is required to select medical report images from the gallery for uploading to the patient's record.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Your app requires access to speech recognition to convert your spoken words into text in the input field.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+		<string>location</string>
+		<string>processing</string>
+		<string>remote-notification</string>
+	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIRequiredDeviceCapabilities</key>
 	<array>
 		<string>arm64</string>
 	</array>
+	<key>UIRequiresFullScreen</key>
+	<true/>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>

@@ -14,7 +14,7 @@ const initialState: State = {
   topic: null,
   token: null,
   expiresAt: null,
-  appVersionCode: Platform.OS=="android"? "1.0.0":"1.0.0"
+  appVersionCode: Platform.OS=="android"? "1.0.1":"1.0.1"
 };
 
 export const userReducer = createSlice({
@@ -28,7 +28,6 @@ export const userReducer = createSlice({
       state.userinfo = action.payload;
     },
     setToken:(state = initialState, action)=>{
-      console.log('Action=>',action)
       return {
         ...state,
         token: action.payload.token,

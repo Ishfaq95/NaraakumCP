@@ -497,20 +497,20 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Naraakum_CP/Naraakum_CP.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = EV53AQE262;
+				DEVELOPMENT_TEAM = 83BZ7R4SP8;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Naraakum_CP/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.1;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.naraakum.naraakumCP;
+				PRODUCT_BUNDLE_IDENTIFIER = com.naraakum.naraakumProvider;
 				PRODUCT_NAME = Naraakum_CP;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -527,19 +527,19 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Naraakum_CP/Naraakum_CP.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = EV53AQE262;
+				DEVELOPMENT_TEAM = 83BZ7R4SP8;
 				INFOPLIST_FILE = Naraakum_CP/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.1;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.naraakum.naraakumCP;
+				PRODUCT_BUNDLE_IDENTIFIER = com.naraakum.naraakumProvider;
 				PRODUCT_NAME = Naraakum_CP;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";

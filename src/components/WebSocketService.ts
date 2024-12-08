@@ -10,8 +10,6 @@ import {GetOnTheWayTasks} from '../Network/GetOnTheWayAPI';
 const WEBSOCKET_URL = 'wss://nk-pro-presense.innotech-sa.com:8202/';
 import LocationService from './LocationTracker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {ContinousBaseGesture} from 'react-native-gesture-handler/lib/typescript/handlers/gestures/gesture';
-import BackgroundGeolocation from 'react-native-background-geolocation';
 
 class WebSocketService {
   private static instance: WebSocketService;
@@ -161,27 +159,7 @@ class WebSocketService {
         this.sendLocation(latitude, longitude);
       });
     } else {
-      console.log('i am here for location');
-      BackgroundGeolocation.start(() => {
-        console.log('- Tracking started');
-      });
-
-      BackgroundGeolocation.onLocation(
-        location => {
-          
-          const {latitude, longitude} = location.coords;
-          this.sendLocation(latitude, longitude);
-          // Handle location updates
-        },
-        error => {
-          console.error('[location] ERROR -', error);
-        },
-      );
-
-      BackgroundGeolocation.onActivityChange(activity => {
-        console.log('[activitychange] - ', activity);
-        // Handle activity change if needed
-      });
+  
     }
   }
 
@@ -217,9 +195,6 @@ class WebSocketService {
     if (Platform.OS === 'android') {
       LocationService.stopTracking();
     } else {
-      BackgroundGeolocation.stop(() => {
-        console.log('- Tracking stopped');
-      });
     }
 
     if (this.locationInterval) {

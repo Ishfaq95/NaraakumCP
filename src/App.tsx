@@ -14,7 +14,6 @@ import SplashScreen from 'react-native-splash-screen';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import queryClient from './Network/queryClient';
 import Config from 'react-native-config';
-import BackgroundGeolocation from 'react-native-background-geolocation';
 
 const App = () => {
   useEffect(() => {
@@ -22,35 +21,6 @@ const App = () => {
       SplashScreen.hide();
     }, 1000);
     requestUserPermission();
-  }, []);
-
-  useEffect(() => {
-    // Configure BackgroundGeolocation
-    if(Platform.OS === 'ios'){
-      BackgroundGeolocation.ready({
-        desiredAccuracy: BackgroundGeolocation.DESIRED_ACCURACY_HIGH,
-        distanceFilter: 10,  // Increase to allow iOS to optimize updates
-        stationaryRadius: 25,
-        locationUpdateInterval: 1000,
-        fastestLocationUpdateInterval: 1000,
-        allowIdenticalLocations: true,
-        debug: false,  // Enables visual and sound cues for testing
-        logLevel: BackgroundGeolocation.LOG_LEVEL_VERBOSE,
-        stopOnTerminate: false,
-        startOnBoot: true,
-        foregroundService: true,
-        preventSuspend: true,
-      }, (state) => {
-        console.log("- BackgroundGeolocation is configured and ready: ", state.enabled);
-      });
-    }
-
-    // Clean up on component unmount
-    return () => {
-      if(Platform.OS === 'ios'){
-        BackgroundGeolocation.removeAllListeners();
-      }
-    };
   }, []);
 
   const requestUserPermission = async () => {

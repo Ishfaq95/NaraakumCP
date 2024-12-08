@@ -5,6 +5,7 @@ import {
   Alert,
   Platform,
   PermissionsAndroid,
+  AppState,
 } from 'react-native';
 import LoaderKit from 'react-native-loader-kit';
 import {WebView} from 'react-native-webview';
@@ -15,33 +16,32 @@ import {setTopic, setUserInfo} from '../shared/redux/reducers/userReducer';
 import {check, request, PERMISSIONS, RESULTS} from 'react-native-permissions';
 import RNFetchBlob from 'rn-fetch-blob';
 import WebSocketService from './WebSocketService';
-import { getLocationPermission } from './LocationService';
+import {getLocationPermission} from './LocationService';
 
-const WebViewComponent = ({ uri }:any) => {
-  const dispatch = useDispatch()
-  const { topic,userinfo } = useSelector((state: any) => state.root.user);
+const WebViewComponent = ({uri}: any) => {
+  const dispatch = useDispatch();
+  const {topic, userinfo} = useSelector((state: any) => state.root.user);
   const [loading, setLoading] = useState(true);
   const [currentUrl, setCurrentUrl] = useState(uri);
-  const [userInformation, setUserInformation] = useState('')
-  const [callConnected, setCallConnected] = useState(false)
-  const [reloadWebView,setReloadWebView]=useState(false)
-  const [latestUrl,setLatestUrl]=useState('')
+  const [userInformation, setUserInformation] = useState('');
+  const [callConnected, setCallConnected] = useState(false);
+  const [reloadWebView, setReloadWebView] = useState(false);
+  const [latestUrl, setLatestUrl] = useState('');
   const webViewRef = useRef(null);
   const webSocketService = WebSocketService.getInstance();
   const sleep = (timeout: number) =>
     new Promise<void>(resolve => setTimeout(resolve, timeout));
-  
-  useEffect(()=>{
-   
-    if(userinfo){
-      const presence = 1; 
-      const communicationKey = userinfo.communicationKey; 
-      const UserId=userinfo.id;
-      webSocketService.connect(presence, communicationKey,UserId);
-    }else{
-      webSocketService.disconnect()
+
+  useEffect(() => {
+    if (userinfo) {
+      const presence = 1;
+      const communicationKey = userinfo.communicationKey;
+      const UserId = userinfo.id;
+      webSocketService.connect(presence, communicationKey, UserId);
+    } else {
+      webSocketService.disconnect();
     }
-  },[userinfo,userInformation])
+  }, [userinfo, userInformation]);
 
   const subsribeTopic = (Id: any) => {
     const topicName = `serviceprovider_${Id}`;
@@ -106,10 +106,10 @@ const WebViewComponent = ({ uri }:any) => {
       data,
       fileName,
     } = JSON.parse(event.nativeEvent.data);
-    
-    if(eventHandler=='logout'){
-      dispatch(setUserInfo(null))
-      webSocketService.disconnect()
+
+    if (eventHandler == 'logout') {
+      dispatch(setUserInfo(null));
+      webSocketService.disconnect();
     }
     if (eventHandler == 'download') {
       let isPermissionGrandted = await getStoragePermission();
@@ -117,12 +117,11 @@ const WebViewComponent = ({ uri }:any) => {
         setLoading(true);
         let pdfUrl = data;
         let fileName = getFileNameFromUrl(pdfUrl);
-        if(Platform.OS === 'ios'){
+        if (Platform.OS === 'ios') {
           downloadFIleForIOS(pdfUrl, fileName);
-        }else{
+        } else {
           downloadFile(pdfUrl, fileName);
         }
-        
       } else {
         showAlert(
           'Allow Media Access.',
@@ -153,11 +152,12 @@ const WebViewComponent = ({ uri }:any) => {
     if (url && url.includes('OnlineSessionRoom')) {
       // let urlComplete = `https://staging.innotech-sa.com${url}`;
       // let urlComplete = `https://dvx.innotech-sa.com${url}`;
-      let urlComplete = `https://nkapps.innotech-sa.com${url}`;
+      // let urlComplete = `https://nkapps.innotech-sa.com${url}`;
+
+      let urlComplete = `https://naraakum.com${url}`;
 
       const redirectUrl = getDeepLink();
 
-      console.log('urlCompleteurlComplete', urlComplete);
       try {
         if (await InAppBrowser.isAvailable()) {
           // const result = await InAppBrowser.open(urlComplete, {
@@ -171,13 +171,13 @@ const WebViewComponent = ({ uri }:any) => {
           //     endExit: 'slide_out_right',
           //   },
           // });
-          const result = await InAppBrowser.open(urlComplete,  {
+          const result = await InAppBrowser.open(urlComplete, {
             forceCloseOnRedirection: false,
             showInRecents: true,
             showTitle: true,
             enableUrlBarHiding: true,
             enableDefaultShare: false,
-            modalPresentationStyle:'overFullScreen',
+            modalPresentationStyle: 'overFullScreen',
 
             ephemeralWebSession: false,
             enableBarCollapsing: true,
@@ -278,11 +278,11 @@ const WebViewComponent = ({ uri }:any) => {
   const downloadPDFFromBase64 = async (base64: string, fileName: any) => {
     const base64String = base64;
     const base64Data = base64String.split(',')[1]; // Remove data URL prefix if present
-    let filePath=null;
-     
-    if(Platform.OS=='ios'){
+    let filePath = null;
+
+    if (Platform.OS == 'ios') {
       filePath = `${RNFetchBlob.fs.dirs.DocumentDir}/${fileName}.pdf`;
-    }else{
+    } else {
       filePath = `${RNFetchBlob.fs.dirs.DownloadDir}/${fileName}.pdf`;
     }
     const uniqueFilePath = await getUniqueFilePath(filePath);
@@ -354,9 +354,60 @@ const WebViewComponent = ({ uri }:any) => {
   };
 
   const onNavigationStateChange = (url: any) => {
-    console.log('url.url==>', url.url);
+    if (isNonSocialMediaUrl(url.url)) {
+      setLatestUrl(url.url);
+    } else {
+      setLoading(false);
+    }
     setLatestUrl(url.url);
   };
+
+  const isNonSocialMediaUrl = (url: string): boolean => {
+    const socialMediaDomains = [
+      'youtube.com',
+      'youtu.be',
+      'x.com',
+      'facebook.com',
+      'twitter.com',
+      'instagram.com',
+      'tiktok.com',
+      'linkedin.com',
+      'snapchat.com',
+      'pinterest.com',
+      'reddit.com',
+    ];
+
+    const lowerCaseUrl = url.toLowerCase();
+
+    // Use stricter domain matching by extracting the host
+    const match = lowerCaseUrl.match(/https?:\/\/(www\.)?([^\/]+)/);
+    const domain = match ? match[2] : null;
+
+    // Check if the extracted domain matches any social media domain
+    return !socialMediaDomains.some(socialDomain =>
+      domain?.includes(socialDomain),
+    );
+  };
+
+  useEffect(() => {
+    const handleAppStateChange = nextAppState => {
+      console.log('App State changed to:', nextAppState);
+      if (nextAppState == 'inactive') {
+        setLoading(false);
+      }
+    };
+
+    // Add event listener
+    const subscription = AppState.addEventListener(
+      'change',
+      handleAppStateChange,
+    );
+
+    // Clean up the event listener on unmount
+    return () => {
+      subscription.remove();
+    };
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -388,7 +439,11 @@ const WebViewComponent = ({ uri }:any) => {
             allowsInlineMediaPlayback={true}
             // originWhitelist={['*']}
             setSupportMultipleWindows={true}
-            userAgent={Platform.OS === 'android' ? 'Mozilla/5.0 (Linux; Android 10; Mobile; rv:79.0) Gecko/79.0 Firefox/79.0' : 'Mozilla/5.0 (iPhone; CPU iPhone OS 13_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Safari/605.1.15'}
+            userAgent={
+              Platform.OS === 'android'
+                ? 'Mozilla/5.0 (Linux; Android 10; Mobile; rv:79.0) Gecko/79.0 Firefox/79.0'
+                : 'Mozilla/5.0 (iPhone; CPU iPhone OS 13_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Safari/605.1.15'
+            }
             // originWhitelist={["https://*", "http://*", "file://*", "sms://*"]}
             originWhitelist={['*']}
             geolocationEnabled={true}

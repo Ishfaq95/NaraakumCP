@@ -36,8 +36,6 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
-	<key>NSMotionUsageDescription</key>
-	<string>Motion data access is required to monitor activity levels or steps, enabling enhanced features for tracking patient mobility and ensuring a better healthcare experience.</string>
 	<key>NSAppleMusicUsageDescription</key>
 	<string>Media library access is required to select and manage audio files related to patient guidance, ensuring a seamless experience for in-app playback and healthcare education.</string>
 	<key>NSCameraUsageDescription</key>
@@ -50,6 +48,8 @@
 	<string>Location access while using the app is necessary to share the doctor's real-time location with patients for live tracking purposes.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Microphone access is required for voice-to-text input in fields and for recording patient complaints to enhance user experience.</string>
+	<key>NSMotionUsageDescription</key>
+	<string>Motion data access is required to monitor activity levels or steps, enabling enhanced features for tracking patient mobility and ensuring a better healthcare experience.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Access to the photo library is needed to save images or media files related to medical reports and patient records directly to the device.</string>
 	<key>NSPhotoLibraryUsageDescription</key>

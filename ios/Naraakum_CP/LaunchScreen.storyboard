@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="32700.99.1234" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" launchScreen="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="01J-lp-oVM">
-    <device id="retina5_5" orientation="portrait" appearance="light"/>
+    <device id="retina6_5" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22684"/>
@@ -14,12 +14,13 @@
             <objects>
                 <viewController id="01J-lp-oVM" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="Ze5-6b-2t3">
-                        <rect key="frame" x="0.0" y="0.0" width="414" height="736"/>
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="launch_screen" translatesAutoresizingMaskIntoConstraints="NO" id="zN7-9V-KWh">
-                                <rect key="frame" x="0.0" y="20" width="414" height="716"/>
+                                <rect key="frame" x="0.0" y="44" width="414" height="818"/>
                                 <constraints>
+                                    <constraint firstAttribute="width" constant="390" id="Rsx-qS-wnn"/>
                                     <constraint firstAttribute="height" constant="800" id="tQE-Hv-Tl8"/>
                                 </constraints>
                             </imageView>
@@ -28,6 +29,9 @@
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                         <constraints>
                             <constraint firstItem="Bcu-3y-fUS" firstAttribute="trailing" secondItem="zN7-9V-KWh" secondAttribute="trailing" id="3sv-hu-E8t"/>
+                            <constraint firstItem="zN7-9V-KWh" firstAttribute="top" secondItem="Bcu-3y-fUS" secondAttribute="top" id="41u-yO-IbX"/>
+                            <constraint firstItem="Bcu-3y-fUS" firstAttribute="trailing" secondItem="zN7-9V-KWh" secondAttribute="trailing" id="7Oq-Dg-rnf"/>
+                            <constraint firstItem="Bcu-3y-fUS" firstAttribute="bottom" secondItem="zN7-9V-KWh" secondAttribute="bottom" id="LDM-Hg-68D"/>
                             <constraint firstItem="Bcu-3y-fUS" firstAttribute="bottom" secondItem="zN7-9V-KWh" secondAttribute="bottom" id="SlG-Hs-bnw"/>
                             <constraint firstItem="zN7-9V-KWh" firstAttribute="leading" secondItem="Bcu-3y-fUS" secondAttribute="leading" id="k7z-X8-3AE"/>
                             <constraint firstItem="zN7-9V-KWh" firstAttribute="top" secondItem="Bcu-3y-fUS" secondAttribute="top" id="vN8-gj-Cfo"/>
@@ -36,7 +40,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="iYj-Kq-Ea1" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="50.390625" y="373.79209370424593"/>
+            <point key="canvasLocation" x="49.618320610687022" y="373.23943661971833"/>
         </scene>
     </scenes>
     <resources>

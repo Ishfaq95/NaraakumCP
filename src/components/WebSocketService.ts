@@ -5,7 +5,7 @@ import BackgroundTimer from 'react-native-background-timer';
 import Geolocation from 'react-native-geolocation-service';
 // import BackgroundFetch from 'react-native-background-fetch';
 import {GetOnTheWayTasks} from '../Network/GetOnTheWayAPI';
-// const WEBSOCKET_URL = 'wss://nodedev01.innotech-sa.com:6223/';
+// const WEBSOCKET_URL='wss://nodedev01.innotech-sa.com:6223/'
 // const WEBSOCKET_URL = 'wss://nodedev01.innotech-sa.com:8112/';
 const WEBSOCKET_URL = 'wss://nk-pro-presense.innotech-sa.com:8202/';
 import LocationService from './LocationTracker';
@@ -20,7 +20,7 @@ class WebSocketService {
   private locationUpdateInfo = {};
   private watchId: number | null = null;
   private taskList: any[] = [];
-  private userId: any = null;
+  private userId:any=null;
 
   private constructor() {
     // Private constructor to enforce singleton pattern
@@ -37,14 +37,13 @@ class WebSocketService {
   public async connect(
     presence: number,
     communicationKey: string,
-    userId: any,
+    userId:any
   ): Promise<void> {
     if (!this.socket || this.socket.readyState === WebSocket.CLOSED) {
       const deviceId = await this.getDeviceId();
       const url = `${WEBSOCKET_URL}connectionMode=${presence}&deviceId=${deviceId}&communicationKey=${communicationKey}`;
-      console.log('url', url);
       this.socket = new WebSocket(url);
-      this.userId = userId;
+      this.userId=userId;
       this.socket.onopen = async () => {
         this.isConnected = true;
         await this.handleOnTheWayTasks(); // Check tasks initially after connection
@@ -52,7 +51,7 @@ class WebSocketService {
 
       this.socket.onmessage = async event => {
         const socketEvent = JSON.parse(event.data);
-
+        
         if (socketEvent.Command === 67 || socketEvent.Command === 68) {
           await this.handleOnTheWayTasks(); // Call API and handle tracking on Command 67 or 68
         }
@@ -64,11 +63,12 @@ class WebSocketService {
         setTimeout(async () => {
           const persistedState = await AsyncStorage.getItem('persist:root');
           if (persistedState) {
-            const parsedState = JSON.parse(persistedState);
+            const parsedState = JSON.parse(persistedState); 
             const rootState = JSON.parse(parsedState.user);
-            const {CommunicationKey, Id} = rootState.userinfo;
-            this.connect(presence, communicationKey, Id);
+            const {CommunicationKey,Id}=rootState.userinfo
+            this.connect(presence, communicationKey,Id)
           }
+         
         }, 5000); // Attempt to reconnect
       };
 
@@ -79,22 +79,22 @@ class WebSocketService {
   }
 
   private async handleOnTheWayTasks(): Promise<void> {
-    this.taskList = [];
+    this.taskList=[]
     try {
-      if (this.userId) {
+      if(this.userId){
         const result = await GetOnTheWayTasks(this.userId);
+        
+      if (result.ResponseStatus.STATUSCODE == 200) {
+        this.taskList = result.Tasks || []; // Save the result to taskList
+      }else{
+        this.taskList = []; // Save the result to taskList
+      }
 
-        if (result.ResponseStatus.STATUSCODE == 200) {
-          this.taskList = result.Tasks || []; // Save the result to taskList
-        } else {
-          this.taskList = []; // Save the result to taskList
-        }
-
-        if (this.taskList.length > 0) {
-          this.startLocationUpdates();
-        } else {
-          this.stopLocationUpdates();
-        }
+      if (this.taskList.length > 0) {
+        this.startLocationUpdates();
+      } else {
+        this.stopLocationUpdates();
+      }
       }
     } catch (error) {
       console.error('Error fetching on the way tasks:', error);
@@ -146,21 +146,17 @@ class WebSocketService {
         }
       } else {
       }
-
-      console.log('i am here for location');
-
-      // Start tracking
-      LocationService.startTracking();
-
-      // Register a listener for location updates
-      LocationService.onLocationUpdate(location => {
-        console.log('location==>', location);
-        const {latitude, longitude} = location;
-        this.sendLocation(latitude, longitude);
-      });
-    } else {
-  
     }
+
+     // Start tracking
+     LocationService.startTracking();
+  
+     // Register a listener for location updates
+     LocationService.onLocationUpdate((location) => {
+      console.log('location==>',location)
+        const {latitude,longitude}=location;
+       this.sendLocation(latitude, longitude);
+     });
   }
 
   private sendLocation(latitude: number, longitude: number): void {
@@ -192,11 +188,7 @@ class WebSocketService {
   }
 
   private stopLocationUpdates(): void {
-    if (Platform.OS === 'android') {
-      LocationService.stopTracking();
-    } else {
-    }
-
+    LocationService.stopTracking();
     if (this.locationInterval) {
       BackgroundTimer.clearInterval(this.locationInterval);
       this.locationInterval = null;

@@ -1,7 +1,8 @@
+// Path: src/components/LocationService.ts
 import { NativeModules, NativeEventEmitter, PermissionsAndroid, Platform } from 'react-native';
 
 const { LocationModule } = NativeModules;
-const eventEmitter = LocationModule? new NativeEventEmitter(LocationModule):null;
+const eventEmitter = new NativeEventEmitter(LocationModule);
 
 class LocationService {
   private location = { latitude: null, longitude: null };
@@ -11,10 +12,10 @@ class LocationService {
     this.subscribeToLocationUpdates();
   }
 
-  // Function to request location permissions (iOS will automatically handle permissions)
+  // Function to request location permissions
   async requestLocationPermission(): Promise<boolean> {
-    if (Platform.OS === 'android') {
-      try {
+    try {
+      if (Platform.OS === 'android') {
         const granted = await PermissionsAndroid.requestMultiple([
           PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
           PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
@@ -26,12 +27,11 @@ class LocationService {
           granted[PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION] === PermissionsAndroid.RESULTS.GRANTED &&
           granted[PermissionsAndroid.PERMISSIONS.ACCESS_BACKGROUND_LOCATION] === PermissionsAndroid.RESULTS.GRANTED
         );
-      } catch (err) {
-        console.warn(err);
-        return false;
       }
-    } else {
-      return true; // iOS permissions are automatically handled
+      return true;
+    } catch (err) {
+      console.warn(err);
+      return false;
     }
   }
 
@@ -39,7 +39,6 @@ class LocationService {
   async startTracking(): Promise<void> {
     const hasPermission = await this.requestLocationPermission();
     if (hasPermission) {
-      console.log('Tracking location');
       LocationModule.startTracking();
     } else {
       console.log('Location permission denied');
@@ -53,8 +52,7 @@ class LocationService {
 
   // Subscribe to location updates
   private subscribeToLocationUpdates(): void {
-    eventEmitter?.addListener('locationUpdate', (event: { latitude: number; longitude: number }) => {
-      console.log('Received location update:', event);
+    eventEmitter.addListener('locationUpdate', (event: { latitude: number; longitude: number }) => {
       this.location = {
         latitude: event.latitude,
         longitude: event.longitude,

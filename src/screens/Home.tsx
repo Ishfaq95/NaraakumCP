@@ -14,7 +14,6 @@ import useMutationHook from '../Network/useMutationHook';
 import {useDispatch, useSelector} from 'react-redux';
 import {setToken} from '../shared/redux/reducers/userReducer';
 import {isTokenExpired} from '../shared/services/service';
-import {check, request, PERMISSIONS, RESULTS} from 'react-native-permissions'
 import { store } from '../shared/redux/store';
 
 const HomeScreen = () => {
@@ -75,7 +74,7 @@ const HomeScreen = () => {
       }else if(Platform.OS=='ios'){
         getVersionCodeFN({
           "GroupId": 14,
-          "Title":"IOS App Version-CP"
+          "Title":"IOS App Version - Patient"
          })
       }
     }
@@ -171,64 +170,46 @@ const HomeScreen = () => {
     }
   }, [isSuccess, isError]);
 
-
-  const requestiOSPermissions = async () => {
-    const cameraPermission = await request(PERMISSIONS.IOS.CAMERA);
-    const microphonePermission = await request(PERMISSIONS.IOS.MICROPHONE);
-    const photoLibraryPermission = await request(PERMISSIONS.IOS.PHOTO_LIBRARY);
-    const mediaLibraryPermission = await request(PERMISSIONS.IOS.MEDIA_LIBRARY);
-  
-    if (
-      cameraPermission === RESULTS.GRANTED &&
-      microphonePermission === RESULTS.GRANTED &&
-      photoLibraryPermission === RESULTS.GRANTED &&
-      mediaLibraryPermission === RESULTS.GRANTED 
-    ) {
-      console.log('All necessary permissions granted');
-      return true;
-    } else {
-      console.log('Some permissions were denied');
-      return false;
-    }
-  };
-
   async function requestCameraAndAudioPermission() {
-    if (Platform.OS === 'ios') {
-      return requestiOSPermissions();
-    } else {
-      try {
-        const granted = await PermissionsAndroid.requestMultiple([
-          PermissionsAndroid.PERMISSIONS.CAMERA,
-          PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
-          PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES,
-          PermissionsAndroid.PERMISSIONS.READ_MEDIA_VIDEO,
-          PermissionsAndroid.PERMISSIONS.READ_MEDIA_AUDIO,
-          PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-          PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-          PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
-        ]);
-  
-        if (
-          granted['android.permission.CAMERA'] === PermissionsAndroid.RESULTS.GRANTED &&
-          granted['android.permission.RECORD_AUDIO'] === PermissionsAndroid.RESULTS.GRANTED &&
-          granted['android.permission.READ_MEDIA_IMAGES'] === PermissionsAndroid.RESULTS.GRANTED &&
-          granted['android.permission.READ_MEDIA_VIDEO'] === PermissionsAndroid.RESULTS.GRANTED &&
-          granted['android.permission.READ_MEDIA_AUDIO'] === PermissionsAndroid.RESULTS.GRANTED
-        ) {
-        } else {
-        }
-      } catch (err) {
+    try {
+      const granted = await PermissionsAndroid.requestMultiple([
+        PermissionsAndroid.PERMISSIONS.CAMERA,
+        PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
+        PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES,
+        PermissionsAndroid.PERMISSIONS.READ_MEDIA_VIDEO,
+        PermissionsAndroid.PERMISSIONS.READ_MEDIA_AUDIO,
+        PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+        PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
+        PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
+      ]);
+
+      if (
+        granted['android.permission.CAMERA'] ===
+          PermissionsAndroid.RESULTS.GRANTED &&
+        granted['android.permission.RECORD_AUDIO'] ===
+          PermissionsAndroid.RESULTS.GRANTED &&
+        granted['android.permission.READ_MEDIA_IMAGES'] ===
+          PermissionsAndroid.RESULTS.GRANTED &&
+        granted['android.permission.READ_MEDIA_VIDEO'] ===
+          PermissionsAndroid.RESULTS.GRANTED &&
+        granted['android.permission.READ_MEDIA_AUDIO'] ===
+          PermissionsAndroid.RESULTS.GRANTED
+      ) {
+        console.log('You can use the camera and mic');
+      } else {
+        console.log('Camera or mic permission denied');
       }
+    } catch (err) {
+      console.warn(err);
     }
-    
   }
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* <WebViewComponent uri="https://staging.innotech-sa.com/naraakum/Web/Web/Index" /> */}
-      {/* <WebViewComponent uri="https://dvx.innotech-sa.com/HHC/web/Web/Index" /> */}
+       {/* <WebViewComponent uri="https://staging.innotech-sa.com/naraakum/Web/Web/Index" />  */}
+       {/* <WebViewComponent uri="https://dvx.innotech-sa.com/HHC/web/Web/Index" />  */}
       {/* <WebViewComponent uri="https://nkapps.innotech-sa.com/" /> */}
-      <WebViewComponent uri="https://naraakum.com/" /> 
+      <WebViewComponent uri="https://naraakum.com/" />
     </SafeAreaView>
   );
 };

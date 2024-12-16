@@ -2,18 +2,22 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CLIENT_ID</key>
+	<string>1060639338997-u30u64u80p9f68mo55fl4r32qc3eipqt.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.1060639338997-u30u64u80p9f68mo55fl4r32qc3eipqt</string>
 	<key>API_KEY</key>
-	<string>AIzaSyB4oUQddaKWNjnM7lWF7NfSp8RaPOhna1I</string>
+	<string>AIzaSyC7ZHYl0UUyFfGk0asWl1sHUllrCo0dDL8</string>
 	<key>GCM_SENDER_ID</key>
-	<string>357000987943</string>
+	<string>1060639338997</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.naraakum.naraakumCP</string>
+	<string>com.naraakum.naraakumProvider</string>
 	<key>PROJECT_ID</key>
-	<string>naraakum-6085c</string>
+	<string>naraakum-c8d6a</string>
 	<key>STORAGE_BUCKET</key>
-	<string>naraakum-6085c.appspot.com</string>
+	<string>naraakum-c8d6a.firebasestorage.app</string>
 	<key>IS_ADS_ENABLED</key>
 	<false></false>
 	<key>IS_ANALYTICS_ENABLED</key>
@@ -25,6 +29,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:357000987943:ios:b88776f5aead2d68869502</string>
+	<string>1:1060639338997:ios:3de13edbf6e3e6575cb0bc</string>
 </dict>
 </plist>

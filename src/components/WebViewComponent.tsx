@@ -350,7 +350,16 @@ const WebViewComponent = ({uri}: any) => {
 
   const handleLoadError = (event: any) => {
     setLoading(false);
-    Alert.alert('Something went wrong. Please try again.');
+    Alert.alert('Something went wrong. Please try again.', '', [
+      {text: 'OK', onPress: () => handleLoadStart()},
+    ]);
+  };
+
+  const handleLoadStart = () => {
+    setReloadWebView(true)
+    setTimeout(() => {
+      setReloadWebView(false)
+    }, 100);
   };
 
   const onNavigationStateChange = (url: any) => {
@@ -359,7 +368,6 @@ const WebViewComponent = ({uri}: any) => {
     } else {
       setLoading(false);
     }
-    setLatestUrl(url.url);
   };
 
   const isNonSocialMediaUrl = (url: string): boolean => {
@@ -375,6 +383,7 @@ const WebViewComponent = ({uri}: any) => {
       'snapchat.com',
       'pinterest.com',
       'reddit.com',
+      'fb'
     ];
 
     const lowerCaseUrl = url.toLowerCase();

@@ -39,10 +39,8 @@ class LocationService {
   async startTracking(): Promise<void> {
     const hasPermission = await this.requestLocationPermission();
     if (hasPermission) {
-      console.log('Tracking location');
       LocationModule.startTracking();
     } else {
-      console.log('Location permission denied');
     }
   }
 
@@ -54,7 +52,6 @@ class LocationService {
   // Subscribe to location updates
   private subscribeToLocationUpdates(): void {
     eventEmitter?.addListener('locationUpdate', (event: { latitude: number; longitude: number }) => {
-      console.log('Received location update:', event);
       this.location = {
         latitude: event.latitude,
         longitude: event.longitude,

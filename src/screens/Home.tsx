@@ -106,7 +106,6 @@ const HomeScreen = () => {
   const versionCompareFunction=()=>{
     const versionCode = DataVersionCode;
     const isApiSuccess=versionCode?.ResponseStatus?.STATUSCODE
-    console.log('DataVersionCode',DataVersionCode?.AppVersion)
     if(isApiSuccess=="200"){
       const comparisonResult = compareVersions(DataVersionCode?.AppVersion, appVersionCode);
       if (comparisonResult > 0) {
@@ -126,7 +125,6 @@ const HomeScreen = () => {
       versionCompareFunction()
     }
     if (isErrorVersionCode) {
-      console.log('version code error');
     }
   }, [isSuccessVersionCode, isErrorVersionCode]);
 
@@ -156,7 +154,6 @@ const HomeScreen = () => {
   useEffect(() => {
     if (isSuccess) {
       const tokenData = JSON.stringify(data);
-      console.log('tokenData', tokenData);
       const sessionToken = {
         token: data.access_token,
         expiresAt: data.expires,
@@ -167,7 +164,6 @@ const HomeScreen = () => {
       }, 100);
     }
     if (isError) {
-      console.log('getting token error');
     }
   }, [isSuccess, isError]);
 
@@ -184,10 +180,8 @@ const HomeScreen = () => {
       photoLibraryPermission === RESULTS.GRANTED &&
       mediaLibraryPermission === RESULTS.GRANTED 
     ) {
-      console.log('All necessary permissions granted');
       return true;
     } else {
-      console.log('Some permissions were denied');
       return false;
     }
   };

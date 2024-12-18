@@ -44,7 +44,6 @@ class WebSocketService {
     if (!this.socket || this.socket.readyState === WebSocket.CLOSED) {
       const deviceId = await this.getDeviceId();
       const url = `${WEBSOCKET_URL}connectionMode=${presence}&deviceId=${deviceId}&communicationKey=${communicationKey}`;
-      console.log('url', url);
       this.socket = new WebSocket(url);
       this.userId = userId;
       this.socket.onopen = async () => {
@@ -113,10 +112,8 @@ class WebSocketService {
       this.appState.match(/inactive|background/) &&
       nextAppState === 'active'
     ) {
-      console.log('App has come to the foreground');
       // this.connect(); // Reconnect if needed
     } else if (nextAppState.match(/inactive|background/)) {
-      console.log('App has gone to the background');
     }
     this.appState = nextAppState;
   }
@@ -127,7 +124,6 @@ class WebSocketService {
         PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
       );
       if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-        console.log('Location permission denied');
         return;
       }
       if (granted === PermissionsAndroid.RESULTS.GRANTED) {
@@ -143,27 +139,21 @@ class WebSocketService {
           },
         );
         if (bggranted !== PermissionsAndroid.RESULTS.GRANTED) {
-          console.log('permission not granted');
           return;
         }
       } else {
       }
-
-      console.log('i am here for location');
 
       // Start tracking
       LocationService.startTracking();
 
       // Register a listener for location updates
       LocationService.onLocationUpdate(location => {
-        console.log('location==>', location);
         const {latitude, longitude} = location;
         this.sendLocation(latitude, longitude);
       });
     } else {
-      console.log('i am here for location');
       BackgroundGeolocation.start(() => {
-        console.log('- Tracking started');
       });
 
       BackgroundGeolocation.onLocation(
@@ -179,7 +169,6 @@ class WebSocketService {
       );
 
       BackgroundGeolocation.onActivityChange(activity => {
-        console.log('[activitychange] - ', activity);
         // Handle activity change if needed
       });
     }
@@ -201,11 +190,9 @@ class WebSocketService {
   
         this.socket.send(JSON.stringify(data));
       }else{
-        console.log('this.taskList',this.taskList)
       }
       
     } else {
-      console.log('WebSocket is not connected');
     }
   }
 
@@ -218,7 +205,6 @@ class WebSocketService {
       LocationService.stopTracking();
     } else {
       BackgroundGeolocation.stop(() => {
-        console.log('- Tracking stopped');
       });
     }
 
@@ -231,7 +217,6 @@ class WebSocketService {
       Geolocation.clearWatch(this.watchId); // Stop watching the location
       Geolocation.stopObserving();
       this.watchId = null; // Clear the watchId reference
-      console.log('Location updates stopped.');
     }
   }
 

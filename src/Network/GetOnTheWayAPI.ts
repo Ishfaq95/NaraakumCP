@@ -10,7 +10,6 @@ export const GetOnTheWayTasks = async (UserProfileId:any) => {
   
   // const UserProfileId=store.getState().root.user.userinfo.Id;
 
-  console.log('UserProfileId',UserProfileId)
   const data={
         "ServiceProviderUserLoginInfoId":UserProfileId
      }

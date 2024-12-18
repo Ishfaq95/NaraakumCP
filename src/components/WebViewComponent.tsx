@@ -6,6 +6,7 @@ import {
   Platform,
   PermissionsAndroid,
   AppState,
+  Linking,
 } from 'react-native';
 import LoaderKit from 'react-native-loader-kit';
 import {WebView} from 'react-native-webview';
@@ -340,10 +341,8 @@ const WebViewComponent = ({uri}: any) => {
       photoLibraryPermission === RESULTS.GRANTED &&
       mediaLibraryPermission === RESULTS.GRANTED
     ) {
-      console.log('All necessary permissions granted');
       return true;
     } else {
-      console.log('Some permissions were denied');
       return false;
     }
   };
@@ -362,13 +361,48 @@ const WebViewComponent = ({uri}: any) => {
     }, 100);
   };
 
-  const onNavigationStateChange = (url: any) => {
-    if (isNonSocialMediaUrl(url.url)) {
-      setLatestUrl(url.url);
-    } else {
-      setLoading(false);
-    }
-  };
+  // const onNavigationStateChange = (url: any) => {
+  //   console.log("isNonSocialMediaUrl(url.url)",isNonSocialMediaUrl(url.url))
+  //   if (isNonSocialMediaUrl(url.url)) {
+  //     setLatestUrl(url.url);
+  //   } else {
+  //     setLoading(false);
+  //   }
+  // };
+
+
+  // const isNonSocialMediaUrl = (url: string): boolean => {
+
+  //   const socialMediaDomains = [
+  //     'youtube.com',
+  //     'youtu.be',
+  //     'x.com',
+  //     'facebook.com',
+  //     'twitter.com',
+  //     'instagram.com',
+  //     'tiktok.com',
+  //     'linkedin.com',
+  //     'snapchat.com',
+  //     'pinterest.com',
+  //     'reddit.com',
+  //   ];
+
+  //   const lowerCaseUrl = url.toLowerCase();
+  //   console.log('lowerCaseUrl', lowerCaseUrl);
+  //   if(lowerCaseUrl.includes('www.facebook.com') || lowerCaseUrl.includes('fb://') ) {
+  //     Linking.openURL(lowerCaseUrl);
+  //     return false;
+  //   }else{
+  //     const match = lowerCaseUrl.match(/https?:\/\/(www\.)?([^\/]+)/);
+  //     const domain = match ? match[2] : null;
+  //   // Check if the extracted domain matches any social media domain
+  //     return !socialMediaDomains.some(socialDomain =>
+  //       domain?.includes(socialDomain),
+  //     );
+  //   }
+    
+  // };
+
 
   const isNonSocialMediaUrl = (url: string): boolean => {
     const socialMediaDomains = [
@@ -383,24 +417,66 @@ const WebViewComponent = ({uri}: any) => {
       'snapchat.com',
       'pinterest.com',
       'reddit.com',
-      'fb'
     ];
-
+  
     const lowerCaseUrl = url.toLowerCase();
-
-    // Use stricter domain matching by extracting the host
+  
+    // Comprehensive check for Facebook-related URLs
+    const isFacebookUrl = 
+      lowerCaseUrl.includes('facebook.com') || 
+      lowerCaseUrl.includes('fb.com') ||
+      lowerCaseUrl.includes('fb://');
+  
+    if (isFacebookUrl) {
+      // Attempt to open the URL outside the app
+      Linking.canOpenURL(lowerCaseUrl).then(supported => {
+        if (supported) {
+          Linking.openURL(lowerCaseUrl)
+            .catch(err => console.error('Error opening Facebook URL', err));
+        }
+      });
+      return false;
+    }
+  
+    // Check other social media domains
     const match = lowerCaseUrl.match(/https?:\/\/(www\.)?([^\/]+)/);
     const domain = match ? match[2] : null;
-
-    // Check if the extracted domain matches any social media domain
+  
     return !socialMediaDomains.some(socialDomain =>
-      domain?.includes(socialDomain),
+      domain?.includes(socialDomain)
     );
   };
+  
+  const onNavigationStateChange = (navState: any) => {
+    const { url } = navState;
+  
+    // Prevent navigation for Facebook URLs
+    if (url.toLowerCase().includes('facebook.com')) {
+      // Reset to previous URL to prevent WebView navigation
+      setCurrentUrl(latestUrl);
+      
+      // Open in external browser
+      Linking.canOpenURL(url).then(supported => {
+        if (supported) {
+          Linking.openURL(url)
+            .catch(err => console.error('Error opening Facebook URL', err));
+        }
+      });
+      
+      return false;
+    }
+  
+    // For non-Facebook social media URLs
+    if (isNonSocialMediaUrl(url)) {
+      setLatestUrl(url);
+    } else {
+      setLoading(false);
+    }
+  };
+
 
   useEffect(() => {
     const handleAppStateChange = nextAppState => {
-      console.log('App State changed to:', nextAppState);
       if (nextAppState == 'inactive') {
         setLoading(false);
       }
@@ -432,6 +508,22 @@ const WebViewComponent = ({uri}: any) => {
         ) : (
           <WebView
             source={{uri: currentUrl}}
+            onShouldStartLoadWithRequest={(request) => {
+              const { url } = request;
+              
+              // Prevent loading Facebook URLs in WebView
+              if (url.toLowerCase().includes('facebook.com')) {
+                Linking.canOpenURL(url).then(supported => {
+                  if (supported) {
+                    Linking.openURL(url)
+                      .catch(err => console.error('Error opening Facebook URL', err));
+                  }
+                });
+                return false;
+              }
+              
+              return true;
+            }}
             useWebKit={true}
             javaScriptEnabled={true}
             domStorageEnabled={true}

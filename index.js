@@ -21,9 +21,7 @@ BackgroundFetch.configure(
     InvokeSocket();
     BackgroundFetch.finish(taskId);
   },
-  (error) => {
-    console.log("[BackgroundFetch] failed to start:", error);
-  }
+  (error) => {}
 );
 
 AppRegistry.registerComponent(appName, () => App);

@@ -5,7 +5,6 @@ import PushNotification from 'react-native-push-notification';
 
 // Register background handler
 messaging().setBackgroundMessageHandler(async remoteMessage => {
-    console.log('Message handled in the background!', remoteMessage);
 
     // Extract notification data
     const { title, body }:any = remoteMessage.notification;
@@ -22,7 +21,6 @@ const NotificationsCenter = () => {
     useEffect(() => {
         PushNotification.configure({
             onNotification: function (notification) {
-                console.log('NOTIFICATION:', notification);
                 // process the notification
             },
             popInitialNotification: true,
@@ -31,7 +29,6 @@ const NotificationsCenter = () => {
 
         // Handle the app opening from a background state
      messaging().onNotificationOpenedApp(remoteMessage => {
-        console.log('Notification caused app to open from background state:', remoteMessage.notification);
         // Handle the notification data
       });
   
@@ -40,7 +37,6 @@ const NotificationsCenter = () => {
         .getInitialNotification()
         .then(remoteMessage => {
           if (remoteMessage) {
-            console.log('Notification caused app to open from quit state:', remoteMessage.notification);
             // Handle the notification data
           }
         });

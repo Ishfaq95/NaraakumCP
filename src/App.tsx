@@ -41,7 +41,6 @@ const App = () => {
         foregroundService: true,
         preventSuspend: true,
       }, (state) => {
-        console.log("- BackgroundGeolocation is configured and ready: ", state.enabled);
       });
     }
 

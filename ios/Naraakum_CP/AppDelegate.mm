@@ -7,6 +7,8 @@
 #import <RNCPushNotificationIOS.h>
 #import "RNSplashScreen.h"
 #import <TSBackgroundFetch/TSBackgroundFetch.h>
+#import <FirebaseCore/FirebaseCore.h>
+#import <FirebaseCrashlytics/FirebaseCrashlytics.h>
 
 @implementation AppDelegate
 

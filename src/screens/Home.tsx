@@ -14,12 +14,15 @@ import useMutationHook from '../Network/useMutationHook';
 import {useDispatch, useSelector} from 'react-redux';
 import {setToken} from '../shared/redux/reducers/userReducer';
 import {isTokenExpired} from '../shared/services/service';
-import {check, request, PERMISSIONS, RESULTS} from 'react-native-permissions'
-import { store } from '../shared/redux/store';
+import {check, request, PERMISSIONS, RESULTS} from 'react-native-permissions';
+import {store} from '../shared/redux/store';
+import {crashlyticsService} from '../shared/services/crashlytics/crashlytics.service';
 
 const HomeScreen = () => {
   const dispatch = useDispatch();
-  const {expiresAt,appVersionCode} = useSelector((state: any) => state.root.user);
+  const {expiresAt, appVersionCode} = useSelector(
+    (state: any) => state.root.user,
+  );
   const [appState, setAppState] = useState(AppState.currentState);
   const {mutate, isSuccess, isError, data, isLoading} = useMutationHook(
     '/authValidator/token',
@@ -27,10 +30,17 @@ const HomeScreen = () => {
     true,
   );
 
-  const {mutate:getVersionCodeFN, isSuccess:isSuccessVersionCode, isError:isErrorVersionCode, data:DataVersionCode, isLoading:isLoadingVersionCode} = useMutationHook(
-    'utilities/GetGeneralSetting',
-    'POST'
-  );
+  const {
+    mutate: getVersionCodeFN,
+    isSuccess: isSuccessVersionCode,
+    isError: isErrorVersionCode,
+    data: DataVersionCode,
+    isLoading: isLoadingVersionCode,
+  } = useMutationHook('utilities/GetGeneralSetting', 'POST');
+
+  useEffect(() => {
+    crashlyticsService.logMessage('Home screen mounted');
+  }, []);
 
   const GetTokenForAPI = () => {
     if (isTokenExpired(expiresAt)) {
@@ -40,89 +50,98 @@ const HomeScreen = () => {
           '333b394f3c3f4c3d27484b3e4c273e3f383d27323d393c274f394f383c3a3e4e4f493b3b',
         platformId: '3b',
       });
-    }else{
-      AppversionAPICall()
+    } else {
+      AppversionAPICall();
     }
   };
 
-  useEffect(()=>{
-    if(appState=="active"){
-      AppversionAPICall()
+  useEffect(() => {
+    if (appState == 'active') {
+      AppversionAPICall();
     }
-  },[appState])
-  
-    useEffect(() => {
-        const handleAppStateChange = (nextAppState) => {
-            setAppState(nextAppState);
-        };
+  }, [appState]);
 
-        // Add event listener
-        const subscription = AppState.addEventListener('change', handleAppStateChange);
+  useEffect(() => {
+    const handleAppStateChange = nextAppState => {
+      setAppState(nextAppState);
+    };
 
-        // Clean up the event listener on unmount
-        return () => {
-            subscription.remove();
-        };
-    }, []);
+    // Add event listener
+    const subscription = AppState.addEventListener(
+      'change',
+      handleAppStateChange,
+    );
 
-    const AppversionAPICall=()=>{
-      if(Platform.OS=='android'){
-        getVersionCodeFN( {
-          "GroupId": 14,
-          "Title":"Android App Version-CP"
-         })
-       
-      }else if(Platform.OS=='ios'){
-        getVersionCodeFN({
-          "GroupId": 14,
-          "Title":"IOS App Version-CP"
-         })
-      }
+    // Clean up the event listener on unmount
+    return () => {
+      subscription.remove();
+    };
+  }, []);
+
+  const AppversionAPICall = () => {
+    if (Platform.OS == 'android') {
+      getVersionCodeFN({
+        GroupId: 14,
+        Title: 'Android App Version-CP',
+      });
+    } else if (Platform.OS == 'ios') {
+      getVersionCodeFN({
+        GroupId: 14,
+        Title: 'IOS App Version-CP',
+      });
     }
+  };
 
-  const compareVersions = (version1:any, version2:any) => {
+  const compareVersions = (version1: any, version2: any) => {
     const v1 = version1.split('.').map(Number);
     const v2 = version2.split('.').map(Number);
-  
+
     for (let i = 0; i < Math.max(v1.length, v2.length); i++) {
       const num1 = v1[i] || 0; // Default to 0 if undefined
       const num2 = v2[i] || 0;
-  
+
       if (num1 > num2) return 1; // version1 is greater
       if (num1 < num2) return -1; // version2 is greater
     }
-  
+
     return 0; // Both versions are equal
   };
 
-  const RedirectURL=()=>{
-    if(Platform.OS=="android"){
-      Linking.openURL("https://play.google.com/store/apps/details?id=com.naraakum_cp")
-    }else if(Platform.OS=='ios'){
-      Linking.openURL("https://apps.apple.com/pk/app/naraakum-provider/id6738122851")
+  const RedirectURL = () => {
+    if (Platform.OS == 'android') {
+      Linking.openURL(
+        'https://play.google.com/store/apps/details?id=com.naraakum_cp',
+      );
+    } else if (Platform.OS == 'ios') {
+      Linking.openURL(
+        'https://apps.apple.com/pk/app/naraakum-provider/id6738122851',
+      );
     }
-  }
+  };
 
-  const versionCompareFunction=()=>{
+  const versionCompareFunction = () => {
     const versionCode = DataVersionCode;
-    const isApiSuccess=versionCode?.ResponseStatus?.STATUSCODE
-    if(isApiSuccess=="200"){
-      const comparisonResult = compareVersions(DataVersionCode?.AppVersion, appVersionCode);
+    const isApiSuccess = versionCode?.ResponseStatus?.STATUSCODE;
+    if (isApiSuccess == '200') {
+      const comparisonResult = compareVersions(
+        DataVersionCode?.AppVersion,
+        appVersionCode,
+      );
       if (comparisonResult > 0) {
         Alert.alert(
-          "Update available", // Title
-          "Please update to the latest version", // Message
+          'Update available', // Title
+          'Please update to the latest version', // Message
           [
-            { text: "OK", onPress: () => RedirectURL() } // Explicit OK button
-          ]
+            {text: 'OK', onPress: () => RedirectURL()}, // Explicit OK button
+          ],
         );
       }
     }
-  }
+  };
 
   useEffect(() => {
     if (isSuccessVersionCode) {
-      versionCompareFunction()
+      versionCompareFunction();
     }
     if (isErrorVersionCode) {
     }
@@ -160,25 +179,24 @@ const HomeScreen = () => {
       };
       dispatch(setToken(sessionToken));
       setTimeout(() => {
-        AppversionAPICall()
+        AppversionAPICall();
       }, 100);
     }
     if (isError) {
     }
   }, [isSuccess, isError]);
 
-
   const requestiOSPermissions = async () => {
     const cameraPermission = await request(PERMISSIONS.IOS.CAMERA);
     const microphonePermission = await request(PERMISSIONS.IOS.MICROPHONE);
     const photoLibraryPermission = await request(PERMISSIONS.IOS.PHOTO_LIBRARY);
     const mediaLibraryPermission = await request(PERMISSIONS.IOS.MEDIA_LIBRARY);
-  
+
     if (
       cameraPermission === RESULTS.GRANTED &&
       microphonePermission === RESULTS.GRANTED &&
       photoLibraryPermission === RESULTS.GRANTED &&
-      mediaLibraryPermission === RESULTS.GRANTED 
+      mediaLibraryPermission === RESULTS.GRANTED
     ) {
       return true;
     } else {
@@ -201,20 +219,23 @@ const HomeScreen = () => {
           PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
           PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
         ]);
-  
+
         if (
-          granted['android.permission.CAMERA'] === PermissionsAndroid.RESULTS.GRANTED &&
-          granted['android.permission.RECORD_AUDIO'] === PermissionsAndroid.RESULTS.GRANTED &&
-          granted['android.permission.READ_MEDIA_IMAGES'] === PermissionsAndroid.RESULTS.GRANTED &&
-          granted['android.permission.READ_MEDIA_VIDEO'] === PermissionsAndroid.RESULTS.GRANTED &&
-          granted['android.permission.READ_MEDIA_AUDIO'] === PermissionsAndroid.RESULTS.GRANTED
+          granted['android.permission.CAMERA'] ===
+            PermissionsAndroid.RESULTS.GRANTED &&
+          granted['android.permission.RECORD_AUDIO'] ===
+            PermissionsAndroid.RESULTS.GRANTED &&
+          granted['android.permission.READ_MEDIA_IMAGES'] ===
+            PermissionsAndroid.RESULTS.GRANTED &&
+          granted['android.permission.READ_MEDIA_VIDEO'] ===
+            PermissionsAndroid.RESULTS.GRANTED &&
+          granted['android.permission.READ_MEDIA_AUDIO'] ===
+            PermissionsAndroid.RESULTS.GRANTED
         ) {
         } else {
         }
-      } catch (err) {
-      }
+      } catch (err) {}
     }
-    
   }
 
   return (
@@ -222,7 +243,7 @@ const HomeScreen = () => {
       {/* <WebViewComponent uri="https://staging.innotech-sa.com/naraakum/Web/Web/Index" /> */}
       {/* <WebViewComponent uri="https://dvx.innotech-sa.com/HHC/web/Web/Index" /> */}
       {/* <WebViewComponent uri="https://nkapps.innotech-sa.com/" /> */}
-      <WebViewComponent uri="https://naraakum.com/" /> 
+      <WebViewComponent uri="https://naraakum.com/" />
     </SafeAreaView>
   );
 };

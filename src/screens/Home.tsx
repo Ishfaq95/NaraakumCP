@@ -15,6 +15,7 @@ import {useDispatch, useSelector} from 'react-redux';
 import {setToken} from '../shared/redux/reducers/userReducer';
 import {isTokenExpired} from '../shared/services/service';
 import { store } from '../shared/redux/store';
+import { crashlyticsService } from '../shared/services/crashlytics/crashlytics.service';
 
 const HomeScreen = () => {
   const dispatch = useDispatch();
@@ -43,6 +44,10 @@ const HomeScreen = () => {
       AppversionAPICall()
     }
   };
+
+  useEffect(() => {
+    crashlyticsService.logMessage('Home screen mounted');
+}, []);
 
   useEffect(()=>{
     if(appState=="active"){

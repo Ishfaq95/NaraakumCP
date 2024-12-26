@@ -42,7 +42,6 @@ class WebSocketService {
     if (!this.socket || this.socket.readyState === WebSocket.CLOSED) {
       const deviceId = await this.getDeviceId();
       const url = `${WEBSOCKET_URL}connectionMode=${presence}&deviceId=${deviceId}&communicationKey=${communicationKey}`;
-      console.log('url',url)
       this.socket = new WebSocket(url);
       this.userId=userId;
       this.socket.onopen = async () => {
@@ -52,7 +51,7 @@ class WebSocketService {
 
       this.socket.onmessage = async event => {
         const socketEvent = JSON.parse(event.data);
-        console.log('socketEvent.Command',socketEvent.Command)
+        
         if (socketEvent.Command === 67 || socketEvent.Command === 68) {
           await this.handleOnTheWayTasks(); // Call API and handle tracking on Command 67 or 68
         }
@@ -82,11 +81,9 @@ class WebSocketService {
   private async handleOnTheWayTasks(): Promise<void> {
     this.taskList=[]
     try {
-      console.log('this.userId',this.userId)
       if(this.userId){
         const result = await GetOnTheWayTasks(this.userId);
         
-      console.log('result',result.ResponseStatus.STATUSCODE)
       if (result.ResponseStatus.STATUSCODE == 200) {
         this.taskList = result.Tasks || []; // Save the result to taskList
       }else{

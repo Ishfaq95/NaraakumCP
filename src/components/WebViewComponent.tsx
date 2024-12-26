@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { StyleSheet, View, Alert, Platform, PermissionsAndroid } from 'react-native';
+import { StyleSheet, View, Alert, Platform, PermissionsAndroid, AppState } from 'react-native';
 import LoaderKit from 'react-native-loader-kit';
 import { WebView } from 'react-native-webview';
 import InAppBrowser from 'react-native-inappbrowser-reborn';
@@ -141,7 +141,8 @@ const WebViewComponent = ({ uri }:any) => {
       setCallConnected(true)
       // let urlComplete = `https://dvx.innotech-sa.com${url}`;
       // let urlComplete = `https://staging.innotech-sa.com${url}`;
-      let urlComplete = `https://nkapps.innotech-sa.com${url}`;
+      // let urlComplete = `https://nkapps.innotech-sa.com${url}`;
+      let urlComplete = `https://naraakum.com${url}`;
       const redirectUrl = getDeepLink();
       try {
         if (await InAppBrowser.isAvailable()) {
@@ -264,10 +265,61 @@ const WebViewComponent = ({ uri }:any) => {
     setLoading(false)
   };
 
-  const onNavigationStateChange=(event:any)=>{
-    const url = event.url;
-    setLatestUrl(url)
-  }
+  const onNavigationStateChange = (url: any) => {
+    if (isNonSocialMediaUrl(url.url)) {
+      setLatestUrl(url.url);
+    } else {
+      setLoading(false);
+    }
+    setLatestUrl(url.url);
+  };
+
+  const isNonSocialMediaUrl = (url: string): boolean => {
+    const socialMediaDomains = [
+      'youtube.com',
+      'youtu.be',
+      'x.com',
+      'facebook.com',
+      'twitter.com',
+      'instagram.com',
+      'tiktok.com',
+      'linkedin.com',
+      'snapchat.com',
+      'pinterest.com',
+      'reddit.com',
+    ];
+
+    const lowerCaseUrl = url.toLowerCase();
+
+    // Use stricter domain matching by extracting the host
+    const match = lowerCaseUrl.match(/https?:\/\/(www\.)?([^\/]+)/);
+    const domain = match ? match[2] : null;
+
+    // Check if the extracted domain matches any social media domain
+    return !socialMediaDomains.some(socialDomain =>
+      domain?.includes(socialDomain),
+    );
+  };
+
+  useEffect(() => {
+    const handleAppStateChange = nextAppState => {
+      console.log('App State changed to:', nextAppState);
+      if (nextAppState == 'inactive') {
+        setLoading(false);
+      }
+    };
+
+    // Add event listener
+    const subscription = AppState.addEventListener(
+      'change',
+      handleAppStateChange,
+    );
+
+    // Clean up the event listener on unmount
+    return () => {
+      subscription.remove();
+    };
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -351,4 +403,3 @@ const styles = StyleSheet.create({
 });
 
 export default WebViewComponent;
-

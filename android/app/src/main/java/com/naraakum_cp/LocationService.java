@@ -60,36 +60,6 @@ public class LocationService extends Service {
         return START_STICKY;
     }
 
-    // private void startForegroundService() {
-    //     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-    //         NotificationChannel channel = new NotificationChannel(
-    //                 "tracking_channel",
-    //                 "Live Tracking",
-    //                 NotificationManager.IMPORTANCE_DEFAULT
-    //         );
-    //         NotificationManager manager = getSystemService(NotificationManager.class);
-    //         manager.createNotificationChannel(channel);
-    //     }
-
-    //     Intent notificationIntent = new Intent(this, MainActivity.class);
-
-    //     PendingIntent pendingIntent = PendingIntent.getActivity(
-    //             this,
-    //             0,
-    //             notificationIntent,
-    //             Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ? PendingIntent.FLAG_IMMUTABLE : 0
-    //     );
-
-    //     Notification notification = new NotificationCompat.Builder(this, "tracking_channel")
-    //             .setContentTitle("Live Tracking")
-    //             .setContentText("Tracking your location...")
-    //             .setSmallIcon(R.mipmap.ic_launcher) // Ensure the icon is correct
-    //             .setContentIntent(pendingIntent)
-    //             .build();
-
-    //     startForeground(1, notification);
-    // }
-
     private void startForegroundService() {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
         NotificationChannel channel = new NotificationChannel(

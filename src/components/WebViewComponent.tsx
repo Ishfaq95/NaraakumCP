@@ -293,6 +293,10 @@ const WebViewComponent = ({uri}: any) => {
       .then(async () => {
         setLoading(false);
         Alert.alert('File downloaded successfully.');
+
+        if (Platform.OS === 'ios') {
+          RNFetchBlob.ios.previewDocument(uniqueFilePath);
+        }
       })
       .catch(error => {
         setLoading(false);
@@ -355,9 +359,9 @@ const WebViewComponent = ({uri}: any) => {
   };
 
   const handleLoadStart = () => {
-    setReloadWebView(true)
+    setReloadWebView(true);
     setTimeout(() => {
-      setReloadWebView(false)
+      setReloadWebView(false);
     }, 100);
   };
 
@@ -369,7 +373,6 @@ const WebViewComponent = ({uri}: any) => {
   //     setLoading(false);
   //   }
   // };
-
 
   // const isNonSocialMediaUrl = (url: string): boolean => {
 
@@ -400,9 +403,8 @@ const WebViewComponent = ({uri}: any) => {
   //       domain?.includes(socialDomain),
   //     );
   //   }
-    
-  // };
 
+  // };
 
   const isNonSocialMediaUrl = (url: string): boolean => {
     const socialMediaDomains = [
@@ -418,54 +420,56 @@ const WebViewComponent = ({uri}: any) => {
       'pinterest.com',
       'reddit.com',
     ];
-  
+
     const lowerCaseUrl = url.toLowerCase();
-  
+
     // Comprehensive check for Facebook-related URLs
-    const isFacebookUrl = 
-      lowerCaseUrl.includes('facebook.com') || 
+    const isFacebookUrl =
+      lowerCaseUrl.includes('facebook.com') ||
       lowerCaseUrl.includes('fb.com') ||
       lowerCaseUrl.includes('fb://');
-  
+
     if (isFacebookUrl) {
       // Attempt to open the URL outside the app
       Linking.canOpenURL(lowerCaseUrl).then(supported => {
         if (supported) {
-          Linking.openURL(lowerCaseUrl)
-            .catch(err => console.error('Error opening Facebook URL', err));
+          Linking.openURL(lowerCaseUrl).catch(err =>
+            console.error('Error opening Facebook URL', err),
+          );
         }
       });
       return false;
     }
-  
+
     // Check other social media domains
     const match = lowerCaseUrl.match(/https?:\/\/(www\.)?([^\/]+)/);
     const domain = match ? match[2] : null;
-  
+
     return !socialMediaDomains.some(socialDomain =>
-      domain?.includes(socialDomain)
+      domain?.includes(socialDomain),
     );
   };
-  
+
   const onNavigationStateChange = (navState: any) => {
-    const { url } = navState;
-  
+    const {url} = navState;
+
     // Prevent navigation for Facebook URLs
     if (url.toLowerCase().includes('facebook.com')) {
       // Reset to previous URL to prevent WebView navigation
       setCurrentUrl(latestUrl);
-      
+
       // Open in external browser
       Linking.canOpenURL(url).then(supported => {
         if (supported) {
-          Linking.openURL(url)
-            .catch(err => console.error('Error opening Facebook URL', err));
+          Linking.openURL(url).catch(err =>
+            console.error('Error opening Facebook URL', err),
+          );
         }
       });
-      
+
       return false;
     }
-  
+
     // For non-Facebook social media URLs
     if (isNonSocialMediaUrl(url)) {
       setLatestUrl(url);
@@ -473,7 +477,6 @@ const WebViewComponent = ({uri}: any) => {
       setLoading(false);
     }
   };
-
 
   useEffect(() => {
     const handleAppStateChange = nextAppState => {
@@ -508,20 +511,21 @@ const WebViewComponent = ({uri}: any) => {
         ) : (
           <WebView
             source={{uri: currentUrl}}
-            onShouldStartLoadWithRequest={(request) => {
-              const { url } = request;
-              
+            onShouldStartLoadWithRequest={request => {
+              const {url} = request;
+
               // Prevent loading Facebook URLs in WebView
               if (url.toLowerCase().includes('facebook.com')) {
                 Linking.canOpenURL(url).then(supported => {
                   if (supported) {
-                    Linking.openURL(url)
-                      .catch(err => console.error('Error opening Facebook URL', err));
+                    Linking.openURL(url).catch(err =>
+                      console.error('Error opening Facebook URL', err),
+                    );
                   }
                 });
                 return false;
               }
-              
+
               return true;
             }}
             useWebKit={true}

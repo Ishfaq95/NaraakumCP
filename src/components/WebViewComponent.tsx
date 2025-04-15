@@ -18,6 +18,8 @@ import {check, request, PERMISSIONS, RESULTS} from 'react-native-permissions';
 import RNFetchBlob from 'rn-fetch-blob';
 import WebSocketService from './WebSocketService';
 import {getLocationPermission} from './LocationService';
+import useMutationHook from '../Network/useMutationHook';
+import PushNotification from 'react-native-push-notification';
 
 const WebViewComponent = ({uri}: any) => {
   const dispatch = useDispatch();
@@ -32,6 +34,66 @@ const WebViewComponent = ({uri}: any) => {
   const webSocketService = WebSocketService.getInstance();
   const sleep = (timeout: number) =>
     new Promise<void>(resolve => setTimeout(resolve, timeout));
+
+  const {
+    mutate: getSystemNotificationFN,
+    isSuccess: isSuccessSystemNotification,
+    isError: isErrorSystemNotifiction,
+    data: SystemNotificationList,
+    isLoading: isLoadingSystemNotification,
+  } = useMutationHook('reminders/GetSystemReminderList', 'POST');
+
+  useEffect(() => {
+    if (isSuccessSystemNotification) {
+      PushNotification.cancelAllLocalNotifications();
+      scheduleNotification(SystemNotificationList?.ReminderList);
+    }
+    if (isErrorSystemNotifiction) {
+    }
+  }, [isSuccessSystemNotification, isErrorSystemNotifiction]);
+
+  const scheduleNotification = (notificationList: any) => {
+    notificationList.map((item: any, index: any) => {
+      const data = item;
+      // Convert UTC date string to local Date object
+      const localDate = new Date(data.ReminderDate); // Date object auto-adjusts to local timezone
+
+      // Optional: skip past dates
+      if (localDate <= new Date()) {
+        console.log(`Skipping past notification with id: ${data.Id}`);
+        return;
+      }
+
+      const reminderObj = {
+        ...item,
+        notificationFrom: 'reminder',
+      };
+
+      PushNotification.localNotificationSchedule({
+        id: data.Id,
+        title: data.Subject,
+        message: data.NotificationBody,
+        date: localDate,
+        // date: new Date(Date.now() + 60 * 1000),
+        playSound: true,
+        soundName: 'default',
+        userInfo: reminderObj,
+        allowWhileIdle: true, // important for background
+      });
+    });
+
+    // PushNotification.getScheduledLocalNotifications(notifs => {
+    //   console.log('Currently Scheduled Notifications:', notifs.length);
+    // });
+  };
+
+  useEffect(() => {
+    if (userinfo) {
+      getSystemNotificationFN({
+        UserloginInfo: userinfo.id,
+      });
+    }
+  }, [userinfo]);
 
   useEffect(() => {
     if (userinfo) {
@@ -152,10 +214,10 @@ const WebViewComponent = ({uri}: any) => {
 
     if (url && url.includes('OnlineSessionRoom')) {
       // let urlComplete = `https://staging.innotech-sa.com${url}`;
-      // let urlComplete = `https://dvx.innotech-sa.com${url}`;
+      let urlComplete = `https://dvx.innotech-sa.com${url}`;
       // let urlComplete = `https://nkapps.innotech-sa.com${url}`;
 
-      let urlComplete = `https://naraakum.com${url}`;
+      // let urlComplete = `https://naraakum.com${url}`;
 
       const redirectUrl = getDeepLink();
 

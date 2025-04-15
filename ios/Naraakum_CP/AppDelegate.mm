@@ -31,12 +31,6 @@
   return [super application:application didFinishLaunchingWithOptions:launchOptions];
 }
 
-//Called when a notification is delivered to a foreground app.
--(void)userNotificationCenter:(UNUserNotificationCenter *)center willPresentNotification:(UNNotification *)notification withCompletionHandler:(void (^)(UNNotificationPresentationOptions options))completionHandler
-{
-  completionHandler(UNNotificationPresentationOptionSound | UNNotificationPresentationOptionAlert | UNNotificationPresentationOptionBadge);
-}
-
 - (NSURL *)sourceURLForBridge:(RCTBridge *)bridge
 {
   return [self bundleURL];
@@ -74,6 +68,16 @@ didReceiveNotificationResponse:(UNNotificationResponse *)response
 {
   [RNCPushNotificationIOS didReceiveNotificationResponse:response];
 }
+
+
+-(void)userNotificationCenter:(UNUserNotificationCenter *)center willPresentNotification:(UNNotification *)notification withCompletionHandler:(void (^)(UNNotificationPresentationOptions options))completionHandler
+{
+  //THIS ONE, it allows you to call javascript even on foreground state.
+  NSDictionary *userInfo = notification.request.content.userInfo;
+  [RNCPushNotificationIOS didReceiveRemoteNotification:userInfo];
+  completionHandler(UNNotificationPresentationOptionSound | UNNotificationPresentationOptionAlert | UNNotificationPresentationOptionBadge);
+}
+
 
 
 @end

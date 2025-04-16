@@ -42,6 +42,7 @@ const useMutationHook = <TData = unknown>(
         'Authorization-Required': !noAuth // Set the flag to conditionally include the token
       },
     });
+
     return response.data;
   };
 

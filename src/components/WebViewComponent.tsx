@@ -9,6 +9,14 @@ import { setTopic, setUserInfo } from '../shared/redux/reducers/userReducer';
 import RNFetchBlob from 'rn-fetch-blob';
 import WebSocketService from './WebSocketService';
 import { getLocationPermission } from './LocationService';
+import useMutationHook from '../Network/useMutationHook';
+import PushNotification from 'react-native-push-notification';
+import notifee, {
+  AndroidImportance,
+  EventType,
+  TimestampTrigger,
+  TriggerType,
+} from '@notifee/react-native';
 
 const WebViewComponent = ({ uri }:any) => {
   const dispatch = useDispatch()
@@ -24,6 +32,153 @@ const WebViewComponent = ({ uri }:any) => {
   const sleep = (timeout: number) =>
     new Promise<void>(resolve => setTimeout(resolve, timeout));
   
+  const {
+    mutate: getSystemNotificationFN,
+    isSuccess: isSuccessSystemNotification,
+    isError: isErrorSystemNotifiction,
+    data: SystemNotificationList,
+    isLoading: isLoadingSystemNotification,
+  } = useMutationHook('reminders/GetSystemReminderList', 'POST');
+
+  useEffect(() => {
+    if (isSuccessSystemNotification) {
+      PushNotification.cancelAllLocalNotifications();
+      
+      scheduleNotification(SystemNotificationList?.ReminderList);
+    }
+    if (isErrorSystemNotifiction) {
+      console.log('error message',isErrorSystemNotifiction)
+    }
+  }, [isSuccessSystemNotification, isErrorSystemNotifiction]);
+
+  const scheduleNotification = async (notificationList: any[]) => {
+    await notifee.cancelAllNotifications();
+    
+    try {
+      for (const item of notificationList) {
+        const localDate = new Date(item.ReminderDate);
+        // const localDate = new Date(Date.now() + 60 * 1000);
+        
+  
+        const trigger: TimestampTrigger = {
+          type: TriggerType.TIMESTAMP,
+          timestamp: localDate.getTime(), // cleaner and safer
+        };
+  
+       
+          await notifee.createTriggerNotification(
+            {
+              id: `reminder-${item.Id}`,
+              title: item.Subject || 'Reminder',
+              body: item.NotificationBody || 'You have a reminder',
+              android: {
+                channelId: 'default',
+                pressAction: {
+                  id: 'default',
+                },
+              },
+              data: {
+                  CatNotificationPlatformId: item.CatNotificationPlatformId,
+                  CreatedDate: item.CreatedDate,
+                  Id:item.Id,
+                  NotificationBody: item.NotificationBody,
+                  ReceiverId: item.ReceiverId,
+                  ReminderDate: item.ReminderDate,
+                  SchedulingDate: item.SchedulingDate,
+                  SchedulingTime: item.SchedulingTime,
+                  Subject: item.Subject,
+                  TaskId: item.TaskId,
+                  VideoSDKMeetingId: item.VideoSDKMeetingId || "Not Found",
+                notificationFrom: 'reminder',
+              },
+            },
+            trigger
+          );
+        
+      }
+  
+      const notifeeNotifs = await notifee.getTriggerNotifications();
+      console.log('✅ Notifee Scheduled Notifications:', notifeeNotifs);
+    } catch (error) {
+      console.error('🔥 Error scheduling notifications:', error);
+    }
+  };
+
+  // const scheduleNotification = async (notificationList: any) => {
+  //   notificationList.map(async (item: any, index: any) => {
+  //     const data = item;
+  //     // Convert UTC date string to local Date object
+  //     const localDate = new Date(data.ReminderDate); // Date object auto-adjusts to local timezone
+
+  //     // Optional: skip past dates
+  //     if (localDate <= new Date()) {
+  //       console.log(`Skipping past notification with id: ${data.Id}`);
+  //       return;
+  //     }
+
+  //     const reminderObj = {
+  //       ...item,
+  //       notificationFrom: 'reminder',
+  //     };
+
+  //     const date = new Date(Date.now());
+  //     date.setMinutes(date.getMinutes() + 1); // 1 minute from now
+
+  //     const trigger: TimestampTrigger = {
+  //       type: TriggerType.TIMESTAMP,
+  //       timestamp: date.getTime(),
+  //       repeatFrequency: undefined,
+  //     };
+
+  //     if (index == 0) {
+  //       await notifee.createTriggerNotification(
+  //         {
+  //           title: 'New Offer 🎁',
+  //           body: 'Tap to view your special offer!',
+  //           android: {
+  //             channelId: 'default',
+  //             pressAction: {
+  //               id: 'default',
+  //             },
+  //           },
+  //           // 👇 Attach your custom data here
+  //           data: {
+  //             type: 'promo',
+  //             itemId: '12345',
+  //           },
+  //         },
+  //         trigger,
+  //       );
+  //       // PushNotification.localNotificationSchedule({
+  //       //   channelId: "com.naraakm.naraakumPatient",
+  //       //   id: data.Id,
+  //       //   title: data.Subject,
+  //       //   message: data.NotificationBody,
+  //       //   // date: localDate,
+  //       //   date: new Date(Date.now() + 60 * 1000),
+  //       //   playSound: true,
+  //       //   soundName: 'default',
+  //       //   userInfo: reminderObj,
+  //       //   allowWhileIdle: true, // important for background
+  //       // });
+  //     }
+  //   });
+
+  //   const notifications = await notifee.getTriggerNotifications();
+  //   console.log('notification list', notifications);
+  //   PushNotification.getScheduledLocalNotifications(notifs => {
+  //     console.log('Currently Scheduled Notifications:', notifs);
+  //   });
+  // };
+
+  useEffect(() => {
+    if (userinfo) {
+      getSystemNotificationFN({
+        UserloginInfo: userinfo.Id,
+      });
+    }
+  }, [userinfo]);
+
   useEffect(()=>{
     
     if(userinfo){
@@ -139,10 +294,10 @@ const WebViewComponent = ({ uri }:any) => {
 
     if (url && url.includes('OnlineSessionRoom')) {
       setCallConnected(true)
-      // let urlComplete = `https://dvx.innotech-sa.com${url}`;
+      let urlComplete = `https://dvx.innotech-sa.com${url}`;
       // let urlComplete = `https://staging.innotech-sa.com${url}`;
       // let urlComplete = `https://nkapps.innotech-sa.com${url}`;
-      let urlComplete = `https://naraakum.com${url}`;
+      // let urlComplete = `https://naraakum.com${url}`;
       const redirectUrl = getDeepLink();
       try {
         if (await InAppBrowser.isAvailable()) {

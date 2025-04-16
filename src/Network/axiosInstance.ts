@@ -1,9 +1,9 @@
 import axios, { AxiosResponse, InternalAxiosRequestConfig, AxiosError } from 'axios';
 import { store } from '../shared/redux/store';
 
-// const BaseURL='https://hhcnode.innotech-sa.com/api/'
+const BaseURL='https://hhcnode.innotech-sa.com/api/'
 // const BaseURL='https://stghhcapis.innotech-sa.com/api/';
-const BaseURL='https://nk-pro-apis.innotech-sa.com/api/'
+// const BaseURL='https://nk-pro-apis.innotech-sa.com/api/'
 
 // Create an Axios instance
 const axiosInstance = axios.create({
@@ -26,6 +26,7 @@ axiosInstance.interceptors.request.use(
   },
   (error: AxiosError): Promise<AxiosError> => {
     // Do something with request error
+    console.log('Error==>',error)
     return Promise.reject(error);
   }
 );
@@ -38,6 +39,7 @@ axiosInstance.interceptors.response.use(
   },
   (error: AxiosError): Promise<AxiosError> => {
     // Any status codes that fall outside the range of 2xx cause this function to trigger
+    console.log('error==>',error.response)
     if (error.response && error.response.status === 401) {
       // Handle unauthorized errors, logout user, etc.
       console.error('Unauthorized access - perhaps redirect to login?');

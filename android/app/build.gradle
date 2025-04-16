@@ -136,6 +136,12 @@ dependencies {
 
      implementation 'com.google.firebase:firebase-crashlytics:18.2.13'
 
+     implementation("androidx.browser:browser") {
+        version {
+            strictly("1.8.0")
+        }
+    }
+
     if (hermesEnabled.toBoolean()) {
         implementation("com.facebook.react:hermes-android")
     } else {

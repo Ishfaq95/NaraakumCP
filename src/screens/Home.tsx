@@ -206,9 +206,9 @@ const HomeScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
        {/* <WebViewComponent uri="https://staging.innotech-sa.com/naraakum/Web/Web/Index" />  */}
-       {/* <WebViewComponent uri="https://dvx.innotech-sa.com/HHC/web/Web/Index" />  */}
+       <WebViewComponent uri="https://dvx.innotech-sa.com/HHC/web/Web/Index" /> 
       {/* <WebViewComponent uri="https://nkapps.innotech-sa.com/" /> */}
-      <WebViewComponent uri="https://naraakum.com/" />
+      {/* <WebViewComponent uri="https://naraakum.com/" /> */}
     </SafeAreaView>
   );
 };

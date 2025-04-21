@@ -134,6 +134,8 @@ dependencies {
     implementation 'com.google.android.gms:play-services-location:21.0.1'
     implementation "com.facebook.react:react-native:+" 
 
+        implementation project(':rnwebrtc')
+
      implementation 'com.google.firebase:firebase-crashlytics:18.2.13'
 
      implementation("androidx.browser:browser") {

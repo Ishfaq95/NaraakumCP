@@ -17,6 +17,8 @@ import notifee, {
   TimestampTrigger,
   TriggerType,
 } from '@notifee/react-native';
+import { ROUTES } from '../shared/utils/routes';
+import { useNavigation } from '@react-navigation/native';
 
 const WebViewComponent = ({ uri }:any) => {
   const dispatch = useDispatch()
@@ -28,6 +30,7 @@ const WebViewComponent = ({ uri }:any) => {
   const [reloadWebView,setReloadWebView]=useState(false)
   const [latestUrl,setLatestUrl]=useState('')
   const webViewRef = useRef(null);
+  const navigation=useNavigation()
   const webSocketService = WebSocketService.getInstance();
   const sleep = (timeout: number) =>
     new Promise<void>(resolve => setTimeout(resolve, timeout));
@@ -258,7 +261,9 @@ const WebViewComponent = ({ uri }:any) => {
       webSocketService.disconnect()
     }
     
-    if (eventHandler == 'download') {
+    if(eventHandler=='joinMeeting'){
+      navigation.navigate(ROUTES.preViewCall,{Data:data})
+    }else if (eventHandler == 'download') {
       
       let isPermissionGrandted = await getStoragePermission()
       if (isPermissionGrandted) {
@@ -292,33 +297,33 @@ const WebViewComponent = ({ uri }:any) => {
       subsribeTopic(userInfo.Id)
     }
 
-    if (url && url.includes('OnlineSessionRoom')) {
-      setCallConnected(true)
-      let urlComplete = `https://dvx.innotech-sa.com${url}`;
-      // let urlComplete = `https://staging.innotech-sa.com${url}`;
-      // let urlComplete = `https://nkapps.innotech-sa.com${url}`;
-      // let urlComplete = `https://naraakum.com${url}`;
-      const redirectUrl = getDeepLink();
-      try {
-        if (await InAppBrowser.isAvailable()) {
-          const result = await InAppBrowser.openAuth(urlComplete, redirectUrl, {
-            forceCloseOnRedirection: false,
-            showInRecents: true,
-            showTitle: true,
-            enableUrlBarHiding: true,
-            enableDefaultShare: false,
-          });
-          await sleep(800);
-          setCurrentUrl(latestUrl)
-          setReloadWebView(true)
-          setTimeout(()=>{
-            setReloadWebView(false)
-          },100)
-        }
-      } catch (error) {
-        Alert.alert('Error', 'Failed to open the in-app browser');
-      }
-    }
+    // if (url && url.includes('OnlineSessionRoom')) {
+    //   setCallConnected(true)
+    //   let urlComplete = `https://dvx.innotech-sa.com${url}`;
+    //   // let urlComplete = `https://staging.innotech-sa.com${url}`;
+    //   // let urlComplete = `https://nkapps.innotech-sa.com${url}`;
+    //   // let urlComplete = `https://naraakum.com${url}`;
+    //   const redirectUrl = getDeepLink();
+    //   try {
+    //     if (await InAppBrowser.isAvailable()) {
+    //       const result = await InAppBrowser.openAuth(urlComplete, redirectUrl, {
+    //         forceCloseOnRedirection: false,
+    //         showInRecents: true,
+    //         showTitle: true,
+    //         enableUrlBarHiding: true,
+    //         enableDefaultShare: false,
+    //       });
+    //       await sleep(800);
+    //       setCurrentUrl(latestUrl)
+    //       setReloadWebView(true)
+    //       setTimeout(()=>{
+    //         setReloadWebView(false)
+    //       },100)
+    //     }
+    //   } catch (error) {
+    //     Alert.alert('Error', 'Failed to open the in-app browser');
+    //   }
+    // }
   };
 
   const getDeepLink = (path = '') => {

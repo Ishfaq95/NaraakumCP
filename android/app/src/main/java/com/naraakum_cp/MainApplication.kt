@@ -16,6 +16,7 @@ import com.facebook.react.defaults.DefaultReactNativeHost
 import com.facebook.soloader.SoLoader
 import org.devio.rn.splashscreen.SplashScreenReactPackage;
 import com.naraakum_cp.LocationModule
+import live.videosdk.rnwebrtc.WebRTCModulePackage;
 
 class MainApplication : Application(), ReactApplication {
 
@@ -24,6 +25,7 @@ class MainApplication : Application(), ReactApplication {
         override fun getPackages(): List<ReactPackage> =
             PackageList(this).packages.apply {
               // Manually add LocationModule package here
+              add(WebRTCModulePackage())
               add(object : ReactPackage {
                 override fun createNativeModules(reactContext: ReactApplicationContext): List<NativeModule> {
                   return listOf(LocationModule(reactContext)) // Register LocationModule

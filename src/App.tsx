@@ -17,6 +17,7 @@ import {CrashlyticsErrorBoundary} from './components/CrashlyticsErrorBoundary';
 import {CrashlyticsProvider} from './components/CrashlyticsProvider';
 import crashlytics from '@react-native-firebase/crashlytics';
 import {Text, TouchableOpacity, View} from 'react-native';
+import { initializeI18Next } from './utils/language/i18nextConfig';
 
 const App = () => {
   useEffect(() => {
@@ -26,6 +27,11 @@ const App = () => {
     requestUserPermission();
   }, []);
 
+  useEffect(() => {
+    // Initialize i18n with the default language
+    initializeI18Next();
+  }, []);
+  
   const requestUserPermission = async () => {
     const authStatus = await messaging().requestPermission();
     const enabled =

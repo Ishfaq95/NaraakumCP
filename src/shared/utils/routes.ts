@@ -1,5 +1,8 @@
 export const ROUTES = {
     Home: 'Home',
-    AlarmScreen:'AlarmScreen'
+    AlarmScreen:'AlarmScreen',
+    preViewCall:'preViewCall',
+    VideoCallScreen:'VideoCallScreen',
+    Meeting: "Meeting_Screen",
   };
   

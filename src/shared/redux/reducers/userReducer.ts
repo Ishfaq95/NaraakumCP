@@ -14,7 +14,7 @@ const initialState: State = {
   topic: null,
   token: null,
   expiresAt: null,
-  appVersionCode: Platform.OS=="android"? "1.0.1":"1.0.1"
+  appVersionCode: Platform.OS=="android"? "1.0.1":"1.0.3"
 };
 
 export const userReducer = createSlice({

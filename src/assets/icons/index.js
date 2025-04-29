@@ -1,5 +1,18 @@
 import MicOn from "./MicOn";
 import MicOff from "./MicOff";
+import RightArrow from "./RightArrow";
+import RightArrowWhite from "./RightArrowWhite";
+import MessageSent from "./MessageSent";
+import MessageDelivered from "./MessageDelivered";
+import MessageSeen from "./MessageSeen";
+import DocumentIcon from "./DocumentIcon";
+import DocumentIconBlack from "./DocumentIconBlack";
+import DownloadIcon from "./DownloadIcon";
+import DownloadIconBlack from "./DownloadIconBlack";
+import VoiceNoteIcon from "./VoiceNoteIcon";
+import VoiceNoteIconBlack from "./VoiceNoteIconBlack";
+import SendIcon from "./SendIcon";
+import ClipIcon from "./ClipIcon";
 
 import VideoOn from "./VideoOn";
 import VideoOff from "./VideoOff";
@@ -42,5 +55,18 @@ export {
   Recording,
   Participants,
   NetworkIcon,
-  Speaker
+  Speaker,
+  RightArrow,
+  RightArrowWhite,
+  MessageSent,
+  MessageDelivered,
+  MessageSeen,
+  DocumentIcon,
+  DocumentIconBlack,
+  DownloadIcon,
+  DownloadIconBlack,
+  VoiceNoteIcon,
+  VoiceNoteIconBlack,
+  SendIcon,
+  ClipIcon
 };

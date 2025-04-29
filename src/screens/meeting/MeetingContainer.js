@@ -10,7 +10,7 @@ import WaitingToJoinView from "./Components/WaitingToJoinView";
 import React from "react";
 import VideoCallScreen from "../VideoSDK/VideoCallScreen";
 
-export default function MeetingContainer({ webcamEnabled, meetingType,SessionStartTime,Name }) {
+export default function MeetingContainer({ webcamEnabled, meetingType,SessionStartTime, sessionEndTime,Name,Data }) {
   const [isJoined, setJoined] = useState(false);
   const [participantLimit, setParticipantLimit] = useState(false);
 
@@ -49,7 +49,7 @@ export default function MeetingContainer({ webcamEnabled, meetingType,SessionSta
   }, []);
 
   return isJoined ? (
-    <VideoCallScreen sessionStartTime={SessionStartTime} displayName={Name} />
+    <VideoCallScreen sessionStartTime={SessionStartTime} sessionEndTime={sessionEndTime} displayName={Name} Data={Data} />
     // <OneToOneMeetingViewer />
   ) : (
     <WaitingToJoinView />

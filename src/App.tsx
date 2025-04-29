@@ -55,6 +55,7 @@ const App = () => {
                   environment: 'development',
                 }}>
                 <NavigationContainer ref={navigationRef}>
+                
                   <Routes />
                   <NotificationsCenter />
                 </NavigationContainer>

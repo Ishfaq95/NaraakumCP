@@ -13,11 +13,10 @@ const AuthStack = () => {
   return (
     <>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name={ROUTES.preViewCall} component={PreViewScreen} />
         <Stack.Screen name={ROUTES.Home} component={HomeScreen} />
         <Stack.Screen name={ROUTES.AlarmScreen} component={AlarmScreen} />
 
-        {/* <Stack.Screen name={ROUTES.preViewCall} component={PreViewScreen} /> */}
+        <Stack.Screen name={ROUTES.preViewCall} component={PreViewScreen} />
       
       <Stack.Screen name={ROUTES.VideoCallScreen} component={VideoCallScreen} />
       <Stack.Screen name={ROUTES.Meeting} component={meeting} />

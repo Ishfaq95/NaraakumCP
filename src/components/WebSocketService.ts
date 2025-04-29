@@ -21,6 +21,7 @@ class WebSocketService {
   private watchId: number | null = null;
   private taskList: any[] = [];
   private userId:any=null;
+  private messageCallbacks: Map<string, Function> = new Map();
 
   private constructor() {
     // Private constructor to enforce singleton pattern
@@ -200,6 +201,43 @@ class WebSocketService {
       this.watchId = null; // Clear the watchId reference
       console.log('Location updates stopped.');
     }
+  }
+
+  // Get the socket instance (for use in components to directly add listeners)
+  public getSocket(): WebSocket | null {
+    return this.socket;
+  }
+
+  // Check if socket is connected
+  public isSocketConnected(): boolean {
+    return this.isConnected && this.socket?.readyState === WebSocket.OPEN;
+  }
+
+  public async sendMessage(messageData: any): Promise<any> {
+    return new Promise((resolve, reject) => {
+      if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
+        reject(new Error('WebSocket not connected'));
+        return;
+      }
+
+      // Send the data
+      try {
+        this.socket.send(JSON.stringify(messageData));
+        resolve(messageData);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  // Register a callback for specific message types
+  public registerMessageCallback(messageType: string, callback: Function): void {
+    this.messageCallbacks.set(messageType, callback);
+  }
+
+  // Unregister a callback
+  public unregisterMessageCallback(messageType: string): void {
+    this.messageCallbacks.delete(messageType);
   }
 
   public disconnect(): void {

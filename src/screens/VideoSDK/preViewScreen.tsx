@@ -7,7 +7,14 @@ import {
   useMediaDevice,
 } from '@videosdk.live/react-native-sdk';
 import React, {useEffect, useState} from 'react';
-import {Text, TouchableOpacity, View, I18nManager} from 'react-native';
+import {
+  Text,
+  TouchableOpacity,
+  View,
+  I18nManager,
+  Platform,
+  SafeAreaView,
+} from 'react-native';
 import colors from '../../shared/utils/color';
 import VideoOff from '../../assets/icons/VideoOff';
 import VideoOn from '../../assets/icons/VideoOn';
@@ -31,6 +38,7 @@ import {LangCode} from '../../utils/language/LanguageUtils';
 import {check, PERMISSIONS, request, RESULTS} from 'react-native-permissions';
 import Svg, {Path} from 'react-native-svg';
 import AudioRecord from 'react-native-audio-record';
+import RightArrowIcon from '../../assets/icons/RightArrow';
 
 const width = 200;
 
@@ -46,22 +54,24 @@ const PreViewScreen = ({navigation, route}: any) => {
   ];
 
   const {t, i18n} = useTranslation();
-  const displayName = route?.params?.Data?.displayName;
+  const displayName = route?.params?.Data?.Name;
   const meetingId = route?.params?.Data?.meetingId;
   const sessionStartTime = route?.params?.Data?.sessionStartTime;
+  const sessionEndTime = route?.params?.Data?.sessionEndTime;
 
   const [recording, setRecording] = useState(false);
   const [volume, setVolume] = useState(0);
   const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
-    checkPermission();
+    if (Platform.OS == 'android') {
+      checkPermission();
+    }
 
     // AudioRecord.on('data', data => {
-      
-    //   // const volume = calculateVolume(data); // You can use a method to calculate volume
-    //   // console.log('volume',volume)
-    //   // setVolume(volume);
+    //   const volume = calculateVolume(data); // You can use a method to calculate volume
+    //   console.log('volume', volume);
+    //   setVolume(volume);
     // });
   }, []);
 
@@ -81,11 +91,11 @@ const PreViewScreen = ({navigation, route}: any) => {
   const prepareRecording = () => {
     // Initialize audio record settings
     AudioRecord.init({
-      sampleRate: 16000,  // default 44100
-      channels: 1,        // 1 or 2, default 1
-      bitsPerSample: 16,  // 8 or 16, default 16
-      audioSource: 6,     // android only (see below)
-      wavFile: 'test.wav' // default 'audio.wav'
+      sampleRate: 16000, // default 44100
+      channels: 1, // 1 or 2, default 1
+      bitsPerSample: 16, // 8 or 16, default 16
+      audioSource: 6, // android only (see below)
+      wavFile: 'test.wav', // default 'audio.wav'
     });
   };
 
@@ -107,7 +117,7 @@ const PreViewScreen = ({navigation, route}: any) => {
     }
   };
 
-  const calculateVolume = (base64Data) => {
+  const calculateVolume = base64Data => {
     // Step 1: Decode base64 to binary buffer
     const binaryString = atob(base64Data); // Decode base64 string
     const len = binaryString.length;
@@ -116,10 +126,10 @@ const PreViewScreen = ({navigation, route}: any) => {
     for (let i = 0; i < len; i++) {
       view[i] = binaryString.charCodeAt(i);
     }
-  
+
     // Step 2: Create Int16Array from the buffer
-    const pcm = new Int16Array(buffer); 
-    
+    const pcm = new Int16Array(buffer);
+
     // Step 3: Calculate the volume
     const sumSquares = pcm.reduce((sum, value) => sum + value * value, 0);
     return Math.sqrt(sumSquares / pcm.length);
@@ -130,9 +140,11 @@ const PreViewScreen = ({navigation, route}: any) => {
     const frequency = 3; // Number of waves on the screen
     const pathHeight = 100; // Height of the wave
     let path = 'M0 ' + pathHeight / 2 + ' ';
-    
+
     for (let i = 0; i < width; i++) {
-      const y = pathHeight / 2 + amplitude * Math.sin((i / width) * frequency * Math.PI * 2);
+      const y =
+        pathHeight / 2 +
+        amplitude * Math.sin((i / width) * frequency * Math.PI * 2);
       path += `L${i} ${y} `;
     }
 
@@ -220,18 +232,18 @@ const PreViewScreen = ({navigation, route}: any) => {
   };
 
   const onJoinMeeting = () => {
-    // navigation.navigate(ROUTES.VideoCallScreen)
-    // if(displayName && meetingId && videoSDKToken){
     if (videoSDKToken) {
       const paramsVal = {
         name: displayName,
         token: videoSDKToken,
-        meetingId: '1w67-n7b1-xtz0',
+        meetingId: meetingId,
         micEnabled: micOn,
         webcamEnabled: videoOn,
         meetingType: meetingType.key,
         defaultCamera: facingMode === 'user' ? 'front' : 'back',
         sessionStartTime: sessionStartTime,
+        sessionEndTime: sessionEndTime,
+        Data: route?.params,
       };
 
       navigation.navigate(ROUTES.Meeting, paramsVal);
@@ -244,18 +256,17 @@ const PreViewScreen = ({navigation, route}: any) => {
     changeLanguage(newLanguage);
   };
 
-  const micFunctionality=()=>{
-    if(micOn){
-      stopRecording()
-    }else{
-      startRecording()
+  const micFunctionality = () => {
+    if (micOn) {
+      stopRecording();
+    } else {
+      startRecording();
     }
-    setMicon(!micOn)
-    
-  }
+    setMicon(!micOn);
+  };
 
   return (
-    <View style={{flex: 1, backgroundColor: '#E6ECEC'}}>
+    <SafeAreaView style={{flex: 1, backgroundColor: '#E6ECEC'}}>
       <View
         style={{
           flex: 1,
@@ -272,12 +283,22 @@ const PreViewScreen = ({navigation, route}: any) => {
               paddingHorizontal: 16,
               alignItems: 'center',
             }}>
-            <TouchableOpacity onPress={()=>navigation.goBack()} style={{flexDirection: 'row',alignItems:'center',width:'10%',height:'100%'}}>
-              <BackIcon />
-            </TouchableOpacity>
-            <View style={{flexDirection: 'row',alignItems:'center',justifyContent:'center',width:'80%',height:'100%'}}>
-              <Text style={{fontSize:18,fontWeight:'bold',color:'black'}}>Conference Call Setting</Text>
-            </View>
+            {I18nManager.isRTL ? (
+              <TouchableOpacity
+                onPress={() => navigation.navigate(ROUTES.Home)}
+                style={{flexDirection: 'row', paddingHorizontal: 8}}>
+                <RightArrowIcon />
+                <Text
+                  style={{paddingLeft: 4, fontSize: 16, fontWeight: 'bold'}}>
+                  خلف
+                </Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity style={{flexDirection: 'row'}}>
+                <BackIcon />
+                <Text style={{paddingLeft: 8}}>Back</Text>
+              </TouchableOpacity>
+            )}
           </View>
           <View
             style={{
@@ -286,7 +307,7 @@ const PreViewScreen = ({navigation, route}: any) => {
               alignSelf: 'center',
               backgroundColor: 'gray',
               marginTop: 20,
-              borderRadius: 15,
+              borderRadius: 5,
               borderWidth: 2,
               borderColor: 'white',
             }}>
@@ -296,14 +317,9 @@ const PreViewScreen = ({navigation, route}: any) => {
                 objectFit={'cover'}
                 mirror={true}
                 style={{
-                  // flex: 1,
-                  height:'100%',
-                  width:'100%',
-                  borderRadius: 50,
-                  borderBottomEndRadius:50,
-                  borderCurve:'circular'
+                  flex: 1,
+                  borderRadius: 20,
                 }}
-                
               />
             ) : (
               <View
@@ -314,7 +330,6 @@ const PreViewScreen = ({navigation, route}: any) => {
                   backgroundColor: '#f5fafa',
                 }}>
                 <CameraIcon height={50} width={50} />
-                {/* <Text style={{color: colors.primary[100]}}>Camera Off</Text> */}
               </View>
             )}
           </View>
@@ -330,17 +345,27 @@ const PreViewScreen = ({navigation, route}: any) => {
               width: '90%',
               alignSelf: 'center',
             }}>
-            <View style={{flexDirection: 'row', alignItems: 'center'}}>
-            <View style={{width:28,alignItems:'center',justifyContent:'center'}}>
-              <CameraIcon height={28} width={28} />
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                width: '90%',
+              }}>
+              <View
+                style={{
+                  width: '12%',
+                  justifyContent: 'center',
+                }}>
+                <CameraIcon height={28} width={28} />
               </View>
+
               <Text
                 style={
                   I18nManager.isRTL
-                    ? {paddingRight: 10, fontSize: 15, fontWeight: '500',color:'black'}
-                    : {paddingLeft: 10, fontSize: 15, fontWeight: '500',color:'black'}
+                    ? {fontSize: 15, fontWeight: '500', color: 'black'}
+                    : {paddingLeft: 10, fontSize: 15, fontWeight: '500',color: 'black'}
                 }>
-                {t('welcome')}
+                {t('video')}
               </Text>
             </View>
             <TouchableOpacity onPress={() => setVideoOn(!videoOn)}>
@@ -358,23 +383,25 @@ const PreViewScreen = ({navigation, route}: any) => {
               width: '90%',
               alignSelf: 'center',
             }}>
-            <View style={{flexDirection: 'row', alignItems: 'center'}}>
-              <View style={{width:28,alignItems:'center',justifyContent:'center'}}>
-              <MicIcon height={28} width={28} />
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                width: '90%',
+              }}>
+              <View
+                style={{
+                  width: '12%',
+                  justifyContent: 'center',
+                }}>
+                <MicIcon />
               </View>
-              <Text style={{paddingLeft: 10, fontSize: 15, fontWeight: '500',color:'black'}}>
-                Microphone
+
+              <Text style={{fontSize: 15, fontWeight: '500', color: 'black'}}>
+                {t('microphone')}
               </Text>
-              {/* <Svg height="200" width={width}>
-                <Path
-                  d={getWavePath()}
-                  fill="none"
-                  stroke="blue"
-                  strokeWidth="2"
-                />
-              </Svg> */}
             </View>
-            <TouchableOpacity onPress={() => micFunctionality()}>
+            <TouchableOpacity onPress={() => setMicon(!micOn)}>
               {micOn ? (
                 <MicIconWithCircle height={33} width={33} />
               ) : (
@@ -422,7 +449,7 @@ const PreViewScreen = ({navigation, route}: any) => {
           </Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 

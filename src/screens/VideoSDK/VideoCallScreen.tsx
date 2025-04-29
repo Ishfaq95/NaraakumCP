@@ -37,12 +37,18 @@ import {ROUTES} from '../../shared/utils/routes';
 import LargeView from '../../screens/meeting/OneToOne/LargeView';
 import useParticipantStat from '../../screens/meeting/Hooks/useParticipantStat';
 import BackIcon from '../../assets/icons/BackIcon';
+import ChatScreen from '../../screens/Chat/ChatSceen';
 
 const {width: SCREEN_WIDTH, height: SCREEN_HEIGHT} = Dimensions.get('window');
 const SMALL_VIDEO_WIDTH = 140;
 const SMALL_VIDEO_HEIGHT = 180;
 
-const VideoCallScreen = ({sessionStartTime, displayName}: any) => {
+const VideoCallScreen = ({
+  sessionStartTime,
+  sessionEndTime,
+  displayName,
+  Data,
+}: any) => {
   const {
     join,
     participants,
@@ -75,8 +81,6 @@ const VideoCallScreen = ({sessionStartTime, displayName}: any) => {
   const [messageText, setMessageText] = useState('');
   const participantIds = [...participants.keys()];
 
-  console.log('participantIds======>',participantIds)
-
   const participantCount = participantIds ? participantIds.length : null;
 
   const {webcamOn, webcamStream, setQuality, isLocal} = useParticipant(
@@ -96,7 +100,8 @@ const VideoCallScreen = ({sessionStartTime, displayName}: any) => {
 
   const calculateRemainingTime = () => {
     const time = new Date(sessionStartTime);
-    const endTime = new Date(time.getTime() + 1 * 60 * 60 * 1000);
+
+    const endTime = new Date(sessionEndTime);
     const now = new Date();
     const timeLeft = endTime - now; // in milliseconds
 
@@ -168,8 +173,10 @@ const VideoCallScreen = ({sessionStartTime, displayName}: any) => {
 
   const onPressHangUp = () => {
     leave();
-    navigation.navigate(ROUTES.preViewCall);
+    navigation.navigate(ROUTES.preViewCall, {Data: Data.Data});
   };
+
+  console.log('Data?.Data',Data?.Data)
 
   return (
     <View style={styles.container}>
@@ -279,7 +286,7 @@ const VideoCallScreen = ({sessionStartTime, displayName}: any) => {
                     alignItems: 'center',
                     justifyContent: 'center',
                   }}>
-                  <Text>Waiting for join</Text>
+                  <Text>{`في انتظار انضمام ${displayName}`}</Text>
                 </View>
               </>
             )}
@@ -350,56 +357,25 @@ const VideoCallScreen = ({sessionStartTime, displayName}: any) => {
         </>
       ) : (
         <>
-          {/* <View style={{flex: 1, backgroundColor: '#E6ECEC'}}> */}
-          <KeyboardAvoidingView
-              style={styles.containerChat}
-              behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+          <View style={styles.fullView}>
+            {/* Use our common ChatScreen component here */}
+            <ChatScreen
+              patientId={Data?.Data?.patientId}
+              serviceProviderId={Data?.Data?.serviceProviderId}
+              onBackPress={() => setMessageClicked(false)}
+              displayName={displayName}
+            />
+
+            {/* Keep the mini video view on top of chat */}
             <Animated.View
-              style={[styles.smallVideo, dragPosition.getLayout()]}
+              style={[styles.chatSmallVideo, dragPosition.getLayout()]}
               {...panResponder.panHandlers}>
               <MiniView
                 openStatsBottomSheet={openStatsBottomSheet}
                 participantId={participantIds[0]}
               />
             </Animated.View>
-            
-              {/* <FlatList
-        data={messages}
-        keyExtractor={item => item.id}
-        renderItem={renderItem}
-        style={styles.chatArea}
-        contentContainerStyle={styles.chatContent}
-      /> */}
-
-              <View style={styles.inputContainer}>
-                <TextInput
-                  style={styles.input}
-                  value={messageText}
-                  onChangeText={setMessageText}
-                  placeholder="Type a message"
-                />
-                <TouchableOpacity style={styles.sendButton}>
-                  <Text style={styles.sendButtonText}>Send</Text>
-                </TouchableOpacity>
-              </View>
-            </KeyboardAvoidingView>
-            {/* <View>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  height: 60,
-                  width: '100%',
-                  backgroundColor: 'white',
-                  paddingHorizontal: 16,
-                  alignItems: 'center',
-                }}>
-                <TouchableOpacity style={{flexDirection: 'row'}}>
-                  <BackIcon />
-                  <Text style={{paddingLeft: 8}}>Back</Text>
-                </TouchableOpacity>
-              </View>
-            </View> */}
-          {/* </View> */}
+          </View>
         </>
       )}
     </View>
@@ -560,6 +536,20 @@ const styles = StyleSheet.create({
   sendButtonText: {
     color: '#fff',
     fontWeight: 'bold',
+  },
+  fullView: {
+    flex: 1,
+    position: 'relative',
+  },
+  chatSmallVideo: {
+    position: 'absolute',
+    top: 70, // Positioned below the chat header
+    right: 10,
+    width: 100,
+    height: 150,
+    borderRadius: 10,
+    overflow: 'hidden',
+    zIndex: 10,
   },
 });
 

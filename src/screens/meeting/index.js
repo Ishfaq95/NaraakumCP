@@ -18,6 +18,9 @@ export default function ({ navigation, route }) {
   const meetingType = route.params.meetingType;
   const defaultCamera = route.params.defaultCamera;
   const SessionStartTime=route.params.sessionStartTime
+  const SessionEndTime=route.params.sessionEndTime
+  const Data=route.params.Data
+
   return (
     <SafeAreaView
       style={{ flex: 1, backgroundColor: colors.primary[900]}}
@@ -51,7 +54,9 @@ export default function ({ navigation, route }) {
                 webcamEnabled={webcamEnabled}
                 meetingType={meetingType}
                 SessionStartTime={SessionStartTime}
+                sessionEndTime={SessionEndTime}
                 Name={name}
+                Data={Data}
               />
             );
           }}

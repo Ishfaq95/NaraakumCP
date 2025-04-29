@@ -7,6 +7,8 @@ interface State {
   token:any;
   expiresAt:any;
   appVersionCode:any;
+  mediaToken:any;
+  mediaTokenExpiresAt:any;
 }
 
 const initialState: State = {
@@ -14,7 +16,9 @@ const initialState: State = {
   topic: null,
   token: null,
   expiresAt: null,
-  appVersionCode: Platform.OS=="android"? "1.0.2":"1.0.0"
+  appVersionCode: Platform.OS=="android"? "1.0.2":"1.0.0",
+  mediaToken: null,
+  mediaTokenExpiresAt: null,
 };
 
 export const userReducer = createSlice({
@@ -33,10 +37,17 @@ export const userReducer = createSlice({
         token: action.payload.token,
         expiresAt: action.payload.expiresAt,
       };
+    },
+    setMediaToken: (state = initialState, action) => {
+      return {
+        ...state,
+        mediaToken: action.payload.token,
+        mediaTokenExpiresAt: action.payload.expiresAt,
+      };
     }
   },
 });
 
-export const { setTopic,setUserInfo,setToken } = userReducer.actions;
+export const { setTopic,setUserInfo,setToken,setMediaToken } = userReducer.actions;
 
 export default userReducer.reducer;

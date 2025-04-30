@@ -43,6 +43,7 @@ import BackIcon from '../../assets/icons/BackIcon';
 import ChatScreen from '../../screens/Chat/ChatSceen';
 import WebSocketService from '../../components/WebSocketService';
 import {useSelector} from 'react-redux';
+import DocumentIcon from '../../assets/icons/DocumentIcon';
 
 const {width: SCREEN_WIDTH, height: SCREEN_HEIGHT} = Dimensions.get('window');
 const SMALL_VIDEO_WIDTH = 140;
@@ -445,21 +446,26 @@ const VideoCallScreen = ({
               />
             </Animated.View>
             <View style={styles.controls}>
-              {/* Only render the hang-up button */}
-              <View style={styles.centeredButtonWrapper}>
+              <View style={styles.controlsRow}>
+                <TouchableOpacity
+                  onPress={() => {
+                    // Add your document action here
+                    console.log('Document button pressed');
+                  }}
+                  style={styles.smallControlButton}>
+                  <DocumentIcon width={24} height={24} />
+                </TouchableOpacity>
+
                 <TouchableOpacity
                   onPress={onPressHangUp}
-                  style={styles.hangUpButton}>
+                  style={[styles.controlButton, styles.hangUpButton]}>
                   <HangUpIcon />
                 </TouchableOpacity>
-              </View>
 
-              {/* Right-aligned chat button */}
-              <View style={styles.rightButtonWrapper}>
                 <TouchableOpacity
                   onPress={() => changeWebcam()}
-                  style={styles.controlButton}>
-                  <FlipCameraIcon />
+                  style={styles.smallControlButton}>
+                  <FlipCameraIcon width={24} height={24} />
                 </TouchableOpacity>
               </View>
             </View>
@@ -638,35 +644,33 @@ const styles = StyleSheet.create({
   controls: {
     position: 'absolute',
     bottom: 20,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    // alignItems: 'center',
-    width: '70%',
-    left: '27%',
-    // paddingHorizontal: 20,
-  },
-  centeredButtonWrapper: {
-    flex: 1,
+    width: '100%',
     alignItems: 'center',
   },
-  rightButtonWrapper: {
-    justifyContent: 'flex-end',
+  controlsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '80%',
   },
   controlButton: {
     width: 60,
     height: 60,
     borderRadius: 30,
-    marginHorizontal: 10,
-    justifyContent: 'flex-end',
+    backgroundColor: '#464646',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  smallControlButton: {
+    width: 45,
+    height: 45,
+    borderRadius: 22.5,
+    backgroundColor: '#464646',
+    justifyContent: 'center',
     alignItems: 'center',
   },
   hangUpButton: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    marginHorizontal: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: '#FF3B30',
   },
   bottomIcons: {
     flexDirection: 'row',

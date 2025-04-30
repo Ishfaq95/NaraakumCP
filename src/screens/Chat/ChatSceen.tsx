@@ -404,6 +404,7 @@ const ChatScreen = ({
         setMessages(reversedMessages);
       } else {
         // Add new messages to the beginning
+        console.log('messages', messages.length );
         setMessages(prevMessages => [...reversedMessages, ...prevMessages]);
       }
 
@@ -926,17 +927,17 @@ const ChatScreen = ({
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
         removeClippedSubviews={false}
-        maxToRenderPerBatch={10}
-        windowSize={10}
-        initialNumToRender={10}
-        onScrollToIndexFailed={info => {
-          // Use a safe fallback
-          setTimeout(() => {
-            if (messages.length > 0) {
-              safeScrollToIndex(info.index);
-            }
-          }, 100);
-        }}
+        maxToRenderPerBatch={20}
+        windowSize={20}
+        initialNumToRender={20}
+        // onScrollToIndexFailed={info => {
+        //   // Use a safe fallback
+        //   setTimeout(() => {
+        //     if (messages.length > 0) {
+        //       safeScrollToIndex(info.index);
+        //     }
+        //   }, 100);
+        // }}
       />
       <View style={styles.inputContainer}>
         <TextInput

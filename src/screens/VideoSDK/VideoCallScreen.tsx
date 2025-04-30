@@ -22,6 +22,9 @@ import CameraIconOff from '../../assets/icons/CameraIconOff';
 import MessageIconWithCircle from '../../assets/icons/MessageIconWithCircle';
 import FlipCameraIcon from '../../assets/icons/FlipCameraIcon';
 import HangUpIcon from '../../assets/icons/HangUpIcon';
+import CallIcon from '../../assets/icons/CallIcon';
+import ExportIcon from '../../assets/icons/ExportIcon';
+import ExpandIcon from '../../assets/icons/ExpandIcon';
 import {
   Constants,
   getAudioDeviceList,
@@ -509,10 +512,62 @@ const VideoCallScreen = ({
           <Animated.View
             style={[styles.chatSmallVideo, dragPosition.getLayout()]}
             {...panResponder.panHandlers}>
-            <MemoizedMiniView
-              openStatsBottomSheet={openStatsBottomSheet}
-              participantId={participantIds[0]}
-            />
+            {participantCount && participantCount > 1 ? (
+              <MemoizedMiniView
+                openStatsBottomSheet={openStatsBottomSheet}
+                participantId={participantIds[1]}
+              />
+            ) : (
+              <View style={styles.waitingParticipantView}>
+                <Text style={styles.waitingParticipantText}>
+                  {`في انتظار انضمام ${displayName}`}
+                </Text>
+              </View>
+            )}
+            <View style={styles.exportButtonContainer}>
+              <TouchableOpacity
+                activeOpacity={1}
+                onPress={() => {
+                  setMessageClicked(false);
+                }}
+                style={styles.exportButton}>
+                <ExpandIcon height={20} width={20} />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.miniViewControls}>
+              <TouchableOpacity
+                activeOpacity={1}
+                onPress={() => {
+                  toggleMic();
+                  setMicOn(!micOn);
+                }}
+                style={[styles.miniControlButton, !micOn && styles.miniControlButtonOff]}>
+                {micOn ? (
+                  <MicIconWithCircle height={22} width={22} />
+                ) : (
+                  <MicIconOff height={22} width={22} />
+                )}
+              </TouchableOpacity>
+              <TouchableOpacity
+                activeOpacity={1}
+                onPress={() => {
+                  toggleWebcam();
+                  setVideoOn(!videoOn);
+                }}
+                style={[styles.miniControlButton, !videoOn && styles.miniControlButtonOff]}>
+                {videoOn ? (
+                  <CameraIconWithCircle height={22} width={22} />
+                ) : (
+                  <CameraIconOff height={22} width={22} />
+                )}
+              </TouchableOpacity>
+              <TouchableOpacity
+                activeOpacity={1}
+                onPress={onPressHangUp}
+                style={[styles.miniControlButton, styles.endCallButton]}>
+                <CallIcon height={22} width={22} />
+              </TouchableOpacity>
+            </View>
           </Animated.View>
         </View>
       )}
@@ -556,23 +611,29 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: 'gray',
     alignItems: 'center',
+    borderRadius: 10,
+    overflow: 'hidden',
   },
   mainVideoStream: {
     width: '100%',
     height: '100%',
     position: 'absolute',
+    borderRadius: 10,
+    overflow: 'hidden',
   },
   smallVideo: {
     width: SMALL_VIDEO_WIDTH,
     height: SMALL_VIDEO_HEIGHT,
     position: 'absolute',
-    // backgroundColor: "blue",
     borderRadius: 10,
     overflow: 'hidden',
+    backgroundColor: '#313131',
   },
   smallVideoStream: {
     width: '100%',
     height: '100%',
+    borderRadius: 10,
+    overflow: 'hidden',
   },
   controls: {
     position: 'absolute',
@@ -684,8 +745,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 70,
     right: 10,
-    width: 100,
-    height: 150,
+    width: 140,
+    height: 180,
     borderRadius: 10,
     overflow: 'hidden',
     zIndex: 10,
@@ -707,6 +768,61 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 12,
     fontWeight: 'bold',
+  },
+  waitingParticipantView: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#313131',
+    borderRadius: 10,
+    overflow: 'hidden',
+  },
+  waitingParticipantText: {
+    color: 'white',
+    textAlign: 'center',
+    fontSize: 14,
+  },
+  miniViewControls: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    paddingVertical: 6,
+    borderBottomLeftRadius: 10,
+    borderBottomRightRadius: 10,
+  },
+  miniControlButton: {
+    width: 32,
+    height: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 6,
+    borderRadius: 18,
+    backgroundColor: '#464646',
+  },
+  miniControlButtonOff: {
+    // backgroundColor: 'rgba(255, 0, 0, 0.2)',
+  },
+  endCallButton: {
+    backgroundColor: '#FF3B30',
+  },
+  exportButtonContainer: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    zIndex: 20,
+  },
+  exportButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

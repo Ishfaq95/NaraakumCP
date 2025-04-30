@@ -37,19 +37,30 @@ export default MiniVideoRTCView = ({
         height:'100%',
         width:'100%',
         aspectRatio: 0.7,
-        borderRadius: 15,
-        borderColor: "#ff0000",
+        borderRadius: 10,
         overflow: "hidden",
+        backgroundColor: "#424242",
       }}
     >
       {isOn && stream ? (
-        <RTCView
-          objectFit="cover"
-          zOrder={1}
-          mirror={isLocal ? true : false}
-          style={{ flex: 1, backgroundColor: "#424242" }}
-          streamURL={new MediaStream([stream.track]).toURL()}
-        />
+        <View style={{
+          flex: 1,
+          borderRadius: 10,
+          overflow: "hidden",
+          backgroundColor: "#424242"
+        }}>
+          <RTCView
+            objectFit="cover"
+            zOrder={1}
+            mirror={isLocal ? true : false}
+            style={{ 
+              flex: 1,
+              borderRadius: 10,
+              overflow: "hidden"
+            }}
+            streamURL={new MediaStream([stream.track]).toURL()}
+          />
+        </View>
       ) : (
         <Avatar
           fullName={displayName}

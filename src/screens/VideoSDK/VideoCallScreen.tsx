@@ -38,6 +38,8 @@ import LargeView from '../../screens/meeting/OneToOne/LargeView';
 import useParticipantStat from '../../screens/meeting/Hooks/useParticipantStat';
 import BackIcon from '../../assets/icons/BackIcon';
 import ChatScreen from '../../screens/Chat/ChatSceen';
+import WebSocketService from '../../components/WebSocketService';
+import {useSelector} from 'react-redux';
 
 const {width: SCREEN_WIDTH, height: SCREEN_HEIGHT} = Dimensions.get('window');
 const SMALL_VIDEO_WIDTH = 140;
@@ -98,9 +100,71 @@ const VideoCallScreen = ({
     participantId: participantIds[0],
   });
 
+  const {user} = useSelector((state: any) => state.root.user);
+  const socketService = useRef(WebSocketService.getInstance());
+
+  const [mongoConverstionId, setMongoConverstionId] = useState<string | null>(null);
+  const [mongoSenderId, setMongoSenderId] = useState<string | null>(null);
+  const [mongoReceiverId, setMongoReceiverId] = useState<string | null>(null);
+
   useEffect(() => {
     setQuality('high');
   }, []);
+
+  // Move state declarations to the top
+  const [messageClicked, setMessageClicked] = useState(false);
+  const [unreadMessageCount, setUnreadMessageCount] = useState(0);
+
+  // Add WebSocket message handler
+  useEffect(() => {
+    const socket = socketService.current.getSocket();
+    if (!socket) return;
+
+    const handleMessage = async (event: any) => {
+      try {
+        const socketEvent = JSON.parse(event.data);
+        console.log('WebSocket message received in VideoCallScreen:', socketEvent);
+        
+        if (socketEvent.Command === 56) {
+          const parsedData = JSON.parse(socketEvent.Message);
+          console.log('Parsed message data:', parsedData);
+          
+          if (parsedData.MessageType === 'Text' || parsedData.MessageType === 'FilePath') {
+            console.log('Message type matches, messageClicked:', messageClicked);
+            // Only increment count if chat is closed
+            if (!messageClicked) {
+              console.log('Incrementing unread count');
+              setUnreadMessageCount(prev => {
+                console.log('Previous count:', prev);
+                return prev + 1;
+              });
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error processing WebSocket message:', error);
+      }
+    };
+
+    // Store the original onmessage handler
+    const originalOnMessage = socket.onmessage;
+
+    // Set our handler
+    socket.onmessage = (event) => {
+      // Call our handler
+      handleMessage(event);
+      
+      // Call the original handler if it exists
+      if (originalOnMessage) {
+        originalOnMessage(event);
+      }
+    };
+
+    return () => {
+      // Restore the original handler on cleanup
+      socket.onmessage = originalOnMessage;
+    };
+  }, [messageClicked]);
 
   const openStatsBottomSheet = ({pId}) => {};
 
@@ -140,7 +204,6 @@ const VideoCallScreen = ({
   const dragPosition = useRef(new Animated.ValueXY()).current;
   const [micOn, setMicOn] = useState(true);
   const [videoOn, setVideoOn] = useState(true);
-  const [messageClicked, setMessageClicked] = useState(false);
 
   const panResponder = useRef(
     PanResponder.create({
@@ -182,26 +245,81 @@ const VideoCallScreen = ({
     navigation.navigate(ROUTES.preViewCall, {Data: Data.Data});
   };
 
-  // Memoize the chat screen toggle function
+  // Add sendReadReceipt function
+  const sendReadReceipt = () => {
+    if (socketService.current.getSocket() && mongoConverstionId) {
+      const socketEvent = {
+        ConnectionMode: 1,
+        Command: 72,
+        FromUser: {Id: user.id},
+        Conversation: {
+          ConversationId: mongoConverstionId,
+          SenderId: mongoSenderId,
+          ReceiverId: mongoReceiverId,
+        },
+        Message: JSON.stringify({
+          ConversationId: mongoConverstionId,
+          SenderId: mongoSenderId,
+          ReceiverId: mongoReceiverId,
+        }),
+        timestamp: new Date().toISOString(),
+      };
+
+      socketService.current.sendMessage(socketEvent);
+    }
+  };
+
+  // Modify toggleChatScreen to properly handle state and read receipt
   const toggleChatScreen = useCallback(() => {
-    setMessageClicked(prev => !prev);
-  }, []);
+    setMessageClicked(prev => {
+      const newState = !prev;
+      console.log('Chat screen state changed to:', newState);
+      if (newState) {
+        // Send read receipt when opening chat
+        console.log('Sending read receipt');
+        sendReadReceipt();
+      }
+      return newState;
+    });
+  }, [mongoConverstionId, mongoSenderId, mongoReceiverId]);
 
   // Memoize the back press handler
   const handleBackPress = useCallback(() => {
     setMessageClicked(false);
   }, []);
 
-  // Memoize the chat screen props
+  // Add handler for conversation IDs
+  const handleConversationIds = useCallback((ids: { conversationId: string; senderId: string; receiverId: string }) => {
+    setMongoConverstionId(ids.conversationId);
+    setMongoSenderId(ids.senderId);
+    setMongoReceiverId(ids.receiverId);
+  }, []);
+
+  // Update chatScreenProps
   const chatScreenProps = useMemo(
     () => ({
       patientId: Data?.Data?.patientId,
       serviceProviderId: Data?.Data?.serviceProviderId,
       onBackPress: handleBackPress,
       displayName,
+      onNewMessage: handleNewMessage,
+      onConversationIds: handleConversationIds,
     }),
-    [Data?.Data?.patientId, Data?.Data?.serviceProviderId, displayName],
+    [Data?.Data?.patientId, Data?.Data?.serviceProviderId, displayName, handleNewMessage, handleConversationIds],
   );
+
+  // Add effect to reset unread count when chat is opened
+  useEffect(() => {
+    if (messageClicked) {
+      console.log('Resetting unread count');
+      setUnreadMessageCount(0);
+    }
+  }, [messageClicked]);
+
+  // Remove the separate handleNewMessage function since we're handling it directly in the WebSocket handler
+  const handleNewMessage = useCallback(() => {
+    // This function is now just a no-op since we handle the count directly in the WebSocket handler
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -370,13 +488,24 @@ const VideoCallScreen = ({
               onPress={toggleChatScreen}
               activeOpacity={1}
               style={styles.iconButton}>
-              <MessageIconWithCircle />
+              <View>
+                <MessageIconWithCircle />
+                {unreadMessageCount > 0 && (
+                  <View style={styles.messageBadge}>
+                    <Text style={styles.messageCount}>
+                      {unreadMessageCount > 99 ? '99+' : unreadMessageCount}
+                    </Text>
+                  </View>
+                )}
+              </View>
             </TouchableOpacity>
           </View>
         </>
       ) : (
         <View style={styles.fullView}>
-          <MemoizedChatScreen {...chatScreenProps} />
+          <MemoizedChatScreen 
+            {...chatScreenProps} 
+          />
           <Animated.View
             style={[styles.chatSmallVideo, dragPosition.getLayout()]}
             {...panResponder.panHandlers}>
@@ -561,6 +690,23 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     zIndex: 10,
     backgroundColor: 'transparent', // Add this to prevent flickering
+  },
+  messageBadge: {
+    position: 'absolute',
+    top: -5,
+    right: -5,
+    backgroundColor: '#FF3B30',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+  },
+  messageCount: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
 });
 

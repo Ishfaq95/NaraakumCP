@@ -91,11 +91,15 @@ const ChatScreen = ({
   serviceProviderId,
   onBackPress,
   displayName,
+  onNewMessage,
+  onConversationIds,
 }: {
   patientId: string;
   serviceProviderId: string;
   onBackPress: () => void;
   displayName: string;
+  onNewMessage?: () => void;
+  onConversationIds?: (ids: { conversationId: string; senderId: string; receiverId: string }) => void;
 }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [messageText, setMessageText] = useState('');
@@ -220,15 +224,40 @@ const ChatScreen = ({
             };
 
             setMessages(prevMessages => [...prevMessages, newMessageObj]);
-            sendReadReceipt();
+            
+            // Send read receipt immediately for new messages
+            if (socketConnected) {
+              const readReceiptEvent = {
+                ConnectionMode: 1,
+                Command: 72,
+                FromUser: {Id: user.id},
+                Conversation: {
+                  ConversationId: mongoConverstionId,
+                  SenderId: mongoSenderId,
+                  ReceiverId: mongoReceiverId,
+                },
+                Message: JSON.stringify({
+                  ConversationId: mongoConverstionId,
+                  SenderId: mongoSenderId,
+                  ReceiverId: mongoReceiverId,
+                }),
+                timestamp: new Date().toISOString(),
+              };
+
+              socketService.current.sendMessage(readReceiptEvent);
+            }
+
             flatListRef?.current?.scrollToEnd({animated: true});
+            
+            // Notify parent component about new message
+            // onNewMessage?.();?
           }
         }
       } catch (error) {
         console.error('Error processing WebSocket message:', error);
       }
     };
-  }, [user.id]);
+  }, [user.id, mongoConverstionId, mongoSenderId, mongoReceiverId, socketConnected, onNewMessage]);
 
   // Clean up socket listeners
   useEffect(() => {
@@ -240,30 +269,6 @@ const ChatScreen = ({
       }
     };
   }, [setupSocketListeners]);
-
-  // Send read receipt when message is displayed
-  const sendReadReceipt = () => {
-    if (socketConnected) {
-      const socketEvent = {
-        ConnectionMode: 1,
-        Command: 72,
-        FromUser: {Id: user.id},
-        Conversation: {
-          ConversationId: mongoConverstionId,
-          SenderId: mongoSenderId,
-          ReceiverId: mongoReceiverId,
-        },
-        Message: JSON.stringify({
-          ConversationId: mongoConverstionId,
-          SenderId: mongoSenderId,
-          ReceiverId: mongoReceiverId,
-        }),
-        timestamp: new Date().toISOString(),
-      };
-
-      socketService.current.sendMessage(socketEvent);
-    }
-  };
 
   // Update message status in state
   const updateMessageStatus = (findStatus, setStatusVal) => {
@@ -364,6 +369,13 @@ const ChatScreen = ({
           setMongoReceiverId(data[0]?.senderId);
           setMongoConverstionId(data[0]?.conversationId);
         }
+
+        // Pass conversation IDs to parent
+        onConversationIds?.({
+          conversationId: data[0]?.conversationId,
+          senderId: data[0]?.senderDetails?.userlogininfoId != user.id ? data[0]?.senderId : data[0]?.receiverId,
+          receiverId: data[0]?.senderDetails?.userlogininfoId != user.id ? data[0]?.receiverId : data[0]?.senderId,
+        });
       }
 
       let tempMessagesArray: Message[] = [];
@@ -390,7 +402,6 @@ const ChatScreen = ({
 
       if (page === 1) {
         setMessages(reversedMessages);
-        sendReadReceipt();
       } else {
         // Add new messages to the beginning
         setMessages(prevMessages => [...reversedMessages, ...prevMessages]);
@@ -405,11 +416,8 @@ const ChatScreen = ({
       console.error('messages list error', error);
       setError('Failed to load messages. Please try again.');
     } finally {
-      // Add a delay before resetting loading states
-      setTimeout(() => {
-        setIsLoadingMore(false);
-        setIsFetchingMore(false);
-      }, 100);
+      setIsLoadingMore(false);
+      setIsFetchingMore(false);
     }
   };
 

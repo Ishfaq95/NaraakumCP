@@ -15,6 +15,7 @@ import {
   FlatList,
   TextInput,
 } from 'react-native';
+import {WebView} from 'react-native-webview';
 import MicIconWithCircle from '../../assets/icons/MicIconWithCircle';
 import MicIconOff from '../../assets/icons/MicIconOff';
 import CameraIconWithCircle from '../../assets/icons/CameraIconWithCircle';
@@ -44,6 +45,7 @@ import ChatScreen from '../../screens/Chat/ChatSceen';
 import WebSocketService from '../../components/WebSocketService';
 import {useSelector} from 'react-redux';
 import DocumentIcon from '../../assets/icons/DocumentIcon';
+import DocumentViewScreen from './DocumentViewScreen';
 
 const {width: SCREEN_WIDTH, height: SCREEN_HEIGHT} = Dimensions.get('window');
 const SMALL_VIDEO_WIDTH = 140;
@@ -92,13 +94,20 @@ const VideoCallScreen = ({
   const [remainingTime, setRemainingTime] = useState(0);
   const [messageText, setMessageText] = useState('');
   const participantIds = [...participants.keys()];
-
+  const [documentUrl, setDocumentUrl] = useState('');
   const participantCount = participantIds ? participantIds.length : null;
 
   const {webcamOn, webcamStream, setQuality, isLocal} = useParticipant(
     participantIds[0],
     {},
   );
+
+  useEffect(() => {
+    if (Data?.Data) {
+      console.log('Data?.Data', Data?.Data?.VisitData);
+      setDocumentUrl(`https://dvx.innotech-sa.com/HHC/web/ServiceProvider/AddVisitRecord?visitData=${Data?.Data?.VisitData}`);
+    }
+  }, [Data]);
 
   const {score} = useParticipantStat({
     participantId: participantIds[0],
@@ -118,6 +127,7 @@ const VideoCallScreen = ({
   // Move state declarations to the top
   const [messageClicked, setMessageClicked] = useState(false);
   const [unreadMessageCount, setUnreadMessageCount] = useState(0);
+  const [documentClicked, setDocumentClicked] = useState(false);
 
   // Add WebSocket message handler
   useEffect(() => {
@@ -325,9 +335,13 @@ const VideoCallScreen = ({
     // This function is now just a no-op since we handle the count directly in the WebSocket handler
   }, []);
 
+  const toggleDocumentScreen = useCallback(() => {
+    setDocumentClicked(prev => !prev);
+  }, []);
+
   return (
     <View style={styles.container}>
-      {!messageClicked ? (
+      {!messageClicked && !documentClicked ? (
         <>
           <View style={styles.header}>
             <View style={{}}>
@@ -448,10 +462,7 @@ const VideoCallScreen = ({
             <View style={styles.controls}>
               <View style={styles.controlsRow}>
                 <TouchableOpacity
-                  onPress={() => {
-                    // Add your document action here
-                    console.log('Document button pressed');
-                  }}
+                  onPress={toggleDocumentScreen}
                   style={styles.smallControlButton}>
                   <DocumentIcon width={24} height={24} />
                 </TouchableOpacity>
@@ -510,6 +521,70 @@ const VideoCallScreen = ({
             </TouchableOpacity>
           </View>
         </>
+      ) : documentClicked ? (
+        <View style={styles.fullView}>
+          <DocumentViewScreen url={documentUrl} onClose={() => setDocumentClicked(false)} />
+          <Animated.View
+            style={[styles.chatSmallVideo, dragPosition.getLayout()]}
+            {...panResponder.panHandlers}>
+            {participantCount && participantCount > 1 ? (
+              <MemoizedMiniView
+                openStatsBottomSheet={openStatsBottomSheet}
+                participantId={participantIds[1]}
+              />
+            ) : (
+              <View style={styles.waitingParticipantView}>
+                <Text style={styles.waitingParticipantText}>
+                  {`في انتظار انضمام ${displayName}`}
+                </Text>
+              </View>
+            )}
+            <View style={styles.exportButtonContainer}>
+              <TouchableOpacity
+                activeOpacity={1}
+                onPress={() => {
+                  setDocumentClicked(false);
+                }}
+                style={styles.exportButton}>
+                <ExpandIcon height={20} width={20} />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.miniViewControls}>
+              <TouchableOpacity
+                activeOpacity={1}
+                onPress={() => {
+                  toggleMic();
+                  setMicOn(!micOn);
+                }}
+                style={[styles.miniControlButton, !micOn && styles.miniControlButtonOff]}>
+                {micOn ? (
+                  <MicIconWithCircle height={22} width={22} />
+                ) : (
+                  <MicIconOff height={22} width={22} />
+                )}
+              </TouchableOpacity>
+              <TouchableOpacity
+                activeOpacity={1}
+                onPress={() => {
+                  toggleWebcam();
+                  setVideoOn(!videoOn);
+                }}
+                style={[styles.miniControlButton, !videoOn && styles.miniControlButtonOff]}>
+                {videoOn ? (
+                  <CameraIconWithCircle height={22} width={22} />
+                ) : (
+                  <CameraIconOff height={22} width={22} />
+                )}
+              </TouchableOpacity>
+              <TouchableOpacity
+                activeOpacity={1}
+                onPress={onPressHangUp}
+                style={[styles.miniControlButton, styles.endCallButton]}>
+                <CallIcon height={22} width={22} />
+              </TouchableOpacity>
+            </View>
+          </Animated.View>
+        </View>
       ) : (
         <View style={styles.fullView}>
           <MemoizedChatScreen 
@@ -827,6 +902,10 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  webView: {
+    flex: 1,
+    backgroundColor: '#fff',
   },
 });
 

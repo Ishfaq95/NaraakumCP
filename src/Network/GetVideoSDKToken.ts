@@ -5,7 +5,6 @@ import { store } from "../shared/redux/store";
 export const getVideoSDKToken=async ()=>{
   const token = store.getState().root.user.token;
   const url='https://hhcnode.innotech-sa.com/api/videosdk/get-token';
-  // const UserProfileId=store.getState().root.user.userinfo.Id;
  
   try {
     const response = await fetch(url, {
@@ -32,7 +31,7 @@ export const getVideoSDKToken=async ()=>{
 // export const GetOnTheWayTasks = async (UserProfileId:any) => {
 //   const token = store.getState().root.user.token;
 //   const url='https://stghhcapis.innotech-sa.com/api/user/GetServiceProviderOnthewayTaskList';
-//   // const UserProfileId=store.getState().root.user.userinfo.Id;
+//   
 
 //   console.log('UserProfileId',UserProfileId)
 //   const data={

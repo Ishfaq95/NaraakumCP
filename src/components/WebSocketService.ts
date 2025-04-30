@@ -223,6 +223,7 @@ class WebSocketService {
       // Send the data
       try {
         this.socket.send(JSON.stringify(messageData));
+        console.log('messageData',messageData)
         resolve(messageData);
       } catch (error) {
         reject(error);

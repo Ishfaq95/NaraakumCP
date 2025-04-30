@@ -1,6 +1,6 @@
 // ChatScreen.js - Chat component with WebSocket integration
 
-import React, {useState, useEffect, useRef} from 'react';
+import React, {useState, useEffect, useRef, useCallback} from 'react';
 import {
   View,
   Text,
@@ -91,10 +91,15 @@ const ChatScreen = ({
   serviceProviderId,
   onBackPress,
   displayName,
-}: any) => {
+}: {
+  patientId: string;
+  serviceProviderId: string;
+  onBackPress: () => void;
+  displayName: string;
+}) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [messageText, setMessageText] = useState('');
-  const {userinfo} = useSelector((state: any) => state.root.user);
+  const {user} = useSelector((state: any) => state.root.user);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mongoSenderId, setMongoSenderId] = useState<string | null>(null);
@@ -151,7 +156,7 @@ const ChatScreen = ({
       if (
         appState.match(/inactive|background/) &&
         nextAppState === 'active' &&
-        userinfo?.CommunicationKey
+        user?.communicationKey
       ) {
         initializeSocket();
       }
@@ -160,18 +165,19 @@ const ChatScreen = ({
     return () => {
       subscription.remove();
     };
-  }, [appState, userinfo]);
+  }, [appState, user]);
 
   // Initialize socket connection
   const initializeSocket = async () => {
-    console.log('user val', userinfo);
     try {
-      if (userinfo?.CommunicationKey && userinfo?.Id) {
+      if (user?.communicationKey && user?.id) {
         await socketService.current.connect(
           1, // Presence value (1 for online)
-          userinfo?.CommunicationKey,
-          userinfo?.Id,
+          user?.communicationKey,
+          user?.id,
         );
+
+        console.log('socketConnected')
         setSocketConnected(true);
 
         // Set up socket message handler
@@ -184,54 +190,56 @@ const ChatScreen = ({
   };
 
   // Set up socket event listeners
-  const setupSocketListeners = () => {
-    // We need to extend the WebSocketService to handle these events
-    // This adds functionality to the existing WebSocketService
+  const setupSocketListeners = useCallback(() => {
+    if (!socketService.current) return;
 
-    // First, get a reference to the actual WebSocket instance
     const socket = socketService.current.getSocket();
+    if (!socket) return;
 
-    if (socket) {
-      // Override the onmessage handler to handle chat messages
-      const originalOnMessage = socket.onmessage;
-
-      socket.onmessage = async event => {
-        // Still call the original handler if it exists
-        if (originalOnMessage) {
-          originalOnMessage(event);
-        }
-
+    socket.onmessage = async event => {
+      try {
         const socketEvent = JSON.parse(event.data);
-
+        
         if (socketEvent.Command === 76) {
           updateMessageStatus('Sent', 'Delivered');
         } else if (socketEvent.Command === 73) {
           updateMessageStatus('Delivered', 'Seen');
         } else if (socketEvent.Command === 56) {
           const parsedData = JSON.parse(socketEvent.Message);
-
           const messageType = parsedData.MessageType;
 
-          if (messageType == 'Text') {
+          if (messageType === 'Text' || messageType === 'FilePath') {
             const newMessageObj = {
-              Id: Math.random().toString(36).substr(2, 9), // Temporary ID until server response
+              Id: Math.random().toString(36).substr(2, 9),
               SenderId: socketEvent.FromUser,
               Text: parsedData.Text,
-              FilePath: null,
-              Type: 'Text',
+              FilePath: messageType === 'FilePath' ? parsedData.FilePath : null,
+              Type: messageType,
               DateTime: new Date().toISOString(),
               status: 'Seen',
             };
 
             setMessages(prevMessages => [...prevMessages, newMessageObj]);
             sendReadReceipt();
-            console.log('flatListRef', flatListRef?.current);
             flatListRef?.current?.scrollToEnd({animated: true});
           }
         }
-      };
-    }
-  };
+      } catch (error) {
+        console.error('Error processing WebSocket message:', error);
+      }
+    };
+  }, [user.id]);
+
+  // Clean up socket listeners
+  useEffect(() => {
+    setupSocketListeners();
+    return () => {
+      const socket = socketService.current?.getSocket();
+      if (socket) {
+        socket.onmessage = null;
+      }
+    };
+  }, [setupSocketListeners]);
 
   // Send read receipt when message is displayed
   const sendReadReceipt = () => {
@@ -239,16 +247,16 @@ const ChatScreen = ({
       const socketEvent = {
         ConnectionMode: 1,
         Command: 72,
-        FromUser: {Id: userinfo.Id},
+        FromUser: {Id: user.id},
         Conversation: {
           ConversationId: mongoConverstionId,
-          SenderId: mongoReceiverId,
-          ReceiverId: mongoSenderId,
+          SenderId: mongoSenderId,
+          ReceiverId: mongoReceiverId,
         },
         Message: JSON.stringify({
           ConversationId: mongoConverstionId,
-          SenderId: mongoReceiverId,
-          ReceiverId: mongoSenderId,
+          SenderId: mongoSenderId,
+          ReceiverId: mongoReceiverId,
         }),
         timestamp: new Date().toISOString(),
       };
@@ -347,7 +355,7 @@ const ChatScreen = ({
 
       // Your existing ID setup code
       if (page === 1) {
-        if (data[0]?.senderDetails?.userlogininfoId === userinfo.Id) {
+        if (data[0]?.senderDetails?.userlogininfoId != user.id) {
           setMongoSenderId(data[0]?.senderId);
           setMongoReceiverId(data[0]?.receiverId);
           setMongoConverstionId(data[0]?.conversationId);
@@ -361,10 +369,7 @@ const ChatScreen = ({
       let tempMessagesArray: Message[] = [];
 
       data.forEach((item: any) => {
-        console.log(
-          'item.senderDetails?.userlogininfoId',
-          item.senderDetails?.userlogininfoId,
-        );
+        
         let message: Message = {
           Id: item._id,
           SenderId: item.senderDetails?.userlogininfoId,
@@ -418,7 +423,6 @@ const ChatScreen = ({
         });
       }
     } catch (error) {
-      console.log('Error during scrollToIndex:', error);
       // Fallback
       if (flatListRef.current) {
         flatListRef.current.scrollToOffset({
@@ -450,7 +454,7 @@ const ChatScreen = ({
     // Create message data
     const messageData = {
       Id: Math.random().toString(36).substr(2, 9),
-      SenderId: userinfo.Id,
+      SenderId: user.id,
       Text: messageText,
       FilePath: null,
       Type: 'Text',
@@ -473,8 +477,8 @@ const ChatScreen = ({
       Id: messageData.Id,
       ConnectionMode: 1,
       Command: 70,
-      FromUser: {Id: userinfo.Id},
-      ToUserList: [{Id: serviceProviderId}],
+      FromUser: {Id: user.id},
+      ToUserList: [{Id: patientId}],
       Message: JSON.stringify({
         Text: messageText,
         FilePath: null,
@@ -521,7 +525,7 @@ const ChatScreen = ({
       const lastMessage = messages[messages.length - 1];
       const isNewMessage =
         Date.now() - new Date(lastMessage.DateTime).getTime() < 5000 &&
-        lastMessage.SenderId === userinfo.Id;
+        lastMessage.SenderId === user.id;
 
       // Auto-scroll to bottom for new messages from current user
       if (isNewMessage) {
@@ -584,7 +588,6 @@ const ChatScreen = ({
 
   const handleFileSelection = async () => {
     try {
-      console.log('Starting file selection...');
 
       const pickresult = await DocumentPicker.pick({
         type: [DocumentPicker.types.allFiles],
@@ -596,10 +599,8 @@ const ChatScreen = ({
       }else{
         pickerResult = pickresult[0];
       }
-      console.log('Picker result:', pickerResult);
 
       if (!pickerResult) {
-        console.log('No file selected');
         return;
       }
 
@@ -610,14 +611,11 @@ const ChatScreen = ({
         size: pickerResult.size,
       };
 
-      console.log('Selected file:', file);
-
       await uploadFile(file, pickerResult);
     } catch (err) {
       console.error('File selection error:', err);
 
       if (DocumentPicker.isCancel(err)) {
-        console.log('User cancelled file picker');
         return;
       }
 
@@ -663,23 +661,20 @@ const ChatScreen = ({
 
       // Append file with the exact field name expected by backend
       formData.append('file', fileData);
-      formData.append('UserType', userinfo.CatUserTypeId);
-      formData.append('Id', userinfo.Id);
+      formData.append('UserType', user.catUserTypeId);
+      formData.append('Id', user.id);
       formData.append('ResourceCategory', ResourceCategoryId);
       formData.append('ResourceType', '9');
 
-      console.log('store.getState().root.user.mediaToken',store.getState().root.user.mediaToken)
       const response = await fetch(url, {
         method: 'POST',
         body: formData,
         headers: {
           'Content-Type': 'multipart/form-data',
           Accept: 'application/json',
-          Authorization: `Bearer ${store.getState().root.user.mediaToken}`,
+          Authorization: `Bearer${store.getState().root.user.mediaToken}`,
         },
       });
-
-      console.log('Upload response status:', response.status);
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -696,13 +691,12 @@ const ChatScreen = ({
       }
 
       const responseData = await response.json();
-      console.log('Upload successful:', responseData);
 
       if (responseData.ResponseStatus?.STATUSCODE === '200') {
         // Add the file message to the chat
         const newMessage: Message = {
           Id: responseData.Data?.id || Math.random().toString(36).substr(2, 9),
-          SenderId: userinfo.Id,
+          SenderId: user.id,
           Text: file.name,
           FilePath: responseData.Data?.AbsolutePath || responseData.Data?.Path,
           Type: 'FilePath',
@@ -711,6 +705,44 @@ const ChatScreen = ({
         };
 
         setMessages(prevMessages => [...prevMessages, newMessage]);
+
+        const socketEvent = {
+          Id: newMessage.Id,
+          ConnectionMode: 1,
+          Command: 70,
+          FromUser: {Id: user.id},
+          ToUserList: [{Id: patientId}],
+          Message: JSON.stringify({
+            Text: messageText,
+            FilePath: responseData.Data?.AbsolutePath || responseData.Data?.Path,
+            CatFileTypeId: 0,
+            MessageType: 'FilePath',
+          }),
+          timestamp: new Date().toISOString(),
+        };
+    
+        // Send via WebSocket
+        socketService.current
+          .sendMessage(socketEvent)
+          .then(response => {
+            setMessages(prevMessages =>
+              prevMessages.map(msg =>
+                msg.Id === newMessage.Id
+                  ? {...msg, isSent: true, isPending: false}
+                  : msg,
+              ),
+            );
+          })
+          .catch(err => {
+            console.error('Failed to send message:', err);
+            setMessages(prevMessages =>
+              prevMessages.map(msg =>
+                msg.Id === newMessage.Id
+                  ? {...msg, isFailed: true, isPending: false}
+                  : msg,
+              ),
+            );
+          });
 
         // Scroll to bottom after adding new message
         setTimeout(() => {
@@ -890,7 +922,6 @@ const ChatScreen = ({
         windowSize={10}
         initialNumToRender={10}
         onScrollToIndexFailed={info => {
-          console.log('Failed to scroll to index', info);
           // Use a safe fallback
           setTimeout(() => {
             if (messages.length > 0) {

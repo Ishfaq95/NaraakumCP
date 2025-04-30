@@ -22,7 +22,7 @@ import { useNavigation } from '@react-navigation/native';
 
 const WebViewComponent = ({ uri }:any) => {
   const dispatch = useDispatch()
-  const { topic,userinfo } = useSelector((state: any) => state.root.user);
+  const { topic,user } = useSelector((state: any) => state.root.user);
   const [loading, setLoading] = useState(true);
   const [currentUrl, setCurrentUrl] = useState(uri);
   const [userInformation, setUserInformation] = useState('')
@@ -175,24 +175,24 @@ const WebViewComponent = ({ uri }:any) => {
   // };
 
   useEffect(() => {
-    if (userinfo) {
+    if (user) {
       getSystemNotificationFN({
-        UserloginInfo: userinfo.Id,
+        UserloginInfo: user.id,
       });
     }
-  }, [userinfo]);
+  }, [user]);
 
   useEffect(()=>{
     
-    if(userinfo){
+    if(user){
       const presence = 1; 
-      const communicationKey = userinfo.CommunicationKey; 
-      const UserId=userinfo.Id;
+      const communicationKey = user.communicationKey; 
+      const UserId=user.id;
       webSocketService.connect(presence, communicationKey,UserId);
     }else{
       webSocketService.disconnect()
     }
-  },[userinfo])
+  },[user])
 
   const subsribeTopic = (Id: any) => {
     const topicName = `serviceprovider_${Id}`;
@@ -289,12 +289,11 @@ const WebViewComponent = ({ uri }:any) => {
       }
     }else if(eventHandler== 'statusChange'){
       
-    }
-
-    if (userInfo) {
-      dispatch(setUserInfo(userInfo))
-      setUserInformation(userInfo)
-      subsribeTopic(userInfo.Id)
+    }else if (eventHandler == 'userLoggedIn') {
+      const userInfoData = data;
+      dispatch(setUserInfo(userInfoData))
+      setUserInformation(userInfoData)
+      subsribeTopic(userInfoData.id)
     }
 
     // if (url && url.includes('OnlineSessionRoom')) {

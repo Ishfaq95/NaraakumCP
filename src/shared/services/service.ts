@@ -8,10 +8,10 @@ export const InvokeSocket=async ()=>{
     if (persistedState) {
       const parsedState = JSON.parse(persistedState); 
       const rootState = JSON.parse(parsedState.user);
-      const {CommunicationKey,Id}=rootState.userinfo
+      const {communicationKey,id}=rootState.user
       const presence = 1; 
 
-      webSocketService.connect(presence, CommunicationKey,Id);
+      webSocketService.connect(presence, communicationKey,id);
     }else{
       
     webSocketService.disconnect()

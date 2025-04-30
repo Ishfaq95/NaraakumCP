@@ -26,7 +26,7 @@ BackgroundFetch.configure(
     BackgroundFetch.finish(taskId);
   },
   (error) => {
-    console.log("[BackgroundFetch] failed to start:", error);
+    
   }
 );
 

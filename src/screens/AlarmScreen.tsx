@@ -24,8 +24,6 @@ const AlarmScreen = () => {
     navigation.navigate(ROUTES.Home);
   };
  
-  console.log('data', data);
- 
   useEffect(() => {
     if (data) {
       makeStringToShow(data);
@@ -73,7 +71,6 @@ const AlarmScreen = () => {
  
     setString1(string1);
     setString2(string2);
-    console.log('stringArray', stringArray);
   };
  
   return (

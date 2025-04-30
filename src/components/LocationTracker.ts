@@ -41,7 +41,7 @@ class LocationService {
     if (hasPermission) {
       LocationModule.startTracking();
     } else {
-      console.log('Location permission denied');
+      
     }
   }
 

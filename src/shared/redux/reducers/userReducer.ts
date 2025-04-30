@@ -2,7 +2,7 @@ import {createSlice} from '@reduxjs/toolkit';
 import { Platform } from 'react-native';
 
 interface State {
-  userinfo: any;
+  user: any;
   topic:any;
   token:any;
   expiresAt:any;
@@ -12,7 +12,7 @@ interface State {
 }
 
 const initialState: State = {
-  userinfo:null,
+  user:null,
   topic: null,
   token: null,
   expiresAt: null,
@@ -29,7 +29,7 @@ export const userReducer = createSlice({
       state.topic = action.payload;
     },
     setUserInfo: (state, action) => {
-      state.userinfo = action.payload;
+      state.user = action.payload;
     },
     setToken:(state = initialState, action)=>{
       return {

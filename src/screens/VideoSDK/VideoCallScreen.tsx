@@ -1,6 +1,6 @@
 import ProfileIcon from '../../assets/icons/ProfileIcon';
 import NetworkSignalIcon from '../../assets/icons/NetworkSignalIcon';
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useEffect, useRef, useState, useCallback, memo, useMemo} from 'react';
 import {
   View,
   Text,
@@ -42,6 +42,12 @@ import ChatScreen from '../../screens/Chat/ChatSceen';
 const {width: SCREEN_WIDTH, height: SCREEN_HEIGHT} = Dimensions.get('window');
 const SMALL_VIDEO_WIDTH = 140;
 const SMALL_VIDEO_HEIGHT = 180;
+
+// Memoize the ChatScreen component to prevent unnecessary re-renders
+const MemoizedChatScreen = memo(ChatScreen);
+
+// Memoize the MiniView component
+const MemoizedMiniView = memo(MiniView);
 
 const VideoCallScreen = ({
   sessionStartTime,
@@ -176,7 +182,26 @@ const VideoCallScreen = ({
     navigation.navigate(ROUTES.preViewCall, {Data: Data.Data});
   };
 
-  console.log('Data?.Data',Data?.Data)
+  // Memoize the chat screen toggle function
+  const toggleChatScreen = useCallback(() => {
+    setMessageClicked(prev => !prev);
+  }, []);
+
+  // Memoize the back press handler
+  const handleBackPress = useCallback(() => {
+    setMessageClicked(false);
+  }, []);
+
+  // Memoize the chat screen props
+  const chatScreenProps = useMemo(
+    () => ({
+      patientId: Data?.Data?.patientId,
+      serviceProviderId: Data?.Data?.serviceProviderId,
+      onBackPress: handleBackPress,
+      displayName,
+    }),
+    [Data?.Data?.patientId, Data?.Data?.serviceProviderId, displayName],
+  );
 
   return (
     <View style={styles.container}>
@@ -293,7 +318,7 @@ const VideoCallScreen = ({
             <Animated.View
               style={[styles.smallVideo, dragPosition.getLayout()]}
               {...panResponder.panHandlers}>
-              <MiniView
+              <MemoizedMiniView
                 openStatsBottomSheet={openStatsBottomSheet}
                 participantId={participantIds[0]}
               />
@@ -341,14 +366,8 @@ const VideoCallScreen = ({
               style={styles.iconButton}>
               {videoOn ? <CameraIconWithCircle /> : <CameraIconOff />}
             </TouchableOpacity>
-            {/* <TouchableOpacity
-              // onPress={() => }
-              activeOpacity={1}
-              style={styles.iconButton}>
-              <MessageIconWithCircle />
-            </TouchableOpacity> */}
             <TouchableOpacity
-              onPress={() => setMessageClicked(true)}
+              onPress={toggleChatScreen}
               activeOpacity={1}
               style={styles.iconButton}>
               <MessageIconWithCircle />
@@ -356,27 +375,17 @@ const VideoCallScreen = ({
           </View>
         </>
       ) : (
-        <>
-          <View style={styles.fullView}>
-            {/* Use our common ChatScreen component here */}
-            <ChatScreen
-              patientId={Data?.Data?.patientId}
-              serviceProviderId={Data?.Data?.serviceProviderId}
-              onBackPress={() => setMessageClicked(false)}
-              displayName={displayName}
+        <View style={styles.fullView}>
+          <MemoizedChatScreen {...chatScreenProps} />
+          <Animated.View
+            style={[styles.chatSmallVideo, dragPosition.getLayout()]}
+            {...panResponder.panHandlers}>
+            <MemoizedMiniView
+              openStatsBottomSheet={openStatsBottomSheet}
+              participantId={participantIds[0]}
             />
-
-            {/* Keep the mini video view on top of chat */}
-            <Animated.View
-              style={[styles.chatSmallVideo, dragPosition.getLayout()]}
-              {...panResponder.panHandlers}>
-              <MiniView
-                openStatsBottomSheet={openStatsBottomSheet}
-                participantId={participantIds[0]}
-              />
-            </Animated.View>
-          </View>
-        </>
+          </Animated.View>
+        </View>
       )}
     </View>
   );
@@ -540,17 +549,19 @@ const styles = StyleSheet.create({
   fullView: {
     flex: 1,
     position: 'relative',
+    backgroundColor: '#1a1a1a', // Match chat background
   },
   chatSmallVideo: {
     position: 'absolute',
-    top: 70, // Positioned below the chat header
+    top: 70,
     right: 10,
     width: 100,
     height: 150,
     borderRadius: 10,
     overflow: 'hidden',
     zIndex: 10,
+    backgroundColor: 'transparent', // Add this to prevent flickering
   },
 });
 
-export default VideoCallScreen;
+export default memo(VideoCallScreen);

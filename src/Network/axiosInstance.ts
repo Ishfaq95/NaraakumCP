@@ -41,7 +41,7 @@ axiosInstance.interceptors.response.use(
   },
   (error: AxiosError): Promise<AxiosError> => {
     // Any status codes that fall outside the range of 2xx cause this function to trigger
-    console.log('error==>',error.response)
+
     if (error.response && error.response.status === 401) {
       // Handle unauthorized errors, logout user, etc.
       console.error('Unauthorized access - perhaps redirect to login?');

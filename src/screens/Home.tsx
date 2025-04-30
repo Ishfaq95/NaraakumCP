@@ -111,7 +111,6 @@ const HomeScreen = () => {
   const versionCompareFunction=()=>{
     const versionCode = DataVersionCode;
     const isApiSuccess=versionCode?.ResponseStatus?.STATUSCODE
-    console.log('DataVersionCode',DataVersionCode?.AppVersion)
     if(isApiSuccess=="200"){
       const comparisonResult = compareVersions(DataVersionCode?.AppVersion, appVersionCode);
       if (comparisonResult > 0) {
@@ -131,7 +130,6 @@ const HomeScreen = () => {
       versionCompareFunction()
     }
     if (isErrorVersionCode) {
-      console.log('version code error');
     }
   }, [isSuccessVersionCode, isErrorVersionCode]);
 
@@ -161,7 +159,6 @@ const HomeScreen = () => {
   useEffect(() => {
     if (isSuccess) {
       const tokenData = JSON.stringify(data);
-      console.log('tokenData', tokenData);
       const sessionToken = {
         token: data.access_token,
         expiresAt: data.expires,
@@ -172,7 +169,6 @@ const HomeScreen = () => {
       }, 100);
     }
     if (isError) {
-      console.log('getting token error');
     }
   }, [isSuccess, isError]);
 
@@ -195,9 +191,7 @@ const HomeScreen = () => {
         granted['android.permission.READ_MEDIA_AUDIO'] ===
           PermissionsAndroid.RESULTS.GRANTED
       ) {
-        console.log('You can use the camera and mic');
       } else {
-        console.log('Camera or mic permission denied');
       }
     } catch (err) {
       console.warn(err);
@@ -229,7 +223,6 @@ const HomeScreen = () => {
       }
 
       const data = await response.json();
-      console.log('response', data);
       if (data.status == '200') {
         const mediaToken = {
           token: data.access_token,

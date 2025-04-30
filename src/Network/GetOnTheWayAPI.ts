@@ -8,7 +8,6 @@ export const GetOnTheWayTasks = async (UserProfileId:any) => {
   // const url='https://nk-pro-apis.innotech-sa.com/api/user/GetServiceProviderOnthewayTaskList';
   // const url='https://stghhcapis.innotech-sa.com/api/user/GetServiceProviderOnthewayTaskList';
   
-  // const UserProfileId=store.getState().root.user.userinfo.Id;
 
   console.log('UserProfileId',UserProfileId)
   const data={

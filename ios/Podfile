@@ -65,6 +65,7 @@ target 'Naraakum_CP' do
     :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
 
+  pod 'react-native-webrtc', :path => '../node_modules/@videosdk.live/react-native-webrtc'
   pod 'react-native-config', :path => '../node_modules/react-native-config'
   pod 'RNInAppBrowser', :path => '../node_modules/react-native-inappbrowser-reborn'
   pod 'Firebase/Core',:modular_headers => true

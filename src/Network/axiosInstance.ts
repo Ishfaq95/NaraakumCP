@@ -1,7 +1,9 @@
 import axios, { AxiosResponse, InternalAxiosRequestConfig, AxiosError } from 'axios';
 import { store } from '../shared/redux/store';
 
-const BaseURL='https://hhcnode.innotech-sa.com/api/'
+export const MediaBaseURL='https://hhcmedia.innotech-sa.com/api/'
+
+export const BaseURL='https://hhcnode.innotech-sa.com/api/'
 // const BaseURL='https://stghhcapis.innotech-sa.com/api/';
 // const BaseURL='https://nk-pro-apis.innotech-sa.com/api/'
 

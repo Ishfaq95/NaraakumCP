@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import useMutationHook from '../Network/useMutationHook';
 import {useDispatch, useSelector} from 'react-redux';
-import {setToken} from '../shared/redux/reducers/userReducer';
+import {setToken, setMediaToken} from '../shared/redux/reducers/userReducer';
 import {isTokenExpired} from '../shared/services/service';
 import {check, request, PERMISSIONS, RESULTS} from 'react-native-permissions';
 import {store} from '../shared/redux/store';
@@ -237,6 +237,49 @@ const HomeScreen = () => {
       } catch (err) {}
     }
   }
+
+  useEffect(() => {
+    getMediaToken();
+  }, []);
+
+  // Add function to get media token
+  const getMediaToken = async () => {
+    try {
+      const params = new URLSearchParams();
+      params.append('grant_type', 'password');
+      params.append('apikey', '15F79088-0CE7-4274-9725-EB48CF58AD56');
+      params.append('platformId', '1');
+
+      const response = await fetch(`${MediaBaseURL}/authValidator/GetToken`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: params.toString(),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (data.status == '200') {
+        const mediaToken = {
+          token: data.access_token,
+          expiresAt: data.expires,
+        };
+
+        dispatch(setMediaToken(mediaToken));
+      } else {
+        console.error(
+          'Failed to get media token:',
+          data.ResponseStatus?.MESSAGE,
+        );
+      }
+    } catch (error) {
+      console.error('Error getting media token:', error);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>

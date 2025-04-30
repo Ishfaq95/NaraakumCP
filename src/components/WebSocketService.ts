@@ -22,57 +22,59 @@ class WebSocketService {
   private locationUpdateInfo = {};
   private watchId: number | null = null;
   private taskList: any[] = [];
-  private userId: any = null;
-
+  private userId:any=null;
+  private messageCallbacks: Map<string, Function> = new Map();
+ 
   private constructor() {
     // Private constructor to enforce singleton pattern
     AppState.addEventListener('change', this.handleAppStateChange.bind(this));
   }
-
+ 
   public static getInstance(): WebSocketService {
     if (!WebSocketService.instance) {
       WebSocketService.instance = new WebSocketService();
     }
     return WebSocketService.instance;
   }
-
+ 
   public async connect(
     presence: number,
     communicationKey: string,
-    userId: any,
+    userId:any
   ): Promise<void> {
     if (!this.socket || this.socket.readyState === WebSocket.CLOSED) {
       const deviceId = await this.getDeviceId();
       const url = `${WEBSOCKET_URL}connectionMode=${presence}&deviceId=${deviceId}&communicationKey=${communicationKey}`;
       this.socket = new WebSocket(url);
-      this.userId = userId;
+      this.userId=userId;
       this.socket.onopen = async () => {
         this.isConnected = true;
         await this.handleOnTheWayTasks(); // Check tasks initially after connection
       };
-
+ 
       this.socket.onmessage = async event => {
         const socketEvent = JSON.parse(event.data);
-
+       
         if (socketEvent.Command === 67 || socketEvent.Command === 68) {
           await this.handleOnTheWayTasks(); // Call API and handle tracking on Command 67 or 68
         }
       };
-
+ 
       this.socket.onclose = () => {
         this.isConnected = false;
-
+ 
         setTimeout(async () => {
           const persistedState = await AsyncStorage.getItem('persist:root');
           if (persistedState) {
             const parsedState = JSON.parse(persistedState);
             const rootState = JSON.parse(parsedState.user);
-            const {CommunicationKey, Id} = rootState.userinfo;
-            this.connect(presence, communicationKey, Id);
+            const {CommunicationKey,Id}=rootState.userinfo
+            this.connect(presence, communicationKey,Id)
           }
+         
         }, 5000); // Attempt to reconnect
       };
-
+ 
       this.socket.onerror = error => {
         console.error('WebSocket error:', error.message);
       };
@@ -112,18 +114,21 @@ class WebSocketService {
       this.appState.match(/inactive|background/) &&
       nextAppState === 'active'
     ) {
+      console.log('App has come to the foreground');
       // this.connect(); // Reconnect if needed
     } else if (nextAppState.match(/inactive|background/)) {
+      console.log('App has gone to the background');
     }
     this.appState = nextAppState;
   }
-
+ 
   public async getLocationAndSend(): Promise<void> {
     if (Platform.OS === 'android') {
       const granted = await PermissionsAndroid.request(
         PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
       );
       if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+        console.log('Location permission denied');
         return;
       }
       if (granted === PermissionsAndroid.RESULTS.GRANTED) {
@@ -139,6 +144,7 @@ class WebSocketService {
           },
         );
         if (bggranted !== PermissionsAndroid.RESULTS.GRANTED) {
+          console.log('permission not granted');
           return;
         }
       } else {
@@ -190,9 +196,11 @@ class WebSocketService {
   
         this.socket.send(JSON.stringify(data));
       }else{
+        console.log('this.taskList',this.taskList)
       }
-      
+     
     } else {
+      console.log('WebSocket is not connected');
     }
   }
 
@@ -217,9 +225,48 @@ class WebSocketService {
       Geolocation.clearWatch(this.watchId); // Stop watching the location
       Geolocation.stopObserving();
       this.watchId = null; // Clear the watchId reference
+      console.log('Location updates stopped.');
     }
   }
-
+ 
+  // Get the socket instance (for use in components to directly add listeners)
+  public getSocket(): WebSocket | null {
+    return this.socket;
+  }
+ 
+  // Check if socket is connected
+  public isSocketConnected(): boolean {
+    return this.isConnected && this.socket?.readyState === WebSocket.OPEN;
+  }
+ 
+  public async sendMessage(messageData: any): Promise<any> {
+    return new Promise((resolve, reject) => {
+      if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
+        reject(new Error('WebSocket not connected'));
+        return;
+      }
+ 
+      // Send the data
+      try {
+        this.socket.send(JSON.stringify(messageData));
+        console.log('messageData',messageData)
+        resolve(messageData);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+ 
+  // Register a callback for specific message types
+  public registerMessageCallback(messageType: string, callback: Function): void {
+    this.messageCallbacks.set(messageType, callback);
+  }
+ 
+  // Unregister a callback
+  public unregisterMessageCallback(messageType: string): void {
+    this.messageCallbacks.delete(messageType);
+  }
+ 
   public disconnect(): void {
     this.stopLocationUpdates();
     if (this.socket) {
@@ -228,5 +275,5 @@ class WebSocketService {
     }
   }
 }
-
+ 
 export default WebSocketService;

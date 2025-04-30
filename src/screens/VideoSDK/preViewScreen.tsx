@@ -294,7 +294,9 @@ const PreViewScreen = ({navigation, route}: any) => {
                 </Text>
               </TouchableOpacity>
             ) : (
-              <TouchableOpacity style={{flexDirection: 'row'}}>
+              <TouchableOpacity
+                onPress={() => navigation.navigate(ROUTES.Home)}
+                style={{flexDirection: 'row'}}>
                 <BackIcon />
                 <Text style={{paddingLeft: 8}}>Back</Text>
               </TouchableOpacity>
@@ -363,7 +365,12 @@ const PreViewScreen = ({navigation, route}: any) => {
                 style={
                   I18nManager.isRTL
                     ? {fontSize: 15, fontWeight: '500', color: 'black'}
-                    : {paddingLeft: 10, fontSize: 15, fontWeight: '500',color: 'black'}
+                    : {
+                        paddingLeft: 10,
+                        fontSize: 15,
+                        fontWeight: '500',
+                        color: 'black',
+                      }
                 }>
                 {t('video')}
               </Text>

@@ -20,7 +20,8 @@ import WebSocketService from './WebSocketService';
 import {getLocationPermission} from './LocationService';
 import useMutationHook from '../Network/useMutationHook';
 import PushNotification from 'react-native-push-notification';
-
+import {ROUTES} from '../shared/utils/routes';
+import {useNavigation} from '@react-navigation/native';
 const WebViewComponent = ({uri}: any) => {
   const dispatch = useDispatch();
   const {topic, userinfo} = useSelector((state: any) => state.root.user);
@@ -32,6 +33,7 @@ const WebViewComponent = ({uri}: any) => {
   const [latestUrl, setLatestUrl] = useState('');
   const webViewRef = useRef(null);
   const webSocketService = WebSocketService.getInstance();
+  const navigation = useNavigation();
   const sleep = (timeout: number) =>
     new Promise<void>(resolve => setTimeout(resolve, timeout));
 
@@ -174,7 +176,11 @@ const WebViewComponent = ({uri}: any) => {
       dispatch(setUserInfo(null));
       webSocketService.disconnect();
     }
-    if (eventHandler == 'download') {
+
+    console.log('eventHandler', eventHandler);
+    if (eventHandler == 'joinMeeting') {
+      navigation.navigate(ROUTES.preViewCall, {Data: data});
+    } else if (eventHandler == 'download') {
       let isPermissionGrandted = await getStoragePermission();
       if (isPermissionGrandted) {
         setLoading(true);
@@ -212,51 +218,51 @@ const WebViewComponent = ({uri}: any) => {
       // getReminderListFromApi()
     }
 
-    if (url && url.includes('OnlineSessionRoom')) {
-      // let urlComplete = `https://staging.innotech-sa.com${url}`;
-      let urlComplete = `https://dvx.innotech-sa.com${url}`;
-      // let urlComplete = `https://nkapps.innotech-sa.com${url}`;
+    // if (url && url.includes('OnlineSessionRoom')) {
+    //   // let urlComplete = `https://staging.innotech-sa.com${url}`;
+    //   let urlComplete = `https://dvx.innotech-sa.com${url}`;
+    //   // let urlComplete = `https://nkapps.innotech-sa.com${url}`;
 
-      // let urlComplete = `https://naraakum.com${url}`;
+    //   // let urlComplete = `https://naraakum.com${url}`;
 
-      const redirectUrl = getDeepLink();
+    //   const redirectUrl = getDeepLink();
 
-      try {
-        if (await InAppBrowser.isAvailable()) {
-          // const result = await InAppBrowser.open(urlComplete, {
-          //   showTitle: true,
-          //   toolbarColor: '#6200EE',
-          //   enableDefaultShare: true,
-          //   animations: {
-          //     startEnter: 'slide_in_right',
-          //     startExit: 'slide_out_left',
-          //     endEnter: 'slide_in_left',
-          //     endExit: 'slide_out_right',
-          //   },
-          // });
-          const result = await InAppBrowser.open(urlComplete, {
-            forceCloseOnRedirection: false,
-            showInRecents: true,
-            showTitle: true,
-            enableUrlBarHiding: true,
-            enableDefaultShare: false,
-            modalPresentationStyle: 'overFullScreen',
+    //   try {
+    //     if (await InAppBrowser.isAvailable()) {
+    //       // const result = await InAppBrowser.open(urlComplete, {
+    //       //   showTitle: true,
+    //       //   toolbarColor: '#6200EE',
+    //       //   enableDefaultShare: true,
+    //       //   animations: {
+    //       //     startEnter: 'slide_in_right',
+    //       //     startExit: 'slide_out_left',
+    //       //     endEnter: 'slide_in_left',
+    //       //     endExit: 'slide_out_right',
+    //       //   },
+    //       // });
+    //       const result = await InAppBrowser.open(urlComplete, {
+    //         forceCloseOnRedirection: false,
+    //         showInRecents: true,
+    //         showTitle: true,
+    //         enableUrlBarHiding: true,
+    //         enableDefaultShare: false,
+    //         modalPresentationStyle: 'overFullScreen',
 
-            ephemeralWebSession: false,
-            enableBarCollapsing: true,
-            modalEnabled: true,
-          });
-          await sleep(800);
-          setCurrentUrl(latestUrl);
-          setReloadWebView(true);
-          setTimeout(() => {
-            setReloadWebView(false);
-          }, 100);
-        }
-      } catch (error) {
-        Alert.alert('Error', 'Failed to open the in-app browser');
-      }
-    }
+    //         ephemeralWebSession: false,
+    //         enableBarCollapsing: true,
+    //         modalEnabled: true,
+    //       });
+    //       await sleep(800);
+    //       setCurrentUrl(latestUrl);
+    //       setReloadWebView(true);
+    //       setTimeout(() => {
+    //         setReloadWebView(false);
+    //       }, 100);
+    //     }
+    //   } catch (error) {
+    //     Alert.alert('Error', 'Failed to open the in-app browser');
+    //   }
+    // }
   };
 
   const getDeepLink = (path = '') => {

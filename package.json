@@ -10,7 +10,7 @@
     "test": "jest",
     "postinstall": "patch-package"
   },
-  "dependencies": {
+ "dependencies": {
     "@react-native-async-storage/async-storage": "^1.23.1",
     "@react-native-community/geolocation": "^3.3.0",
     "@react-native-community/netinfo": "^11.4.1",
@@ -42,7 +42,7 @@
     "react-native-background-timer": "^2.4.1",
     "react-native-config": "^1.5.3",
     "react-native-device-info": "^11.1.0",
-    "react-native-document-picker": "^4.2.0",
+    "react-native-document-picker": "^9.3.1",
     "react-native-file-picker": "^0.0.21",
     "react-native-file-viewer": "^2.1.5",
     "react-native-fs": "^2.20.0",

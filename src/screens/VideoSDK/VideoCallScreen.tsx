@@ -447,7 +447,7 @@ const VideoCallScreen = ({
                     alignItems: 'center',
                     justifyContent: 'center',
                   }}>
-                  <Text>{`في انتظار انضمام ${displayName}`}</Text>
+                  <Text>{`Waiting for ${displayName} to join.`}</Text>
                 </View>
               </>
             )}
@@ -535,7 +535,7 @@ const VideoCallScreen = ({
             ) : (
               <View style={styles.waitingParticipantView}>
                 <Text style={styles.waitingParticipantText}>
-                  {`في انتظار انضمام ${displayName}`}
+                  {`Waiting for ${displayName} to join.`}
                 </Text>
               </View>
             )}
@@ -601,7 +601,7 @@ const VideoCallScreen = ({
             ) : (
               <View style={styles.waitingParticipantView}>
                 <Text style={styles.waitingParticipantText}>
-                  {`في انتظار انضمام ${displayName}`}
+                  {`Waiting for ${displayName} to join.`}
                 </Text>
               </View>
             )}

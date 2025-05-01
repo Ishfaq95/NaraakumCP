@@ -366,13 +366,13 @@ const PreViewScreen = ({navigation, route}: any) => {
                   I18nManager.isRTL
                     ? {fontSize: 15, fontWeight: '500', color: 'black'}
                     : {
-                        paddingLeft: 10,
                         fontSize: 15,
                         fontWeight: '500',
                         color: 'black',
                       }
                 }>
-                {t('video')}
+                {/* {t('video')} */}
+                Video
               </Text>
             </View>
             <TouchableOpacity onPress={() => setVideoOn(!videoOn)}>
@@ -405,7 +405,8 @@ const PreViewScreen = ({navigation, route}: any) => {
               </View>
 
               <Text style={{fontSize: 15, fontWeight: '500', color: 'black'}}>
-                {t('microphone')}
+                {/* {t('microphone')} */}
+                Microphone
               </Text>
             </View>
             <TouchableOpacity onPress={() => setMicon(!micOn)}>

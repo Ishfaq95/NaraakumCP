@@ -1,6 +1,13 @@
 import ProfileIcon from '../../assets/icons/ProfileIcon';
 import NetworkSignalIcon from '../../assets/icons/NetworkSignalIcon';
-import React, {useEffect, useRef, useState, useCallback, memo, useMemo} from 'react';
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  useCallback,
+  memo,
+  useMemo,
+} from 'react';
 import {
   View,
   Text,
@@ -105,7 +112,9 @@ const VideoCallScreen = ({
   useEffect(() => {
     if (Data?.Data) {
       console.log('Data?.Data', Data?.Data?.VisitData);
-      setDocumentUrl(`https://dvx.innotech-sa.com/HHC/web/ServiceProvider/AddVisitRecord?visitData=${Data?.Data?.VisitData}`);
+      setDocumentUrl(
+        `https://dvx.innotech-sa.com/HHC/web/ServiceProvider/AddVisitRecord?visitData=${Data?.Data?.VisitData}`,
+      );
     }
   }, [Data]);
 
@@ -116,7 +125,9 @@ const VideoCallScreen = ({
   const {user} = useSelector((state: any) => state.root.user);
   const socketService = useRef(WebSocketService.getInstance());
 
-  const [mongoConverstionId, setMongoConverstionId] = useState<string | null>(null);
+  const [mongoConverstionId, setMongoConverstionId] = useState<string | null>(
+    null,
+  );
   const [mongoSenderId, setMongoSenderId] = useState<string | null>(null);
   const [mongoReceiverId, setMongoReceiverId] = useState<string | null>(null);
 
@@ -137,14 +148,23 @@ const VideoCallScreen = ({
     const handleMessage = async (event: any) => {
       try {
         const socketEvent = JSON.parse(event.data);
-        console.log('WebSocket message received in VideoCallScreen:', socketEvent);
-        
+        console.log(
+          'WebSocket message received in VideoCallScreen:',
+          socketEvent,
+        );
+
         if (socketEvent.Command === 56) {
           const parsedData = JSON.parse(socketEvent.Message);
           console.log('Parsed message data:', parsedData);
-          
-          if (parsedData.MessageType === 'Text' || parsedData.MessageType === 'FilePath') {
-            console.log('Message type matches, messageClicked:', messageClicked);
+
+          if (
+            parsedData.MessageType === 'Text' ||
+            parsedData.MessageType === 'FilePath'
+          ) {
+            console.log(
+              'Message type matches, messageClicked:',
+              messageClicked,
+            );
             // Only increment count if chat is closed
             if (!messageClicked) {
               console.log('Incrementing unread count');
@@ -164,10 +184,10 @@ const VideoCallScreen = ({
     const originalOnMessage = socket.onmessage;
 
     // Set our handler
-    socket.onmessage = (event) => {
+    socket.onmessage = event => {
       // Call our handler
       handleMessage(event);
-      
+
       // Call the original handler if it exists
       if (originalOnMessage) {
         originalOnMessage(event);
@@ -303,11 +323,14 @@ const VideoCallScreen = ({
   }, []);
 
   // Add handler for conversation IDs
-  const handleConversationIds = useCallback((ids: { conversationId: string; senderId: string; receiverId: string }) => {
-    setMongoConverstionId(ids.conversationId);
-    setMongoSenderId(ids.senderId);
-    setMongoReceiverId(ids.receiverId);
-  }, []);
+  const handleConversationIds = useCallback(
+    (ids: {conversationId: string; senderId: string; receiverId: string}) => {
+      setMongoConverstionId(ids.conversationId);
+      setMongoSenderId(ids.senderId);
+      setMongoReceiverId(ids.receiverId);
+    },
+    [],
+  );
 
   // Update chatScreenProps
   const chatScreenProps = useMemo(
@@ -319,7 +342,13 @@ const VideoCallScreen = ({
       onNewMessage: handleNewMessage,
       onConversationIds: handleConversationIds,
     }),
-    [Data?.Data?.patientId, Data?.Data?.serviceProviderId, displayName, handleNewMessage, handleConversationIds],
+    [
+      Data?.Data?.patientId,
+      Data?.Data?.serviceProviderId,
+      displayName,
+      handleNewMessage,
+      handleConversationIds,
+    ],
   );
 
   // Add effect to reset unread count when chat is opened
@@ -447,7 +476,7 @@ const VideoCallScreen = ({
                     alignItems: 'center',
                     justifyContent: 'center',
                   }}>
-                  <Text>{`في انتظار انضمام ${displayName}`}</Text>
+                  <Text>{`Waiting for ${displayName} to join.`}</Text>
                 </View>
               </>
             )}
@@ -523,7 +552,10 @@ const VideoCallScreen = ({
         </>
       ) : documentClicked ? (
         <View style={styles.fullView}>
-          <DocumentViewScreen url={documentUrl} onClose={() => setDocumentClicked(false)} />
+          <DocumentViewScreen
+            url={documentUrl}
+            onClose={() => setDocumentClicked(false)}
+          />
           <Animated.View
             style={[styles.chatSmallVideo, dragPosition.getLayout()]}
             {...panResponder.panHandlers}>
@@ -535,7 +567,7 @@ const VideoCallScreen = ({
             ) : (
               <View style={styles.waitingParticipantView}>
                 <Text style={styles.waitingParticipantText}>
-                  {`في انتظار انضمام ${displayName}`}
+                  {`Waiting for ${displayName} to join.`}
                 </Text>
               </View>
             )}
@@ -556,7 +588,10 @@ const VideoCallScreen = ({
                   toggleMic();
                   setMicOn(!micOn);
                 }}
-                style={[styles.miniControlButton, !micOn && styles.miniControlButtonOff]}>
+                style={[
+                  styles.miniControlButton,
+                  !micOn && styles.miniControlButtonOff,
+                ]}>
                 {micOn ? (
                   <MicIconWithCircle height={22} width={22} />
                 ) : (
@@ -569,7 +604,10 @@ const VideoCallScreen = ({
                   toggleWebcam();
                   setVideoOn(!videoOn);
                 }}
-                style={[styles.miniControlButton, !videoOn && styles.miniControlButtonOff]}>
+                style={[
+                  styles.miniControlButton,
+                  !videoOn && styles.miniControlButtonOff,
+                ]}>
                 {videoOn ? (
                   <CameraIconWithCircle height={22} width={22} />
                 ) : (
@@ -587,9 +625,7 @@ const VideoCallScreen = ({
         </View>
       ) : (
         <View style={styles.fullView}>
-          <MemoizedChatScreen 
-            {...chatScreenProps} 
-          />
+          <MemoizedChatScreen {...chatScreenProps} />
           <Animated.View
             style={[styles.chatSmallVideo, dragPosition.getLayout()]}
             {...panResponder.panHandlers}>
@@ -601,7 +637,7 @@ const VideoCallScreen = ({
             ) : (
               <View style={styles.waitingParticipantView}>
                 <Text style={styles.waitingParticipantText}>
-                  {`في انتظار انضمام ${displayName}`}
+                  {`Waiting for ${displayName} to join.`}
                 </Text>
               </View>
             )}
@@ -622,7 +658,10 @@ const VideoCallScreen = ({
                   toggleMic();
                   setMicOn(!micOn);
                 }}
-                style={[styles.miniControlButton, !micOn && styles.miniControlButtonOff]}>
+                style={[
+                  styles.miniControlButton,
+                  !micOn && styles.miniControlButtonOff,
+                ]}>
                 {micOn ? (
                   <MicIconWithCircle height={22} width={22} />
                 ) : (
@@ -635,7 +674,10 @@ const VideoCallScreen = ({
                   toggleWebcam();
                   setVideoOn(!videoOn);
                 }}
-                style={[styles.miniControlButton, !videoOn && styles.miniControlButtonOff]}>
+                style={[
+                  styles.miniControlButton,
+                  !videoOn && styles.miniControlButtonOff,
+                ]}>
                 {videoOn ? (
                   <CameraIconWithCircle height={22} width={22} />
                 ) : (

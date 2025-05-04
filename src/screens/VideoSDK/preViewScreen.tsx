@@ -48,6 +48,7 @@ const PreViewScreen = ({navigation, route}: any) => {
   const [videoOn, setVideoOn] = useState(true);
   const [facingMode, setfacingMode] = useState('user');
   const [videoSDKToken, setVideoSDKToken] = useState('');
+  const [isSessionExpired, setIsSessionExpired] = useState(false);
   const meetingTypes = [
     {key: 'ONE_TO_ONE', value: 'One to One Meeting'},
     {key: 'GROUP', value: 'Group Meeting'},
@@ -245,7 +246,8 @@ const PreViewScreen = ({navigation, route}: any) => {
         sessionEndTime: sessionEndTime,
         Data: route?.params,
       };
-
+      setMicon(true);
+      setVideoOn(true);
       navigation.navigate(ROUTES.Meeting, paramsVal);
     }
   };
@@ -264,6 +266,24 @@ const PreViewScreen = ({navigation, route}: any) => {
     }
     setMicon(!micOn);
   };
+
+  // Add effect to check session expiration
+  useEffect(() => {
+    const checkSessionExpiration = () => {
+      const now = new Date();
+      const endTime = new Date(sessionEndTime);
+      setIsSessionExpired(now > endTime);
+    };
+
+    // Check immediately
+    checkSessionExpiration();
+
+    // Set up interval to check every minute
+    const interval = setInterval(checkSessionExpiration, 60000);
+
+    // Cleanup interval on unmount
+    return () => clearInterval(interval);
+  }, [sessionEndTime]);
 
   return (
     <SafeAreaView style={{flex: 1, backgroundColor: '#E6ECEC'}}>
@@ -434,6 +454,7 @@ const PreViewScreen = ({navigation, route}: any) => {
         </View>
         <TouchableOpacity
           onPress={onJoinMeeting}
+          disabled={isSessionExpired}
           style={{
             height: 40,
             width: '90%',
@@ -442,10 +463,11 @@ const PreViewScreen = ({navigation, route}: any) => {
             justifyContent: 'center',
             borderRadius: 5,
             alignSelf: 'center',
-            backgroundColor: '#32A3A4',
+            backgroundColor: isSessionExpired ? '#CCCCCC' : '#32A3A4',
+            opacity: isSessionExpired ? 0.7 : 1,
           }}>
           <Text style={{fontSize: 14, fontWeight: '400', color: 'white'}}>
-            Join Now
+            {isSessionExpired ? 'Session Expired' : 'Join Now'}
           </Text>
         </TouchableOpacity>
       </View>

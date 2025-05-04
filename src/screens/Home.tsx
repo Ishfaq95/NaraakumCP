@@ -17,6 +17,7 @@ import {isTokenExpired} from '../shared/services/service';
 import {check, request, PERMISSIONS, RESULTS} from 'react-native-permissions';
 import {store} from '../shared/redux/store';
 import {crashlyticsService} from '../shared/services/crashlytics/crashlytics.service';
+import {MediaBaseURL} from '../Network/axiosInstance';
 
 const HomeScreen = () => {
   const dispatch = useDispatch();

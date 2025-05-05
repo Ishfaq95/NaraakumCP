@@ -41,10 +41,8 @@ public class LocationModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void startTracking() {
-        Log.d(TAG, "startTracking called");
         try {
             if (reactContext == null) {
-                Log.e(TAG, "React context is null in startTracking");
                 return;
             }
 
@@ -69,7 +67,6 @@ public class LocationModule extends ReactContextBaseJavaModule {
             } else {
                 reactContext.startService(serviceIntent);
             }
-            Log.d(TAG, "Location service started successfully");
         } catch (Exception e) {
             Log.e(TAG, "Error starting location service: " + e.getMessage(), e);
         }
@@ -77,7 +74,6 @@ public class LocationModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void stopTracking() {
-        Log.d(TAG, "stopTracking called");
         try {
             if (reactContext == null) {
                 Log.e(TAG, "React context is null in stopTracking");
@@ -86,7 +82,6 @@ public class LocationModule extends ReactContextBaseJavaModule {
 
             Intent serviceIntent = new Intent(reactContext, LocationService.class);
             reactContext.stopService(serviceIntent);
-            Log.d(TAG, "Location service stopped successfully");
         } catch (Exception e) {
             Log.e(TAG, "Error stopping location service: " + e.getMessage(), e);
         }

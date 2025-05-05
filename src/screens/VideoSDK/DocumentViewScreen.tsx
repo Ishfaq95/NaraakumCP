@@ -5,11 +5,13 @@ import {WebView} from 'react-native-webview';
 interface DocumentViewScreenProps {
   url: string;
   onClose: () => void;
+  onSetVisitData: (data: any) => void;
 }
 
 const DocumentViewScreen: React.FC<DocumentViewScreenProps> = ({
   url,
   onClose,
+  onSetVisitData,
 }) => {
   const INJECTED_JAVASCRIPT = `
   (function() {
@@ -32,6 +34,7 @@ const DocumentViewScreen: React.FC<DocumentViewScreenProps> = ({
     } = JSON.parse(event.nativeEvent.data);
 
     console.log('url', eventHandler, data);
+    onSetVisitData(data);
   };
 
   const onNavigationStateChange = (url: any) => {

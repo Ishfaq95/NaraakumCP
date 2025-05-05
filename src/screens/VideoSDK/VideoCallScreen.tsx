@@ -103,6 +103,14 @@ const VideoCallScreen = ({
   const [messageText, setMessageText] = useState('');
   const participantIds = [...participants.keys()];
   const [documentUrl, setDocumentUrl] = useState('');
+  const [visitData, setVisitData] = useState(Data?.Data?.VisitData);
+  const [documentClicked, setDocumentClicked] = useState(false);
+  const [pendingVisitData, setPendingVisitData] = useState(null);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalContent, setModalContent] = useState({
+    heading: '',
+    detail: '',
+  });
   const participantCount = participantIds ? participantIds.length : null;
 
   const {webcamOn, webcamStream, setQuality, isLocal} = useParticipant(
@@ -112,12 +120,22 @@ const VideoCallScreen = ({
 
   useEffect(() => {
     if (Data?.Data) {
-      console.log('Data?.Data', Data?.Data?.VisitData);
-      setDocumentUrl(
-        `https://dvx.innotech-sa.com/HHC/web/ServiceProvider/AddVisitRecord?visitData=${Data?.Data?.VisitData}`,
-      );
+      setVisitData(Data?.Data?.VisitData);
     }
   }, [Data]);
+
+  useEffect(() => {
+    if (!documentClicked) {
+      const dataToUse = pendingVisitData || visitData;
+      setDocumentUrl(
+        `https://dvx.innotech-sa.com/HHC/web/ServiceProvider/AddVisitRecord?visitData=${dataToUse}`,
+      );
+      if (pendingVisitData) {
+        setVisitData(pendingVisitData);
+        setPendingVisitData(null);
+      }
+    }
+  }, [visitData, documentClicked, pendingVisitData]);
 
   const {score} = useParticipantStat({
     participantId: participantIds[0],
@@ -139,12 +157,6 @@ const VideoCallScreen = ({
   // Move state declarations to the top
   const [messageClicked, setMessageClicked] = useState(false);
   const [unreadMessageCount, setUnreadMessageCount] = useState(0);
-  const [documentClicked, setDocumentClicked] = useState(false);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [modalContent, setModalContent] = useState({
-    heading: '',
-    detail: '',
-  });
 
   // Add WebSocket message handler
   useEffect(() => {
@@ -394,6 +406,20 @@ const VideoCallScreen = ({
     setModalVisible(false);
   };
 
+  const handleVisitDataUpdate = (data: any) => {
+    if (documentClicked) {
+      // Store the update for later
+      setPendingVisitData(data);
+    } else {
+      // Update immediately if document is not open
+      setVisitData(data);
+    }
+  };
+
+  const handleDocumentClose = () => {
+    setDocumentClicked(false);
+  };
+
   return (
     <View style={styles.container}>
       {!messageClicked && !documentClicked ? (
@@ -578,7 +604,8 @@ const VideoCallScreen = ({
         <View style={styles.fullView}>
           <DocumentViewScreen
             url={documentUrl}
-            onClose={() => setDocumentClicked(false)}
+            onSetVisitData={handleVisitDataUpdate}
+            onClose={handleDocumentClose}
           />
           <Animated.View
             style={[styles.chatSmallVideo, dragPosition.getLayout()]}

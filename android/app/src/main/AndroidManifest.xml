@@ -25,7 +25,7 @@
     <!-- end rn push notification -->
 
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
     
 <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
@@ -103,7 +103,8 @@
       <service
             android:name=".LocationService"
             android:enabled="true"
-            android:exported="true" />
+            android:exported="false"
+            android:foregroundServiceType="location" />
 
       <!-- BroadcastReceiver to handle background and killed state -->
         <receiver

@@ -8,6 +8,7 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.pm.ServiceInfo;
 import android.location.Location;
 import android.os.Build;
 import android.os.IBinder;
@@ -26,124 +27,146 @@ import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.Priority;
 import com.naraakum_cp.ReactContextHolder;
 
 public class LocationService extends Service {
+    private static final String TAG = "LocationService";
+    private static final String CHANNEL_ID = "location_service_channel";
+    private static final int NOTIFICATION_ID = 1;
     private FusedLocationProviderClient fusedLocationClient;
-    private static ReactApplicationContext reactContext;
+    private LocationCallback locationCallback;
 
-    public LocationService() {
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        createNotificationChannel();
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
     }
 
-    public LocationService(ReactApplicationContext context) {
-        reactContext = context;
+    private void createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(
+                CHANNEL_ID,
+                "Location Service Channel",
+                NotificationManager.IMPORTANCE_LOW
+            );
+            channel.setShowBadge(false);
+            NotificationManager manager = getSystemService(NotificationManager.class);
+            if (manager != null) {
+                manager.createNotificationChannel(channel);
+            }
+        }
+    }
+
+    private Notification createNotification() {
+        Intent notificationIntent = new Intent(this, MainActivity.class);
+        PendingIntent pendingIntent = PendingIntent.getActivity(
+            this,
+            0,
+            notificationIntent,
+            PendingIntent.FLAG_IMMUTABLE
+        );
+
+        return new NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle("Location Tracking")
+            .setContentText("Tracking your location")
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setContentIntent(pendingIntent)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setOngoing(true)
+            .build();
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        try {
+            startForegroundService();
+            startLocationUpdates();
+            return START_STICKY;
+        } catch (Exception e) {
+            Log.e(TAG, "Error in onStartCommand: " + e.getMessage());
+            stopSelf();
+            return START_NOT_STICKY;
+        }
+    }
+
+    private void startForegroundService() {
+        try {
+            Notification notification = createNotification();
+
+            // Start foreground with proper type for Android 14
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION);
+            } else {
+                startForeground(NOTIFICATION_ID, notification);
+            }
+            
+        } catch (Exception e) {
+            Log.e(TAG, "Error starting foreground service: " + e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    private void startLocationUpdates() {
+        try {
+            if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                Log.e(TAG, "Location permission not granted");
+                return;
+            }
+
+            LocationRequest locationRequest = new LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 10000)
+                .setMinUpdateIntervalMillis(5000)
+                .setMaxUpdateDelayMillis(10000)
+                .build();
+
+            locationCallback = new LocationCallback() {
+                @Override
+                public void onLocationResult(LocationResult locationResult) {
+                    if (locationResult == null) {
+                        Log.e(TAG, "Location result is null");
+                        return;
+                    }
+                    for (Location location : locationResult.getLocations()) {
+                        sendLocationUpdate(location);
+                    }
+                }
+            };
+
+            fusedLocationClient.requestLocationUpdates(
+                locationRequest,
+                locationCallback,
+                Looper.getMainLooper()
+            );
+        } catch (Exception e) {
+            Log.e(TAG, "Error starting location updates: " + e.getMessage());
+        }
+    }
+
+    private void sendLocationUpdate(Location location) {
+        try {
+            LocationModule locationModule = LocationModule.getInstance();
+            if (locationModule != null) {
+                locationModule.sendLocationUpdate(location.getLatitude(), location.getLongitude());
+            } else {
+                Log.e(TAG, "LocationModule instance is null");
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error sending location update: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (fusedLocationClient != null && locationCallback != null) {
+            fusedLocationClient.removeLocationUpdates(locationCallback);
+        }
     }
 
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
         return null;
-    }
-
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        // Get ReactApplicationContext from ReactContextHolder
-        ReactApplicationContext reactContext = ReactContextHolder.getContext();
-
-        if (reactContext == null) {
-            stopSelf();
-            return START_NOT_STICKY;
-        }
-
-        startForegroundService();
-        startLocationUpdates();
-        return START_STICKY;
-    }
-
-    private void startForegroundService() {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        NotificationChannel channel = new NotificationChannel(
-            "tracking_channel",
-            "Live Tracking",
-            NotificationManager.IMPORTANCE_LOW // Lower priority for less prominent notification
-        );
-        NotificationManager manager = getSystemService(NotificationManager.class);
-        manager.createNotificationChannel(channel);
-    }
-
-    Intent notificationIntent = new Intent(this, MainActivity.class);
-
-    PendingIntent pendingIntent = PendingIntent.getActivity(
-            this,
-            0,
-            notificationIntent,
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ? PendingIntent.FLAG_IMMUTABLE : 0
-    );
-
-    Notification notification = new NotificationCompat.Builder(this, "tracking_channel")
-            .setContentTitle("Live Tracking")
-            .setContentText("Tracking your location...")
-            .setSmallIcon(R.mipmap.ic_launcher) // Use a transparent icon to minimize the UI impact
-            .setPriority(NotificationCompat.PRIORITY_LOW) // Lower priority
-            .setContentIntent(pendingIntent)
-            .build();
-
-    startForeground(1, notification);
-}
-
-    private void startLocationUpdates() {
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-
-        // Create a LocationRequest using the new builder pattern
-        LocationRequest locationRequest = new LocationRequest.Builder(
-                LocationRequest.PRIORITY_HIGH_ACCURACY, 5000L)  // 5 seconds interval
-                .setMinUpdateIntervalMillis(3000L)  // Fastest interval (3 seconds)
-                .build();
-
-        // Check for location permissions
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            stopSelf();
-            return;
-        }
-
-        // Start requesting location updates
-        fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
-    }
-
-    private LocationCallback locationCallback = new LocationCallback() {
-        @Override
-        public void onLocationResult(LocationResult locationResult) {
-            if (locationResult == null) {
-                return;
-            }
-            for (Location location : locationResult.getLocations()) {
-                Log.d("LocationService", "Location received: " + location.getLatitude() + ", " + location.getLongitude());
-                sendLocationToReactNative(location.getLatitude(), location.getLongitude());
-            }
-        }
-    };
-
-    private void sendLocationToReactNative(double latitude, double longitude) {
-        ReactApplicationContext reactContext = ReactContextHolder.getContext();
-        if (reactContext != null) {
-            WritableMap params = new WritableNativeMap();
-            params.putDouble("latitude", latitude);
-            params.putDouble("longitude", longitude);
-
-            Log.d("LocationService", "Sending location to React Native");
-
-            reactContext
-                    .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
-                    .emit("locationUpdate", params);
-        }else {
-            Log.e("LocationService", "ReactContext is null, cannot send event.");
-        }
-    }
-
-    @Override
-    public void onDestroy() {
-        fusedLocationClient.removeLocationUpdates(locationCallback);
-        super.onDestroy();
     }
 }

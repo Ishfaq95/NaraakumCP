@@ -31,10 +31,10 @@ import {
 import {launchImageLibrary} from 'react-native-image-picker';
 import DocumentPicker from 'react-native-document-picker';
 import FilePicker from 'react-native-file-picker';
-import {BaseURL} from '../../Network/axiosInstance';
 import Sound from 'react-native-sound';
 import RNFS from 'react-native-fs';
 import {store} from '../../shared/redux/store';
+import {MediaBaseURL} from '../../shared/utils/constants';
 
 interface Message {
   Id: string;
@@ -666,7 +666,7 @@ const ChatScreen = ({
     try {
       setIsUploading(true);
       setUploadProgress(0);
-      let url = 'https://hhcmedia.innotech-sa.com/api/common/upload';
+      let url = `${MediaBaseURL}common/upload`;
       let ResourceCategoryId = '2';
 
       let fileType = file.name.split('.').pop();

@@ -18,13 +18,12 @@ import DocumentIconBlack from '../../assets/icons/DocumentIconBlack';
 import RNFS from 'react-native-fs';
 import {Alert} from 'react-native';
 import RNFetchBlob from 'rn-fetch-blob';
-import {MediaBaseURL} from '../../Network/axiosInstance';
 import DownloadIcon from '../../assets/icons/DownloadIcon';
 import DownloadIconBlack from '../../assets/icons/DownloadIconBlack';
 import Sound from 'react-native-sound';
 import VoiceNoteIcon from '../../assets/icons/VoiceNoteIcon';
 import VoiceNoteIconBlack from '../../assets/icons/VoiceNoteIconBlack';
-
+import {MediaBaseURL} from '../../shared/utils/constants';
 
 interface Message {
   SenderId: string;

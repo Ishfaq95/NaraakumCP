@@ -42,7 +42,6 @@ import {
   useParticipant,
 } from '@videosdk.live/react-native-sdk';
 import Toast from 'react-native-simple-toast';
-import VideosdkRPK from '../../../VideosdkRPK';
 import MiniView from '../../screens/meeting/OneToOne/MiniView';
 import {useNavigation} from '@react-navigation/native';
 import {ROUTES} from '../../shared/utils/routes';
@@ -54,6 +53,8 @@ import WebSocketService from '../../components/WebSocketService';
 import {useSelector} from 'react-redux';
 import DocumentIcon from '../../assets/icons/DocumentIcon';
 import DocumentViewScreen from './DocumentViewScreen';
+import {WEBSITE_URL} from '../../shared/utils/constants';
+import {SendNotificationForMeeting} from '../../Network/sendNotificationForMeeting';
 
 const {width: SCREEN_WIDTH, height: SCREEN_HEIGHT} = Dimensions.get('window');
 const SMALL_VIDEO_WIDTH = 140;
@@ -101,7 +102,8 @@ const VideoCallScreen = ({
   const navigation = useNavigation();
   const [remainingTime, setRemainingTime] = useState(0);
   const [messageText, setMessageText] = useState('');
-  const participantIds = [...participants.keys()];
+  const [participantIds, setParticipantIds] = useState<string[]>([]);
+  const notificationSentRef = useRef(false);
   const [documentUrl, setDocumentUrl] = useState('');
   const [visitData, setVisitData] = useState(Data?.Data?.VisitData);
   const [documentClicked, setDocumentClicked] = useState(false);
@@ -125,10 +127,48 @@ const VideoCallScreen = ({
   }, [Data]);
 
   useEffect(() => {
+    // Update participantIds whenever participants change
+    const ids = [...participants.keys()];
+    setParticipantIds(ids);
+  }, [participants]);
+
+  useEffect(() => {
+    if (
+      Data?.Data &&
+      participantIds.length === 1 &&
+      !notificationSentRef.current
+    ) {
+      console.log('Sending notification...');
+      notificationSentRef.current = true;
+      sendFCMToOtherParticipants();
+    }
+  }, [Data, participantIds]);
+
+  const sendFCMToOtherParticipants = async () => {
+    const reciverId = `serviceprovider_${Data?.Data?.patientId}`;
+    let data = {
+      notificationFrom: 'JoinMeeting',
+      toUserId: Data?.Data?.serviceProviderId,
+      sessionStartTime: Data?.Data?.sessionStartTime,
+      bookingId: Data?.Data?.bookingId,
+      patientProfileId: Data?.Data?.patientProfileId,
+      meetingId: Data?.Data?.meetingId,
+      Name: Data?.Data?.displayName,
+      displayName: Data?.Data?.Name,
+      sessionEndTime: Data?.Data?.sessionEndTime,
+      patientId: Data?.Data?.patientId,
+      VisitData: Data?.Data?.VisitData,
+      serviceProviderId: Data?.Data?.serviceProviderId,
+    };
+
+    const response = await SendNotificationForMeeting(reciverId, data);
+  };
+
+  useEffect(() => {
     if (!documentClicked) {
       const dataToUse = pendingVisitData || visitData;
       setDocumentUrl(
-        `https://dvx.innotech-sa.com/HHC/web/ServiceProvider/AddVisitRecord?visitData=${dataToUse}`,
+        `${WEBSITE_URL}ServiceProvider/AddVisitRecord?visitData=${dataToUse}`,
       );
       if (pendingVisitData) {
         setVisitData(pendingVisitData);

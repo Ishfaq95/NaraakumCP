@@ -5,13 +5,11 @@ import BackgroundTimer from 'react-native-background-timer';
 import Geolocation from 'react-native-geolocation-service';
 // import BackgroundFetch from 'react-native-background-fetch';
 import {GetOnTheWayTasks} from '../Network/GetOnTheWayAPI';
-const WEBSOCKET_URL = 'wss://nodedev01.innotech-sa.com:6223/';
-// const WEBSOCKET_URL = 'wss://nodedev01.innotech-sa.com:8112/';
-// const WEBSOCKET_URL = 'wss://nk-pro-presense.innotech-sa.com:8202/';
 import LocationService from './LocationTracker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {ContinousBaseGesture} from 'react-native-gesture-handler/lib/typescript/handlers/gestures/gesture';
 import BackgroundGeolocation from 'react-native-background-geolocation';
+import { WEBSOCKET_URL } from '../shared/utils/constants';
 
 class WebSocketService {
   private static instance: WebSocketService;

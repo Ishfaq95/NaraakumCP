@@ -74,6 +74,10 @@ const NotificationsCenter = () => {
       if (Platform.OS === 'ios') {
         if (remoteMessage?.data?.notificationFrom == 'reminder') {
           handleNavigationFromNotification(remoteMessage.data);
+        } else if (remoteMessage?.data?.notificationFrom == 'JoinMeeting') {
+          navigation.navigate(ROUTES.preViewCall, {
+            Data: remoteMessage?.data,
+          });
         }
       }
     });
@@ -93,8 +97,18 @@ const NotificationsCenter = () => {
       let parsedData = JSON.parse(notificationData);
       let title = parsedData.notification?.title;
       let body = parsedData.notification?.body;
-      console.log('remoteMessage', parsedData);
-      Alert.alert(title, body);
+
+      console.log('parsedData', parsedData?.data);
+      const notificationFrom = parsedData?.data?.notificationFrom;
+
+      if (notificationFrom == 'JoinMeeting') {
+        navigation.navigate(ROUTES.preViewCall, {
+          Data: parsedData?.data,
+        });
+      } else {
+        Alert.alert(title, body);
+      }
+
       if (Platform.OS === 'ios') {
         // This is the critical part that will show the notification banner
         // PushNotificationIOS.addNotificationRequest({
@@ -139,6 +153,12 @@ const NotificationsCenter = () => {
         if (notification?.data?.notificationFrom == 'reminder') {
           setTimeout(() => {
             handleNavigationFromNotification(notification.data);
+          }, 1000);
+        } else if (notification?.data?.notificationFrom == 'JoinMeeting') {
+          setTimeout(() => {
+            navigation.navigate(ROUTES.preViewCall, {
+              Data: notification?.data,
+            });
           }, 1000);
         }
       }

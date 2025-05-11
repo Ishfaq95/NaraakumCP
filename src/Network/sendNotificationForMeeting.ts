@@ -1,24 +1,23 @@
-// apiService.ts
+import {BaseURL} from '../shared/utils/constants';
+import {store} from '../shared/redux/store';
 
-import { BaseURL } from "../shared/utils/constants";
-import { store } from "../shared/redux/store";
-
-export const GetOnTheWayTasks = async (UserProfileId:any) => {
+export const SendNotificationForMeeting = async (ReciverId: any, data: any) => {
   const token = store.getState().root.user.token;
-  const url=`${BaseURL}user/GetServiceProviderOnthewayTaskList`
+  const url = `${BaseURL}chat/FCMtojoinMeeting`;
 
-  const data={
-        "ServiceProviderUserLoginInfoId":UserProfileId
-     }
+  const dataObj = {
+    ReciverId: ReciverId,
+    data: data,
+  };
   try {
     const response = await fetch(url, {
       method: 'POST', // or 'GET', 'PUT', 'DELETE' as needed
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`, // Add Bearer token to headers
+        Authorization: `Bearer ${token}`, // Add Bearer token to headers
         // Add any additional headers if needed
       },
-      body: JSON.stringify(data), // For POST or PUT requests
+      body: JSON.stringify(dataObj), // For POST or PUT requests
     });
 
     if (!response.ok) {

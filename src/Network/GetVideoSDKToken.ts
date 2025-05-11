@@ -1,10 +1,11 @@
 // apiService.ts
 
 import { store } from "../shared/redux/store";
+import { BaseURL } from "../shared/utils/constants";
 
 export const getVideoSDKToken=async ()=>{
   const token = store.getState().root.user.token;
-  const url='https://hhcnode.innotech-sa.com/api/videosdk/get-token';
+  const url=`${BaseURL}videosdk/get-token`;
  
   try {
     const response = await fetch(url, {

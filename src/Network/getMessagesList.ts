@@ -1,7 +1,7 @@
 // apiService.ts
 import axios from 'axios';
 import { store } from "../shared/redux/store";
-import { BaseURL } from "./axiosInstance";
+import { BaseURL } from '../shared/utils/constants';
 
 export const getMessagesList = async (payload: object) => {
   const token = store.getState().root.user.token;

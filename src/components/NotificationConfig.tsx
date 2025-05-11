@@ -110,6 +110,10 @@ const NotificationsCenter = () => {
           // Ensure handleNavigationFromNotification is called with correct data
           if (data?.notificationFrom == 'reminder') {
             handleNavigationFromNotification(data);
+          }else if(data?.notificationFrom == "JoinMeeting"){
+            navigation.navigate(ROUTES.preViewCall,{
+              Data:data,
+            })
           }
  
           notification.finish(PushNotificationIOS.FetchResult.NoData);
@@ -152,37 +156,48 @@ const NotificationsCenter = () => {
       let title = parsedData.notification?.title;
       let body = parsedData.notification?.body;
       console.log('remoteMessage', remoteMessage);
-      if (Platform.OS === 'ios') {
-        // This is the critical part that will show the notification banner
-        PushNotificationIOS.addNotificationRequest({
-          title: remoteMessage?.notification?.title,
-          subtitle: '',
-          body: remoteMessage?.notification?.body,
-          userInfo: remoteMessage.data,
-          repeats: false,
-          threadId: 'thread-id',
-          sound: 'default',
-          badge: 1,
-          repeatsComponent: {
-            hour: false,
-            minute: false,
-            day: false,
-            weekday: false,
-            month: false,
-            year: false,
-          },
-        });
-      } else {
-        // Your existing Android code
-        PushNotification.localNotification({
-          channelId: 'com.naraakm.naraakumCP',
-          title: remoteMessage.notification?.title,
-          message: remoteMessage.notification?.body,
-          playSound: true,
-          soundName: 'default',
-          data: remoteMessage.data,
-        });
+
+      const notificationFrom=parsedData?.data?.notificationFrom;
+
+      if(notificationFrom == "JoinMeeting"){
+        navigation.navigate(ROUTES.preViewCall,{
+          Data:parsedData?.data,
+        })
+      }else{
+        Alert.alert(title,body)
       }
+
+      // if (Platform.OS === 'ios') {
+      //   // This is the critical part that will show the notification banner
+      //   PushNotificationIOS.addNotificationRequest({
+      //     title: remoteMessage?.notification?.title,
+      //     subtitle: '',
+      //     body: remoteMessage?.notification?.body,
+      //     userInfo: remoteMessage.data,
+      //     repeats: false,
+      //     threadId: 'thread-id',
+      //     sound: 'default',
+      //     badge: 1,
+      //     repeatsComponent: {
+      //       hour: false,
+      //       minute: false,
+      //       day: false,
+      //       weekday: false,
+      //       month: false,
+      //       year: false,
+      //     },
+      //   });
+      // } else {
+      //   // Your existing Android code
+      //   PushNotification.localNotification({
+      //     channelId: 'com.naraakm.naraakumCP',
+      //     title: remoteMessage.notification?.title,
+      //     message: remoteMessage.notification?.body,
+      //     playSound: true,
+      //     soundName: 'default',
+      //     data: remoteMessage.data,
+      //   });
+      // }
     });
  
     return unsubscribe;
@@ -196,6 +211,10 @@ const NotificationsCenter = () => {
           setTimeout(() => {
             handleNavigationFromNotification(notification.data);
           }, 1000);
+        } else if(notification?.data?.notificationFrom == "JoinMeeting"){
+          navigation.navigate(ROUTES.preViewCall,{
+            Data:notification?.data,
+          })
         }
       }
     });

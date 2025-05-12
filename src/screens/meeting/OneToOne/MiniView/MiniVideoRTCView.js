@@ -67,8 +67,8 @@ export default MiniVideoRTCView = ({
           containerBackgroundColor={colors.primary[600]}
           fontSize={24}
           style={{
-            backgroundColor: colors.primary[500],
-            height: 60,
+            // backgroundColor: colors.primary[500],
+            // height: 60,
             aspectRatio: 1,
             borderRadius: 40,
           }}

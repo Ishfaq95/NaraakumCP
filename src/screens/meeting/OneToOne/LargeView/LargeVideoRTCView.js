@@ -27,7 +27,8 @@ export default LargeVideoRTCView = ({
       fontSize={26}
       style={{
         backgroundColor: colors.primary[700],
-        height: 70,
+        // height: 70,
+        padding:10,
         aspectRatio: 1,
         borderRadius: 40,
       }}

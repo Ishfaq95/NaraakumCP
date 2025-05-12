@@ -104,6 +104,8 @@ const VideoCallScreen = ({
   const [documentClicked, setDocumentClicked] = useState(false);
   const [pendingVisitData, setPendingVisitData] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [currentParticipantName, setCurrentParticipantName] = useState(null);
+
   const [modalContent, setModalContent] = useState({
     heading: '',
     detail: '',
@@ -117,6 +119,7 @@ const VideoCallScreen = ({
 
   useEffect(() => {
     if (Data?.Data) {
+      setCurrentParticipantName(Data?.Data?.displayName);
       setVisitData(Data?.Data?.VisitData);
     }
   }, [Data]);
@@ -533,6 +536,7 @@ const VideoCallScreen = ({
                 <LargeView
                   participantId={participantIds[1]}
                   openStatsBottomSheet={openStatsBottomSheet}
+                  name={displayName}
                 />
               </View>
             ) : (
@@ -553,6 +557,7 @@ const VideoCallScreen = ({
               <MemoizedMiniView
                 openStatsBottomSheet={openStatsBottomSheet}
                 participantId={participantIds[0]}
+                name={currentParticipantName}
               />
             </Animated.View>
             <View style={styles.controls}>
@@ -629,6 +634,7 @@ const VideoCallScreen = ({
               <MemoizedMiniView
                 openStatsBottomSheet={openStatsBottomSheet}
                 participantId={participantIds[1]}
+                name={displayName}
               />
             ) : (
               <View style={styles.waitingParticipantView}>
@@ -693,6 +699,7 @@ const VideoCallScreen = ({
               <MemoizedMiniView
                 openStatsBottomSheet={openStatsBottomSheet}
                 participantId={participantIds[1]}
+                name={displayName}
               />
             ) : (
               <View style={styles.waitingParticipantView}>

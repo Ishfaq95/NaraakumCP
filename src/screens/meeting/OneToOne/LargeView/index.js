@@ -5,6 +5,7 @@ import { NetworkIcon } from "../../../../assets/icons";
 import colors from "../../../../styles/colors";
 import useParticipantStat from "../../Hooks/useParticipantStat";
 import LargeVideoRTCView from "./LargeVideoRTCView";
+import MicIconOff from "../../../../assets/icons/MicIconOff"
 
 const buttonStyle = {
   alignItems: "center",
@@ -20,6 +21,7 @@ const buttonStyle = {
 export default LargeViewContainer = ({
   participantId,
   openStatsBottomSheet,
+  name
 }) => {
   const {
     screenShareOn,
@@ -54,7 +56,7 @@ export default LargeViewContainer = ({
           <LargeVideoRTCView
             isOn={webcamOn}
             stream={webcamStream}
-            displayName={displayName}
+            displayName={name}
             objectFit={"cover"}
             isLocal={isLocal}
           />
@@ -69,12 +71,30 @@ export default LargeViewContainer = ({
                     ? "#faa713"
                     : "#FF5D5D",
               }}
+              disabled={true}
               onPress={() => {
                 openStatsBottomSheet({ pId: participantId });
               }}
             >
               <NetworkIcon fill={"#fff"} />
             </TouchableOpacity>
+          ) : null}
+          {!micOn ? (
+            <View
+              style={{
+                alignItems: "center",
+                position: "absolute",
+                top: 10,
+                padding: 8,
+                height: 26,
+                aspectRatio: 1,
+                borderRadius: 12,
+                justifyContent: "center",
+                right: 10,
+              }}
+            >
+              <MicIconOff height={22} width={22} />
+            </View>
           ) : null}
         </>
      

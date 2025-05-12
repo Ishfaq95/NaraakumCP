@@ -24,6 +24,7 @@ export default function Avatar({
       <View
         style={{
           ...style,
+          flex:1,
           justifyContent: "center",
           alignItems: "center",
           zIndex: 10,
@@ -35,7 +36,8 @@ export default function Avatar({
             color: colors.primary[100],
           }}
         >
-          {fullName && fullName.charAt(0).toUpperCase()}
+          {/* {fullName && fullName.charAt(0).toUpperCase()} */}
+          {fullName}
         </Text>
       </View>
     </View>

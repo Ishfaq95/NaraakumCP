@@ -109,6 +109,7 @@ const VideoCallScreen = ({
   const [documentClicked, setDocumentClicked] = useState(false);
   const [pendingVisitData, setPendingVisitData] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [currentParticipantName, setCurrentParticipantName] = useState(null);
   const [modalContent, setModalContent] = useState({
     heading: '',
     detail: '',
@@ -123,6 +124,7 @@ const VideoCallScreen = ({
   useEffect(() => {
     if (Data?.Data) {
       setVisitData(Data?.Data?.VisitData);
+      setCurrentParticipantName(Data?.Data?.displayName);
     }
   }, [Data]);
 
@@ -145,7 +147,7 @@ const VideoCallScreen = ({
   }, [Data, participantIds]);
 
   const sendFCMToOtherParticipants = async () => {
-    const reciverId = `serviceprovider_${Data?.Data?.patientId}`;
+    const reciverId = `patient_${Data?.Data?.patientId}`;
     let data = {
       notificationFrom: 'JoinMeeting',
       toUserId: Data?.Data?.serviceProviderId,
@@ -558,6 +560,7 @@ const VideoCallScreen = ({
                 <LargeView
                   participantId={participantIds[1]}
                   openStatsBottomSheet={openStatsBottomSheet}
+                  name={displayName}
                 />
               </View>
             ) : (
@@ -578,6 +581,7 @@ const VideoCallScreen = ({
               <MemoizedMiniView
                 openStatsBottomSheet={openStatsBottomSheet}
                 participantId={participantIds[0]}
+                name={currentParticipantName}
               />
             </Animated.View>
             <View style={styles.controls}>
@@ -654,6 +658,7 @@ const VideoCallScreen = ({
               <MemoizedMiniView
                 openStatsBottomSheet={openStatsBottomSheet}
                 participantId={participantIds[1]}
+                name={displayName}
               />
             ) : (
               <View style={styles.waitingParticipantView}>
@@ -722,6 +727,7 @@ const VideoCallScreen = ({
               <MemoizedMiniView
                 openStatsBottomSheet={openStatsBottomSheet}
                 participantId={participantIds[1]}
+                name={displayName}
               />
             ) : (
               <View style={styles.waitingParticipantView}>

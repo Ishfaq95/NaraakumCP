@@ -5,6 +5,7 @@ import MiniVideoRTCView from "./MiniVideoRTCView";
 export default MiniViewContainer = ({
   participantId,
   openStatsBottomSheet,
+  name,
 }) => {
   const { webcamOn, webcamStream, displayName, setQuality, isLocal, micOn } =
     useParticipant(participantId, {});
@@ -17,7 +18,7 @@ export default MiniViewContainer = ({
     <MiniVideoRTCView
       isOn={webcamOn}
       stream={webcamStream}
-      displayName={displayName}
+      displayName={name}
       isLocal={isLocal}
       micOn={micOn}
       participantId={participantId}

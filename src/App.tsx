@@ -18,6 +18,7 @@ import BackgroundGeolocation from 'react-native-background-geolocation';
 import {CrashlyticsErrorBoundary} from './components/CrashlyticsErrorBoundary';
 import {CrashlyticsProvider} from './components/CrashlyticsProvider';
 import crashlytics from '@react-native-firebase/crashlytics';
+import 'react-native-get-random-values';
 
 const App = () => {
   useEffect(() => {

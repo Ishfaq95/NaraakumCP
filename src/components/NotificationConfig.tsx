@@ -5,6 +5,7 @@ import PushNotification from 'react-native-push-notification';
 import PushNotificationIOS from '@react-native-community/push-notification-ios';
 import {useNavigation} from '@react-navigation/native';
 import {ROUTES} from '../shared/utils/routes';
+import {getCurrentScreen} from '../utils/navigationUtils';
 
 const createChannel = () => {
   PushNotification.createChannel(
@@ -101,10 +102,13 @@ const NotificationsCenter = () => {
       console.log('parsedData', parsedData?.data);
       const notificationFrom = parsedData?.data?.notificationFrom;
 
+      const currentScreen = getCurrentScreen(navigation);
+
       if (notificationFrom == 'JoinMeeting') {
-        navigation.navigate(ROUTES.preViewCall, {
-          Data: parsedData?.data,
-        });
+        if (Platform.OS == 'ios' && currentScreen != 'Meeting_Screen')
+          navigation.navigate(ROUTES.preViewCall, {
+            Data: parsedData?.data,
+          });
       } else {
         Alert.alert(title, body);
       }

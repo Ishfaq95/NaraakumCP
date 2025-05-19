@@ -11,6 +11,7 @@ import notifee, {
   TimestampTrigger,
   TriggerType,
 } from '@notifee/react-native';
+import { getCurrentScreen } from '../utils/navigationUtils';
  
 const createChannel = () => {
   PushNotification.createChannel(
@@ -106,11 +107,13 @@ const NotificationsCenter = () => {
           if (!data) {
             return;
           }
+
+          const currentScreen = getCurrentScreen(navigation);
  
           // Ensure handleNavigationFromNotification is called with correct data
           if (data?.notificationFrom == 'reminder') {
             handleNavigationFromNotification(data);
-          }else if(data?.notificationFrom == "JoinMeeting"){
+          }else if(data?.notificationFrom == "JoinMeeting" && currentScreen != ROUTES.Meeting){
             navigation.navigate(ROUTES.preViewCall,{
               Data:data,
             })
@@ -158,11 +161,13 @@ const NotificationsCenter = () => {
       console.log('remoteMessage', remoteMessage);
 
       const notificationFrom=parsedData?.data?.notificationFrom;
+      const currentScreen = getCurrentScreen(navigation);
 
       if(notificationFrom == "JoinMeeting"){
-        navigation.navigate(ROUTES.preViewCall,{
-          Data:parsedData?.data,
-        })
+
+        // navigation.navigate(ROUTES.preViewCall,{
+        //   Data:parsedData?.data,
+        // })
       }else{
         Alert.alert(title,body)
       }

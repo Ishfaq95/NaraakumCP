@@ -209,6 +209,9 @@ const ChatScreen = ({
         } else if (socketEvent.Command === 73) {
           updateMessageStatus('Delivered', 'Seen');
         } else if (socketEvent.Command === 56) {
+          if(!mongoConverstionId){
+            fetchPreviousMessages
+          }
           const parsedData = JSON.parse(socketEvent.Message);
           const messageType = parsedData.MessageType;
 
@@ -457,7 +460,7 @@ const ChatScreen = ({
 
   // Send a message through WebSocket
   const sendMessage = () => {
-    if (messageText.trim() === '' || !socketConnected || !mongoConverstionId)
+    if (messageText.trim() === '' || !socketConnected)
       return;
 
     // Create message data

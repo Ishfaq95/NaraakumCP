@@ -18,6 +18,7 @@ import {CrashlyticsProvider} from './components/CrashlyticsProvider';
 import crashlytics from '@react-native-firebase/crashlytics';
 import {Text, TouchableOpacity, View} from 'react-native';
 import { initializeI18Next } from './utils/language/i18nextConfig';
+import "react-native-get-random-values"
 
 const App = () => {
   useEffect(() => {

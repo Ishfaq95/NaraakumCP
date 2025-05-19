@@ -61,7 +61,6 @@ const WebViewComponent = ({ uri }:any) => {
       for (const item of notificationList) {
         const localDate = new Date(item.ReminderDate);
         // const localDate = new Date(Date.now() + 60 * 1000);
-        
   
         const trigger: TimestampTrigger = {
           type: TriggerType.TIMESTAMP,
@@ -92,7 +91,8 @@ const WebViewComponent = ({ uri }:any) => {
                   Subject: item.Subject,
                   TaskId: item.TaskId,
                   VideoSDKMeetingId: item.VideoSDKMeetingId || "Not Found",
-                notificationFrom: 'reminder',
+                  notificationFrom: 'reminder',
+                  meetingInfo: item.meetingInfo[0],
               },
             },
             trigger

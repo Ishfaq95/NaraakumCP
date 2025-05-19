@@ -39,6 +39,7 @@ import {check, PERMISSIONS, request, RESULTS} from 'react-native-permissions';
 import Svg, {Path} from 'react-native-svg';
 import AudioRecord from 'react-native-audio-record';
 import RightArrowIcon from '../../assets/icons/RightArrow';
+import {encryptText} from '../../shared/services/service';
 
 const width = 200;
 
@@ -48,11 +49,49 @@ const PreViewScreen = ({navigation, route}: any) => {
   const [videoOn, setVideoOn] = useState(true);
   const [facingMode, setfacingMode] = useState('user');
   const [videoSDKToken, setVideoSDKToken] = useState('');
+  const [callData,setCallData]=useState('')
   const [isSessionExpired, setIsSessionExpired] = useState(false);
   const meetingTypes = [
     {key: 'ONE_TO_ONE', value: 'One to One Meeting'},
     {key: 'GROUP', value: 'Group Meeting'},
   ];
+
+  useEffect(() => {
+    console.log('route params',route.params)
+    if(route.params && route.params.Data && !route?.params?.Data?.VisitData){
+      encryptDataVisit();
+    }else if(route.params && route.params?.Data){
+      setCallData(route.params)
+    }
+    // encryptDataVisit();
+  }, [route.params]);
+ 
+  const encryptDataVisit = () => {
+    const dataVisit = {
+      TaskId: route.params?.Data?.bookingId,
+      isFromSession: true,
+      isEdit: false,
+      canEdit: true,
+      canAddService: true,
+      VisitRecord: {VisitMainId: null},
+      UserloginInfoId: route.params?.Data?.patientId,
+      ServiceProviderId: route.params?.Data?.serviceProviderId,
+      PatientUserProfileInfoId: route.params?.Data?.patientProfileId,
+    };
+ 
+    const paramsJson = JSON.stringify(dataVisit);
+    console.log('paramsJson',paramsJson)
+    const encryptedVisitData = encryptText(paramsJson, '!naarakum@789');
+    
+    const callDataObj:any={
+      Data:{
+        ...route.params.Data,
+        VisitData:encryptedVisitData
+      }
+    }
+
+    setCallData(callDataObj)
+  };
 
   const {t, i18n} = useTranslation();
   const displayName = route?.params?.Data?.Name;
@@ -244,7 +283,7 @@ const PreViewScreen = ({navigation, route}: any) => {
         defaultCamera: facingMode === 'user' ? 'front' : 'back',
         sessionStartTime: sessionStartTime,
         sessionEndTime: sessionEndTime,
-        Data: route?.params,
+        Data: callData,
       };
       setMicon(true);
       setVideoOn(true);

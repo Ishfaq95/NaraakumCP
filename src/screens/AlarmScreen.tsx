@@ -10,6 +10,7 @@ import {
   SafeAreaView,
 } from 'react-native';
 import {ROUTES} from '../shared/utils/routes';
+import { formatDateTimeToLocal } from '../utils/dateUtils';
  
 const AlarmScreen = () => {
   const route = useRoute();
@@ -19,16 +20,48 @@ const AlarmScreen = () => {
   const [string2, setString2] = useState('');
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
+  const [callData, setCallData] = useState<any>(null);
+
+  console.log("Data",data)
+
  
   const onPressButton = () => {
-    navigation.navigate(ROUTES.Home);
+    if(data.Subject=="Session Started"){
+      navigation.navigate(ROUTES.preViewCall,{Data:callData});
+    }else{
+      navigation.navigate(ROUTES.Home);
+    }
+    
   };
  
   useEffect(() => {
     if (data) {
       makeStringToShow(data);
+      makeDataForCall(data);
     }
   }, [route.params]);
+
+  const makeDataForCall = (data: any) => {
+    console.log('data==>', data.meetingInfo);
+    const sessionStartTime = formatDateTimeToLocal(
+      data.meetingInfo.SchedulingDate,
+      data.meetingInfo.sessionStartTime,
+    );
+    const sessionEndTime = formatDateTimeToLocal(
+      data.meetingInfo.SchedulingDate,
+      data.meetingInfo.sessionEndTime,
+    );
+ 
+    console.log('sessionStartTime==>', sessionStartTime);
+    console.log('sessionEndTime==>', sessionEndTime);
+ 
+    const dataForCall = {
+      ...data.meetingInfo,
+      sessionStartTime: sessionStartTime,
+      sessionEndTime: sessionEndTime,
+    };
+    setCallData(dataForCall);
+  };
  
   const convertUtcToLocal = (utcTime: string) => {
     const [hours, minutes, seconds] = utcTime.split(':').map(Number);
@@ -128,7 +161,7 @@ const AlarmScreen = () => {
  
         {/* OK Button */}
         <TouchableOpacity onPress={onPressButton} style={styles.okButton}>
-          <Text style={styles.okButtonText}>OK</Text>
+          <Text style={styles.okButtonText}>{data.Subject=="Session Started"?"Join Session":"Ok"}</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

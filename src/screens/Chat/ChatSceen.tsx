@@ -481,8 +481,7 @@ const ChatScreen = ({
 
   // Send a message through WebSocket
   const sendMessage = () => {
-    if (messageText.trim() === '' || !socketConnected || !mongoConverstionId)
-      return;
+    if (messageText.trim() === '' || !socketConnected) return;
 
     // Create message data
     const messageData = {

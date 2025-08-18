@@ -64,7 +64,7 @@ class WebSocketService {
           if (persistedState) {
             const parsedState = JSON.parse(persistedState); 
             const rootState = JSON.parse(parsedState.user);
-            const {CommunicationKey,Id}=rootState.userinfo
+            const {Id}=rootState.userinfo
             this.connect(presence, communicationKey,Id)
           }
          

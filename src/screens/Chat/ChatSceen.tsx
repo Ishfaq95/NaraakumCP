@@ -29,7 +29,7 @@ import {
   VoiceNoteIcon
 } from '../../assets/icons';
 import {launchImageLibrary} from 'react-native-image-picker';
-import DocumentPicker from 'react-native-document-picker';
+// import DocumentPicker from 'react-native-document-picker';
 import FilePicker from 'react-native-file-picker';
 import Sound from 'react-native-sound';
 import RNFS from 'react-native-fs';
@@ -599,47 +599,47 @@ const ChatScreen = ({
   }, []);
 
   const handleFileSelection = async () => {
-    try {
+    // try {
 
-      const pickresult = await DocumentPicker.pick({
-        type: [DocumentPicker.types.allFiles],
-      });
+    //   const pickresult = await DocumentPicker.pick({
+    //     type: [DocumentPicker.types.allFiles],
+    //   });
 
-      let pickerResult = null;
-      if(Platform.OS === 'ios'){
-        pickerResult = pickresult;
-      }else{
-        pickerResult = pickresult[0];
-      }
+    //   let pickerResult = null;
+    //   if(Platform.OS === 'ios'){
+    //     pickerResult = pickresult;
+    //   }else{
+    //     pickerResult = pickresult[0];
+    //   }
 
-      if (!pickerResult) {
-        return;
-      }
+    //   if (!pickerResult) {
+    //     return;
+    //   }
 
-      const file = {
-        uri: pickerResult.uri,
-        type: pickerResult.type || 'application/octet-stream',
-        name: pickerResult.name,
-        size: pickerResult.size,
-      };
+    //   const file = {
+    //     uri: pickerResult.uri,
+    //     type: pickerResult.type || 'application/octet-stream',
+    //     name: pickerResult.name,
+    //     size: pickerResult.size,
+    //   };
 
-      await uploadFile(file, pickerResult);
-    } catch (err) {
-      console.error('File selection error:', err);
+    //   await uploadFile(file, pickerResult);
+    // } catch (err) {
+    //   console.error('File selection error:', err);
 
-      if (DocumentPicker.isCancel(err)) {
-        return;
-      }
+    //   if (DocumentPicker.isCancel(err)) {
+    //     return;
+    //   }
 
-      if (err instanceof Error) {
-        Alert.alert(
-          'Error',
-          `Failed to select file: ${err.message}. Please try again.`,
-        );
-      } else {
-        Alert.alert('Error', 'Failed to select file. Please try again.');
-      }
-    }
+    //   if (err instanceof Error) {
+    //     Alert.alert(
+    //       'Error',
+    //       `Failed to select file: ${err.message}. Please try again.`,
+    //     );
+    //   } else {
+    //     Alert.alert('Error', 'Failed to select file. Please try again.');
+    //   }
+    // }
   };
 
   const uploadFile = async (file: any, pickerResult: any) => {

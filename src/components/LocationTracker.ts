@@ -2,11 +2,15 @@
 import { NativeModules, NativeEventEmitter, PermissionsAndroid, Platform } from 'react-native';
 
 const { LocationModule } = NativeModules;
-const eventEmitter = new NativeEventEmitter(LocationModule);
+const eventEmitter = Platform.OS === 'android' && LocationModule ? new NativeEventEmitter(LocationModule) : null as unknown as NativeEventEmitter;
+
+type NullableLocation = { latitude: number | null; longitude: number | null };
+
+type Location = { latitude: number; longitude: number };
 
 class LocationService {
-  private location = { latitude: null, longitude: null };
-  private listeners: Array<(location: { latitude: number; longitude: number }) => void> = [];
+  private location: NullableLocation = { latitude: null, longitude: null };
+  private listeners: Array<(location: NullableLocation) => void> = [];
 
   constructor() {
     this.subscribeToLocationUpdates();
@@ -38,38 +42,42 @@ class LocationService {
   // Start tracking
   async startTracking(): Promise<void> {
     const hasPermission = await this.requestLocationPermission();
-    if (hasPermission) {
+    if (hasPermission && Platform.OS === 'android' && LocationModule) {
       LocationModule.startTracking();
     } else {
-      
+      // no-op on iOS (module not implemented)
     }
   }
 
   // Stop tracking
   stopTracking(): void {
-    LocationModule.stopTracking();
+    if (Platform.OS === 'android' && LocationModule) {
+      LocationModule.stopTracking();
+    }
   }
 
   // Subscribe to location updates
   private subscribeToLocationUpdates(): void {
-    eventEmitter.addListener('locationUpdate', (event: { latitude: number; longitude: number }) => {
-      this.location = {
-        latitude: event.latitude,
-        longitude: event.longitude,
-      };
+    if (eventEmitter) {
+      eventEmitter.addListener('locationUpdate', (event: Location) => {
+        this.location = {
+          latitude: event.latitude,
+          longitude: event.longitude,
+        };
 
-      // Notify all listeners of the new location
-      this.notifyListeners();
-    });
+        // Notify all listeners of the new location
+        this.notifyListeners();
+      });
+    }
   }
 
   // Get the current location
-  getLocation(): { latitude: number | null; longitude: number | null } {
+  getLocation(): NullableLocation {
     return this.location;
   }
 
   // Register a listener for location updates
-  onLocationUpdate(listener: (location: { latitude: number; longitude: number }) => void): void {
+  onLocationUpdate(listener: (location: NullableLocation) => void): void {
     this.listeners.push(listener);
   }
 

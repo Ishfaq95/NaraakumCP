@@ -14,10 +14,12 @@ def node_require(script)
     )", __dir__]).strip
 end
 
+$RNFirebaseAsStaticFramework = true
+
 node_require('react-native/scripts/react_native_pods.rb')
 node_require('react-native-permissions/scripts/setup.rb')
 
-platform :ios, min_ios_version_supported
+platform :ios, 15.1
 prepare_react_native_project!
 
 linkage = ENV['USE_FRAMEWORKS']
@@ -63,17 +65,26 @@ target 'Naraakum_CP' do
     :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
 
-  pod 'react-native-config', :path => '../node_modules/react-native-config'
-  pod 'RNInAppBrowser', :path => '../node_modules/react-native-inappbrowser-reborn'
-  pod 'Firebase/Core',:modular_headers => true
-  pod 'Firebase/Messaging',:modular_headers => true
-  pod 'FirebaseCoreInternal',:modular_headers => true
-  pod 'GoogleUtilities',:modular_headers => true
+  # pod 'react-native-config', :path => '../node_modules/react-native-config'
+  # pod 'Firebase/Core',:modular_headers => true
+  # pod 'Firebase/Messaging',:modular_headers => true
+  # pod 'FirebaseCoreInternal',:modular_headers => true
+  # pod 'GoogleUtilities',:modular_headers => true
+  # pod 'Firebase/Crashlytics'
 
-  target 'Naraakum_CPTests' do
-    inherit! :complete
-    # Pods for testing
-  end
+  pod 'RNInAppBrowser', :path => '../node_modules/react-native-inappbrowser-reborn'
+  pod 'react-native-webrtc', :path => '../node_modules/@videosdk.live/react-native-webrtc'
+  pod 'GoogleSignIn', '~> 7.1'
+  pod 'react-native-maps/Google', :path => '../node_modules/react-native-maps'
+
+  pod 'RNFBApp', :path => '../node_modules/@react-native-firebase/app'
+  pod 'RNFBCrashlytics', :path => '../node_modules/@react-native-firebase/crashlytics'
+  pod 'RNFBMessaging', :path => '../node_modules/@react-native-firebase/messaging'
+
+  # target 'Naraakum_CPTests' do
+  #   inherit! :complete
+  #   # Pods for testing
+  # end
 
   post_install do |installer|
     # https://github.com/facebook/react-native/blob/main/packages/react-native/scripts/react_native_pods.rb#L197-L202

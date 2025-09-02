@@ -61,3 +61,15 @@
     java.lang.Object readResolve();
 }
  
+-keep class coil3.** { *; }
+-keep interface coil3.** { *; }
+-dontwarn coil3.**
+
+# OkHttp used by coil-network-okhttp
+-dontwarn okhttp3.**
+-keep class okhttp3.** { *; }
+-keep interface okhttp3.** { *; }
+
+# Kotlin metadata
+-keepclassmembers class kotlin.Metadata { *; }
+ 

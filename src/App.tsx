@@ -44,6 +44,9 @@ const App = () => {
   };
 
   return (
+    // <View>
+    //   <Text>Hello</Text>
+    // </View>
     <Provider store={store}>
       <PersistGate persistor={persistor}>
         <SafeAreaProvider>

@@ -1,0 +1,445 @@
+import CustomPhoneInput from '../common/CustomPhoneInput';
+import React, { useState } from 'react';
+import {
+    View,
+    Text,
+    StyleSheet,
+    TouchableOpacity,
+    Platform,
+    Alert,
+} from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { globalTextStyles } from '../../styles/globalStyles';
+import { ROUTES } from '../../shared/utils/routes';
+import GoogleIcon from '../../assets/icons/GoogleIcon';
+import { appleAuth } from '@invertase/react-native-apple-authentication';
+import AntDesign from 'react-native-vector-icons/AntDesign';
+import { signInWithGoogle } from '../../services/auth/googleAuthService';
+import { authService } from '../../services/api/authService';
+import { setUser } from '../../shared/redux/reducers/userReducer';
+import { useDispatch } from 'react-redux';
+
+const PersonalInfoStep: React.FC<{userRoleId: any, onNext: (userInfo: any) => void}> = ({userRoleId, onNext}) => {
+    const { t } = useTranslation();
+    const [phoneNumber, setPhoneNumber] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const dispatch = useDispatch();
+    const [selectedCountry, setSelectedCountry] = useState<any>({
+        code: 'SA',
+        name: 'Saudi Arabia',
+        nameAr: 'المملكة العربية السعودية',
+        flag: '🇸🇦',
+        dialCode: '+966',
+        pattern: '## ### ####',
+        maxLength: 9,
+    });
+    const [error, setError] = useState(false);
+    const [apiError, setAPIError] = useState(false);
+
+    const handlePhoneNumberChange = (text: string) => {
+        setPhoneNumber(text);
+        setError(false); // Clear error when user types
+        if (apiError) setAPIError(false);
+    };
+
+    const handleCountryChange = (country: any) => {
+        setSelectedCountry(country);
+    };
+
+    const handleGoogleLogin = async () => {
+        try {
+            setIsLoading(true);
+            const googleUser = await signInWithGoogle();
+
+            if (googleUser) {
+
+                const data = {
+                    "FullName": googleUser.name,
+                    "Username": googleUser.name,
+                    "Email": googleUser.email,
+                    "UniqueSocialId": googleUser.id,
+                    "RegistrationPlatformId": Platform.OS === 'ios' ? 3 : 2,
+                    "RegistrationTypeId": 2,
+                    "CatSocialServerId": 1,
+                    "CatUserTypeId": 1,
+                    "CatNationalityId": 1,
+                    "CellNumber": "000000000",
+                    "DeviceId": "DDRT56789",
+                    "DateofBirth": "1984-09-09"
+                }
+
+                // // Call your API to save the Google user data
+                const response = await authService.loginWithSocialMedia(data);
+
+                if (response?.ResponseStatus?.STATUSCODE === 200) {
+                    setIsLoading(false);
+                    dispatch(setUser(response.Userinfo));
+                } else {
+                    Alert.alert(
+                        "Error",
+                        response?.ResponseStatus?.MESSAGE,
+                        [{ text: "OK" }]
+                    );
+                }
+            } else {
+                Alert.alert(
+                    "Error",
+                    "Google login failed",
+                    [{ text: "OK" }]
+                );
+            }
+
+        } catch (error: any) {
+            console.error('Google login error:', error);
+            Alert.alert(
+                t('error'),
+                error.message || t('google_login_failed'),
+                [{ text: t('ok') }]
+            );
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleAppleLogin = async () => {
+        try {
+            // Dismiss any existing modals first
+            setIsLoading(false);
+
+            const appleAuthResponse = await appleAuth.performRequest({
+                requestedOperation: appleAuth.Operation.LOGIN,
+                requestedScopes: [appleAuth.Scope.EMAIL, appleAuth.Scope.FULL_NAME],
+            });
+
+            if (!appleAuthResponse.identityToken) {
+                throw new Error('Apple Sign-In failed - no identify token returned');
+            }
+
+            const { identityToken, nonce, fullName, email, user } = appleAuthResponse;
+
+            // Get user info from the identity token
+            const decodedToken = JSON.parse(atob(identityToken.split('.')[1]));
+
+            const data = {
+                "FullName": fullName?.givenName || decodedToken.email?.split('@')[0] || 'Apple User',
+                "Username": email || decodedToken.email || `apple_user_${user}`,
+                "Email": email || decodedToken.email,
+                "UniqueSocialId": user,
+                "RegistrationPlatformId": Platform.OS === 'ios' ? 3 : 2,
+                "RegistrationTypeId": 2,
+                "CatSocialServerId": 3, // Apple
+                "CatUserTypeId": 1,
+                "CatNationalityId": 1,
+                "CellNumber": "000000000",
+                "DeviceId": "DDRT56789",
+                "DateofBirth": "1984-09-09"
+            };
+
+            // Show loading after Apple Sign In is complete
+            setIsLoading(true);
+
+            const response = await authService.loginWithSocialMedia(data);
+
+            if (response?.ResponseStatus?.STATUSCODE === 200) {
+                setIsLoading(false);
+                console.log(response.Userinfo);
+                // dispatch(setUser(response.Userinfo));
+            } else {
+                Alert.alert(
+                    "Error",
+                    response?.ResponseStatus?.MESSAGE,
+                    [{ text: "OK" }]
+                );
+            }
+        } catch (error: any) {
+            if (error.code === appleAuth.Error.CANCELED) {
+            } else {
+                console.error('Apple Sign in error:', error);
+                Alert.alert(
+                    t('error'),
+                    error.message || t('apple_login_failed'),
+                    [{ text: t('ok') }]
+                );
+            }
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const renderSocialButtons = () => {
+        if (Platform.OS === 'ios') {
+            return (
+                <View style={styles.socialButtonsRow}>
+                    <TouchableOpacity
+                        style={[styles.socialButton, styles.googleButton]}
+                        onPress={handleGoogleLogin}
+                    >
+                        <GoogleIcon width={24} height={24} style={styles.socialIcon} />
+                        <Text numberOfLines={1} style={styles.socialButtonText}>{t('continue_with_google')}</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[styles.socialButton, styles.appleButton]}
+                        onPress={handleAppleLogin}
+                    >
+                        <AntDesign name="apple1" size={20} color="#FFFFFF" style={{ marginRight: 3 }} />
+                        <Text numberOfLines={1} style={[styles.socialButtonText, { color: '#FFFFFF' }]}>
+                            {t('continue_with_apple')}
+                        </Text>
+                    </TouchableOpacity>
+                </View>
+            );
+        }
+
+        return (
+            <TouchableOpacity
+                style={[styles.socialButton, styles.googleButton, styles.centerButton]}
+                onPress={handleGoogleLogin}
+            >
+                <GoogleIcon width={24} height={24} style={styles.socialIcon} />
+                <Text style={styles.socialButtonText}>{t('continue_with_google')}</Text>
+            </TouchableOpacity>
+        );
+    };
+
+    const handleNext = async () => {
+        setIsLoading(true);
+        let hasError = false;
+        if (!phoneNumber.trim()) {
+            setError(true);
+            hasError = true;
+        }
+
+        const digits = phoneNumber.replace(/\D/g, '');
+        if (digits.length !== selectedCountry?.maxLength) {
+            setError(true);
+            hasError = true;
+        }
+
+        if (hasError) {
+            setIsLoading(false);
+            return;
+        }
+
+        try {
+            const response = await authService.signUpStep1({
+                "CellNumber": phoneNumber,
+                "RegistrationPlatformId": Platform.OS === 'ios' ? 3 : 2,
+                "CatuserRoleId": userRoleId,
+                "DeviceId": Platform.OS === 'ios' ? 'IOS' : 'Android',
+            });
+
+            if (response?.ResponseStatus?.STATUSCODE === 200) {
+                console.log(response.Userinfo);
+                onNext(response.Userinfo);
+            }
+
+        } catch (error) {
+            console.error('Sign up error:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
+    console.log(userRoleId);
+
+    return (
+        <View style={styles.container}>
+            <View>
+                <Text style={styles.title}>Mobile Number</Text>
+                <CustomPhoneInput
+                    value={phoneNumber}
+                    onChangeText={handlePhoneNumberChange}
+                    onCountryChange={handleCountryChange}
+                    placeholder={t('enter_phone_number')}
+                    error={error}
+                    initialCountry={selectedCountry}
+                />
+            </View>
+            {/* Navigation Buttons */}
+            <View style={styles.navigationContainer}>
+
+                <TouchableOpacity
+                    style={[
+                        styles.nextButton,
+                    ]}
+                    onPress={handleNext}
+                    disabled={false}
+                >
+                    <Text style={styles.nextButtonText}>
+                        {`Next ${2}/4`}
+                    </Text>
+                    <Text style={styles.nextButtonArrow}>→</Text>
+                </TouchableOpacity>
+            </View>
+
+            {/* Bottom Section */}
+            <View style={[
+                styles.bottomContainer,
+            ]}>
+                <View style={[styles.orContainer]}>
+                    <View style={styles.orLine} />
+                    <Text style={[
+                        styles.orText,
+                    ]}>{t('or_by')}</Text>
+                    <View style={styles.orLine} />
+                </View>
+
+                {renderSocialButtons()}
+
+                <View style={styles.signUpContainer}>
+                    <Text style={styles.signUpText}>By clicking Next or Continue,</Text>
+                </View>
+                <View style={[styles.signUpContainer]}>
+                    <Text style={[
+                        styles.signUpText,
+                    ]}>{`you agree to the`}</Text>
+                    <TouchableOpacity style={{ paddingLeft: 5 }} onPress={() => { }}>
+                        <Text style={[
+                            styles.signUpLink,
+                        ]}>{`Terms and Conditions`}</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+        </View>
+    );
+};
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        paddingHorizontal: 16,
+    },
+    title: {
+        ...globalTextStyles.bodyMedium,
+        fontWeight: '500',
+        marginBottom: 8,
+    },
+    subtitle: {
+        fontSize: 14,
+        color: '#666',
+        textAlign: 'center',
+    },
+    navigationContainer: {
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        alignItems: 'center',
+        marginTop: 16,
+    },
+    previousButton: {
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        paddingVertical: 16,
+        paddingHorizontal: 24,
+        borderWidth: 2,
+        borderColor: '#20B2AA',
+    },
+    previousButtonText: {
+        color: '#20B2AA',
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    nextButton: {
+        backgroundColor: '#20B2AA',
+        width: '100%',
+        borderRadius: 12,
+        paddingVertical: 16,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    nextButtonDisabled: {
+        backgroundColor: '#E0E0E0',
+    },
+    nextButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '600',
+        marginRight: 8,
+    },
+    nextButtonArrow: {
+        color: '#fff',
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
+    bottomContainer: {
+        marginTop: 30,
+    },
+    orContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 20,
+    },
+    orLine: {
+        flex: 1,
+        height: 1,
+        backgroundColor: '#E0E0E0',
+    },
+    orText: {
+        marginHorizontal: 8,
+        ...globalTextStyles.label,
+        color: '#000',
+    },
+    signUpContainer: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        marginTop: 15,
+    },
+    signUpText: {
+        ...globalTextStyles.caption,
+        color: '#666',
+    },
+    signUpLink: {
+        ...globalTextStyles.caption,
+        fontWeight: '600',
+        color: '#000',
+        fontFamily: globalTextStyles.h2.fontFamily,
+    },
+    socialButtonsRow: {
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        marginBottom: 20,
+        gap: 12,
+        paddingHorizontal: 0,
+    },
+    socialButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: Platform.OS === 'ios' ? 8 : 12,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#E0E0E0',
+        height: 48,
+        minWidth: Platform.OS === 'ios' ? 140 : undefined,
+    },
+    googleButton: {
+        backgroundColor: '#FFFFFF',
+        flex: Platform.OS === 'ios' ? 1 : undefined,
+        width: '100%',
+    },
+    appleButton: {
+        backgroundColor: '#000000',
+        width: '100%',
+    },
+    centerButton: {
+        alignSelf: 'center',
+    },
+    socialIcon: {
+        width: 24,
+        height: 24,
+        marginRight: 8,
+    },
+    socialButtonText: {
+        ...globalTextStyles.bodySmall,
+        color: '#333333',
+        fontFamily: globalTextStyles.h5.fontFamily,
+        flexShrink: 1,
+        textAlign: 'center',
+    },
+    requiredStar: {
+        ...globalTextStyles.bodySmall,
+        color: '#FF3B30',
+    },
+});
+
+export default PersonalInfoStep;

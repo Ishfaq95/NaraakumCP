@@ -2,5 +2,20 @@
   "welcome": "Welcome",
   "video": "Video",
   "microphone": "Microphone",
-  "change_language": "Change Language"
+  "change_language": "Change Language",
+
+  "login": "Login",
+  "create_new_account": "Create New Account",
+  "login_with": "Login with",
+  "phone_username": "Mobile Number",
+  "email_username": "Email Address",
+  "continue_with_google": "Continue with Google",
+  "continue_with_apple": "Continue with Apple",
+  "dont_have_an_account": "Don't have an account?",
+  "enter_phone_number": "Enter Phone Number",
+  "password": "Password",
+  "remember_me": "Remember Me",
+  "forgot_password": "Forgot Password",
+  "invalid_phone_or_password": "Invalid Phone Number or Password",
+  "or_by": "OR"
 }

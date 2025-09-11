@@ -5,7 +5,7 @@ import { WebView } from 'react-native-webview';
 import InAppBrowser from 'react-native-inappbrowser-reborn';
 import messaging from '@react-native-firebase/messaging';
 import { useDispatch, useSelector } from 'react-redux';
-import { setTopic, setUserInfo } from '../shared/redux/reducers/userReducer';
+import { setTopic } from '../shared/redux/reducers/userReducer';
 import RNFetchBlob from 'rn-fetch-blob';
 import WebSocketService from './WebSocketService';
 import { getLocationPermission } from './LocationService';
@@ -257,7 +257,7 @@ const WebViewComponent = ({ uri }:any) => {
     const { url, userInfo, event: eventHandler,data,fileName,status } = JSON.parse(event.nativeEvent.data);
 
     if(eventHandler=='logout'){
-      dispatch(setUserInfo(null))
+      // dispatch(setUserInfo(null))
       webSocketService.disconnect()
     }
     
@@ -291,7 +291,7 @@ const WebViewComponent = ({ uri }:any) => {
       
     }else if (eventHandler == 'userLoggedIn') {
       const userInfoData = data;
-      dispatch(setUserInfo(userInfoData))
+      // dispatch(setUserInfo(userInfoData))
       setUserInformation(userInfoData)
       subsribeTopic(userInfoData.id)
     }

@@ -68,7 +68,7 @@ const RenderTabText = ({ routeName, isFocused }: RenderTabIconProps) => {
               color: isFocused ? "#22A6A7" : "rgba(99, 110, 114, 1)",
             },
           ]}
-        >{t('appointments')}</Text>
+        >{"Appointments"}</Text>
       );
     case ROUTES.MyClientsStack:
       return (
@@ -80,7 +80,7 @@ const RenderTabText = ({ routeName, isFocused }: RenderTabIconProps) => {
               color: isFocused ? "#22A6A7" : "rgba(99, 110, 114, 1)",
             },
           ]}
-        >{t('cart')}</Text>
+        >{"My Clients"}</Text>
       );
     case ROUTES.MyProfileStack:
       return (
@@ -92,7 +92,7 @@ const RenderTabText = ({ routeName, isFocused }: RenderTabIconProps) => {
               color: isFocused ? "#22A6A7" : "rgba(99, 110, 114, 1)",
             },
           ]}
-        >{t('profile')}</Text>
+        >{"My Profile"}</Text>
       );
     case ROUTES.SettingsStack:
       return (
@@ -104,7 +104,7 @@ const RenderTabText = ({ routeName, isFocused }: RenderTabIconProps) => {
               color: isFocused ? "#22A6A7" : "rgba(99, 110, 114, 1)",
             },
           ]}
-        >{t('settings')}</Text>
+        >{"Settings"}</Text>
       );
     default:
       return <></>;

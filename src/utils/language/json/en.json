@@ -17,5 +17,8 @@
   "remember_me": "Remember Me",
   "forgot_password": "Forgot Password",
   "invalid_phone_or_password": "Invalid Phone Number or Password",
-  "or_by": "OR"
+  "or_by": "OR",
+  "phone_number_already_exists": "Phone Number Already Exists",
+  "code_sent_successfully": "The verification code has been re-sent successfully",
+  "invalid_otp": "Incorrect Code"
 }

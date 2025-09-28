@@ -30,6 +30,7 @@ interface DropdownProps {
   selectedItemStyle?: any;
   selectedItemTextStyle?: any;
   disabled?: boolean;
+  error?: boolean;
 }
 
 const Dropdown: React.FC<DropdownProps> = ({
@@ -45,6 +46,7 @@ const Dropdown: React.FC<DropdownProps> = ({
   selectedItemStyle,
   selectedItemTextStyle,
   disabled,
+  error,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedValue, setSelectedValue] = useState(value);
@@ -57,7 +59,7 @@ const Dropdown: React.FC<DropdownProps> = ({
   // Reset selectedValue if current value doesn't exist in new data
   useEffect(() => {
     const valueExists = data.some(item => item.value === selectedValue);
-    if (!valueExists && data.length > 0) {
+    if (!valueExists && data.length > 0 && selectedValue !== '') {
       // If current value doesn't exist in new data, set to first item
       const newValue = data[0].value;
       setSelectedValue(newValue);
@@ -76,7 +78,7 @@ const Dropdown: React.FC<DropdownProps> = ({
   return (
     <View style={[styles.container, containerStyle]}>
       <TouchableOpacity
-        style={[styles.dropdownButton, dropdownStyle]}
+        style={[styles.dropdownButton, dropdownStyle, error && { borderColor: 'red' }]}
         onPress={() => {
           setIsOpen(!isOpen);
         }}
@@ -101,6 +103,7 @@ const Dropdown: React.FC<DropdownProps> = ({
           onPress={() => setIsOpen(false)}
         >
           <View style={styles.modalContent}>
+            <View style={styles.handle} />
             <FlatList
               data={data}
               showsVerticalScrollIndicator={true}
@@ -172,15 +175,18 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: 'flex-end',
+    alignItems: 'stretch',
   },
   modalContent: {
-    width: Dimensions.get('window').width * 0.8,
+    width: '100%',
     maxHeight: Dimensions.get('window').height * 0.6,
     backgroundColor: '#fff',
-    borderRadius: 8,
-    padding: 8,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    paddingBottom: 30,
+    paddingHorizontal: 8,
+    paddingTop: 8,
   },
   item: {
     paddingVertical: 12,
@@ -200,6 +206,14 @@ const styles = StyleSheet.create({
     ...globalTextStyles.bodySmall,
     color: '#179c8e',
     fontFamily: globalTextStyles.h5.fontFamily,
+  },
+  handle: {
+    alignSelf: 'center',
+    width: 40,
+    height: 4,
+    backgroundColor: '#ddd',
+    borderRadius: 2,
+    marginBottom: 8,
   },
 });
 

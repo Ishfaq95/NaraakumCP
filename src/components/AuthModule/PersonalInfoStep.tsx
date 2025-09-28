@@ -18,8 +18,9 @@ import { signInWithGoogle } from '../../services/auth/googleAuthService';
 import { authService } from '../../services/api/authService';
 import { setUser } from '../../shared/redux/reducers/userReducer';
 import { useDispatch } from 'react-redux';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
-const PersonalInfoStep: React.FC<{userRoleId: any, onNext: (userInfo: any) => void}> = ({userRoleId, onNext}) => {
+const PersonalInfoStep: React.FC<{userRoleId: any, onNext: (userInfo: any, phoneNumber: string) => void}> = ({userRoleId, onNext}) => {
     const { t } = useTranslation();
     const [phoneNumber, setPhoneNumber] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -171,7 +172,7 @@ const PersonalInfoStep: React.FC<{userRoleId: any, onNext: (userInfo: any) => vo
             return (
                 <View style={styles.socialButtonsRow}>
                     <TouchableOpacity
-                        style={[styles.socialButton, styles.googleButton]}
+                        style={[styles.socialButton]}
                         onPress={handleGoogleLogin}
                     >
                         <GoogleIcon width={24} height={24} style={styles.socialIcon} />
@@ -220,17 +221,24 @@ const PersonalInfoStep: React.FC<{userRoleId: any, onNext: (userInfo: any) => vo
             return;
         }
 
+        const fullNumber = selectedCountry.dialCode + digits;
+
         try {
             const response = await authService.signUpStep1({
-                "CellNumber": phoneNumber,
+                "CellNumber": fullNumber,
                 "RegistrationPlatformId": Platform.OS === 'ios' ? 3 : 2,
                 "CatuserRoleId": userRoleId,
                 "DeviceId": Platform.OS === 'ios' ? 'IOS' : 'Android',
             });
 
             if (response?.ResponseStatus?.STATUSCODE === 200) {
+                if(response.StatusCode.STATUSCODE === 3020){
+                    setAPIError(true);
+                    setIsLoading(false);
+                    return;
+                }
                 console.log(response.Userinfo);
-                onNext(response.Userinfo);
+                onNext(response.Userinfo, fullNumber);
             }
 
         } catch (error) {
@@ -254,6 +262,7 @@ const PersonalInfoStep: React.FC<{userRoleId: any, onNext: (userInfo: any) => vo
                     error={error}
                     initialCountry={selectedCountry}
                 />
+                {apiError && <Text style={styles.errorText}>{t('phone_number_already_exists')}</Text>}
             </View>
             {/* Navigation Buttons */}
             <View style={styles.navigationContainer}>
@@ -268,7 +277,7 @@ const PersonalInfoStep: React.FC<{userRoleId: any, onNext: (userInfo: any) => vo
                     <Text style={styles.nextButtonText}>
                         {`Next ${2}/4`}
                     </Text>
-                    <Text style={styles.nextButtonArrow}>→</Text>
+                    <Ionicons name="arrow-forward" size={22} color="#fff" />
                 </TouchableOpacity>
             </View>
 
@@ -433,12 +442,17 @@ const styles = StyleSheet.create({
         ...globalTextStyles.bodySmall,
         color: '#333333',
         fontFamily: globalTextStyles.h5.fontFamily,
-        flexShrink: 1,
+        // flexShrink: 1,
         textAlign: 'center',
     },
     requiredStar: {
         ...globalTextStyles.bodySmall,
         color: '#FF3B30',
+    },
+    errorText: {
+        ...globalTextStyles.bodySmall,
+        color: '#FF3B30',
+        marginTop: 5,
     },
 });
 

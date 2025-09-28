@@ -6,21 +6,25 @@ import {
     TouchableOpacity,
     Image,
     I18nManager,
+    ScrollView,
 } from 'react-native';
 import { globalTextStyles } from '../../styles/globalStyles';
 import { authService } from '../../services/api/authService';
 import { useIsFocused } from '@react-navigation/native';
 import { MediaBaseURL } from '../../shared/utils/constants';
 import UniversalImage from '../common/UniversalImage';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 interface ServiceProviderSelectionProps {
     selectedProvider: string | null;
     onProviderSelect: (providerId: string) => void;
+    onNext: () => void;
 }
 
 const ServiceProviderSelection: React.FC<ServiceProviderSelectionProps> = ({
     selectedProvider,
     onProviderSelect,
+    onNext,
 }) => {
     const isFocused = useIsFocused();
     const isRTL = I18nManager.isRTL;
@@ -39,50 +43,59 @@ const ServiceProviderSelection: React.FC<ServiceProviderSelectionProps> = ({
         }
     };
 
-    console.log('serviceProviders', serviceProviders);
+    const handleNext = () => {
+        onNext();
+    }
 
     return (
         <View style={styles.selectionContainer}>
             <Text style={styles.selectionTitle}>Service Provider Type</Text>
-            
-            <View style={styles.cardsGrid}>
-                {serviceProviders.map((provider) => {
-                    console.log('provider', `${MediaBaseURL}${provider.UserRoleImagePath}`);
-                    return (
-                    <TouchableOpacity
-                        key={provider.Id}
-                        style={[
-                            styles.providerCard,
-                            selectedProvider === provider.Id && styles.providerCardSelected
-                        ]}
-                        onPress={() => onProviderSelect(provider.Id)}
-                    >
-                        <View style={[
-                            styles.selectionIndicator,
-                            selectedProvider === provider.Id && styles.selectionIndicatorActive
-                        ]}>
-                            {selectedProvider === provider.Id && (
-                                <Text style={styles.checkmark}>✓</Text>
-                            )}
-                        </View>
-                        
-                        <View style={styles.iconContainer}>
-                            {provider.UserRoleImagePath ? (
-                                <UniversalImage source={{ uri: `${MediaBaseURL}${provider.UserRoleImagePath}` }} style={styles.providerIcon} />
-                            ):(
-                                <Image source={require('../../assets/icons/test-tube.png')} style={styles.providerIcon} />
-                            )}
-                        </View>
-                        
-                        <Text style={[
-                            styles.providerName,
-                            selectedProvider === provider.Id && styles.providerNameSelected
-                        ]}>
-                            {isRTL ? provider.TitleSlang : provider.TitlePlang}
-                        </Text>
-                    </TouchableOpacity>
-                );
-                })}
+            <ScrollView>
+                <View style={styles.cardsGrid}>
+                    {serviceProviders.map((provider) => {
+                        console.log('provider', `${MediaBaseURL}${provider.UserRoleImagePath}`);
+                        return (
+                            <TouchableOpacity
+                                key={provider.Id}
+                                style={[
+                                    styles.providerCard,
+                                    selectedProvider === provider.Id && styles.providerCardSelected
+                                ]}
+                                onPress={() => onProviderSelect(provider.Id)}
+                            >
+                                <View style={[
+                                    styles.selectionIndicator,
+                                    selectedProvider === provider.Id && styles.selectionIndicatorActive
+                                ]}>
+                                    {selectedProvider === provider.Id && (
+                                        <Text style={styles.checkmark}>✓</Text>
+                                    )}
+                                </View>
+
+                                <View style={styles.iconContainer}>
+                                    {provider.UserRoleImagePath ? (
+                                        <UniversalImage source={{ uri: `${MediaBaseURL}${provider.UserRoleImagePath}` }} style={styles.providerIcon} />
+                                    ) : (
+                                        <Image source={require('../../assets/icons/test-tube.png')} style={styles.providerIcon} />
+                                    )}
+                                </View>
+
+                                <Text style={[
+                                    styles.providerName,
+                                    selectedProvider === provider.Id && styles.providerNameSelected
+                                ]}>
+                                    {isRTL ? provider.TitleSlang : provider.TitlePlang}
+                                </Text>
+                            </TouchableOpacity>
+                        );
+                    })}
+                </View>
+            </ScrollView>
+            <View style={styles.navigationContainer}>
+                <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
+                    <Text style={styles.nextButtonText}>{`Next 1/4`}</Text>
+                    <Ionicons name="arrow-forward" size={22} color="#fff" />
+                </TouchableOpacity>
             </View>
         </View>
     );
@@ -164,6 +177,43 @@ const styles = StyleSheet.create({
     },
     providerNameSelected: {
         color: '#20B2AA',
+    },
+    navigationContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginVertical: 10,
+    },
+    previousButton: {
+        padding: 10,
+        backgroundColor: '#20B2AA',
+        borderRadius: 8,
+    },
+    previousButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+    nextButton: {
+        backgroundColor: '#20B2AA',
+        borderRadius: 12,
+        paddingVertical: 16,
+        paddingHorizontal: 24,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flex: 1,
+        marginLeft: 12,
+    },
+    nextButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '600',
+        marginRight: 8,
+    },
+    nextButtonArrow: {
+        color: '#fff',
+        fontSize: 18,
+        fontWeight: 'bold',
     },
 });
 

@@ -153,6 +153,68 @@ export const signUpStep2 = async (credentials: any) => {
     }
 };
 
+export const resendOTP = async (credentials: any) => {
+    try {
+        const response = await axiosInstance.post(
+            `patients/ResendRegistrationCode`,
+            credentials
+        );
+        return response.data;
+    } catch (error: any) {
+        throw {
+            message: error?.response?.data?.message || 'Resend OTP failed',
+            status: error?.response?.status,
+            code: error?.response?.data?.code
+        };
+    }
+};
+
+export const getAllLanguages = async () => {
+    try {
+        const response = await axiosInstance.get(
+            `catalogue/GetAllLanguage`
+        );
+        return response.data;
+    } catch (error: any) {
+        throw {
+            message: error?.response?.data?.message || 'Get all languages failed',
+            status: error?.response?.status,
+            code: error?.response?.data?.code
+        };
+    }
+};
+
+export const getAllCountries = async () => {
+    try {
+        const response = await axiosInstance.get(
+            `patients/GetAllNationalities`
+        );
+        return response.data;
+    } catch (error: any) {
+        throw {
+            message: error?.response?.data?.message || 'Get all countries failed',
+            status: error?.response?.status,
+            code: error?.response?.data?.code
+        };
+    }
+};
+
+export const addIndividualServiceProviderStep3 = async (credentials: any) => {
+    try {
+        const response = await axiosInstance.post(
+            `organization/AddIndividualServiceProvider`,
+            credentials
+        );
+        return response.data;
+    } catch (error: any) {
+        console.log('error', error)
+        throw {
+            message: error?.response?.data?.message || 'Add individual service provider step 3 failed',
+            status: error?.response?.status,
+            code: error?.response?.data?.code
+        };
+    }
+};
 // Export all auth related functions
 export const authService = {
     login,
@@ -163,5 +225,9 @@ export const authService = {
     resetPassword,
     signUpStep1,
     signUpStep2,
-    getServiceProviderRoleList
+    getServiceProviderRoleList,
+    resendOTP,
+    getAllLanguages,
+    getAllCountries,
+    addIndividualServiceProviderStep3
 }; 

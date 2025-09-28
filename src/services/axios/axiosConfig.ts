@@ -15,8 +15,19 @@ const axiosInstance = axios.create({
 axiosInstance.interceptors.request.use(
     (config) => {
         const token = store.getState().root.user.token;
+        const user = store.getState().root.user.user;
+
+        console.log('user', user);
+        
         if (token && config.headers) {
             config.headers.Authorization = `Bearer ${token}`;
+            
+            // Add additional headers if user exists
+            if (user) {
+                config.headers.Claim = user.Claim;
+                config.headers.CatUserRoleId = user.CatUserRoleId;
+                config.headers.UserloginInfoId = user.Id;
+            }
         }
         return config;
     },

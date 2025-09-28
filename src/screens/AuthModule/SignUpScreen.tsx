@@ -20,6 +20,11 @@ import ServiceProviderSelection from '../../components/AuthModule/ServiceProvide
 import PersonalInfoStep from '../../components/AuthModule/PersonalInfoStep';
 import OTPVerificationStep from '../../components/AuthModule/OTPVerificationStep';
 import { globalTextStyles } from '../../styles/globalStyles';
+import { authService } from '../../services/api/authService';
+import FinalDetailsStep from '../../components/AuthModule/FinalDetailsStep';
+import SuccessScreen from '../../components/AuthModule/SuccessScreen';
+import { setUser } from '../../shared/redux/reducers/userReducer';
+import { useDispatch } from 'react-redux';
 
 const MIN_HEIGHT = 550; // Absolute minimum height
 const OPTIMAL_HEIGHT = 750; // Height for medium screens
@@ -33,30 +38,31 @@ interface Country {
 }
 
 const SignUpScreen = () => {
+    const dispatch = useDispatch();
     const { height: windowHeight } = useWindowDimensions();
     const isLargeScreen = windowHeight > OPTIMAL_HEIGHT;
     const isSmallScreen = windowHeight < MIN_HEIGHT;
     const [currentStep, setCurrentStep] = useState(1);
     const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
-    const [phoneNumber, setPhoneNumber] = useState('5163468753');
+    const [phoneNumber, setPhoneNumber] = useState('');
     const [otpVerified, setOtpVerified] = useState(false);
+    const [userInfo, setUserInfo] = useState<any>(null);
+    const [userData, setUserData] = useState<any>(null);
     const { t } = useTranslation();
 
     const handleProviderSelect = (providerId: string) => {
         setSelectedProvider(providerId);
     };
 
-    const handleUserInfoData = (userInfo: any) => {
-        if (userInfo.phoneNumber) {
-            setPhoneNumber(userInfo.phoneNumber);
+    const handleUserInfoData = (userInfo: any, phoneNumber: string) => {
+        if (phoneNumber) {
+            setPhoneNumber(phoneNumber);
         }
+        setUserInfo(userInfo);
         handleNext();
     };
 
-    const handleOTPVerified = (otp: string) => {
-        console.log('OTP Verified:', otp);
-        setOtpVerified(true);
-        // TODO: Implement OTP verification API call
+    const handleOTPVerified = async (otp: string) => {
         handleNext();
     };
 
@@ -83,6 +89,11 @@ const SignUpScreen = () => {
         }
     };
 
+    const handleSuccess = () => {
+        console.log("user data", userData);
+       dispatch(setUser(userData));
+    };
+
     const renderStepContent = () => {
         switch (currentStep) {
             case 1:
@@ -90,6 +101,7 @@ const SignUpScreen = () => {
                     <ServiceProviderSelection
                         selectedProvider={selectedProvider}
                         onProviderSelect={handleProviderSelect}
+                        onNext={handleNext}
                     />
                 );
             case 2:
@@ -98,16 +110,22 @@ const SignUpScreen = () => {
                 return (
                     <OTPVerificationStep
                         phoneNumber={phoneNumber}
+                        userInfo={userInfo}
                         onOTPVerified={handleOTPVerified}
                         onEditPhoneNumber={handleEditPhoneNumber}
                     />
                 );
             case 4:
                 return (
-                    <View style={styles.placeholderContainer}>
-                        <Text style={styles.placeholderTitle}>Step 4</Text>
-                        <Text style={styles.placeholderSubtitle}>Final step - Review and submit</Text>
-                    </View>
+                    <FinalDetailsStep
+                        phoneNumber={phoneNumber}
+                        userInfo={userInfo}
+                        selectedProvider={selectedProvider}
+                        onSubmit={(form) => {
+                            setUserData(form);
+                            setCurrentStep(5);
+                        }}
+                    />
                 );
             default:
                 return null;
@@ -121,7 +139,7 @@ const SignUpScreen = () => {
             case 2:
                 return true; // PersonalInfoStep handles its own validation
             case 3:
-                return otpVerified;
+                return false;
             case 4:
                 return true;
             default:
@@ -130,14 +148,18 @@ const SignUpScreen = () => {
     };
 
     return (
-        <SafeAreaView style={styles.container}>
-            <AuthHeader onBack={handlePrevious} />
+        <SafeAreaView style={[styles.container, { backgroundColor: currentStep === 5 ? '#fff' : '#eaf6f6' }]}>
+            {currentStep !== 5 && <AuthHeader onBack={handlePrevious} />}
             <FullScreenLoader visible={false} />
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 style={styles.keyboardAvoidingView}>
                 <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                    <View style={styles.contentContainer}>
+                    {currentStep === 5 ? <View style={styles.contentContainer}>
+                        <View style={styles.stepContentContainer}>
+                            <SuccessScreen onNext={handleSuccess} />
+                        </View>
+                    </View> : <View style={styles.contentContainer}>
                         {/* Fixed Header */}
                         <View style={styles.headerContainer}>
                             <Text style={globalTextStyles.h3}>
@@ -160,40 +182,9 @@ const SignUpScreen = () => {
 
                         {/* Scrollable Step Content */}
                         <View style={styles.stepContentContainer}>
-                            <ScrollView
-                                contentContainerStyle={styles.stepContentScrollView}
-                                bounces={false}
-                                showsVerticalScrollIndicator={isSmallScreen}>
-                                {renderStepContent()}
-                            </ScrollView>
+                            {renderStepContent()}
                         </View>
-
-                        {/* Fixed Navigation Buttons */}
-                        {currentStep != 2 && <View style={styles.navigationContainer}>
-                            {/* {currentStep > 1 && (
-                                <TouchableOpacity
-                                    style={styles.previousButton}
-                                    onPress={handlePrevious}
-                                >
-                                    <Text style={styles.previousButtonText}>← Previous</Text>
-                                </TouchableOpacity>
-                            )} */}
-
-                            <TouchableOpacity
-                                style={[
-                                    styles.nextButton,
-                                    !canProceed() && styles.nextButtonDisabled
-                                ]}
-                                onPress={handleNext}
-                                disabled={!canProceed()}
-                            >
-                                <Text style={styles.nextButtonText}>
-                                    {currentStep === 4 ? 'Complete' : `Next ${currentStep}/4`}
-                                </Text>
-                                {currentStep < 4 && <Text style={styles.nextButtonArrow}>→</Text>}
-                            </TouchableOpacity>
-                        </View>}
-                    </View>
+                    </View>}
                 </TouchableWithoutFeedback>
             </KeyboardAvoidingView>
         </SafeAreaView>

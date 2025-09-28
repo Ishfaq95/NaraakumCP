@@ -15,5 +15,8 @@
   "remember_me": "تذكرني",
   "forgot_password": "هل نسيت كلمة المرور؟",
   "invalid_phone_or_password": "رقم الجوال أو كلمة المرور غير صالحة",
-  "or_by": "أو بواسطة"
+  "or_by": "أو بواسطة",
+  "phone_number_already_exists": "رقم الجوال موجود بالفعل",
+  "code_sent_successfully": "تم إرسال الرمز بنجاح",
+  "invalid_otp": "الرمز المدخل غير صالح"
 }

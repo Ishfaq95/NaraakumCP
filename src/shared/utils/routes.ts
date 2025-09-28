@@ -8,6 +8,10 @@ export const ROUTES = {
     Meeting: "Meeting_Screen",
     Login: 'Login',
     SignUp: 'SignUp',
+    ConfirmPassword: 'ConfirmPassword',
+    ForgotOTP: 'ForgotOTP',
+    ForgotPassword: 'ForgotPassword',
+    CalendarScreen: 'CalendarScreen',
 
     // App Navigator
     AppointmentsStack: 'AppointmentsStack',

@@ -24,5 +24,6 @@ export const ROUTES = {
     MyClientsScreen: 'MyClientsScreen',
     MyProfileScreen: 'MyProfileScreen',
     SettingScreen: 'SettingScreen',
+    PromotionAndDiscount: 'PromotionAndDiscount',
   };
   

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 interface MenuItem {
@@ -7,6 +7,7 @@ interface MenuItem {
   title: string;
   icon: string;
   iconColor: string;
+  Image?: any;
   onPress: () => void;
   showArrow?: boolean;
 }
@@ -33,7 +34,7 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({
         >
           <View style={styles.menuItemContent}>
             <View style={styles.leftSection}>
-              <Ionicons name={item.icon} size={24} color={item.iconColor} />
+              {item.Image ? <Image source={item.Image} style={{width: 24, height: 24}} resizeMode="contain" /> : <Ionicons name={item.icon} size={24} color={item.iconColor} />}
               <Text style={styles.menuItemText}>{item.title}</Text>
             </View>
             

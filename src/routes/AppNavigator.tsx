@@ -12,6 +12,7 @@ import AppointmentListScreen from "../screens/AppointmentStack/AppointmentListSc
 import MyClientsScreen from "../screens/MyClientsStack/MyClientsScreen";
 import MyProfileScreen from "../screens/MyProfileStack/MyProfileScreen";
 import SettingScreen from "../screens/SettingStack/SettingScreen";
+import PromotionAndDiscount from "../screens/SettingStack/PromotionAndDiscount";
 
 
 

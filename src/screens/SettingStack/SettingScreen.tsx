@@ -5,14 +5,18 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import SettingsMenu from '../../components/Profile/SettingsMenu';
 import { useDispatch } from 'react-redux';
 import { setUser } from '../../shared/redux/reducers/userReducer';
+import { ROUTES } from '../../shared/utils/routes';
+import { useNavigation } from '@react-navigation/native';
 
 const SettingScreen = () => {
   const dispatch = useDispatch();
+  const navigation = useNavigation();
   const [settingsMenuItems, setSettingsMenuItems] = useState([
     {
       id: 'promotions',
       title: 'Promotions & Discounts',
       icon: 'pricetag-outline',
+      Image: require('../../assets/icons/PromotionIcon.png'),
       iconColor: '#00A19D',
       onPress: () => handleSettingsItemPress('promotions'),
     },
@@ -56,6 +60,9 @@ const SettingScreen = () => {
   
   const handleSettingsItemPress = (itemId: string) => {
     console.log(`Settings item pressed: ${itemId}`);
+    if (itemId === 'promotions') {
+      navigation.navigate(ROUTES.PromotionAndDiscount as never);
+    } 
     
     if (itemId === 'delete') {
       Alert.alert(

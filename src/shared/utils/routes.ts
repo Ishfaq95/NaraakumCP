@@ -25,5 +25,7 @@ export const ROUTES = {
     MyProfileScreen: 'MyProfileScreen',
     SettingScreen: 'SettingScreen',
     PromotionAndDiscount: 'PromotionAndDiscount',
+    HelpScreen: 'HelpScreen',
+    DeleteAccountScreen: 'DeleteAccountScreen',
   };
   

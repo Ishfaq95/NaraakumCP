@@ -1,70 +1,49 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
-
-interface ClientItem {
-  id: string;
-  name: string;
-  gender: 'Male' | 'Female';
-  rating: number;
-  ratingCount: number;
-  avatar?: string;
-}
-
-const MOCK_DATA: ClientItem[] = [
-  { id: '1', name: 'المريض أحمد علي خان', gender: 'Female', rating: 4.5, ratingCount: 21 },
-  { id: '2', name: 'دادوديب', gender: 'Male', rating: 5.0, ratingCount: 6 },
-];
-
-const ClientCard: React.FC<{ item: ClientItem } & { onMore?: () => void; onBook?: () => void }> = ({ item, onMore, onBook }) => {
-  return (
-    <View style={styles.card}>
-      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-        {/* <Image
-          source={ item.avatar ? { uri: item.avatar } : require('../../../assets/icons/avatar-placeholder.png') }
-          style={styles.avatar}
-        /> */}
-        <View style={{ flex: 1 }}>
-          <Text style={styles.name} numberOfLines={1}>{item.name}</Text>
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Text style={styles.gender}>{item.gender}</Text>
-            <FontAwesome name="star" size={14} color="#FFC107" style={{ marginHorizontal: 6 }} />
-            <Text style={styles.rating}>{item.rating.toFixed(2)}</Text>
-            <Text style={styles.ratingCount}>({item.ratingCount} Person)</Text>
-          </View>
-        </View>
-      </View>
-
-      <View style={styles.divider} />
-
-      <View style={styles.actionsRow}>
-        <TouchableOpacity style={styles.bookButton} onPress={onBook}>
-          <Ionicons name="stethoscope-outline" size={18} color="#00A19D" />
-          <Text style={styles.bookText}>Book a Service</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.moreButton} onPress={onMore}>
-          <Ionicons name="ellipsis-horizontal" size={18} color="#666" />
-          <Text style={styles.moreText}>More</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
-};
+import ClientCard from './ClientCard';
+import { useSelector } from 'react-redux';
+import { myClientsService } from '../../../services/api/myClientsService';
 
 const ClientsList: React.FC<{ onCountChange?: (n: number) => void }> = ({ onCountChange }) => {
-  React.useEffect(() => {
-    onCountChange && onCountChange(MOCK_DATA.length);
-  }, [onCountChange]);
+  const [clientList, setClientList] = useState<any[]>([]);
+  const user = useSelector((state: any) => state.root.user.user);
+
+  useEffect(() => {
+    getClients();
+  }, []);
+
+  const getClients = async () => {
+    try {
+      const payload = {
+        UserloginInfoId: user.Id,
+      };
+      const response = await myClientsService.getClientsByServiceProvider(payload);
+      if (response.ResponseStatus.STATUSCODE === 200) {
+        setClientList(response.list);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   return (
-    <FlatList
-      data={MOCK_DATA}
-      keyExtractor={(item) => item.id}
-      contentContainerStyle={{ paddingVertical: 8 }}
-      renderItem={({ item }) => <ClientCard item={item} />}
-    />
+    <View style={{ flex: 1 }}>
+      {/* Row 2: results count + search button */}
+      <View style={styles.resultsRow}>
+        <Text style={styles.resultsText}>{clientList.length} Results</Text>
+        <TouchableOpacity style={styles.searchButton}>
+          <Ionicons name="search" size={18} color={'#00A19D'} />
+        </TouchableOpacity>
+      </View>
+      <FlatList
+        data={clientList}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={{ paddingVertical: 8 }}
+        renderItem={({ item }) => <ClientCard item={item} />}
+      />
+    </View>
   );
 };
 
@@ -132,6 +111,32 @@ const styles = StyleSheet.create({
   moreText: {
     color: '#666',
     marginLeft: 6,
+  },
+  resultsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 12,
+    paddingTop: 10,
+    paddingBottom: 4,
+    backgroundColor: '#e4f1ef',
+  },
+  searchButton: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.15,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  resultsText: {
+    fontSize: 14,
+    color: '#111827',
   },
 });
 

@@ -1,11 +1,40 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, FlatList } from 'react-native';
+import { myClientsService } from '../../../services/api/myClientsService';
+import { useSelector } from 'react-redux';
+import ClientFeedbackCard from './ClientFeedbackCard';
 
 const ClientsFeedback: React.FC = () => {
+  const user = useSelector((state: any) => state.root.user.user);
+  const [clientsFeedback, setClientsFeedback] = useState<any[]>([]);
+  useEffect(() => {
+    getClientsFeedback();
+  }, []);
+
+  const getClientsFeedback = async () => {
+    try {
+      const payload = {
+        UserloginInfoId: user.Id,
+      };
+      const response = await myClientsService.getServiceProvidersFeedback(payload);
+      if (response.ResponseStatus.STATUSCODE === 200) {
+        setClientsFeedback(response.List);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Clients Feedback</Text>
-      <Text style={styles.subtitle}>Coming soon...</Text>
+      <Text style={styles.title}>Clients Feedback ({clientsFeedback.length})</Text>
+      <FlatList
+        data={clientsFeedback}
+        keyExtractor={(item) => String(item.OrderId)}
+        contentContainerStyle={{ gap: 10, paddingTop: 10 }}
+        renderItem={({ item }) => (
+          <ClientFeedbackCard item={item} onDelete={() => {}} />
+        )}
+      />
     </View>
   );
 };
@@ -13,13 +42,11 @@ const ClientsFeedback: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   title: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#111827',
+    color: '#666',
   },
   subtitle: {
     marginTop: 6,

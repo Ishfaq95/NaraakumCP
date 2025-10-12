@@ -23,7 +23,6 @@ const MyClientsScreen = () => {
   };
 
   const [activeTab, setActiveTab] = useState<'list' | 'feedback'>('list');
-  const [resultsCount, setResultsCount] = useState<number>(0);
 
   const renderTabs = () => (
     <>
@@ -43,13 +42,7 @@ const MyClientsScreen = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Row 2: results count + search button */}
-      <View style={styles.resultsRow}>
-        <Text style={styles.resultsText}>{resultsCount} Results</Text>
-        <TouchableOpacity style={styles.searchButton}>
-          <Ionicons name="search" size={18} color={'#00A19D'} />
-        </TouchableOpacity>
-      </View>
+      
     </>
   );
 
@@ -68,7 +61,7 @@ const MyClientsScreen = () => {
       <View style={{ flex: 1, backgroundColor: '#e4f1ef' }}>
         {renderTabs()}
         <View style={{ flex: 1, padding: 12 }}>
-          {activeTab === 'list' ? <ClientsList onCountChange={setResultsCount} /> : <ClientsFeedback />}
+          {activeTab === 'list' ? <ClientsList /> : <ClientsFeedback />}
         </View>
       </View>
     </SafeAreaView>
@@ -105,30 +98,5 @@ const styles = StyleSheet.create({
   tabTextActive: {
     color: '#fff',
   },
-  resultsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 12,
-    paddingTop: 10,
-    paddingBottom: 4,
-    backgroundColor: '#e4f1ef',
-  },
-  searchButton: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: '#fff',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.15,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  resultsText: {
-    fontSize: 14,
-    color: '#111827',
-  },
+  
 });

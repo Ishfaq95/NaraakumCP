@@ -16,6 +16,8 @@ import ForgotPassword from '../screens/ForgotPassword/ForgotPassword';
 import ForgotOTP from '../screens/ForgotPassword/ForgotOTP';
 import CalendarScreen from '../screens/AppointmentStack/CalendarScreen';
 import PromotionAndDiscount from '../screens/SettingStack/PromotionAndDiscount';
+import HelpScreen from '../screens/SettingStack/HelpScreen';
+import DeleteAccountScreen from '../screens/SettingStack/DeleteAccount';
 
 const Stack = createNativeStackNavigator();
 
@@ -41,6 +43,8 @@ const RootNavigator = () => {
       <Stack.Screen name={ROUTES.AppNavigator} component={BottomTabs} />
       <Stack.Screen name={ROUTES.CalendarScreen} component={CalendarScreen} />
       <Stack.Screen name={ROUTES.PromotionAndDiscount} component={PromotionAndDiscount} />
+      <Stack.Screen name={ROUTES.HelpScreen} component={HelpScreen} />
+      <Stack.Screen name={ROUTES.DeleteAccountScreen} component={DeleteAccountScreen} />
     </Stack.Navigator>
   );
 };

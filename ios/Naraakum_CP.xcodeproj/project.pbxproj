@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
-		80C93EC92CC8E85F00EB637C /* RNBackgroundFetch+AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 80C93EC82CC8E85E00EB637C /* RNBackgroundFetch+AppDelegate.m */; };
 		80C93ECB2CC8EC0300EB637C /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 80C93ECA2CC8EC0300EB637C /* GoogleService-Info.plist */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		9EA39F5D7DCDB854F4C68009 /* Pods_Naraakum_CP.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C034DA4775DBC8056DF47AD2 /* Pods_Naraakum_CP.framework */; };
@@ -38,7 +37,6 @@
 		773514709AF54A8D80466987 /* FontAwesome5_Brands.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = FontAwesome5_Brands.ttf; path = "../node_modules/react-native-vector-icons/Fonts/FontAwesome5_Brands.ttf"; sourceTree = "<group>"; };
 		792EA9AC71F94CC08412506C /* FontAwesome.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = FontAwesome.ttf; path = "../node_modules/react-native-vector-icons/Fonts/FontAwesome.ttf"; sourceTree = "<group>"; };
 		80C93EC72CC8CC5300EB637C /* Naraakum_CP.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = Naraakum_CP.entitlements; path = Naraakum_CP/Naraakum_CP.entitlements; sourceTree = "<group>"; };
-		80C93EC82CC8E85E00EB637C /* RNBackgroundFetch+AppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "RNBackgroundFetch+AppDelegate.m"; path = "../node_modules/react-native-background-fetch/ios/RNBackgroundFetch/RNBackgroundFetch+AppDelegate.m"; sourceTree = "<group>"; };
 		80C93ECA2CC8EC0300EB637C /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = Naraakum_CP/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		8800D64B7536F60F5B52709F /* Pods-Naraakum_CP.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Naraakum_CP.release.xcconfig"; path = "Target Support Files/Pods-Naraakum_CP/Pods-Naraakum_CP.release.xcconfig"; sourceTree = "<group>"; };
@@ -70,7 +68,6 @@
 		13B07FAE1A68108700A75B9A /* Naraakum_CP */ = {
 			isa = PBXGroup;
 			children = (
-				80C93EC82CC8E85E00EB637C /* RNBackgroundFetch+AppDelegate.m */,
 				80C93EC72CC8CC5300EB637C /* Naraakum_CP.entitlements */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				761780EC2CA45674006654EE /* AppDelegate.swift */,
@@ -338,7 +335,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				80C93EC92CC8E85F00EB637C /* RNBackgroundFetch+AppDelegate.m in Sources */,
 				761780ED2CA45674006654EE /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -710,10 +706,7 @@
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
 				);
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_LDFLAGS = "$(inherited)  ";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
@@ -797,10 +790,7 @@
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
 				);
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_LDFLAGS = "$(inherited)  ";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				USE_HERMES = true;

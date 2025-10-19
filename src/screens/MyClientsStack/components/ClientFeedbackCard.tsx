@@ -61,9 +61,9 @@ const ClientFeedbackCard: React.FC<Props> = ({ item, onDelete }) => {
 
             {!!secondaryDate && <Text style={styles.secondaryDate}>{secondaryDate}</Text>}
 
-            <TouchableOpacity onPress={onDelete} activeOpacity={0.8} style={styles.deleteBtn}>
+            {/* <TouchableOpacity onPress={onDelete} activeOpacity={0.8} style={styles.deleteBtn}>
                 <Text style={styles.deleteText}>Delete Comment</Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
         </View>
     );
 };

@@ -5,11 +5,14 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import ClientCard from './ClientCard';
 import { useSelector } from 'react-redux';
 import { myClientsService } from '../../../services/api/myClientsService';
+import CustomBottomSheet from '../../../components/common/CustomBottomSheet';
+import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
+import Entypo from 'react-native-vector-icons/Entypo';
 
 const ClientsList: React.FC<{ onCountChange?: (n: number) => void }> = ({ onCountChange }) => {
   const [clientList, setClientList] = useState<any[]>([]);
   const user = useSelector((state: any) => state.root.user.user);
-
+  const [isMoreOptionsBottomSheetVisible, setIsMoreOptionsBottomSheetVisible] = useState(false);
   useEffect(() => {
     getClients();
   }, []);
@@ -41,8 +44,54 @@ const ClientsList: React.FC<{ onCountChange?: (n: number) => void }> = ({ onCoun
         data={clientList}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ paddingVertical: 8 }}
-        renderItem={({ item }) => <ClientCard item={item} />}
+        renderItem={({ item }) => <ClientCard item={item} onMore={(item) => setIsMoreOptionsBottomSheetVisible(true)} />}
       />
+
+      <CustomBottomSheet
+        visible={isMoreOptionsBottomSheetVisible}
+        onClose={() => setIsMoreOptionsBottomSheetVisible(false)}
+        showHandle={false}
+        height="28%"
+        backdropClickable={true}
+      >
+        <View style={styles.bottomSheetContent}>
+          <TouchableOpacity style={styles.menuItem}>
+            <FontAwesome name="stethoscope" size={20} color="#00A19D" />
+            <Text style={styles.menuText}>Book a Service</Text>
+            <Ionicons name="chevron-forward" size={16} color="#6b7280" />
+          </TouchableOpacity>
+          
+          <View style={styles.separator} />
+          
+          <TouchableOpacity style={styles.menuItem}>
+          
+            <FontAwesome5 name="file-prescription" size={20} color="#00A19D" />
+            <Text style={styles.menuText}>Prescriptions</Text>
+            <Ionicons name="chevron-forward" size={16} color="#6b7280" />
+          </TouchableOpacity>
+          
+          <View style={styles.separator} />
+          
+          <TouchableOpacity style={styles.menuItem}>
+            {/* <Ionicons name="chatbubble" size={20} color="#00A19D" /> */}
+            <Image
+              source={require('../../../assets/icons/messageIcon.png')}
+              style={styles.icon}
+              resizeMode="contain"
+            />
+            <Text style={styles.menuText}>Send Message</Text>
+            <Ionicons name="chevron-forward" size={16} color="#6b7280" />
+          </TouchableOpacity>
+          
+          <View style={styles.separator} />
+          
+          <TouchableOpacity style={styles.menuItem}>
+            <Entypo name="back-in-time" size={20} color="#00A19D" />
+            <Text style={styles.menuText}>Booking History</Text>
+            <Ionicons name="chevron-forward" size={16} color="#6b7280" />
+          </TouchableOpacity>
+        </View>
+      </CustomBottomSheet>
     </View>
   );
 };
@@ -137,6 +186,32 @@ const styles = StyleSheet.create({
   resultsText: {
     fontSize: 14,
     color: '#111827',
+  },
+  bottomSheetContent: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 16,
+  },
+  menuText: {
+    flex: 1,
+    fontSize: 16,
+    color: '#111827',
+    fontWeight: '400',
+    marginLeft: 12,
+  },
+  separator: {
+    height: 1,
+    backgroundColor: '#e5e7eb',
+    marginLeft: 32,
+  },
+  icon: {
+    width: 18,
+    height: 18,
+    tintColor: '#00A19D',
   },
 });
 

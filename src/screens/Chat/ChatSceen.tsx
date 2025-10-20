@@ -29,7 +29,7 @@ import {
   VoiceNoteIcon
 } from '../../assets/icons';
 import {launchImageLibrary} from 'react-native-image-picker';
-import DocumentPicker from 'react-native-document-picker';
+import * as DocumentPicker from '@react-native-documents/picker';
 import FilePicker from 'react-native-file-picker';
 import Sound from 'react-native-sound';
 import RNFS from 'react-native-fs';
@@ -103,7 +103,7 @@ const ChatScreen = ({
 }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [messageText, setMessageText] = useState('');
-  const {user} = useSelector((state: any) => state.root.user);
+  const {user,mediaToken} = useSelector((state: any) => state.root.user);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mongoSenderId, setMongoSenderId] = useState<string | null>(null);
@@ -600,15 +600,14 @@ const ChatScreen = ({
 
   const handleFileSelection = async () => {
     try {
-
       const pickresult = await DocumentPicker.pick({
         type: [DocumentPicker.types.allFiles],
       });
 
       let pickerResult = null;
-      if(Platform.OS === 'ios'){
+      if (Platform.OS === 'ios') {
         pickerResult = pickresult;
-      }else{
+      } else {
         pickerResult = pickresult[0];
       }
 
@@ -649,7 +648,7 @@ const ChatScreen = ({
       let url = `${MediaBaseURL}common/upload`;
       let ResourceCategoryId = '2';
 
-      let fileType = file.name.split('.').pop();
+      let fileType = file.name?.split('.').pop();
       if (fileType == 'pdf' || fileType == 'PDF') ResourceCategoryId = '4';
       else if (
         fileType == 'jpg' ||
@@ -684,7 +683,7 @@ const ChatScreen = ({
         headers: {
           'Content-Type': 'multipart/form-data',
           Accept: 'application/json',
-          Authorization: `Bearer${store.getState().root.user.mediaToken}`,
+          Authorization: `Bearer${mediaToken}`,
         },
       });
 

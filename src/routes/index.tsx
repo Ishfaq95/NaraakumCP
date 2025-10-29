@@ -18,6 +18,12 @@ import CalendarScreen from '../screens/AppointmentStack/CalendarScreen';
 import PromotionAndDiscount from '../screens/SettingStack/PromotionAndDiscount';
 import HelpScreen from '../screens/SettingStack/HelpScreen';
 import DeleteAccountScreen from '../screens/SettingStack/DeleteAccount';
+import ClientsProfileScreen from '../screens/MyProfileStack/ClientsProfileScreen';
+import ClientSectionScreen from '../screens/MyProfileStack/ClientSection';
+import PersonalProfileScreen from '../screens/MyProfileStack/PersonalProfile';
+import CareProviderBioScreen from '../screens/MyProfileStack/CareProviderBio';
+import MedicalLicenseScreen from '../screens/MyProfileStack/MedicalLicense';
+import AccountInformationScreen from '../screens/MyProfileStack/AccountInformation';
 
 const Stack = createNativeStackNavigator();
 
@@ -45,6 +51,12 @@ const RootNavigator = () => {
       <Stack.Screen name={ROUTES.PromotionAndDiscount} component={PromotionAndDiscount} />
       <Stack.Screen name={ROUTES.HelpScreen} component={HelpScreen} />
       <Stack.Screen name={ROUTES.DeleteAccountScreen} component={DeleteAccountScreen} />
+      <Stack.Screen name={ROUTES.ClientsProfileScreen} component={ClientsProfileScreen} />
+      <Stack.Screen name={ROUTES.ClientSectionScreen} component={ClientSectionScreen} />
+      <Stack.Screen name={ROUTES.PersonalProfileScreen} component={PersonalProfileScreen} />
+      <Stack.Screen name={ROUTES.CareProviderBioScreen} component={CareProviderBioScreen} />
+      <Stack.Screen name={ROUTES.MedicalLicenseScreen} component={MedicalLicenseScreen} />
+      <Stack.Screen name={ROUTES.AccountInformationScreen} component={AccountInformationScreen} />
     </Stack.Navigator>
   );
 };

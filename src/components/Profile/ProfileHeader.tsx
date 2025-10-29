@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { MediaBaseURL } from '../../shared/utils/constants';
 
 interface ProfileHeaderProps {
   name: string;
@@ -41,7 +42,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
       <View style={styles.header}>
         <View style={styles.profileSection}>
           <Image 
-            source={profileImage ? { uri: profileImage } : require('../../assets/icons/doctor-vector.svg')} 
+            source={profileImage ? { uri: `${MediaBaseURL}${profileImage}` } : require('../../assets/icons/doctor-vector.svg')} 
             style={styles.profileImage} 
           />
           <View style={styles.userInfo}>
@@ -144,6 +145,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    width: '100%',
   },
   progressBar: {
     flex: 1,
@@ -161,7 +163,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
     color: '#333',
-    width: 30,
+    width: 40,
     textAlign: 'right',
   },
 });

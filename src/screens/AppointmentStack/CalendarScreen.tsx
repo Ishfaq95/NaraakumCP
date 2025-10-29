@@ -227,7 +227,7 @@ const CalendarScreen: React.FC = () => {
 
   const renderHeader = () => (
     <View style={{ flexDirection: 'row', alignItems: 'center', height: 50, backgroundColor: '#fff', padding: 10 }}>
-      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.bookButton}>
+      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
         <Ionicons name="chevron-back" size={24} color="#333" />
 
       </TouchableOpacity>
@@ -647,7 +647,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  bookButton: {
+  backButton: {
     padding: 5,
     backgroundColor: '#fff',
     borderRadius: 10,

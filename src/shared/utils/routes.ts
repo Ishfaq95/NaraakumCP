@@ -27,5 +27,11 @@ export const ROUTES = {
     PromotionAndDiscount: 'PromotionAndDiscount',
     HelpScreen: 'HelpScreen',
     DeleteAccountScreen: 'DeleteAccountScreen',
+    ClientsProfileScreen: 'ClientsProfileScreen',
+    ClientSectionScreen: 'ClientSectionScreen',
+    PersonalProfileScreen: 'PersonalProfileScreen', 
+    CareProviderBioScreen: 'CareProviderBioScreen',
+    MedicalLicenseScreen: 'MedicalLicenseScreen',
+    AccountInformationScreen: 'AccountInformationScreen',
   };
   

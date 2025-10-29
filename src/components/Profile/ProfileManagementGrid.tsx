@@ -19,10 +19,10 @@ const ProfileManagementGrid: React.FC<ProfileManagementGridProps> = ({ options }
   return (
     <View style={styles.container}>
       <Text style={styles.sectionTitle}>Profile Management</Text>
-      
+
       <View style={styles.grid}>
         {options.map((option) => (
-          <TouchableOpacity 
+          <TouchableOpacity
             key={option.id}
             style={styles.gridItem}
             onPress={option.onPress}
@@ -31,13 +31,19 @@ const ProfileManagementGrid: React.FC<ProfileManagementGridProps> = ({ options }
               <View style={[styles.iconContainer, { borderColor: option.iconColor }]}>
                 <Ionicons name={option.icon} size={28} color={option.iconColor} />
               </View>
-              
-              {!option.isComplete && (
-                <View style={styles.incompleteTag}>
-                  <Text style={styles.incompleteText}>incomplete</Text>
-                </View>
+
+              {option.id !== 'clients' && (
+                option.isComplete ? (
+                  <View style={styles.completeTag}>
+                    <Text style={styles.completeText}>Complete</Text>
+                  </View>
+                ) : (
+                  <View style={styles.incompleteTag}>
+                    <Text style={styles.incompleteText}>Incomplete</Text>
+                  </View>
+                )
               )}
-              
+
               <Text style={styles.optionTitle}>{option.title}</Text>
             </View>
           </TouchableOpacity>
@@ -86,6 +92,20 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  completeTag: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    backgroundColor: '#198754',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  completeText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '500',
   },
   incompleteTag: {
     position: 'absolute',

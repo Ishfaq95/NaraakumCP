@@ -33,5 +33,9 @@ export const ROUTES = {
     CareProviderBioScreen: 'CareProviderBioScreen',
     MedicalLicenseScreen: 'MedicalLicenseScreen',
     AccountInformationScreen: 'AccountInformationScreen',
+    PaymentProfileScreen:'PaymentProfileScreen',
+    PaymentDetailsScreen:'PaymentDetailsScreen',
+    SignTheContractScreen:'SignTheContractScreen',
+    SignatureViewerScreen:'SignatureViewerScreen'
   };
   

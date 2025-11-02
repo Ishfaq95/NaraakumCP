@@ -161,6 +161,8 @@ const MyProfileScreen = () => {
       navigation.navigate(ROUTES.ClientsProfileScreen as never);
     }else if (optionId == 'personal') {
       navigation.navigate(ROUTES.PersonalProfileScreen as never);
+    }else if (optionId == 'payment') {
+      navigation.navigate(ROUTES.PaymentProfileScreen as never);
     }
   };
 

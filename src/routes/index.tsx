@@ -24,6 +24,10 @@ import PersonalProfileScreen from '../screens/MyProfileStack/PersonalProfile';
 import CareProviderBioScreen from '../screens/MyProfileStack/CareProviderBio';
 import MedicalLicenseScreen from '../screens/MyProfileStack/MedicalLicense';
 import AccountInformationScreen from '../screens/MyProfileStack/AccountInformation';
+import PaymentProfileScreen from '../screens/MyProfileStack/PaymentProfile';
+import PaymentDetailsScreen from '../screens/MyProfileStack/PaymentDetails';
+import SignTheContractScreen from '../screens/MyProfileStack/SignTheContract';
+import SignatureViewerScreen from '../screens/MyProfileStack/SignatureViewer';
 
 const Stack = createNativeStackNavigator();
 
@@ -57,6 +61,10 @@ const RootNavigator = () => {
       <Stack.Screen name={ROUTES.CareProviderBioScreen} component={CareProviderBioScreen} />
       <Stack.Screen name={ROUTES.MedicalLicenseScreen} component={MedicalLicenseScreen} />
       <Stack.Screen name={ROUTES.AccountInformationScreen} component={AccountInformationScreen} />
+      <Stack.Screen name={ROUTES.PaymentProfileScreen} component={PaymentProfileScreen} />
+      <Stack.Screen name={ROUTES.PaymentDetailsScreen} component={PaymentDetailsScreen} />
+      <Stack.Screen name={ROUTES.SignTheContractScreen} component={SignTheContractScreen} />
+      <Stack.Screen name={ROUTES.SignatureViewerScreen} component={SignatureViewerScreen} />
     </Stack.Navigator>
   );
 };

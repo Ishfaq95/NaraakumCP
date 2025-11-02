@@ -1166,7 +1166,6 @@ const styles = StyleSheet.create({
     borderColor: '#E0E0E0',
     borderRadius: 12,
     backgroundColor: '#FFFFFF',
-    paddingHorizontal: 12,
     paddingVertical: 12,
     minHeight: 56,
   },
@@ -1174,9 +1173,8 @@ const styles = StyleSheet.create({
     borderColor: '#FF3B30',
   },
   countrySelector: {
-    flexDirection: I18nManager.isRTL?'row-reverse':'row',
+    flexDirection:'row',
     alignItems: 'center',
-    paddingLeft: 0,
   },
   countryFlag: {
     fontSize: 20,
@@ -1191,13 +1189,12 @@ const styles = StyleSheet.create({
   dropdownIcon: {
     fontSize: 12,
     color: '#666',
-    marginRight: 2,
   },
   separator: {
     width: 1,
     height: 24,
     backgroundColor: '#E0E0E0',
-    marginHorizontal: 8,
+    marginHorizontal: 4,
   },
   phoneInput: {
     flex: 1,

@@ -6,8 +6,6 @@ export const GetOnTheWayTasks = async (UserProfileId:any) => {
   const token = store.getState().root.user.token;
   const url=`${BaseURL}user/GetServiceProviderOnthewayTaskList`
   
-
-  console.log('UserProfileId',UserProfileId)
   const data={
         "ServiceProviderUserLoginInfoId":UserProfileId
      }

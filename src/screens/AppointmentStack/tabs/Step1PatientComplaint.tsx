@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -10,44 +10,89 @@ import {
 import Icon from 'react-native-vector-icons/Ionicons';
 import { globalTextStyles } from '../../../styles/globalStyles';
 import Dropdown from '../../../components/common/Dropdown';
+import { useDispatch, useSelector } from 'react-redux';
+import CustomBottomSheet from '../../../components/common/CustomBottomSheet';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import { addVisitRecordService } from '../../../services/api/addVisitRecord';
+import { setVisitMainId } from '../../../shared/redux/reducers/generalDataReducer';
 
 interface Step1Props {
+  patientData: any;
   onNext: () => void;
-  data?: {
-    chiefComplaint?: string;
-    presentIllness?: string;
-    durationValue?: string;
-    durationUnit?: string;
-    otherComplaint?: string;
-  };
   onDataChange?: (data: any) => void;
 }
 
-const Step1PatientComplaint: React.FC<Step1Props> = ({ onNext, data, onDataChange }) => {
-  const [chiefComplaint, setChiefComplaint] = useState(data?.chiefComplaint || '');
-  const [presentIllness, setPresentIllness] = useState(data?.presentIllness || '');
-  const [durationValue, setDurationValue] = useState(data?.durationValue || '0');
-  const [durationUnit, setDurationUnit] = useState(data?.durationUnit || 'Day');
-  const [otherComplaint, setOtherComplaint] = useState(data?.otherComplaint || '');
+const Step1PatientComplaint: React.FC<Step1Props> = ({ patientData, onNext, onDataChange }) => {
+  const [chiefComplaint, setChiefComplaint] = useState('');
+  const [presentIllness, setPresentIllness] = useState('');
+  const [durationValue, setDurationValue] = useState('0');
+  const [durationUnit, setDurationUnit] = useState('Day');
+  const [otherComplaint, setOtherComplaint] = useState('');
+  const [visible, setVisible] = useState(false);
+  const visitRecordData: any = useSelector((state: any) => state.root.generalData.visitRecordData);
+  const visitmainId: any = useSelector((state: any) => state.root.generalData.visitmainId);
+  const user: any = useSelector((state: any) => state.root.user.user);
+  const dispatch = useDispatch();
 
   const durationOptions = [
-    { label: 'Day', value: 'Day' },
-    { label: 'Week', value: 'Week' },
-    { label: 'Month', value: 'Month' },
-    { label: 'Year', value: 'Year' },
+    { label: 'Day', value: '1' },
+    { label: 'Week', value: '2' },
+    { label: 'Month', value: '3' },
+    { label: 'Year', value: '4' },
+    { label: 'Hour', value: '5' },
+    { label: 'Minutes', value: '6' },
   ];
 
-  const handleNext = () => {
-    if (onDataChange) {
-      onDataChange({
-        chiefComplaint,
-        presentIllness,
-        durationValue,
-        durationUnit,
-        otherComplaint,
-      });
+  useEffect(() => {
+    if (visitRecordData) {
+      manageVisitRecordData();
     }
-    onNext();
+  }, [visitRecordData]);
+
+  const manageVisitRecordData = () => {
+    console.log("visitRecordData==>", visitRecordData?.PatientComplaint[0]);
+    setChiefComplaint(visitRecordData?.PatientComplaint[0]?.ChiefComplaint);
+    setPresentIllness(visitRecordData?.PatientComplaint[0]?.PresentIllness);
+    setDurationValue(visitRecordData?.PatientComplaint[0]?.DurationOfComplaint.toString());
+    setDurationUnit(visitRecordData?.PatientComplaint[0]?.CatTimeUnitId.toString());
+    setOtherComplaint(visitRecordData?.PatientComplaint[0]?.OtherComplaint);
+  };
+
+  const handleAddVisitMain = async () => {
+    const payload: any = {
+      UserloginInfoId: user?.Id,
+      TaskMainId: patientData?.Detail[0]?.TaskMainId,
+    };
+    const response = await addVisitRecordService.addVisitMain(payload);
+    if (response?.StatusCode?.STATUSCODE == 12001) {
+      dispatch(setVisitMainId(response.VisitMain[0]?.VisitMainId));
+      handleSave(response.VisitMain[0]?.VisitMainId);
+    }
+  };
+
+  const handleSave = async (visitId?: any) => {
+    const payload: any = {
+      VisitMainId: visitId || visitmainId,
+      ChiefComplaint: chiefComplaint,
+      PresentIllness: presentIllness,
+      DurationOfComplaint: durationValue,
+      CatTimeUnitId: durationUnit,
+      OtherComplaint: otherComplaint,
+    };
+
+    console.log("payload==>", payload);
+
+    const response = await addVisitRecordService.addEditVisitRecord(payload);
+    if (response?.ResponseStatus?.STATUSCODE === 200) {
+      onNext();
+    }
+  };
+
+  const isDataValid = () => {
+    if (chiefComplaint.trim() == '' && presentIllness.trim() == '' && otherComplaint.trim() == '') {
+      return true;
+    }
+    return false;
   };
 
   return (
@@ -122,8 +167,8 @@ const Step1PatientComplaint: React.FC<Step1Props> = ({ onNext, data, onDataChang
                 onChange={(value) => setDurationUnit(value as string)}
                 placeholder="Select"
                 // containerStyle={styles.dropdown}
-                containerStyle={{ height: 44 }}
-                dropdownStyle={[{ height: 44 }]}
+                containerStyle={{ height: 45 }}
+                dropdownStyle={[{ height: 45 }]}
               />
             </View>
           </View>
@@ -150,10 +195,44 @@ const Step1PatientComplaint: React.FC<Step1Props> = ({ onNext, data, onDataChang
 
       {/* Save / Next Button */}
       <View style={styles.footer}>
-        <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
-          <Text style={styles.nextButtonText}>Save / Next</Text>
+        <TouchableOpacity style={[styles.nextButton]} onPress={() => {
+          if (!visitRecordData && isDataValid()) {
+            setVisible(true);
+          } else {
+            if (visitmainId) {
+              handleSave();
+            } else {
+              handleAddVisitMain();
+            }
+          }
+        }}>
+          <Text style={[styles.nextButtonText, { color: !visitRecordData ? '#fff' : '#fff' }]}>Save / Next</Text>
         </TouchableOpacity>
       </View>
+
+      <CustomBottomSheet
+        visible={visible}
+        onClose={() => setVisible(false)}
+        backdropClickable={true}
+        showHandle={false}
+      >
+        <View style={styles.bottomSheetContainer}>
+          <View style={{flexDirection:'row', justifyContent:'space-between', alignItems:'center', paddingHorizontal: 16, paddingVertical: 16}}>
+            <Text style={{...globalTextStyles.buttonLarge, color: '#000'}}>Warning</Text>
+            <TouchableOpacity onPress={() => setVisible(false)}>
+              <Ionicons name="close" size={24} color="#333" />
+            </TouchableOpacity>
+          </View>
+          <View style={{paddingHorizontal: 16}}>
+            <Text style={{...globalTextStyles.bodyMedium, color: '#000'}}>please provide data before saving.</Text>
+          </View>
+          <View style={{width:100,alignSelf:'center',marginVertical: 16}}>
+            <TouchableOpacity style={styles.bottomSheetButton} onPress={() => setVisible(false)}>
+              <Text style={styles.bottomSheetButtonText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </CustomBottomSheet>
     </View>
   );
 };
@@ -234,10 +313,12 @@ const styles = StyleSheet.create({
   durationContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    justifyContent: 'space-between',
+    width: '100%',
   },
   durationInputWrapper: {
-    flex: 1,
+    height: 44,
+    width: '39%',
     backgroundColor: '#fff',
     borderRadius: 8,
     paddingHorizontal: 12,
@@ -253,7 +334,8 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   dropdownWrapper: {
-    flex: 1,
+    height: 45,
+    width: '59%',
   },
   dropdown: {
     backgroundColor: '#fff',
@@ -264,8 +346,9 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
   },
   footer: {
-    padding: 16,
-    backgroundColor: '#f0f8f7',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: '#fff',
     borderTopWidth: 1,
     borderTopColor: '#e0e0e0',
   },
@@ -284,6 +367,21 @@ const styles = StyleSheet.create({
     ...globalTextStyles.bodyMedium,
     color: '#fff',
     fontWeight: '600',
+  },
+  bottomSheetContainer: {
+    flex: 1,
+  },
+  bottomSheetButton: {
+    backgroundColor: '#179c8e',
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bottomSheetButtonText: {
+    ...globalTextStyles.buttonLarge,
+    color: '#fff',
   },
 });
 

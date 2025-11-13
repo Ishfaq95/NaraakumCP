@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -9,22 +9,24 @@ import {
 import { globalTextStyles } from '../../../../styles/globalStyles';
 
 interface VitalSignsProps {
-  data?: {
-    temperature?: string;
-    heartRate?: string;
-    p4O2?: string;
-    respiratoryRate?: string;
-    bloodPressure?: string;
-  };
+  data?:any;
   onDataChange?: (data: any) => void;
 }
 
 const VitalSigns: React.FC<VitalSignsProps> = ({ data, onDataChange }) => {
-  const [temperature, setTemperature] = useState(data?.temperature || '0');
-  const [heartRate, setHeartRate] = useState(data?.heartRate || '0');
-  const [p4O2, setP4O2] = useState(data?.p4O2 || '0');
-  const [respiratoryRate, setRespiratoryRate] = useState(data?.respiratoryRate || '0');
-  const [bloodPressure, setBloodPressure] = useState(data?.bloodPressure || '120/80');
+  const [temperature, setTemperature] = useState( '0');
+  const [heartRate, setHeartRate] = useState('0');
+  const [p4O2, setP4O2] = useState('0');
+  const [respiratoryRate, setRespiratoryRate] = useState('0');
+  const [bloodPressure, setBloodPressure] = useState('120/80');
+
+  useEffect(() => {
+    setTemperature(data?.[0]?.Tem || '0');
+    setHeartRate(data?.[0]?.HR || '0');
+    setP4O2(data?.[0]?.P4O2 || '0');
+    setRespiratoryRate(data?.[0]?.RR || '0');
+    setBloodPressure(data?.[0]?.Bp || '120/80');
+  }, [data]);
 
   const handleChange = (field: string, value: string) => {
     const updatedData = {
@@ -54,8 +56,19 @@ const VitalSigns: React.FC<VitalSignsProps> = ({ data, onDataChange }) => {
         break;
     }
 
+    console.log("updatedData==>", updatedData);
+
+    let tempData = [{
+      ...data?.[0],
+      Tem: updatedData.temperature,
+      HR: updatedData.heartRate,
+      P4O2: updatedData.p4O2,
+      RR: updatedData.respiratoryRate,
+      Bp: updatedData.bloodPressure,
+    }];
+
     if (onDataChange) {
-      onDataChange(updatedData);
+      onDataChange(tempData);
     }
   };
 

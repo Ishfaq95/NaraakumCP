@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -10,18 +10,12 @@ import {
 import Icon from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { globalTextStyles } from '../../../styles/globalStyles';
+import { useSelector } from 'react-redux';
+import { addVisitRecordService } from '../../../services/api/addVisitRecord';
 
 interface Step2Props {
   onNext: () => void;
-  onPrevious: () => void;
   onSkip: () => void;
-  data?: {
-    pastMedicalHistory?: string[];
-    pastSurgicalHistory?: string[];
-    allergy?: string[];
-    currentMeds?: string[];
-  };
-  onDataChange?: (data: any) => void;
 }
 
 interface HistoryItem {
@@ -30,32 +24,74 @@ interface HistoryItem {
   hasError: boolean;
 }
 
-const Step2PatientHistory: React.FC<Step2Props> = ({ 
-  onNext, 
-  onPrevious, 
+const createHistoryItemsFromString = (value?: string): HistoryItem[] => {
+  if (!value || typeof value !== 'string') {
+    return [{ id: '1', value: '', hasError: false }];
+  }
+
+  const items = value
+    .split('#')
+    .map(entry => entry.trim())
+    .filter(entry => entry.length > 0);
+
+  if (!items.length) {
+    return [{ id: '1', value: '', hasError: false }];
+  }
+
+  return items.map((entry, index) => ({
+    id: `${index + 1}`,
+    value: entry,
+    hasError: false,
+  }));
+};
+
+const Step2PatientHistory: React.FC<Step2Props> = ({
+  onNext,
   onSkip,
-  data, 
-  onDataChange 
 }) => {
+  const visitRecordData: any = useSelector((state: any) => state.root.generalData.visitRecordData);
+  const visitmainId: any = useSelector((state: any) => state.root.generalData.visitmainId);
   const [pastMedicalHistory, setPastMedicalHistory] = useState<HistoryItem[]>([
-    { id: '1', value: data?.pastMedicalHistory?.[0] || '', hasError: false }
+    { id: '1', value: '', hasError: false }
   ]);
   const [pastSurgicalHistory, setPastSurgicalHistory] = useState<HistoryItem[]>([
-    { id: '1', value: data?.pastSurgicalHistory?.[0] || '', hasError: false }
+    { id: '1', value: '', hasError: false }
   ]);
   const [allergy, setAllergy] = useState<HistoryItem[]>([
-    { id: '1', value: data?.allergy?.[0] || '', hasError: false }
+    { id: '1', value: '', hasError: false }
   ]);
   const [currentMeds, setCurrentMeds] = useState<HistoryItem[]>([
-    { id: '1', value: data?.currentMeds?.[0] || '', hasError: false }
+    { id: '1', value: '', hasError: false }
   ]);
+  const dataHydratedRef = useRef(false);
+
+  useEffect(() => {
+    if (dataHydratedRef.current) {
+      return;
+    }
+
+    const patientHistory = visitRecordData?.PatientHistory;
+
+    if (!patientHistory || !Array.isArray(patientHistory) || !patientHistory.length) {
+      return;
+    }
+
+    const [historyData] = patientHistory;
+
+    setPastMedicalHistory(createHistoryItemsFromString(historyData?.PMH));
+    setPastSurgicalHistory(createHistoryItemsFromString(historyData?.PSH));
+    setAllergy(createHistoryItemsFromString(historyData?.Allergy));
+    setCurrentMeds(createHistoryItemsFromString(historyData?.CurrentMeds));
+
+    dataHydratedRef.current = true;
+  }, [visitRecordData]);
 
   const handleAddLine = (
     items: HistoryItem[],
     setItems: React.Dispatch<React.SetStateAction<HistoryItem[]>>
   ) => {
     const lastItem = items[items.length - 1];
-    
+
     // Check if last item is empty
     if (!lastItem.value.trim()) {
       // Mark the last item with error
@@ -97,16 +133,21 @@ const Step2PatientHistory: React.FC<Step2Props> = ({
     setItems(updatedItems);
   };
 
-  const handleNext = () => {
-    if (onDataChange) {
-      onDataChange({
-        pastMedicalHistory: pastMedicalHistory.map(item => item.value).filter(v => v.trim()),
-        pastSurgicalHistory: pastSurgicalHistory.map(item => item.value).filter(v => v.trim()),
-        allergy: allergy.map(item => item.value).filter(v => v.trim()),
-        currentMeds: currentMeds.map(item => item.value).filter(v => v.trim()),
-      });
+  const handleNext = async () => {
+    // onNext();
+    const payload = {
+      VisitMainId: visitmainId,
+      PMH: pastMedicalHistory.map(item => item.value).join('#'),
+      PSH: pastSurgicalHistory.map(item => item.value).join('#'),
+      Allergy: allergy.map(item => item.value).join('#'),
+      CurrentMeds: currentMeds.map(item => item.value).join('#'),
     }
-    onNext();
+
+    console.log("payload==>", payload);
+    const response = await addVisitRecordService.addEditVisitPatientHistory(payload);
+    if (response?.StatusCode?.STATUSCODE == 12005) {
+      onNext();
+    }
   };
 
   const renderSection = (

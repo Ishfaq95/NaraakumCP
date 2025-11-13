@@ -12,7 +12,6 @@ export const login = async (credentials: any) => {
         );
         return response.data;
     } catch (error: any) {
-        console.log('error',error)
         throw {
             message: error?.response?.data?.message || 'Login failed',
             status: error?.response?.status,
@@ -144,7 +143,6 @@ export const signUpStep2 = async (credentials: any) => {
         );
         return response.data;
     } catch (error: any) {
-        console.log(error)
         throw {
             message: error?.response?.data?.message || 'Sign up failed',
             status: error?.response?.status,
@@ -207,7 +205,6 @@ export const addIndividualServiceProviderStep3 = async (credentials: any) => {
         );
         return response.data;
     } catch (error: any) {
-        console.log('error', error)
         throw {
             message: error?.response?.data?.message || 'Add individual service provider step 3 failed',
             status: error?.response?.status,

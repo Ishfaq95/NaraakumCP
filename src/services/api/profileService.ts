@@ -10,7 +10,6 @@ export const getServiceProviderByUserId = async (credentials: any) => {
         );
         return response.data;
     } catch (error: any) {
-        console.log('error', error)
         throw {
             message: error?.response?.data?.message || 'Get service provider by user id failed',
             status: error?.response?.status,
@@ -28,7 +27,6 @@ export const getServiceProviderPreferences = async (credentials: any) => {
         return response.data;
     }
     catch (error: any) {
-        console.log('error', error)
         throw {
             message: error?.response?.data?.message || 'Get service provider preferences failed',
             status: error?.response?.status,
@@ -46,7 +44,6 @@ export const deleteServiceProviderPreference = async (credentials: any) => {
         return response.data;
     }
     catch (error: any) {
-        console.log('error', error)
         throw {
             message: error?.response?.data?.message || 'Delete service provider preference failed',
             status: error?.response?.status,
@@ -64,7 +61,6 @@ export const addUpdateServiceProviderPreference = async (credentials: any) => {
         return response.data;
     }
     catch (error: any) {
-        console.log('error', error)
         throw {
             message: error?.response?.data?.message || 'Add service provider preference failed',
             status: error?.response?.status,
@@ -82,7 +78,6 @@ export const getServiceProviderPersonalProfileSummary = async (credentials: any)
         return response.data;
     }
     catch (error: any) {
-        console.log('error', error)
         throw {
             message: error?.response?.data?.message || 'Get service provider personal profile summary failed',
             status: error?.response?.status,
@@ -100,7 +95,6 @@ export const getServiceProviderPaymentProfileSummary = async (credentials: any) 
         return response.data;
     }
     catch (error: any) {
-        console.log('error', error)
         throw {
             message: error?.response?.data?.message || 'Get service provider payment profile summary failed',
             status: error?.response?.status,
@@ -118,7 +112,6 @@ export const getServiceProviderMedicalLicense = async (credentials: any) => {
         return response.data;
     }
     catch (error: any) {
-        console.log('error', error)
         throw {
             message: error?.response?.data?.message || 'Get service provider medical license failed',
             status: error?.response?.status,
@@ -136,7 +129,6 @@ export const getUserInfoByUserId = async (credentials: any) => {
         return response.data;
     }
     catch (error: any) {
-        console.log('error', error)
         throw {
             message: error?.response?.data?.message || 'Get user info by user id failed',
             status: error?.response?.status,
@@ -153,7 +145,6 @@ export const getNationalities = async () => {
         return response.data;
     }
     catch (error: any) {
-        console.log('error', error)
         throw {
             message: error?.response?.data?.message || 'Get nationalities failed',
             status: error?.response?.status,
@@ -171,7 +162,6 @@ export const getServiceProviderPaymentDetails = async (credentials: any) => {
         return response.data;
     }
     catch (error: any) {
-        console.log('error', error)
         throw {
             message: error?.response?.data?.message || 'Get service provider payment details failed',
             status: error?.response?.status,
@@ -190,7 +180,6 @@ export const getServiceProviderContractSigning = async (credentials: any) => {
         return response.data;
     }
     catch (error: any) {
-        console.log('error', error)
         throw {
             message: error?.response?.data?.message || 'Get service provider contract signing failed',
             status: error?.response?.status,
@@ -276,7 +265,6 @@ export const addServiceProviderContract = async (credentials: any) => {
         return response.data;
     }
     catch (error: any) {
-        console.log('error', error)
         throw new Error(error instanceof Error ? error.message : 'Add service provider contract failed');
     }
 }

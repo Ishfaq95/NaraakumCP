@@ -13,7 +13,7 @@ const VisitDetailScreen = ({route}: any) => {
     const [taskDetail, setTaskDetail] = useState<any>(null);
     const [activeTab, setActiveTab] = useState<'taskDetail' | 'medicalHistory' | 'patientRating'>('taskDetail');
 
-    console.log("taskDetail==>", taskDetail);
+    console.log("taskDetail==>", taskId);
 
     useEffect(() => {
         if (taskId) {

@@ -81,7 +81,6 @@ const OTPVerificationStep: React.FC<OTPVerificationStepProps> = ({
                setOtpError(true);
             }
         } catch (error) {
-            console.log(error);
         }
     }
 
@@ -105,7 +104,6 @@ const OTPVerificationStep: React.FC<OTPVerificationStepProps> = ({
                 setIsResendSuccess(true);
             }
         } catch (error) {
-            console.log(error);
         }
     };
 

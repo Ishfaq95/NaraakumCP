@@ -92,17 +92,14 @@ const SettingScreen = () => {
   const [isDataLoaded, setIsDataLoaded] = useState(false);
 
   const handleNotificationPress = () => {
-    console.log('Notification pressed');
     // Navigate to notifications screen or show notifications
   };
 
   const handleSettingsPress = () => {
-    console.log('Settings pressed');
     // Navigate to settings screen
   };
 
   const handleAlarmPress = () => {
-    console.log('Alarm pressed');
     // Navigate to calendar/appointments screen
   };
   
@@ -159,7 +156,6 @@ const SettingScreen = () => {
   }
   
   const handleLogout = () => {
-    console.log('Logout pressed');
     dispatch(setUser(null));
     // Implement logout functionality
     // Clear user session and navigate to login screen

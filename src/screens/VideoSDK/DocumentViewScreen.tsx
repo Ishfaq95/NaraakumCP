@@ -27,12 +27,10 @@ const DocumentViewScreen: React.FC<DocumentViewScreenProps> = ({
 const handleMessage = async (event:any) => {
   const { url, userInfo, event: eventHandler,data,fileName,status } = JSON.parse(event.nativeEvent.data);
 
-  console.log('url', eventHandler,data);
   onSetVisitData(data);
 };
 
 const onNavigationStateChange = (url: any) => {
-  console.log('url', url);
 };
   return (
     <View style={styles.container}>

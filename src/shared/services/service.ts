@@ -30,6 +30,5 @@ export const isTokenExpired = (expiresAt:any) => {
 
 export function encryptText(text, key) {
   const encrypted = CryptoJS.AES.encrypt(text, key).toString();
-  console.log('encrypted',encrypted)
   return btoa(encrypted);
 }

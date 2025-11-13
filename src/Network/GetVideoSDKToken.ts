@@ -34,7 +34,6 @@ export const getVideoSDKToken=async ()=>{
 //   const url='https://stghhcapis.innotech-sa.com/api/user/GetServiceProviderOnthewayTaskList';
 //   
 
-//   console.log('UserProfileId',UserProfileId)
 //   const data={
 //         "ServiceProviderUserLoginInfoId":UserProfileId
 //      }

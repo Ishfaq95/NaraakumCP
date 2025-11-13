@@ -22,8 +22,6 @@ const AlarmScreen = () => {
   const [time, setTime] = useState('');
   const [callData, setCallData] = useState<any>(null);
 
-  console.log("Data",data)
-
  
   const onPressButton = () => {
     if(data.Subject=="Session Started"){
@@ -42,7 +40,6 @@ const AlarmScreen = () => {
   }, [route.params]);
 
   const makeDataForCall = (data: any) => {
-    console.log('data==>', data.meetingInfo);
     const sessionStartTime = formatDateTimeToLocal(
       data.meetingInfo.SchedulingDate,
       data.meetingInfo.sessionStartTime,
@@ -52,8 +49,6 @@ const AlarmScreen = () => {
       data.meetingInfo.sessionEndTime,
     );
  
-    console.log('sessionStartTime==>', sessionStartTime);
-    console.log('sessionEndTime==>', sessionEndTime);
  
     const dataForCall = {
       ...data.meetingInfo,
@@ -79,7 +74,6 @@ const AlarmScreen = () => {
   };
  
   const makeStringToShow = (data: any) => {
-    // console.log('data', data);
     const timeString = data.SchedulingTime;
     const formattedTime = convertUtcToLocal(timeString);
  

@@ -8,7 +8,6 @@ export const getServiceProviderMainSummary = async (credentials: any) => {
         );
         return response.data;
     } catch (error: any) {
-        console.log('error',error)
         throw {
             message: error?.response?.data?.message || 'Get service provider main summary failed',
             status: error?.response?.status,
@@ -25,7 +24,6 @@ export const getServiceProviderUnAvailability = async (credentials: any) => {
         );
         return response.data;
     } catch (error: any) {
-        console.log('error',error)
         throw {
             message: error?.response?.data?.message || 'Get service provider unavailability failed',
             status: error?.response?.status,
@@ -42,7 +40,6 @@ export const getTaskbyServiceProviderId = async (credentials: any) => {
         );
         return response.data;
     } catch (error: any) {
-        console.log('error',error)
         throw {
             message: error?.response?.data?.message || 'Get task by service provider id failed',
             status: error?.response?.status,
@@ -59,7 +56,6 @@ export const getServiceProviderCount = async (credentials: any) => {
         );
         return response.data;
     } catch (error: any) {
-        console.log('error',error)
         throw {
             message: error?.response?.data?.message || 'Get service provider count failed',
             status: error?.response?.status,
@@ -76,7 +72,6 @@ export const getServiceProviderSchedules = async (credentials: any) => {
         );
         return response.data;
     } catch (error: any) {
-        console.log('error',error)
         throw {
             message: error?.response?.data?.message || 'Get service provider schedules failed',
             status: error?.response?.status,
@@ -93,7 +88,6 @@ export const getServiceProviderDaySchedules = async (credentials: any) => {
         );
         return response.data;
     } catch (error: any) {
-        console.log('error',error)
         throw {
             message: error?.response?.data?.message || 'Get service provider day schedules failed',
             status: error?.response?.status,
@@ -111,7 +105,6 @@ export const getTaskDetail = async (credentials: any) => {
         return response.data;
     }
     catch (error: any) {
-        console.log('error',error)
         throw {
             message: error?.response?.data?.message || 'Get task detail failed',
             status: error?.response?.status,
@@ -129,7 +122,6 @@ export const getVisitRecordList = async (credentials: any) => {
         return response.data;
     }
     catch (error: any) {
-        console.log('error',error)
         throw {
             message: error?.response?.data?.message || 'Get visit record list failed',
             status: error?.response?.status,
@@ -147,7 +139,6 @@ export const getUserRatingForPatient = async (credentials: any) => {
         return response.data;
     }
     catch (error: any) {
-        console.log('error',error)
         throw {
             message: error?.response?.data?.message || 'Get user rating for patient failed',
             status: error?.response?.status,
@@ -165,7 +156,6 @@ export const addEditUserRating = async (credentials: any) => {
         return response.data;
     }
     catch (error: any) {
-        console.log('error',error)
         throw {
             message: error?.response?.data?.message || 'Add user rating for patient failed',
             status: error?.response?.status,
@@ -183,9 +173,25 @@ export const deleteUserRating = async (credentials: any) => {
         return response.data;
     }
     catch (error: any) {
-        console.log('error',error)
         throw {
             message: error?.response?.data?.message || 'Delete user rating failed',
+            status: error?.response?.status,
+            code: error?.response?.data?.code
+        };
+    }
+};
+
+export const getVisitMainRecordDetail = async (credentials: any) => {
+    try {
+        const response = await axiosInstance.post(
+            `visitRecord/GetVisitMainRecordDetail`,
+            credentials
+        );
+        return response.data;
+    }
+    catch (error: any) {
+        throw {
+            message: error?.response?.data?.message || 'Get visit main record detail failed',
             status: error?.response?.status,
             code: error?.response?.data?.code
         };
@@ -204,4 +210,5 @@ export const appointmentService = {
     getUserRatingForPatient,
     addEditUserRating,
     deleteUserRating,
+    getVisitMainRecordDetail,
 }; 

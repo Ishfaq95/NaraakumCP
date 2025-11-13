@@ -8,7 +8,6 @@ export const getClientsByServiceProvider = async (credentials: any) => {
         );
         return response.data;
     } catch (error: any) {
-        console.log('error',error)
         throw {
             message: error?.response?.data?.message || 'Get clients by service provider failed',
             status: error?.response?.status,
@@ -25,7 +24,6 @@ export const getServiceProvidersFeedback = async (credentials: any) => {
         );
         return response.data;
     } catch (error: any) {
-        console.log('error',error)
         throw {
             message: error?.response?.data?.message || 'Get service providers feedback failed',
             status: error?.response?.status,

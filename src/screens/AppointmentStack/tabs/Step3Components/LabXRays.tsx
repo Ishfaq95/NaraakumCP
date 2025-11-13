@@ -19,9 +19,7 @@ interface LabFile {
 }
 
 interface LabXRaysProps {
-  data?: {
-    files?: LabFile[];
-  };
+  data?: any;
   onAddFile?: () => void;
   onDownloadFile?: (file: LabFile) => void;
   onDeleteFile?: (file: LabFile) => void;
@@ -35,20 +33,22 @@ const LabXRays: React.FC<LabXRaysProps> = ({
   onDeleteFile,
   onDataChange,
 }) => {
-  const [files, setFiles] = useState<LabFile[]>(data?.files || []);
+  const [files, setFiles] = useState<any>(data || []);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [filePaths, setFilePaths] = useState<string[]>([]);
   const { user } = useSelector((state: any) => state.root.user);
   const { mediaToken } = useSelector((state: any) => state.root.user);
 
+  console.log("data==>", data);
+
   useEffect(() => {
-    if (data?.files) {
-      setFiles(data.files);
+    if (data) {
+      setFiles(data);
     } else {
       setFiles([]);
     }
-  }, [data?.files]);
+  }, [data]);
 
   const inferCategory = (fileName: string, mime?: string | null) => {
     const normalizedMime = mime?.toLowerCase() ?? '';
@@ -229,6 +229,8 @@ const LabXRays: React.FC<LabXRaysProps> = ({
     }
   };
 
+
+
   return (
     <View style={styles.container}>
       <View style={styles.headerRow}>
@@ -248,7 +250,7 @@ const LabXRays: React.FC<LabXRaysProps> = ({
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.fileListContainer}
         >
-          {files.map(file => (
+          {files.map((file: any) => (
             <View key={file.id} style={styles.fileCard}>
               <View style={styles.fileInfoRow}>
                 <View style={styles.iconCircle}>
@@ -257,11 +259,8 @@ const LabXRays: React.FC<LabXRaysProps> = ({
                 <View style={styles.fileTextContainer}>
                   <Text style={styles.fileLabel}>File Category</Text>
                   <Text style={styles.fileCategory}>
-                    {file.category || 'Lab Reports'}
+                    {file?.FileTypeTitlePlang || 'Lab Reports'}
                   </Text>
-                  {file.fileName ? (
-                    <Text style={styles.fileName}>{file.fileName}</Text>
-                  ) : null}
                 </View>
               </View>
 

@@ -57,7 +57,6 @@ const PreViewScreen = ({navigation, route}: any) => {
   ];
 
   useEffect(() => {
-    console.log('route params',route.params)
     if(route.params && route.params.Data && !route?.params?.Data?.VisitData){
       encryptDataVisit();
     }else if(route.params && route.params?.Data){
@@ -80,7 +79,6 @@ const PreViewScreen = ({navigation, route}: any) => {
     };
  
     const paramsJson = JSON.stringify(dataVisit);
-    console.log('paramsJson',paramsJson)
     const encryptedVisitData = encryptText(paramsJson, '!naarakum@789');
     
     const callDataObj:any={
@@ -110,7 +108,7 @@ const PreViewScreen = ({navigation, route}: any) => {
 
     // AudioRecord.on('data', data => {
     //   const volume = calculateVolume(data); // You can use a method to calculate volume
-    //   console.log('volume', volume);
+    //   
     //   setVolume(volume);
     // });
   }, []);

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, SafeAreaView, StyleSheet, TouchableOpacity } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
@@ -7,6 +7,9 @@ import Step1PatientComplaint from './tabs/Step1PatientComplaint';
 import Step2PatientHistory from './tabs/Step2PatientHistory';
 import Step3PatientAssessment from './tabs/Step3PatientAssessment';
 import Step4Treatment from './tabs/Step4Treatment';
+import { appointmentService } from '../../services/api/appointmentService';
+import { useDispatch, useSelector } from 'react-redux';
+import { setVisitMainData, setVisitMainId } from '../../shared/redux/reducers/generalDataReducer';
 
 interface Step1Data {
     chiefComplaint?: string;
@@ -30,8 +33,29 @@ interface Step3Data {
     dx?: any;
 }
 
-const AddSessionRecord = () => {
+const AddSessionRecord = ({route}: {route: any}) => {
     const navigation = useNavigation();
+    const patientData: any = route?.params?.patientData || null;
+    const visitRecordData: any = useSelector((state: any) => state.root.generalData.visitRecordData);
+    const visitmainId: any = useSelector((state: any) => state.root.generalData.visitmainId);
+    const dispatch = useDispatch();
+
+    useEffect(() => {
+        if (visitmainId) {
+            getVisitMainRecordDetail();
+        }
+    }, [visitmainId]);
+
+    const getVisitMainRecordDetail = async () => {
+        const payload = {
+            VisitMainId: visitmainId,
+        };
+        const response = await appointmentService.getVisitMainRecordDetail(payload);
+        if (response?.ResponseStatus?.STATUSCODE === 200) {
+            dispatch(setVisitMainData(response));
+        }
+    };
+
     const [currentStep, setCurrentStep] = useState(1);
     const [formData, setFormData] = useState<{
         step1: Step1Data;
@@ -50,6 +74,7 @@ const AddSessionRecord = () => {
     };
 
     const handleNext = () => {
+        getVisitMainRecordDetail();
         if (currentStep < 4) {
             setCurrentStep(currentStep + 1);
         }
@@ -63,7 +88,6 @@ const AddSessionRecord = () => {
 
     const handleComplete = () => {
         // Handle form completion and save
-        console.log('Form completed with data:', formData);
         navigation.goBack();
     };
 
@@ -74,9 +98,15 @@ const AddSessionRecord = () => {
         }));
     };
 
+    const backButtonPress = () => {
+        dispatch(setVisitMainData(null as any));
+        dispatch(setVisitMainId(null as any));
+        navigation.goBack();
+    };
+
     const renderHeader = () => (
         <View style={styles.header}>
-            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <TouchableOpacity onPress={backButtonPress} style={styles.backButton}>
                 <Ionicons name="chevron-back" size={24} color="#333" />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Add Session Record</Text>
@@ -88,29 +118,22 @@ const AddSessionRecord = () => {
             case 1:
                 return (
                     <Step1PatientComplaint
+                        patientData={patientData}
                         onNext={handleNext}
-                        data={formData.step1}
-                        onDataChange={(data) => handleDataChange('step1', data)}
                     />
                 );
             case 2:
                 return (
                     <Step2PatientHistory
                         onNext={handleNext}
-                        onPrevious={handlePrevious}
                         onSkip={handleNext}
-                        data={formData.step2}
-                        onDataChange={(data) => handleDataChange('step2', data)}
                     />
                 );
             case 3:
                 return (
                     <Step3PatientAssessment
                         onNext={handleNext}
-                        onPrevious={handlePrevious}
                         onSkip={handleNext}
-                        data={formData.step3}
-                        onDataChange={(data) => handleDataChange('step3', data)}
                     />
                 );
             case 4:

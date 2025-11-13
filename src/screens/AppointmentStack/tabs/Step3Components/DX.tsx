@@ -35,9 +35,7 @@ interface ICD10Code {
 }
 
 interface DXProps {
-  data?: {
-    items?: DXItem[];
-  };
+  data?: any;
   specialties?: Specialty[]; // API data for specialties
   icd10Codes?: ICD10Code[]; // API data for ICD10 codes
   onDataChange?: (data: any) => void;

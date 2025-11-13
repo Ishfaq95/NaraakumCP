@@ -51,7 +51,6 @@ const NotificationsCenter = () => {
       const permission = await PermissionsAndroid.request(
         PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
       );
-      console.log('Notification permission:', permission);
     }
   };
 
@@ -85,7 +84,6 @@ const NotificationsCenter = () => {
           authStatus === messaging.AuthorizationStatus.PROVISIONAL;
  
         if (enabled) {
-          console.log('Authorization status:', authStatus);
         }
       }
     };
@@ -97,10 +95,8 @@ const NotificationsCenter = () => {
     }
     PushNotification.configure({
       onRegister: function (token) {
-        console.log('TOKEN:', token);
       },
       onNotification: function (notification) {
-        console.log('notification===>', notification);
         try {
           const data = notification?.data; // No need to stringify
  
@@ -134,7 +130,6 @@ const NotificationsCenter = () => {
  
     // Handle the app opening from a background state
     messaging().onNotificationOpenedApp(remoteMessage => {
-      console.log('remoteMessage in open app', remoteMessage);
       // Handle the notification data
       if (Platform.OS === 'ios') {
         if (remoteMessage?.data?.notificationFrom == 'reminder') {
@@ -158,7 +153,6 @@ const NotificationsCenter = () => {
       let parsedData = JSON.parse(notificationData);
       let title = parsedData.notification?.title;
       let body = parsedData.notification?.body;
-      console.log('remoteMessage', remoteMessage);
 
       const notificationFrom=parsedData?.data?.notificationFrom;
       const currentScreen = getCurrentScreen(navigation);

@@ -53,7 +53,6 @@ const ServiceProviderSelection: React.FC<ServiceProviderSelectionProps> = ({
             <ScrollView>
                 <View style={styles.cardsGrid}>
                     {serviceProviders.map((provider) => {
-                        console.log('provider', `${MediaBaseURL}${provider.UserRoleImagePath}`);
                         return (
                             <TouchableOpacity
                                 key={provider.Id}

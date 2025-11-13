@@ -65,7 +65,6 @@ const SignTheContractScreen = () => {
                 );
             }
         } catch (error: any) {
-            console.log('error', error);
             Alert.alert('Error', 'Failed to submit contract. Please try again.');
         }
     }
@@ -85,7 +84,6 @@ const SignTheContractScreen = () => {
                 setContractSigningData(response?.Contract[0]);
             }
         } catch (error: any) {
-            console.log('error', error)
         }
         finally {
             setIsLoading(false);
@@ -95,16 +93,13 @@ const SignTheContractScreen = () => {
     // Upload signature image or PDF contract
     const uploadContract = async (file: any, type: string) => {
         try {
-            console.log('Uploading file:', file.name, 'Type:', type);
             const response = await profileService.uploadFile(file, user);
 
             if (response?.ResponseStatus?.STATUSCODE === '200') {
                 if (type === 'signature') {
                     setSignatureFilePath(response?.Path || response?.Data?.Path);
-                    console.log('Signature uploaded successfully:', response?.Path || response?.Data?.Path);
                 } else if (type === 'contract') {
                     setContractFilePath(response?.Path || response?.Data?.Path);
-                    console.log('Contract PDF uploaded successfully:', response?.Path || response?.Data?.Path);
                 }
             }
         } catch (error: any) {

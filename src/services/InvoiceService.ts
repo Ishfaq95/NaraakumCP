@@ -43,8 +43,6 @@ const generateInvoiceHTML = (data: any): string => {
   const invoiceDate = moment().locale("en").format('DD/MM/YYYY');
   const userInfo = store.getState().root.user.user;
 
-  console.log('userInfo', userInfo);
-
   // Determine payment method
   let paymentMethod = 'محفظة';
   let cardNumber = '';
@@ -434,8 +432,6 @@ const generateInvoicePDF = async (data: any): Promise<string> => {
     const timestamp = new Date().getTime();
     const fileName = `Naraakum_Invoice_${data[0].OrderID}_${timestamp}`;
 
-    console.log('Generating PDF for invoice:', fileName);
-
     const options = {
       html,
       fileName,
@@ -449,7 +445,6 @@ const generateInvoicePDF = async (data: any): Promise<string> => {
     const file = await RNHTMLtoPDF.convert(options);
 
     if (file && file.filePath) {
-      console.log('PDF generated successfully at:', file.filePath);
       return file.filePath;
     } else {
       console.error('Failed to generate PDF, no file path returned');
@@ -520,7 +515,6 @@ const requestStoragePermission = async (): Promise<boolean> => {
 
 const shareFile = async (filePath: string, fileName: string) => {
   try {
-    console.log('Sharing file from path:', filePath);
     
     // Ensure the file exists
     const fileExists = await RNFetchBlob.fs.exists(filePath);
@@ -535,20 +529,16 @@ const shareFile = async (filePath: string, fileName: string) => {
     
     // Check file size
     const fileInfo = await RNFetchBlob.fs.stat(filePath);
-    console.log('File size:', fileInfo.size, 'bytes');
     
     if (Platform.OS === 'ios') {
       // On iOS, use RNFetchBlob's previewDocument for PDF files
       try {
-        console.log('Opening PDF preview with path:', filePath);
         await RNFetchBlob.ios.previewDocument(filePath);
-        console.log('PDF preview opened successfully');
       } catch (previewError) {
         console.error('Error previewing document:', previewError);
         
         // Fallback to share API if preview fails
         try {
-          console.log('Falling back to Share API');
           await Share.share({
             url: fileUrl,
             title: fileName,
@@ -578,7 +568,6 @@ const shareFile = async (filePath: string, fileName: string) => {
       // Create directory if it doesn't exist
       const dirExists = await fs.exists(SharedDir);
       if (!dirExists) {
-        console.log('Creating Shared directory');
         await fs.mkdir(SharedDir);
       }
 
@@ -586,12 +575,9 @@ const shareFile = async (filePath: string, fileName: string) => {
       const timestamp = new Date().getTime();
       const uniqueFileName = fileName.replace('.pdf', `_${timestamp}.pdf`);
       const newPath = `${SharedDir}/${uniqueFileName}`;
-
-      console.log('Copying file to:', newPath);
       
       // Copy file to shared location
       await fs.cp(filePath, newPath);
-      console.log('File copied successfully to:', newPath);
 
       Alert.alert(
         'File Saved',
@@ -620,8 +606,6 @@ const downloadFIleForIOS = (url: string, fileName: string) => {
   const timestamp = new Date().getTime();
   const uniqueFileName = fileName.replace('.pdf', `_${timestamp}.pdf`);
   const filePath = `${DocumentDir}/${uniqueFileName}`;
-  
-  console.log('Downloading to unique path:', filePath);
 
   // Check if the URL is a local file path
   if (url.startsWith('file://') || url.startsWith('/')) {
@@ -631,14 +615,9 @@ const downloadFIleForIOS = (url: string, fileName: string) => {
     // Copy the file to the destination
     fs.cp(sourcePath, filePath)
       .then(() => {
-        console.log('File copied successfully to:', filePath);
         shareFile(filePath, uniqueFileName);
       })
       .catch((error) => {
-        console.error('Error copying file:', error);
-        
-        // If copy fails, try to use the original file directly
-        console.log('Attempting to use source file directly:', sourcePath);
         shareFile(sourcePath, fileName);
       });
   } else {
@@ -650,7 +629,6 @@ const downloadFIleForIOS = (url: string, fileName: string) => {
     })
       .fetch('GET', url)
       .then(res => {
-        console.log('File downloaded successfully to:', res.path());
         shareFile(res.path(), uniqueFileName);
       })
       .catch(error => {
@@ -725,9 +703,6 @@ export const generateAndDownloadInvoice = async (data: any) => {
     // Extract the filename from the path
     const pathParts = filePath.split('/');
     const fileName = pathParts[pathParts.length - 1];
-    
-    console.log('Generated PDF at path:', filePath);
-    console.log('Using filename:', fileName);
     
     if (Platform.OS === 'ios') {
       // On iOS, the filePath from RNHTMLtoPDF is already a local file path

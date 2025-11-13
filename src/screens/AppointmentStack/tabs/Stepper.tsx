@@ -1,6 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { globalTextStyles } from '../../../styles/globalStyles';
+import { useSelector } from 'react-redux';
+import CustomBottomSheet from '../../../components/common/CustomBottomSheet';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 interface StepperProps {
   currentStep: number;
@@ -9,6 +12,8 @@ interface StepperProps {
 }
 
 const Stepper: React.FC<StepperProps> = ({ currentStep, totalSteps, onStepPress }) => {
+  const visitRecordData: any = useSelector((state: any) => state.root.generalData.visitRecordData);
+  const [visible, setVisible] = useState(false);
   return (
     <View style={styles.container}>
       {Array.from({ length: totalSteps }, (_, index) => {
@@ -19,8 +24,14 @@ const Stepper: React.FC<StepperProps> = ({ currentStep, totalSteps, onStepPress 
         return (
           <React.Fragment key={stepNumber}>
             <TouchableOpacity
-              style={styles.stepContainer}
-              onPress={() => onStepPress(stepNumber)}
+              style={[styles.stepContainer]}
+              onPress={() => {
+                if (!visitRecordData) {
+                  setVisible(true);
+                } else {
+                  onStepPress(stepNumber);
+                }
+              }}
               activeOpacity={0.7}
             >
               <View
@@ -52,6 +63,30 @@ const Stepper: React.FC<StepperProps> = ({ currentStep, totalSteps, onStepPress 
           </React.Fragment>
         );
       })}
+
+      <CustomBottomSheet
+        visible={visible}
+        onClose={() => setVisible(false)}
+        backdropClickable={true}
+        showHandle={false}
+      >
+        <View style={styles.bottomSheetContainer}>
+          <View style={{flexDirection:'row', justifyContent:'space-between', alignItems:'center', paddingHorizontal: 16, paddingVertical: 16}}>
+            <Text style={{...globalTextStyles.buttonLarge, color: '#000'}}>Warning</Text>
+            <TouchableOpacity onPress={() => setVisible(false)}>
+              <Ionicons name="close" size={24} color="#333" />
+            </TouchableOpacity>
+          </View>
+          <View style={{paddingHorizontal: 16}}>
+            <Text style={{...globalTextStyles.bodyMedium, color: '#000'}}>You need to save the Patient Complaint before moving to next step.</Text>
+          </View>
+          <View style={{width:100,alignSelf:'center',marginVertical: 16}}>
+            <TouchableOpacity style={styles.bottomSheetButton} onPress={() => setVisible(false)}>
+              <Text style={styles.bottomSheetButtonText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </CustomBottomSheet>
     </View>
   );
 };
@@ -108,6 +143,21 @@ const styles = StyleSheet.create({
   },
   completedStepLine: {
     backgroundColor: '#179c8e',
+  },
+  bottomSheetContainer: {
+    flex: 1,
+  },
+  bottomSheetButton: {
+    backgroundColor: '#179c8e',
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bottomSheetButtonText: {
+    ...globalTextStyles.buttonLarge,
+    color: '#fff',
   },
 });
 

@@ -11,8 +11,6 @@ const PromotionAndDiscount: React.FC = () => {
     const [promoCodeList, setPromoCodeList] = useState<any[]>([]);
     const user = useSelector((state: any) => state.root.user.user);
 
-    console.log('user', promoCodeList);
-
     useEffect(() => {
         if (user) {
             getPromoCodeListFN();
@@ -47,7 +45,6 @@ const PromotionAndDiscount: React.FC = () => {
     ]);
 
     const handleEditPromotion = (promotion: any) => {
-        console.log('Edit promotion:', promotion);
         // Navigate to edit screen or show edit modal
         Alert.alert('Edit Promotion', `Edit promotion: ${promotion.pCode}`);
     };
@@ -70,7 +67,6 @@ const PromotionAndDiscount: React.FC = () => {
     };
 
     const handleAddNewPromotion = () => {
-        console.log('Add new promotion');
         // Navigate to add promotion screen or show add modal
         Alert.alert('Add New Promotion', 'Navigate to add promotion screen');
     };

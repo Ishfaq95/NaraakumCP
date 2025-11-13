@@ -15,6 +15,8 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { globalTextStyles } from '../../../../styles/globalStyles';
 import BottomSheet from '../../../../components/BottomSheet';
 import { Dimensions } from 'react-native';
+import { addVisitRecordService } from '../../../../services/api/addVisitRecord';
+import { useSelector } from 'react-redux';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -38,209 +40,56 @@ interface MainItem {
 }
 
 interface OEProps {
-  data?: {
-    selectedItems?: { [key: string]: boolean };
-    customItems?: string[];
-  };
+  data?: any;
   onDataChange?: (data: any) => void;
 }
 
-// Mock API data - replace with actual API call
-const API_DATA: MainItem[] = [
-  {
-    Id: "1",
-    Title: "General",
-    SubItem: [
-      {
-        Id: "9",
-        Title: "General Inspection",
-        SubList: [
-          { Id: "12", Title: "Pallor", InputRequired: false },
-          { Id: "13", Title: "Jaundice", InputRequired: true },
-          { Id: "14", Title: "Cyanosis", InputRequired: true },
-          { Id: "15", Title: "Muscle wasting", InputRequired: true },
-          { Id: "16", Title: "Cachexia", InputRequired: true },
-          { Id: "17", Title: "Tremer", InputRequired: true },
-          { Id: "18", Title: "Tall stature", InputRequired: true },
-          { Id: "19", Title: "Short stature", InputRequired: true },
-        ]
-      },
-      {
-        Id: "10",
-        Title: "Skin",
-        SubList: [
-          { Id: "20", Title: "Excoriation marks", InputRequired: true },
-          { Id: "21", Title: "Colour", InputRequired: true },
-          { Id: "22", Title: "Rash - Location", InputRequired: true },
-        ]
-      },
-      {
-        Id: "11",
-        Title: "LN",
-        SubList: [
-          { Id: "40", Title: "Number", InputRequired: true },
-          { Id: "41", Title: "Size", InputRequired: true },
-          { Id: "42", Title: "Tenderness", InputRequired: true },
-          { Id: "43", Title: "Location", InputRequired: true },
-          { Id: "44", Title: "Consistency", InputRequired: true },
-        ]
-      }
-    ]
-  },
-  {
-    Id: "2",
-    Title: "Head & Neck",
-    SubItem: [
-      {
-        Id: "45",
-        Title: "Head & Neck.",
-        SubList: [
-          { Id: "49", Title: "Glossitis", InputRequired: true },
-          { Id: "50", Title: "Angular stomatitis", InputRequired: true },
-          { Id: "51", Title: "Mouth ulcers", InputRequired: true },
-          { Id: "52", Title: "Gingivitis", InputRequired: true },
-          { Id: "53", Title: "Low set ears", InputRequired: true },
-          { Id: "54", Title: "Malar rash", InputRequired: true },
-          { Id: "55", Title: "Pigmentation", InputRequired: true },
-          { Id: "56", Title: "Tonsillitis", InputRequired: true },
-          { Id: "57", Title: "Pharyngitis", InputRequired: true },
-          { Id: "58", Title: "Septal deviation", InputRequired: true },
-        ]
-      },
-      {
-        Id: "46",
-        Title: "Eye",
-        SubList: [
-          { Id: "59", Title: "Ptosis", InputRequired: true },
-          { Id: "60", Title: "Papilledema", InputRequired: true },
-        ]
-      },
-      {
-        Id: "47",
-        Title: "ENT",
-        SubList: [
-          { Id: "213", Title: "ENT", InputRequired: true },
-        ]
-      },
-      {
-        Id: "48",
-        Title: "Thyroid",
-        SubList: [
-          { Id: "70", Title: "Size", InputRequired: true },
-          { Id: "71", Title: "Consistency", InputRequired: true },
-          { Id: "72", Title: "Symmetrical", InputRequired: true },
-          { Id: "73", Title: "Nodules", InputRequired: true },
-          { Id: "74", Title: "Bruit", InputRequired: true },
-        ]
-      }
-    ]
-  },
-  {
-    Id: "3",
-    Title: "Chest",
-    SubItem: [
-      {
-        Id: "75",
-        Title: "Cardiovascular signs",
-        SubList: [
-          { Id: "77", Title: "Measurement", InputRequired: true },
-          { Id: "78", Title: "Character", InputRequired: true },
-        ]
-      },
-      {
-        Id: "76",
-        Title: "Respiratory Signs",
-        SubList: [
-          { Id: "92", Title: "Astrexis", InputRequired: true },
-          { Id: "93", Title: "Nicotine stain", InputRequired: true },
-        ]
-      }
-    ]
-  },
-  {
-    Id: "4",
-    Title: "Abdomen",
-    SubItem: [
-      { Id: "106", Title: "Distended urinary bladder", SubList: [], InputRequired: true },
-      { Id: "107", Title: "Distended gallbladder", SubList: [], InputRequired: true },
-      { Id: "108", Title: "Ascites", SubList: [], InputRequired: true },
-    ]
-  },
-  {
-    Id: "5",
-    Title: "Back",
-    SubItem: [
-      { Id: "125", Title: "Kyphosis", SubList: [], InputRequired: true },
-      { Id: "126", Title: "Lordosis", SubList: [], InputRequired: true },
-      { Id: "127", Title: "Scoliosis", SubList: [], InputRequired: true },
-      { Id: "128", Title: "Dimple", SubList: [], InputRequired: true },
-      { Id: "129", Title: "Winged scapula", SubList: [], InputRequired: true },
-      { Id: "130", Title: "Tenderness - Location", SubList: [], InputRequired: true },
-    ]
-  },
-  {
-    Id: "6",
-    Title: "Genitourinary",
-    SubItem: [
-      {
-        Id: "131",
-        Title: "Male genitalia",
-        SubList: [
-          { Id: "133", Title: "Testicles - Normal", InputRequired: true },
-          { Id: "134", Title: "Testicles - Undescended testis", InputRequired: true },
-        ]
-      },
-      {
-        Id: "132",
-        Title: "Female genitalia",
-        SubList: [
-          { Id: "144", Title: "Vulvitis", InputRequired: true },
-          { Id: "145", Title: "Vulvar ulcer", InputRequired: true },
-        ]
-      }
-    ]
-  },
-  {
-    Id: "7",
-    Title: "Neurological",
-    SubItem: [
-      { Id: "150", Title: "GCS", SubList: [], InputRequired: true },
-      { Id: "151", Title: "Orientation - Time", SubList: [], InputRequired: true },
-    ]
-  },
-  {
-    Id: "8",
-    Title: "Rheumatological",
-    SubItem: [
-      { Id: "197", Title: "Joint disease - Joint affected", SubList: [], InputRequired: true },
-      { Id: "198", Title: "Joint disease - Side", SubList: [], InputRequired: true },
-    ]
-  },
-];
-
 const OE: React.FC<OEProps> = ({ data, onDataChange }) => {
   const [selectedMainItem, setSelectedMainItem] = useState<MainItem | null>(null);
-  const [selectedItems, setSelectedItems] = useState<{ [key: string]: boolean }>(
-    data?.selectedItems || {}
-  );
+  const [bodyAnatomy, setBodyAnatomy] = useState<any>([]);
+  const visitmainId: any = useSelector((state: any) => state.root.generalData.visitmainId);
+  // const [selectedItems, setSelectedItems] = useState<{ [key: string]: boolean }>(
+  //   data || {}
+  // );
   const [expandedSubItems, setExpandedSubItems] = useState<{ [key: string]: boolean }>({});
-  const [customItems, setCustomItems] = useState<{ [subItemId: string]: Array<{ id: string; title: string; value: string; checked: boolean }> }>(
-    data?.customItems || {}
-  );
+  // const [customItems, setCustomItems] = useState<{ [subItemId: string]: Array<{ id: string; title: string; value: string; checked: boolean }> }>(
+  //   data || {}
+  // );
   const [showAddOther, setShowAddOther] = useState<{ [key: string]: boolean }>({});
   const [newCustomTitle, setNewCustomTitle] = useState<{ [key: string]: string }>({});
   const [newCustomValue, setNewCustomValue] = useState<{ [key: string]: string }>({});
   const bottomSheetRef = useRef<any>(null);
 
-  useEffect(() => {
-    if (onDataChange) {
-      onDataChange({
-        selectedItems,
-        customItems,
-      });
-    }
-  }, [selectedItems, customItems]);
+  console.log("data", data)
 
+  // useEffect(() => {
+  //   if (onDataChange) {
+  //     onDataChange({
+  //       selectedItems,
+  //       customItems,
+  //     });
+  //   }
+  // }, [selectedItems, customItems]);
+
+  useEffect(() => {
+    if (visitmainId) {
+      getBodyAnatomy();
+    }
+  }, [visitmainId]);
+
+  const getBodyAnatomy = async () => {
+    try {
+      const payload = {
+        VisitMainId: visitmainId,
+      }
+      const response = await addVisitRecordService.getVisitPatientBodyAnatomy(payload);
+      if (response?.ResponseStatus?.STATUSCODE == 200) {
+        setBodyAnatomy(response?.Data);
+      }
+    } catch (error: any) {
+      console.log("error==>", error);
+    }
+  };
   const handleMainItemPress = (item: MainItem) => {
     setSelectedMainItem(item);
     setExpandedSubItems({});
@@ -259,22 +108,22 @@ const OE: React.FC<OEProps> = ({ data, onDataChange }) => {
   };
 
   const toggleCheckbox = (itemId: string) => {
-    setSelectedItems(prev => ({
-      ...prev,
-      [itemId]: !prev[itemId]
-    }));
+    // setSelectedItems(prev => ({
+    //   ...prev,
+    //   [itemId]: !prev[itemId]
+    // }));
   };
 
   const toggleCustomItemCheckbox = (subItemId: string, customItemId: string) => {
-    setCustomItems(prev => {
-      const subItemCustoms = prev[subItemId] || [];
-      return {
-        ...prev,
-        [subItemId]: subItemCustoms.map(item =>
-          item.id === customItemId ? { ...item, checked: !item.checked } : item
-        )
-      };
-    });
+    // setCustomItems(prev => {
+    //   const subItemCustoms = prev[subItemId] || [];
+    //   return {
+    //     ...prev,
+    //     [subItemId]: subItemCustoms.map(item =>
+    //       item.id === customItemId ? { ...item, checked: !item.checked } : item
+    //     )
+    //   };
+    // });
   };
 
   const handleShowAddOther = (subItemId: string) => {
@@ -289,7 +138,7 @@ const OE: React.FC<OEProps> = ({ data, onDataChange }) => {
   const handleAddCustomItem = (subItemId: string) => {
     const title = newCustomTitle[subItemId]?.trim();
     const value = newCustomValue[subItemId]?.trim();
-    
+
     if (title) {
       const newItem = {
         id: `custom-${Date.now()}`,
@@ -297,12 +146,12 @@ const OE: React.FC<OEProps> = ({ data, onDataChange }) => {
         value: value || '',
         checked: true
       };
-      
-      setCustomItems(prev => ({
-        ...prev,
-        [subItemId]: [...(prev[subItemId] || []), newItem]
-      }));
-      
+
+      // setCustomItems(prev => ({
+      //   ...prev,
+      //   [subItemId]: [...(prev[subItemId] || []), newItem]
+      // }));
+
       setNewCustomTitle(prev => ({ ...prev, [subItemId]: '' }));
       setNewCustomValue(prev => ({ ...prev, [subItemId]: '' }));
       setShowAddOther(prev => ({ ...prev, [subItemId]: false }));
@@ -314,18 +163,41 @@ const OE: React.FC<OEProps> = ({ data, onDataChange }) => {
   };
 
   const renderCheckbox = (item: SubListItem | SubItem) => {
-    const isChecked = selectedItems[item.Id];
+    console.log("item", item)
+    const isExist = data?.find((atom: any) => atom.CatBodyAnatomyId == item.Id);
+    let isChecked = false;
+    if (isExist) {
+      isChecked = true;
+    } else {
+      isChecked = false;
+    }
+
+    console.log("isExist", isExist)
+    // const isChecked = false;
     return (
-      <TouchableOpacity
-        key={item.Id}
-        style={styles.checkboxRow}
-        onPress={() => toggleCheckbox(item.Id)}
-      >
-        <View style={[styles.checkbox, isChecked && styles.checkboxChecked]}>
-          {isChecked && <Icon name="checkmark" size={16} color="#fff" />}
-        </View>
-        <Text style={styles.checkboxLabel}>{item.Title}</Text>
-      </TouchableOpacity>
+      <View key={item.Id}>
+        <TouchableOpacity
+          style={styles.checkboxRow}
+          onPress={() => toggleCheckbox(item.Id)}
+        >
+          <View style={[styles.checkbox, isChecked && styles.checkboxChecked]}>
+            {isChecked && <Icon name="checkmark" size={16} color="#fff" />}
+          </View>
+          <Text style={styles.checkboxLabel}>{item.Title}</Text>
+        </TouchableOpacity>
+        {
+          (isExist && isExist.InputValue) && (
+            <TextInput
+                      style={styles.addOtherFormInput}
+                      placeholder="title"
+                      placeholderTextColor="#999"
+                      value={isExist.InputValue || ''}
+                      onChangeText={(text) => {}}
+                    />
+          )
+        }
+      </View>
+
     );
   };
 
@@ -333,7 +205,7 @@ const OE: React.FC<OEProps> = ({ data, onDataChange }) => {
     const hasSubList = subItem.SubList && subItem.SubList.length > 0;
     const isExpanded = expandedSubItems[subItem.Id];
     const isShowingAddOther = showAddOther[subItem.Id];
-    const customItemsList = customItems[subItem.Id] || [];
+    const customItemsList = [];
 
     if (!hasSubList && subItem.InputRequired) {
       // Direct checkbox without accordion
@@ -369,7 +241,7 @@ const OE: React.FC<OEProps> = ({ data, onDataChange }) => {
             {subItem.SubList!.map(item => renderCheckbox(item))}
 
             {/* Custom items */}
-            {customItemsList.map(customItem => (
+            {/* {customItemsList.map(customItem => (
               <View key={customItem.id} style={styles.customCheckboxContainer}>
                 <TouchableOpacity
                   style={styles.checkboxRow}
@@ -386,7 +258,7 @@ const OE: React.FC<OEProps> = ({ data, onDataChange }) => {
                   </View>
                 </TouchableOpacity>
               </View>
-            ))}
+            ))} */}
 
             {/* Add Other Input Form */}
             {isShowingAddOther && (
@@ -450,7 +322,7 @@ const OE: React.FC<OEProps> = ({ data, onDataChange }) => {
         </View>
 
         {/* Content */}
-        <ScrollView 
+        <ScrollView
           style={styles.bottomSheetContent}
           showsVerticalScrollIndicator={false}
         >
@@ -465,6 +337,8 @@ const OE: React.FC<OEProps> = ({ data, onDataChange }) => {
     );
   };
 
+  console.log("bodyAnatomy", bodyAnatomy)
+
   return (
     <View style={styles.container}>
       <ScrollView
@@ -472,7 +346,7 @@ const OE: React.FC<OEProps> = ({ data, onDataChange }) => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
       >
-        {API_DATA.map((item) => (
+        {bodyAnatomy?.map((item: any) => (
           <TouchableOpacity
             key={item.Id}
             style={styles.mainItemRow}

@@ -50,7 +50,6 @@ const WebViewComponent = ({ uri }:any) => {
       scheduleNotification(SystemNotificationList?.ReminderList);
     }
     if (isErrorSystemNotifiction) {
-      console.log('error message',isErrorSystemNotifiction)
     }
   }, [isSuccessSystemNotification, isErrorSystemNotifiction]);
 
@@ -101,7 +100,6 @@ const WebViewComponent = ({ uri }:any) => {
       }
   
       const notifeeNotifs = await notifee.getTriggerNotifications();
-      console.log('✅ Notifee Scheduled Notifications:', notifeeNotifs);
     } catch (error) {
       console.error('🔥 Error scheduling notifications:', error);
     }
@@ -458,7 +456,6 @@ const WebViewComponent = ({ uri }:any) => {
 
   useEffect(() => {
     const handleAppStateChange = nextAppState => {
-      console.log('App State changed to:', nextAppState);
       if (nextAppState == 'inactive') {
         setLoading(false);
       }

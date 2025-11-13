@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -12,36 +12,71 @@ import VitalSigns from './Step3Components/VitalSigns';
 import OE from './Step3Components/OE';
 import LabXRays from './Step3Components/LabXRays';
 import DX from './Step3Components/DX';
+import { useDispatch, useSelector } from 'react-redux';
+import { addVisitRecordService } from '../../../services/api/addVisitRecord';
 
 interface Step3Props {
   onNext: () => void;
-  onPrevious: () => void;
   onSkip: () => void;
-  data?: {
-    vitalSigns?: any;
-    oe?: any;
-    labXRays?: any;
-    dx?: any;
-  };
-  onDataChange?: (data: any) => void;
 }
 
 type TabType = 'vitalSigns' | 'oe' | 'labXRays' | 'dx';
 
 const Step3PatientAssessment: React.FC<Step3Props> = ({ 
   onNext, 
-  onPrevious, 
   onSkip,
-  data, 
-  onDataChange 
 }) => {
   const [activeTab, setActiveTab] = useState<TabType>('vitalSigns');
-  const [formData, setFormData] = useState({
-    vitalSigns: data?.vitalSigns || {},
-    oe: data?.oe || {},
-    labXRays: data?.labXRays || {},
-    dx: data?.dx || {},
+  const visitRecordData: any = useSelector((state: any) => state.root.generalData.visitRecordData);
+  const visitmainId: any = useSelector((state: any) => state.root.generalData.visitmainId);
+  const dispatch = useDispatch();
+  const [assessmentData, setAssessmentData] = useState({
+    vitalSigns: [],
+    oe: [],
+    labXRays: [],
+    dx: [],
   });
+
+  useEffect(() => {
+    if (visitRecordData) {
+      manageAssessmentData();
+    } }, [visitRecordData]);
+
+  const manageAssessmentData = () => {
+    setAssessmentData({
+      vitalSigns: visitRecordData?.PatientAssessment[0]?.VitalSigns,
+      oe: visitRecordData?.PatientAssessment[0]?.OE,
+      labXRays: visitRecordData?.PatientAssessment[0]?.LabXRays,
+      dx: visitRecordData?.PatientAssessment[0]?.Diagnosis,
+    });
+  };
+
+  const handleSave = async () => {
+    await handleSaveVitalSigns();
+  };
+
+  const handleSaveVitalSigns = async () => {
+    try {
+      const payload = {
+        VisitMainId: visitmainId,
+        Tem: assessmentData.vitalSigns[0]?.Tem,
+        HR: assessmentData.vitalSigns[0]?.HR,
+        P4O2: assessmentData.vitalSigns[0]?.P4O2,
+        RR: assessmentData.vitalSigns[0]?.RR,
+        Bp: assessmentData.vitalSigns[0]?.Bp,
+      };
+      const response = await addVisitRecordService.addEditVisitPatientVitalSigns(payload);
+      if (response?.StatusCode?.STATUSCODE == 12007) {
+  
+      }
+    } catch (error: any) {
+      console.log("error==>", error);
+      
+    }
+    
+  };
+
+
 
   const handleTabChange = (tab: TabType) => {
     setActiveTab(tab);
@@ -49,19 +84,13 @@ const Step3PatientAssessment: React.FC<Step3Props> = ({
 
   const handleSubDataChange = (tab: TabType, subData: any) => {
     const updatedData = {
-      ...formData,
+      ...assessmentData,
       [tab]: subData,
     };
-    setFormData(updatedData);
-    if (onDataChange) {
-      onDataChange(updatedData);
-    }
+    setAssessmentData(updatedData);
   };
 
   const handleNext = () => {
-    if (onDataChange) {
-      onDataChange(formData);
-    }
     onNext();
   };
 
@@ -77,28 +106,28 @@ const Step3PatientAssessment: React.FC<Step3Props> = ({
       case 'vitalSigns':
         return (
           <VitalSigns
-            data={formData.vitalSigns}
+            data={assessmentData.vitalSigns}
             onDataChange={(data) => handleSubDataChange('vitalSigns', data)}
           />
         );
       case 'oe':
         return (
           <OE
-            data={formData.oe}
+            data={assessmentData.oe}
             onDataChange={(data) => handleSubDataChange('oe', data)}
           />
         );
       case 'labXRays':
         return (
           <LabXRays
-            data={formData.labXRays}
+            data={assessmentData.labXRays}
             onDataChange={(data) => handleSubDataChange('labXRays', data)}
           />
         );
       case 'dx':
         return (
           <DX
-            data={formData.dx}
+            data={assessmentData.dx}
             onDataChange={(data) => handleSubDataChange('dx', data)}
           />
         );
@@ -153,7 +182,7 @@ const Step3PatientAssessment: React.FC<Step3Props> = ({
 
       {/* Footer Buttons */}
       <View style={styles.footer}>
-        <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
+        <TouchableOpacity style={styles.nextButton} onPress={handleSave}>
           <Text style={styles.nextButtonText}>Save / Next</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.skipButton} onPress={onSkip}>

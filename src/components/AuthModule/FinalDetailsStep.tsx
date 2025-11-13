@@ -157,7 +157,6 @@ const FinalDetailsStep: React.FC<FinalDetailsStepProps> = ({ phoneNumber, userIn
             setErrors({ ...errors, experience: true });
             return;
         }
-        console.log('language', language);
         if (language == "") {
             setErrors({ ...errors, language: true });
             return;
@@ -190,8 +189,6 @@ const FinalDetailsStep: React.FC<FinalDetailsStepProps> = ({ phoneNumber, userIn
             setErrors({ ...errors, confirmPassword: true });
             return;
         }
-
-        console.log('errors', errors);
 
         if (Object.values(errors).every(value => value === true)) {
             return;
@@ -234,7 +231,6 @@ const FinalDetailsStep: React.FC<FinalDetailsStepProps> = ({ phoneNumber, userIn
             }   
         
         } catch (error) {
-            console.log('error', error);
         }
     };
 

@@ -29,7 +29,7 @@ class CrashlyticsService {
             
             // if (_DEV_) {
             //     await crashlytics().setCustomKey('debug_mode', 'enabled');
-            //     console.log('Crashlytics initialized in debug mode');
+            //     
             // }
 
             if (config?.userId) {

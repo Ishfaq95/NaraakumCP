@@ -6,7 +6,9 @@ import { appointmentService } from '../../../services/api/appointmentService';
 import CurrentRecordsList from './CurrentRecordsList';
 import OtherRecordsList from './OtherRecordsList';
 import { ROUTES } from '../../../shared/utils/routes';
-import { useNavigation } from '@react-navigation/native';
+import { useIsFocused, useNavigation } from '@react-navigation/native';
+import { setVisitMainId } from '../../../shared/redux/reducers/generalDataReducer';
+import { useDispatch } from 'react-redux';
 
 interface MedicalHistoryTabProps {
     data: any;
@@ -18,12 +20,13 @@ const MedicalHistoryTab: React.FC<MedicalHistoryTabProps> = ({ data }) => {
     const [currentRecords, setCurrentRecords] = useState<any[]>([]);
     const [otherRecords, setOtherRecords] = useState<any[]>([]);
     const navigation = useNavigation();
-
+    const dispatch = useDispatch();
+    const isFocused = useIsFocused();
     useEffect(() => {
         if (data?.PatientUserProfileInfoId) {
             getVisitRecordList();
         }
-    }, [data]);
+    }, [data,isFocused]);
 
     const getVisitRecordList = async () => {
         const payload = {
@@ -42,31 +45,36 @@ const MedicalHistoryTab: React.FC<MedicalHistoryTabProps> = ({ data }) => {
         }
     }, [visitRecordList]);
 
+    const handleVisitRecordPress = (item: any) => {
+        dispatch(setVisitMainId(item.Id));
+        navigation.navigate(ROUTES.AddSessionRecord, { patientData: data });
+    };
+
     return (
         <View style={styles.container}>
             {/* Patient Info Section */}
-            <View style={{backgroundColor: '#fff',margin :8,borderRadius: 8}}>
-            <View style={styles.patientInfoSection}>
-                <View >
-                    <Text style={styles.patientLabel}>Patient Name</Text>
-                    <Text style={styles.patientName}>{data.PatientPlang || 'دادود'}</Text>
+            <View style={{ backgroundColor: '#fff', margin: 8, borderRadius: 8 }}>
+                <View style={styles.patientInfoSection}>
+                    <View >
+                        <Text style={styles.patientLabel}>Patient Name</Text>
+                        <Text style={styles.patientName}>{data.PatientPlang || 'دادود'}</Text>
+                    </View>
+                    <View style={styles.avatarCircle}>
+                        <Ionicons name="person-outline" size={24} color="#666" />
+                    </View>
+                    {/* Action Buttons */}
+
                 </View>
-                <View style={styles.avatarCircle}>
-                    <Ionicons name="person-outline" size={24} color="#666" />
+                <View style={styles.actionButtonsRow}>
+                    <TouchableOpacity style={styles.actionButton}>
+                        <Text style={styles.actionButtonText}>Complaint Related{'\n'}Reports</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.actionButton}>
+                        <Text style={styles.actionButtonText}>Patient Complaint</Text>
+                    </TouchableOpacity>
                 </View>
-                {/* Action Buttons */}
-            
             </View>
-            <View style={styles.actionButtonsRow}>
-                <TouchableOpacity style={styles.actionButton}>
-                    <Text style={styles.actionButtonText}>Complaint Related{'\n'}Reports</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.actionButton}>
-                    <Text style={styles.actionButtonText}>Patient Complaint</Text>
-                </TouchableOpacity>
-            </View>
-            </View>
-            
+
 
             {/* Visit/Session Records Header */}
             <View style={styles.recordsHeader}>
@@ -77,7 +85,7 @@ const MedicalHistoryTab: React.FC<MedicalHistoryTabProps> = ({ data }) => {
 
             {/* Tab Pills */}
             <View style={styles.tabPillsContainer}>
-                <TouchableOpacity 
+                <TouchableOpacity
                     style={[styles.tabPill, activeTab === 'current' && styles.activeTabPill]}
                     onPress={() => setActiveTab('current')}
                 >
@@ -85,7 +93,7 @@ const MedicalHistoryTab: React.FC<MedicalHistoryTabProps> = ({ data }) => {
                         Current
                     </Text>
                 </TouchableOpacity>
-                <TouchableOpacity 
+                <TouchableOpacity
                     style={[styles.tabPill, activeTab === 'other' && styles.activeTabPill]}
                     onPress={() => setActiveTab('other')}
                 >
@@ -98,7 +106,7 @@ const MedicalHistoryTab: React.FC<MedicalHistoryTabProps> = ({ data }) => {
             {/* Records List */}
             <View style={styles.recordsListContainer}>
                 {activeTab === 'current' ? (
-                    <CurrentRecordsList records={currentRecords} />
+                    <CurrentRecordsList records={currentRecords} onVisitRecordPress={handleVisitRecordPress} />
                 ) : (
                     <OtherRecordsList records={otherRecords} />
                 )}
@@ -106,7 +114,7 @@ const MedicalHistoryTab: React.FC<MedicalHistoryTabProps> = ({ data }) => {
 
             {/* Add Session Record Button */}
             <View style={styles.addButtonContainer}>
-                <TouchableOpacity onPress={() => navigation.navigate(ROUTES.AddSessionRecord)} disabled={currentRecords.length > 0} style={[styles.addButton,currentRecords.length > 0 && {backgroundColor: '#ccc'}]}>
+                <TouchableOpacity onPress={() => navigation.navigate(ROUTES.AddSessionRecord, { patientData: data })} disabled={currentRecords.length > 0} style={[styles.addButton, currentRecords.length > 0 && { backgroundColor: '#ccc' }]}>
                     <Ionicons name="add-circle-outline" size={20} color="#fff" />
                     <Text style={styles.addButtonText}>Add Session Record</Text>
                 </TouchableOpacity>
@@ -121,7 +129,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#e4f1ef',
     },
     patientInfoSection: {
-        
+
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',

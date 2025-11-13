@@ -7,38 +7,39 @@ import moment from 'moment';
 
 interface CurrentRecordsListProps {
     records: any[];
+    onVisitRecordPress?: (item: any) => void;
 }
 
-const CurrentRecordsList: React.FC<CurrentRecordsListProps> = ({ records }) => {
+const CurrentRecordsList: React.FC<CurrentRecordsListProps> = ({ records, onVisitRecordPress }) => {
     const renderRecordItem = ({ item }: { item: any }) => (
         <View style={styles.recordCard}>
-        <View style={styles.providerHeader}>
-            <View style={styles.providerInfo}>
-                <Text style={styles.providerLabel}>Care Provider</Text>
-                <Text style={styles.providerName}>{item.FullnamePlang}</Text>
-            </View>
-                <Image 
-                    source={{ uri: item.LogoImagePath ? `${MediaBaseURL}${item.LogoImagePath}` : `${MediaBaseURL}${item.ImagePath}`}} 
+            <View style={styles.providerHeader}>
+                <View style={styles.providerInfo}>
+                    <Text style={styles.providerLabel}>Care Provider</Text>
+                    <Text style={styles.providerName}>{item.FullnamePlang}</Text>
+                </View>
+                <Image
+                    source={{ uri: item.LogoImagePath ? `${MediaBaseURL}${item.LogoImagePath}` : `${MediaBaseURL}${item.ImagePath}` }}
                     style={styles.providerImage}
                 />
-        </View>
+            </View>
 
-        <View style={styles.detailRow}>
-            <MaterialIcons name="local-hospital" size={20} color="#14b8a6" />
-            <Text style={styles.detailLabel}>Hospital</Text>
-            <Text style={styles.detailValue}>{item.TitlePlang}</Text>
-        </View>
+            <View style={styles.detailRow}>
+                <MaterialIcons name="local-hospital" size={20} color="#14b8a6" />
+                <Text style={styles.detailLabel}>Hospital</Text>
+                <Text style={styles.detailValue}>{item.TitlePlang}</Text>
+            </View>
 
-        <View style={styles.detailRow}>
-            <Ionicons name="calendar-outline" size={20} color="#14b8a6" />
-            <Text style={styles.detailLabel}>Visit Date</Text>
-            <Text style={styles.detailValue}>{moment.utc(item.VisitDate).local().format('DD/MM/YYYY')}</Text>
-        </View>
+            <View style={styles.detailRow}>
+                <Ionicons name="calendar-outline" size={20} color="#14b8a6" />
+                <Text style={styles.detailLabel}>Visit Date</Text>
+                <Text style={styles.detailValue}>{moment.utc(item.VisitDate).local().format('DD/MM/YYYY')}</Text>
+            </View>
 
-        <TouchableOpacity style={styles.infoButton}>
-            <Text style={styles.infoButtonText}>Visit Record Information</Text>
-        </TouchableOpacity>
-    </View>
+            <TouchableOpacity style={styles.infoButton} onPress={() => onVisitRecordPress && onVisitRecordPress(item)}>
+                    <Text style={styles.infoButtonText}>Visit Record Information</Text>
+            </TouchableOpacity>
+        </View>
     );
 
     const renderEmptyState = () => (

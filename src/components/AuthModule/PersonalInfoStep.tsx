@@ -143,7 +143,6 @@ const PersonalInfoStep: React.FC<{userRoleId: any, onNext: (userInfo: any, phone
 
             if (response?.ResponseStatus?.STATUSCODE === 200) {
                 setIsLoading(false);
-                console.log(response.Userinfo);
                 // dispatch(setUser(response.Userinfo));
             } else {
                 Alert.alert(
@@ -237,7 +236,6 @@ const PersonalInfoStep: React.FC<{userRoleId: any, onNext: (userInfo: any, phone
                     setIsLoading(false);
                     return;
                 }
-                console.log(response.Userinfo);
                 onNext(response.Userinfo, fullNumber);
             }
 
@@ -247,8 +245,6 @@ const PersonalInfoStep: React.FC<{userRoleId: any, onNext: (userInfo: any, phone
             setIsLoading(false);
         }
     }
-
-    console.log(userRoleId);
 
     return (
         <View style={styles.container}>

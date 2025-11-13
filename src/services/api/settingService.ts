@@ -8,7 +8,6 @@ export const getPromoCodeList = async (credentials: any) => {
         );
         return response.data;
     } catch (error: any) {
-        console.log('error',error)
         throw {
             message: error?.response?.data?.message || 'Get promo code list failed',
             status: error?.response?.status,

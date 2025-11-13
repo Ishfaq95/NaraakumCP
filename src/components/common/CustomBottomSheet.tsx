@@ -14,7 +14,7 @@ interface CustomBottomSheetProps {
   visible: boolean;
   onClose: () => void;
   children: React.ReactNode;
-  height?: number | string;
+  maxHeight?: number | string;
   style?: ViewStyle;
   showBackdrop?: boolean;
   backdropOpacity?: number;
@@ -32,7 +32,7 @@ const CustomBottomSheet: React.FC<CustomBottomSheetProps> = ({
   visible,
   onClose,
   children,
-  height = '50%',
+  maxHeight = '90%',
   style,
   showBackdrop = true,
   backdropClickable=false,
@@ -84,15 +84,15 @@ const CustomBottomSheet: React.FC<CustomBottomSheetProps> = ({
     }
   };
 
-  const getHeightValue = () => {
-    if (typeof height === 'number') {
-      return height;
+  const getMaxHeightValue = () => {
+    if (typeof maxHeight === 'number') {
+      return maxHeight;
     }
-    if (typeof height === 'string' && height.includes('%')) {
-      const percentage = parseFloat(height) / 100;
+    if (typeof maxHeight === 'string' && maxHeight.includes('%')) {
+      const percentage = parseFloat(maxHeight) / 100;
       return screenHeight * percentage;
     }
-    return screenHeight * 0.5; // Default to 50%
+    return screenHeight * 0.9; // Default to 90%
   };
 
   return (
@@ -123,7 +123,7 @@ const CustomBottomSheet: React.FC<CustomBottomSheetProps> = ({
           style={[
             styles.bottomSheet,
             {
-              height: getHeightValue(),
+              maxHeight: getMaxHeightValue(),
               backgroundColor,
               borderTopLeftRadius: borderRadius,
               borderTopRightRadius: borderRadius,

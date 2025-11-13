@@ -7,7 +7,7 @@ import moment from 'moment';
 
 interface AppointmentCardProps {
   item: any;
-  onSessionDetails: () => void;
+  onSessionDetails: (item: any) => void;
 }
 
 const AppointmentCard: React.FC<AppointmentCardProps> = ({
@@ -186,12 +186,12 @@ const AppointmentCard: React.FC<AppointmentCardProps> = ({
           <Ionicons name="time-outline" size={18} color="#fff" />
           <Text style={styles.durationText}>{item?.Duration} Minutes</Text>
         </View>
-        <TouchableOpacity style={styles.detailsButton} onPress={onSessionDetails}>
+        <TouchableOpacity style={styles.detailsButton} onPress={() => onSessionDetails(item)}>
           <Text style={styles.detailsButtonText}>Session Details</Text>
         </TouchableOpacity>
       </View> : <View style={styles.footer}>
 
-        <TouchableOpacity style={[styles.detailsButton, { width: '100%' }]} onPress={onSessionDetails}>
+        <TouchableOpacity style={[styles.detailsButton, { width: '100%' }]} onPress={() => onSessionDetails(item)}>
           <Text style={styles.detailsButtonText}>Session Details</Text>
         </TouchableOpacity>
       </View>}

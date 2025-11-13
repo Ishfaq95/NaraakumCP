@@ -102,6 +102,95 @@ export const getServiceProviderDaySchedules = async (credentials: any) => {
     }
 };
 
+export const getTaskDetail = async (credentials: any) => {
+    try {
+        const response = await axiosInstance.post(
+            `user/GetTaskDetail`,
+            credentials
+        );
+        return response.data;
+    }
+    catch (error: any) {
+        console.log('error',error)
+        throw {
+            message: error?.response?.data?.message || 'Get task detail failed',
+            status: error?.response?.status,
+            code: error?.response?.data?.code
+        };
+    }
+};
+
+export const getVisitRecordList = async (credentials: any) => {
+    try {
+        const response = await axiosInstance.post(
+            `visitRecord/GetVisitRecordList`,
+            credentials
+        );
+        return response.data;
+    }
+    catch (error: any) {
+        console.log('error',error)
+        throw {
+            message: error?.response?.data?.message || 'Get visit record list failed',
+            status: error?.response?.status,
+            code: error?.response?.data?.code
+        };
+    }
+};
+
+export const getUserRatingForPatient = async (credentials: any) => {
+    try {
+        const response = await axiosInstance.post(
+            `user/GetUserRatingForPatient`,
+            credentials
+        );
+        return response.data;
+    }
+    catch (error: any) {
+        console.log('error',error)
+        throw {
+            message: error?.response?.data?.message || 'Get user rating for patient failed',
+            status: error?.response?.status,
+            code: error?.response?.data?.code
+        };
+    }
+};
+
+export const addEditUserRating = async (credentials: any) => {
+    try {
+        const response = await axiosInstance.post(
+            `user/AddEditUserRating`,
+            credentials
+        );
+        return response.data;
+    }
+    catch (error: any) {
+        console.log('error',error)
+        throw {
+            message: error?.response?.data?.message || 'Add user rating for patient failed',
+            status: error?.response?.status,
+            code: error?.response?.data?.code
+        };
+    }
+};
+
+export const deleteUserRating = async (credentials: any) => {
+    try {
+        const response = await axiosInstance.post(
+            `visitRecord/DeleteUserRating`,
+            credentials
+        );
+        return response.data;
+    }
+    catch (error: any) {
+        console.log('error',error)
+        throw {
+            message: error?.response?.data?.message || 'Delete user rating failed',
+            status: error?.response?.status,
+            code: error?.response?.data?.code
+        };
+    }
+};
 // Export all appointment related functions
 export const appointmentService = {
     getServiceProviderMainSummary,
@@ -110,4 +199,9 @@ export const appointmentService = {
     getServiceProviderCount,
     getServiceProviderSchedules,
     getServiceProviderDaySchedules,
+    getTaskDetail,
+    getVisitRecordList,
+    getUserRatingForPatient,
+    addEditUserRating,
+    deleteUserRating,
 }; 

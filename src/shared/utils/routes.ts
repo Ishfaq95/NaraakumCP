@@ -36,6 +36,8 @@ export const ROUTES = {
     PaymentProfileScreen:'PaymentProfileScreen',
     PaymentDetailsScreen:'PaymentDetailsScreen',
     SignTheContractScreen:'SignTheContractScreen',
-    SignatureViewerScreen:'SignatureViewerScreen'
+    SignatureViewerScreen:'SignatureViewerScreen',
+    VisitDetailScreen:'VisitDetailScreen',
+    AddSessionRecord: 'AddSessionRecord'
   };
   

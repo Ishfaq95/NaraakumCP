@@ -180,10 +180,10 @@ const AppointmentListScreen = () => {
     setActiveTab(tab);
   };
   
-  const handleSessionDetails = (appointmentId: string) => {
-    console.log('View session details for appointment:', appointmentId);
+  const handleSessionDetails = (item: any) => {
+    console.log('View session details for appointment:', item);
     // Navigate to appointment details screen
-    // navigation.navigate('AppointmentDetails', { appointmentId });
+    navigation.navigate(ROUTES.VisitDetailScreen as never, { taskId: item?.TaskId });
   };
 
   console.log("appointments",appointments);
@@ -255,7 +255,7 @@ const AppointmentListScreen = () => {
                 renderItem={({ item }) => (
                   <AppointmentCard
                     item={item}
-                    onSessionDetails={() => handleSessionDetails(item)}
+                    onSessionDetails={(item: any) => handleSessionDetails(item)}
                   />
                 )}
                 onEndReached={loadMoreAppointments}

@@ -28,6 +28,8 @@ import PaymentProfileScreen from '../screens/MyProfileStack/PaymentProfile';
 import PaymentDetailsScreen from '../screens/MyProfileStack/PaymentDetails';
 import SignTheContractScreen from '../screens/MyProfileStack/SignTheContract';
 import SignatureViewerScreen from '../screens/MyProfileStack/SignatureViewer';
+import VisitDetailScreen from '../screens/AppointmentStack/VisitDetail';
+import AddSessionRecord from '../screens/AppointmentStack/AddSessionRecord';
 
 const Stack = createNativeStackNavigator();
 
@@ -65,6 +67,8 @@ const RootNavigator = () => {
       <Stack.Screen name={ROUTES.PaymentDetailsScreen} component={PaymentDetailsScreen} />
       <Stack.Screen name={ROUTES.SignTheContractScreen} component={SignTheContractScreen} />
       <Stack.Screen name={ROUTES.SignatureViewerScreen} component={SignatureViewerScreen} />
+      <Stack.Screen name={ROUTES.VisitDetailScreen} component={VisitDetailScreen} />
+      <Stack.Screen name={ROUTES.AddSessionRecord} component={AddSessionRecord} />
     </Stack.Navigator>
   );
 };

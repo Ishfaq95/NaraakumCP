@@ -152,13 +152,11 @@ const AppointmentListScreen = () => {
   };
 
   const handleNotificationPress = () => {
-    console.log('Notification pressed');
-    // Navigate to notifications screen or show notifications
+    navigation.navigate(ROUTES.NotificationListScreen as never);
   };
 
-  const handleSettingsPress = () => {
-    console.log('Settings pressed');
-    // Navigate to settings screen
+  const handleMessagesPress = () => {
+    navigation.navigate(ROUTES.ConversationListScreen as never);
   };
 
   const handleAlarmPress = () => {
@@ -194,10 +192,10 @@ const AppointmentListScreen = () => {
         title="My Appointments"
         showNotification={true}
         notificationCount={0}
-        showSettings={true}
+        showMessages={true}
         showAlarm={true}
         onNotificationPress={handleNotificationPress}
-        onSettingsPress={handleSettingsPress}
+        onMessagesPress={handleMessagesPress}
         onAlarmPress={handleAlarmPress}
       />
       <View style={{ flex: 1, backgroundColor: '#e4f1ef' }}>

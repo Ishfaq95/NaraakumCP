@@ -37,7 +37,7 @@ interface Message {
 
 const ChatMessageRender = ({item}: {item: Message}) => {
   const {user} = useSelector((state: any) => state.root.user);
-  const isOwnMessage = item.SenderId == user.id;
+  const isOwnMessage = item.SenderId == user.Id;
   const [isDownloading, setIsDownloading] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [sound, setSound] = useState<Sound | null>(null);

@@ -8,6 +8,7 @@ import { GetOnTheWayTasks } from '../Network/GetOnTheWayAPI';
 import LocationService from './LocationTracker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { WEBSOCKET_URL } from '../shared/utils/constants';
+import { setUnreadMessages } from '../shared/redux/reducers/userReducer';
 
 class WebSocketService {
   private static instance: WebSocketService;
@@ -31,6 +32,35 @@ class WebSocketService {
       WebSocketService.instance = new WebSocketService();
     }
     return WebSocketService.instance;
+  }
+
+  // Add a global message handler that will work across all screens
+  public addGlobalMessageHandler() {
+    if (this.socket) {
+      // Make sure we don't add duplicate handlers
+      this.socket.onmessage = async event => {
+        try {
+          const socketEvent = JSON.parse(event.data);
+          // Call the appropriate handlers based on the message type
+          if (socketEvent.Command === 74) {
+            // We need to get dispatch from the store
+            const store = require('../shared/redux/store').store;
+            if (store && store.dispatch) {
+              this.socketCommandHandler(socketEvent, store.dispatch);
+            }
+          }
+          
+          // Notify any registered callbacks
+          this.messageCallbacks.forEach((callback, type) => {
+            if (socketEvent.Command === parseInt(type)) {
+              callback(socketEvent);
+            }
+          });
+        } catch (error) {
+          console.error('Error processing WebSocket message:', error);
+        }
+      };
+    }
   }
 
   public async connect(
@@ -97,6 +127,19 @@ class WebSocketService {
       }
     } catch (error) {
       console.error('Error fetching on the way tasks:', error);
+    }
+  }
+
+  socketCommandHandler(socketEvent: any, dispatch: any) {
+    if(socketEvent.Command == 74){
+      // Convert message string to number
+      const messageCount = parseInt(socketEvent.Message, 10);
+      // Dispatch only if the number is greater than 0
+      if(messageCount > 0){
+        dispatch(setUnreadMessages(socketEvent.Message));
+      }else{
+        dispatch(setUnreadMessages(0));
+      }
     }
   }
 

@@ -38,6 +38,9 @@ export const ROUTES = {
     SignTheContractScreen:'SignTheContractScreen',
     SignatureViewerScreen:'SignatureViewerScreen',
     VisitDetailScreen:'VisitDetailScreen',
-    AddSessionRecord: 'AddSessionRecord'
+    AddSessionRecord: 'AddSessionRecord',
+    ConversationListScreen: 'ConversationListScreen',
+    ChatScreenMainView: 'ChatScreenMainView',
+    NotificationListScreen: 'NotificationListScreen',
   };
   

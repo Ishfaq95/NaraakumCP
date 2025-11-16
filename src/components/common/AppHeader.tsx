@@ -10,11 +10,12 @@ interface AppHeaderProps {
   onBackPress?: () => void;
   showNotification?: boolean;
   notificationCount?: number;
-  showSettings?: boolean;
+  showMessages?: boolean;
   showAlarm?: boolean;
   onNotificationPress?: () => void;
   onSettingsPress?: () => void;
   onAlarmPress?: () => void;
+  onMessagesPress?: () => void;
 }
 
 const AppHeader: React.FC<AppHeaderProps> = ({
@@ -23,11 +24,12 @@ const AppHeader: React.FC<AppHeaderProps> = ({
   onBackPress,
   showNotification = true,
   notificationCount = 0,
-  showSettings = true,
+  showMessages = true,
   showAlarm = true,
   onNotificationPress,
   onSettingsPress,
   onAlarmPress,
+  onMessagesPress,
 }) => {
   const navigation = useNavigation();
 
@@ -51,10 +53,10 @@ const AppHeader: React.FC<AppHeaderProps> = ({
       <View style={styles.rightSection}>
 
 
-        {showAlarm && (
+        {showMessages && (
           <TouchableOpacity
             style={styles.iconContainer}
-            onPress={onAlarmPress}
+            onPress={onMessagesPress}
           >
             <Image
               source={require('../../assets/icons/messageIcon.png')}

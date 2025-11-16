@@ -10,6 +10,7 @@ interface State {
   mediaToken:any;
   mediaTokenExpiresAt:any;
   rememberMeRedux:any;
+  unreadMessages: number;
 }
 
 const initialState: State = {
@@ -21,6 +22,7 @@ const initialState: State = {
   mediaToken: null,
   mediaTokenExpiresAt: null,
   rememberMeRedux: false,
+  unreadMessages: 0,
 };
 
 export const userReducer = createSlice({
@@ -49,10 +51,13 @@ export const userReducer = createSlice({
         mediaToken: action.payload.token,
         mediaTokenExpiresAt: action.payload.expiresAt,
       };
-    }
+    },
+    setUnreadMessages: (state, action) => {
+      state.unreadMessages = action.payload;
+    },
   },
 });
 
-export const { setTopic,setToken,setMediaToken,setRememberMeRedux,setUser } = userReducer.actions;
+export const { setTopic,setToken,setMediaToken,setRememberMeRedux,setUser,setUnreadMessages } = userReducer.actions;
 
 export default userReducer.reducer;

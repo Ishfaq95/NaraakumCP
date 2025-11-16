@@ -30,6 +30,9 @@ import SignTheContractScreen from '../screens/MyProfileStack/SignTheContract';
 import SignatureViewerScreen from '../screens/MyProfileStack/SignatureViewer';
 import VisitDetailScreen from '../screens/AppointmentStack/VisitDetail';
 import AddSessionRecord from '../screens/AppointmentStack/AddSessionRecord';
+import ConversationListScreen from '../screens/Chat/ConversationListScreen';
+import ChatScreenMainView from '../screens/Chat/ChatScreenMainView';
+import NotificationListScreen from '../screens/Notifications/NotificationList';
 
 const Stack = createNativeStackNavigator();
 
@@ -45,7 +48,7 @@ const RootNavigator = () => {
         <Stack.Screen name={ROUTES.SignUp} component={SignUpScreen} />
         <Stack.Screen name={ROUTES.ForgotPassword} component={ForgotPassword} />
         <Stack.Screen name={ROUTES.ForgotOTP} component={ForgotOTP} />
-        <Stack.Screen name={ROUTES.ConfirmPassword} component={ConfirmPassword} />
+      <Stack.Screen name={ROUTES.ConfirmPassword} component={ConfirmPassword} />
       </Stack.Navigator>
     );
   }
@@ -69,6 +72,9 @@ const RootNavigator = () => {
       <Stack.Screen name={ROUTES.SignatureViewerScreen} component={SignatureViewerScreen} />
       <Stack.Screen name={ROUTES.VisitDetailScreen} component={VisitDetailScreen} />
       <Stack.Screen name={ROUTES.AddSessionRecord} component={AddSessionRecord} />
+      <Stack.Screen name={ROUTES.ConversationListScreen} component={ConversationListScreen} />
+      <Stack.Screen name={ROUTES.ChatScreenMainView} component={ChatScreenMainView} />
+      <Stack.Screen name={ROUTES.NotificationListScreen} component={NotificationListScreen} />
     </Stack.Navigator>
   );
 };

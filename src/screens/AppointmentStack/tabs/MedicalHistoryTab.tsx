@@ -47,7 +47,7 @@ const MedicalHistoryTab: React.FC<MedicalHistoryTabProps> = ({ data }) => {
 
     const handleVisitRecordPress = (item: any) => {
         dispatch(setVisitMainId(item.Id));
-        navigation.navigate(ROUTES.AddSessionRecord, { patientData: data });
+        navigation.navigate(ROUTES.AddSessionRecord, { patientData: data, step: 5 });
     };
 
     return (

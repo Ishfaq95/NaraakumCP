@@ -15,6 +15,7 @@ import CustomBottomSheet from '../../../components/common/CustomBottomSheet';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { addVisitRecordService } from '../../../services/api/addVisitRecord';
 import { setVisitMainId } from '../../../shared/redux/reducers/generalDataReducer';
+import SvgUri from 'react-native-svg-uri';
 
 interface Step1Props {
   patientData: any;
@@ -105,7 +106,11 @@ const Step1PatientComplaint: React.FC<Step1Props> = ({ patientData, onNext, onDa
         {/* Header with Icon */}
         <View style={styles.headerSection}>
           <View style={styles.headerIconContainer}>
-            <Icon name="medical" size={30} color="#179c8e" />
+            <SvgUri
+              width={50}
+              height={50}
+              source={require('../../../assets/icons/PatientComplaint.svg')}
+            />
           </View>
           <Text style={styles.headerTitle}>Patient Complaint</Text>
         </View>
@@ -269,8 +274,8 @@ const styles = StyleSheet.create({
     marginRight: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#e6f7f5',
-    borderRadius: 25,
+    // backgroundColor: '#e6f7f5',
+    // borderRadius: 25,
   },
   headerTitle: {
     ...globalTextStyles.h5,

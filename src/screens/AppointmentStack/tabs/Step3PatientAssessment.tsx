@@ -14,10 +14,12 @@ import LabXRays from './Step3Components/LabXRays';
 import DX from './Step3Components/DX';
 import { useDispatch, useSelector } from 'react-redux';
 import { addVisitRecordService } from '../../../services/api/addVisitRecord';
+import SvgUri from 'react-native-svg-uri';
 
 interface Step3Props {
   onNext: () => void;
   onSkip: () => void;
+  getVisitMainRecordDetail: () => void;
 }
 
 type TabType = 'vitalSigns' | 'oe' | 'labXRays' | 'dx';
@@ -25,6 +27,7 @@ type TabType = 'vitalSigns' | 'oe' | 'labXRays' | 'dx';
 const Step3PatientAssessment: React.FC<Step3Props> = ({ 
   onNext, 
   onSkip,
+  getVisitMainRecordDetail,
 }) => {
   const [activeTab, setActiveTab] = useState<TabType>('vitalSigns');
   const visitRecordData: any = useSelector((state: any) => state.root.generalData.visitRecordData);
@@ -67,7 +70,7 @@ const Step3PatientAssessment: React.FC<Step3Props> = ({
       };
       const response = await addVisitRecordService.addEditVisitPatientVitalSigns(payload);
       if (response?.StatusCode?.STATUSCODE == 12007) {
-  
+        getVisitMainRecordDetail();
       }
     } catch (error: any) {
       console.log("error==>", error);
@@ -122,6 +125,8 @@ const Step3PatientAssessment: React.FC<Step3Props> = ({
           <LabXRays
             data={assessmentData.labXRays}
             onDataChange={(data) => handleSubDataChange('labXRays', data)}
+            visitmainId={visitmainId}
+            onSaveSuccess={() => getVisitMainRecordDetail()}
           />
         );
       case 'dx':
@@ -141,7 +146,11 @@ const Step3PatientAssessment: React.FC<Step3Props> = ({
       {/* Header */}
       <View style={styles.headerSection}>
         <View style={styles.headerIconContainer}>
-          <MaterialCommunityIcons name="stethoscope" size={30} color="#179c8e" />
+          <SvgUri
+            width={50}
+            height={50}
+            source={require('../../../assets/icons/PatientAssessment.svg')}
+          />
         </View>
         <Text style={styles.headerTitle}>Patient Assessment</Text>
       </View>
@@ -189,6 +198,7 @@ const Step3PatientAssessment: React.FC<Step3Props> = ({
           <Text style={styles.skipButtonText}>Skip</Text>
         </TouchableOpacity>
       </View>
+
     </View>
   );
 };
@@ -218,8 +228,8 @@ const styles = StyleSheet.create({
     marginRight: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#e6f7f5',
-    borderRadius: 25,
+    // backgroundColor: '#e6f7f5',
+    // borderRadius: 25,
   },
   headerTitle: {
     ...globalTextStyles.h5,

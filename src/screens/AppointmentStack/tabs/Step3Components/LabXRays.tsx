@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { globalTextStyles } from '../../../../styles/globalStyles';
 import {
@@ -11,6 +11,9 @@ import {
 } from '@react-native-documents/picker';
 import { MediaBaseURL } from '../../../../shared/utils/constants';
 import { useSelector } from 'react-redux';
+import CustomBottomSheet from '../../../../components/common/CustomBottomSheet';
+import { addVisitRecordService } from '../../../../services/api/addVisitRecord';
+import Dropdown from '../../../../components/common/Dropdown';
 
 interface LabFile {
   id: string;
@@ -24,6 +27,8 @@ interface LabXRaysProps {
   onDownloadFile?: (file: LabFile) => void;
   onDeleteFile?: (file: LabFile) => void;
   onDataChange?: (files: LabFile[]) => void;
+  visitmainId?: number | string;
+  onSaveSuccess?: () => void;
 }
 
 const LabXRays: React.FC<LabXRaysProps> = ({
@@ -32,6 +37,8 @@ const LabXRays: React.FC<LabXRaysProps> = ({
   onDownloadFile,
   onDeleteFile,
   onDataChange,
+  visitmainId,
+  onSaveSuccess,
 }) => {
   const [files, setFiles] = useState<any>(data || []);
   const [isUploading, setIsUploading] = useState(false);
@@ -39,7 +46,10 @@ const LabXRays: React.FC<LabXRaysProps> = ({
   const [filePaths, setFilePaths] = useState<string[]>([]);
   const { user } = useSelector((state: any) => state.root.user);
   const { mediaToken } = useSelector((state: any) => state.root.user);
-
+  const [isFileTypesBottomSheetVisible, setIsFileTypesBottomSheetVisible] = useState(false);
+  const [fileTypes, setFileTypes] = useState<any>([]);
+  const [selectedFileCategory, setSelectedFileCategory] = useState<number | string>('');
+  const [selectedFile, setSelectedFile] = useState<DocumentPickerResponse | null>(null);
   console.log("data==>", data);
 
   useEffect(() => {
@@ -49,6 +59,32 @@ const LabXRays: React.FC<LabXRaysProps> = ({
       setFiles([]);
     }
   }, [data]);
+
+  useEffect(() => {
+    getAllFileTypes();
+  }, []);
+
+  useEffect(() => {
+    if (fileTypes.length > 0 && !selectedFileCategory) {
+      setSelectedFileCategory(fileTypes[0].value);
+    }
+  }, [fileTypes]);
+
+  const getAllFileTypes = async () => {
+    try {
+      const response = await addVisitRecordService.getAllFileTypes();
+      if (response?.ResponseStatus?.STATUSCODE == 200) {
+        const fileTypesList = response?.list?.map((item: any) => ({
+          label: item.TitlePlang,
+          value: item.Id,
+        }));
+        setFileTypes(fileTypesList);
+      }
+    }
+    catch (error: any) {
+      console.log("error==>", error);
+    }
+  };
 
   const inferCategory = (fileName: string, mime?: string | null) => {
     const normalizedMime = mime?.toLowerCase() ?? '';
@@ -65,7 +101,16 @@ const LabXRays: React.FC<LabXRaysProps> = ({
     return 'Lab Reports';
   };
 
-  const handleFileSelection = async () => {
+  const handleAddFilePress = () => {
+    setIsFileTypesBottomSheetVisible(true);
+    // Reset selections when opening
+    if (fileTypes.length > 0 && !selectedFileCategory) {
+      setSelectedFileCategory(fileTypes[0].value);
+    }
+    setSelectedFile(null);
+  };
+
+  const handleChooseFile = async () => {
     try {
       const pickResult = await pickDocuments({
         type: [documentTypes.allFiles],
@@ -82,14 +127,7 @@ const LabXRays: React.FC<LabXRaysProps> = ({
         return;
       }
 
-      const file = {
-        uri: selected.uri,
-        type: selected.type ?? 'application/octet-stream',
-        name: selected.name ?? 'attachment',
-        size: selected.size,
-      };
-
-      await uploadFile(file);
+      setSelectedFile(selected);
     } catch (err) {
       if (isErrorWithCode(err) && err.code === errorCodes.OPERATION_CANCELED) {
         return;
@@ -103,6 +141,33 @@ const LabXRays: React.FC<LabXRaysProps> = ({
       } else {
         Alert.alert('Error', 'Failed to select file. Please try again.');
       }
+    }
+  };
+
+  const handleSaveFile = async () => {
+    if (!selectedFile) {
+      Alert.alert('File Required', 'Please choose a file');
+      return;
+    }
+
+    const file = {
+      uri: selectedFile.uri,
+      type: selectedFile.type ?? 'application/octet-stream',
+      name: selectedFile.name ?? 'attachment',
+      size: selectedFile.size,
+    };
+
+    await uploadFile(file,);
+    setIsFileTypesBottomSheetVisible(false);
+    setSelectedFile(null);
+   
+  };
+
+  const handleCloseBottomSheet = () => {
+    setIsFileTypesBottomSheetVisible(false);
+    setSelectedFile(null);
+    if (fileTypes.length > 0) {
+      setSelectedFileCategory(fileTypes[0].value);
     }
   };
 
@@ -174,24 +239,21 @@ const LabXRays: React.FC<LabXRaysProps> = ({
       const responseData = await response.json();
 
       if (responseData.ResponseStatus?.STATUSCODE === '200') {
-        // Add the file message to the chat
-        const previousFilePaths = [...filePaths, responseData.Data.Path];
-        setFilePaths(previousFilePaths);
-        const newEntry: LabFile = {
-          id: responseData.Data?.Id?.toString() ?? `${file.uri}-${Date.now()}`,
-          category: inferCategory(file.name, file.type),
-          fileName: file.name,
-        };
-        setFiles(prev => {
-          const updated = [...prev, newEntry];
-          if (onDataChange) {
-            onDataChange(updated);
+        // Save file to visit record if visitmainId is available
+        if (visitmainId) {
+          try {
+            const savePayload = {
+              VisitMainId: visitmainId,
+              FilePath: responseData.Data.Path,
+              CatPatientUploadFileTypeId: selectedFileCategory,
+            };
+            const saveResponse = await addVisitRecordService.addEditVisitPatientLabXRay(savePayload);
+            if (saveResponse?.ResponseStatus?.STATUSCODE == 200 || saveResponse?.StatusCode?.STATUSCODE == 12010) {
+              onSaveSuccess?.();
+            }
+          } catch (saveError) {
+            
           }
-          return updated;
-        });
-
-        if (onAddFile) {
-          onAddFile();
         }
       } else {
         throw new Error(
@@ -218,14 +280,17 @@ const LabXRays: React.FC<LabXRaysProps> = ({
     }
   };
 
-  const handleDeletePress = (file: LabFile) => {
-    if (onDeleteFile) {
-      onDeleteFile(file);
+  const handleDeletePress = async (file: any) => {
+    try {
+      const response = await addVisitRecordService.deleteVisitPatientLabXRay({
+        LabXrayFileid: file.Id,
+      });
+      if (response?.ResponseStatus?.STATUSCODE == 200 || response?.StatusCode?.STATUSCODE == 12017) {
+        onSaveSuccess?.();
+      }
     }
-    if (!onDeleteFile && onDataChange) {
-      const updated = files.filter(item => item.id !== file.id);
-      setFiles(updated);
-      onDataChange(updated);
+    catch (error: any) {
+      console.log("error==>", error);
     }
   };
 
@@ -235,7 +300,7 @@ const LabXRays: React.FC<LabXRaysProps> = ({
     <View style={styles.container}>
       <View style={styles.headerRow}>
         <Text style={styles.sectionTitle}>Lab & X-Rays Files</Text>
-        <TouchableOpacity style={styles.addButton} onPress={handleFileSelection}>
+        <TouchableOpacity style={styles.addButton} onPress={handleAddFilePress}>
           <Icon name="add" size={18} color="#fff" />
           <Text style={styles.addButtonText}>Add File</Text>
         </TouchableOpacity>
@@ -250,7 +315,7 @@ const LabXRays: React.FC<LabXRaysProps> = ({
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.fileListContainer}
         >
-          {files.map((file: any) => (
+          {files.map((file: any, index: number) => (
             <View key={file.id} style={styles.fileCard}>
               <View style={styles.fileInfoRow}>
                 <View style={styles.iconCircle}>
@@ -282,6 +347,73 @@ const LabXRays: React.FC<LabXRaysProps> = ({
           ))}
         </ScrollView>
       )}
+
+
+<CustomBottomSheet
+        visible={isFileTypesBottomSheetVisible}
+        onClose={handleCloseBottomSheet}
+        showHandle={false}
+        backdropClickable={false}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.addFileBottomSheetContainer}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+        >
+          {/* Header */}
+          <View style={styles.addFileBottomSheetHeader}>
+            <Text style={styles.addFileBottomSheetTitle}>Add File</Text>
+            <TouchableOpacity onPress={handleCloseBottomSheet}>
+              <Icon name="close" size={24} color="#333" />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.addFileBottomSheetContent}>
+            {/* File Category Section */}
+            <View style={styles.fileCategorySection}>
+              <Text style={styles.fileCategoryLabel}>File Category</Text>
+              <Dropdown
+                data={fileTypes}
+                value={selectedFileCategory}
+                onChange={(value) => setSelectedFileCategory(value)}
+                placeholder="Select file category"
+                containerStyle={styles.dropdownContainer}
+                dropdownStyle={styles.dropdownButton}
+                labelStyle={styles.dropdownLabel}
+              />
+            </View>
+
+            {/* Upload File Section */}
+            <View style={styles.uploadFileSection}>
+              <Text style={styles.uploadFileLabel}>Upload File</Text>
+              <View style={styles.chooseFileContainer}>
+                <TouchableOpacity
+                  style={styles.chooseFileButton}
+                  onPress={handleChooseFile}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.chooseFileButtonText}>Choose file</Text>
+                </TouchableOpacity>
+                <Text style={styles.selectedFileName}>
+                  {selectedFile ? selectedFile.name : 'No file chosen'}
+                </Text>
+              </View>
+            </View>
+
+            {/* Save Button */}
+            <TouchableOpacity
+              style={styles.saveFileButton}
+              onPress={handleSaveFile}
+              activeOpacity={0.8}
+              disabled={isUploading}
+            >
+              <Text style={styles.saveFileButtonText}>
+                {isUploading ? 'Uploading...' : 'Save'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </KeyboardAvoidingView>
+      </CustomBottomSheet>
     </View>
   );
 };
@@ -405,6 +537,95 @@ const styles = StyleSheet.create({
     ...globalTextStyles.bodySmall,
     color: '#ff4f4f',
     fontWeight: '600',
+  },
+  addFileBottomSheetContainer: {
+    flex: 1,
+  },
+  addFileBottomSheetHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  addFileBottomSheetTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#000',
+  },
+  addFileBottomSheetContent: {
+    paddingHorizontal: 20,
+    paddingTop: 24,
+    paddingBottom: 20,
+  },
+  fileCategorySection: {
+    marginBottom: 24,
+  },
+  fileCategoryLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#000',
+    marginBottom: 12,
+  },
+  dropdownContainer: {
+    width: '100%',
+  },
+  dropdownButton: {
+    height: 50,
+    borderRadius: 8,
+    borderColor: '#e0e0e0',
+    backgroundColor: '#fff',
+  },
+  dropdownLabel: {
+    fontSize: 14,
+    color: '#333',
+  },
+  uploadFileSection: {
+    marginBottom: 32,
+  },
+  uploadFileLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#000',
+    marginBottom: 12,
+  },
+  chooseFileContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  chooseFileButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    backgroundColor: '#fff',
+  },
+  chooseFileButtonText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#333',
+  },
+  selectedFileName: {
+    flex: 1,
+    fontSize: 14,
+    color: '#666',
+  },
+  saveFileButton: {
+    backgroundColor: '#14b8a6',
+    borderRadius: 12,
+    paddingVertical: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  saveFileButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#fff',
   },
 });
 

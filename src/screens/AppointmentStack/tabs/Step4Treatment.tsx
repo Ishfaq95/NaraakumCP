@@ -14,6 +14,7 @@ import PatientInstructions, { PatientInstructionsData } from './Step4Components/
 import NewService, { NewServiceData } from './Step4Components/NewService';
 import ReferralConsultation, { ReferralData } from './Step4Components/ReferralConsultation';
 import Notes, { NotesData } from './Step4Components/Notes';
+import SvgUri from 'react-native-svg-uri';
 
 interface Step4Props {
   onComplete: () => void;
@@ -136,7 +137,11 @@ const Step4Treatment: React.FC<Step4Props> = ({
       {/* Header */}
       <View style={styles.headerSection}>
         <View style={styles.headerIconContainer}>
-          <MaterialCommunityIcons name="needle" size={30} color="#179c8e" />
+          <SvgUri
+            width={50}
+            height={50}
+            source={require('../../../assets/icons/TreatmentPlan.svg')}
+          />
         </View>
         <Text style={styles.headerTitle}>Treatment Plan</Text>
       </View>
@@ -176,9 +181,6 @@ const Step4Treatment: React.FC<Step4Props> = ({
 
       {/* Footer Buttons */}
       <View style={styles.footer}>
-        <TouchableOpacity style={styles.backButton} onPress={onPrevious}>
-          <Text style={styles.backButtonText}>Previous</Text>
-        </TouchableOpacity>
         <TouchableOpacity style={styles.completeButton} onPress={handleComplete}>
           <Text style={styles.completeButtonText}>Save & Complete</Text>
         </TouchableOpacity>
@@ -212,8 +214,8 @@ const styles = StyleSheet.create({
     marginRight: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#e6f7f5',
-    borderRadius: 25,
+    // backgroundColor: '#e6f7f5',
+    // borderRadius: 25,
   },
   headerTitle: {
     ...globalTextStyles.h5,

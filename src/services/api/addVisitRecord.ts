@@ -101,6 +101,56 @@ export const AddEditVisitPatientProceduresReferNotes = async (credentials: any) 
     }
 };
 
+export const addEditVisitPatientLabXRay = async (credentials: any) => {
+    try {
+        const response = await axiosInstance.post(
+            `visitRecord/AddEditVisitPatientLabXRay`,
+            credentials
+        );
+        return response.data;
+    }
+    catch (error: any) {
+        throw {
+            message: error?.response?.data?.message || 'Add edit visit patient lab x ray failed',
+            status: error?.response?.status,
+            code: error?.response?.data?.code
+        };
+    }
+};
+
+export const getAllFileTypes = async () => {
+    try {
+        const response = await axiosInstance.get(
+            `catalogue/GetAllFileType`
+        );
+        return response.data;
+    }
+    catch (error: any) {
+        throw {
+            message: error?.response?.data?.message || 'Get all file types failed',
+            status: error?.response?.status,
+            code: error?.response?.data?.code
+        };
+    }
+};
+
+export const deleteVisitPatientLabXRay = async (credentials: any) => {
+    try {
+        const response = await axiosInstance.post(
+            `visitRecord/DeleteLabFile`,
+            credentials
+        );
+        return response.data;
+    }
+    catch (error: any) {
+        throw {
+            message: error?.response?.data?.message || 'Delete visit patient lab x ray failed',
+            status: error?.response?.status,
+            code: error?.response?.data?.code
+        };
+    }
+};
+
 // Export all appointment related functions
 export const addVisitRecordService = {
     addVisitMain,
@@ -109,4 +159,7 @@ export const addVisitRecordService = {
     addEditVisitPatientVitalSigns,
     getVisitPatientBodyAnatomy,
     AddEditVisitPatientProceduresReferNotes,
+    addEditVisitPatientLabXRay,
+    getAllFileTypes,
+    deleteVisitPatientLabXRay,
 }; 

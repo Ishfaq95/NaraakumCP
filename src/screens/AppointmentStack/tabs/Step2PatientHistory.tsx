@@ -12,6 +12,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import { globalTextStyles } from '../../../styles/globalStyles';
 import { useSelector } from 'react-redux';
 import { addVisitRecordService } from '../../../services/api/addVisitRecord';
+import SvgUri from 'react-native-svg-uri';
 
 interface Step2Props {
   onNext: () => void;
@@ -217,7 +218,11 @@ const Step2PatientHistory: React.FC<Step2Props> = ({
         {/* Header with Icon */}
         <View style={styles.headerSection}>
           <View style={styles.headerIconContainer}>
-            <MaterialCommunityIcons name="clipboard-text" size={30} color="#179c8e" />
+            <SvgUri
+              width={50}
+              height={50}
+              source={require('../../../assets/icons/PatientHistory.svg')}
+            />
           </View>
           <Text style={styles.headerTitle}>Patient History</Text>
         </View>
@@ -303,8 +308,8 @@ const styles = StyleSheet.create({
     marginRight: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#e6f7f5',
-    borderRadius: 25,
+    // backgroundColor: '#e6f7f5',
+    // borderRadius: 25,
   },
   headerTitle: {
     ...globalTextStyles.h5,

@@ -33,6 +33,8 @@ import AddSessionRecord from '../screens/AppointmentStack/AddSessionRecord';
 import ConversationListScreen from '../screens/Chat/ConversationListScreen';
 import ChatScreenMainView from '../screens/Chat/ChatScreenMainView';
 import NotificationListScreen from '../screens/Notifications/NotificationList';
+import ServiceProfileScreen from '../screens/MyProfileStack/ServiceProfile';
+import ReminderListScreen from '../screens/Notifications/ReminderList';
 
 const Stack = createNativeStackNavigator();
 
@@ -75,6 +77,8 @@ const RootNavigator = () => {
       <Stack.Screen name={ROUTES.ConversationListScreen} component={ConversationListScreen} />
       <Stack.Screen name={ROUTES.ChatScreenMainView} component={ChatScreenMainView} />
       <Stack.Screen name={ROUTES.NotificationListScreen} component={NotificationListScreen} />
+      <Stack.Screen name={ROUTES.ServiceProfileScreen} component={ServiceProfileScreen} />
+      <Stack.Screen name={ROUTES.ReminderListScreen} component={ReminderListScreen} />
     </Stack.Navigator>
   );
 };

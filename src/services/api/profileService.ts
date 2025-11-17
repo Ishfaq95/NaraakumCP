@@ -269,6 +269,32 @@ export const addServiceProviderContract = async (credentials: any) => {
     }
 }
 
+export const getServiceProviderRoleAndSpecialty = async (credentials: any) => {
+    try {
+        const response = await axiosInstance.post(
+            `organization/GetServiceProviderRoleandSpecialty`,
+            credentials
+        );
+        return response.data;
+    }
+    catch (error: any) {
+        throw new Error(error instanceof Error ? error.message : 'Get service provider role and specialty failed');
+    }
+}
+
+export const assignRoleAndSpecialty = async (credentials: any) => {
+    try {
+        const response = await axiosInstance.post(
+            `organization/AssignRoleSpecialtyToServiceProvider`,
+            credentials
+        );
+        return response.data;
+    }
+    catch (error: any) {
+        throw new Error(error instanceof Error ? error.message : 'Assign role and specialty failed');
+    }
+}
+
 // Export all profile related functions
 export const profileService = {
     getServiceProviderByUserId,
@@ -284,4 +310,6 @@ export const profileService = {
     getServiceProviderContractSigning,
     uploadFile,
     addServiceProviderContract,
+    getServiceProviderRoleAndSpecialty,
+    assignRoleAndSpecialty,
 }; 

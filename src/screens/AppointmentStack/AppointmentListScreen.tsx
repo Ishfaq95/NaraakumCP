@@ -161,7 +161,7 @@ const AppointmentListScreen = () => {
 
   const handleAlarmPress = () => {
     console.log('Alarm pressed');
-    // Navigate to calendar/appointments screen
+      navigation.navigate(ROUTES.ReminderListScreen as never);
   };
 
   const handleAvailabilityChange = (value: boolean) => {

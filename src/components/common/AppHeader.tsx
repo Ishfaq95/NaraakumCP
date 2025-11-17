@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useIsFocused, useNavigation } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { globalTextStyles } from '../../styles/globalStyles';
+import { notificationsService } from '../../services/api/notifications';
+import { useSelector } from 'react-redux';
 
 interface AppHeaderProps {
   title: string;
@@ -23,7 +25,6 @@ const AppHeader: React.FC<AppHeaderProps> = ({
   showBackButton = false,
   onBackPress,
   showNotification = true,
-  notificationCount = 0,
   showMessages = true,
   showAlarm = true,
   onNotificationPress,
@@ -32,6 +33,49 @@ const AppHeader: React.FC<AppHeaderProps> = ({
   onMessagesPress,
 }) => {
   const navigation = useNavigation();
+  const isFocused = useIsFocused();
+  const user = useSelector((state: any) => state.root.user.user);
+  const [notificationCount, setNotificationCount] = useState(0);
+  const [reminderCount, setReminderCount] = useState(0);
+  useEffect(() => {
+    if (isFocused) {
+      getNotificationsList();
+      getReminderList();
+    }
+  }, [isFocused]);
+
+  const getReminderList = async () => {
+    try {
+        const payload = {
+            UserloginInfoId: user.Id,
+        }
+        const response = await notificationsService.getServiceProviderReminderList(payload);
+        if (response.ResponseStatus.STATUSCODE == 200) {
+            setReminderCount(response.ReminderList.length);
+        }
+    }
+    catch (error) {
+        console.log('Error fetching reminder list:', error);
+    }
+}
+
+  const getNotificationsList = async () => {
+    try {
+        const payload = {
+            "ReciverId": user.Id,
+            "Viewstatus": 0,
+            "PageNumber": 1,
+            "PageSize": 10
+        }
+        const response = await notificationsService.getNotificationsList(payload);
+        if (response.ResponseStatus.STATUSCODE == 200) {
+            setNotificationCount(response.TotalRecord);
+            
+        }
+    } catch (error) {
+        console.log('Error fetching notifications:', error);
+    }
+}
 
   const handleBackPress = () => {
     if (onBackPress) {
@@ -76,6 +120,13 @@ const AppHeader: React.FC<AppHeaderProps> = ({
               style={styles.icon}
               resizeMode="contain"
             />
+            {reminderCount > 0 && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>
+                  {reminderCount > 99 ? '99+' : reminderCount}
+                </Text>
+              </View>
+            )}
           </TouchableOpacity>
         )}
 
@@ -146,11 +197,12 @@ const styles = StyleSheet.create({
     right: -5,
     backgroundColor: '#FF3B30',
     borderRadius: 10,
-    minWidth: 20,
-    height: 20,
+    height: 18,
+    width:18,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 4,
+    // paddingHorizontal: 2,
+    // paddingVertical: 2,
   },
   badgeText: {
     color: '#FFFFFF',

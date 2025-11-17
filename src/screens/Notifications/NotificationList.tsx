@@ -1,7 +1,7 @@
 import { View, Text, SafeAreaView, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { useNavigation } from '@react-navigation/native';
+import { useIsFocused, useNavigation } from '@react-navigation/native';
 import { notificationsService } from '../../services/api/notifications';
 import { useSelector } from 'react-redux';
 import { globalTextStyles } from '../../styles/globalStyles';
@@ -40,16 +40,16 @@ const NotificationList = () => {
     const [hasMore, setHasMore] = useState(true);
     const [totalRecords, setTotalRecords] = useState(0);
     const pageSize = 10;
-
+    const isFocused = useIsFocused();
     const backButtonPress = () => {
         navigation.goBack();
     }
 
     useEffect(() => {
-        if (user) {
+        if (user && isFocused) {
             getNotificationsList(1, true);
         }
-    }, [user]);
+    }, [user,isFocused]);
 
     const getNotificationsList = async (page: number, isInitialLoad: boolean = false) => {
         if (isInitialLoad) {
@@ -96,6 +96,21 @@ const NotificationList = () => {
         } finally {
             setIsLoading(false);
             setIsLoadingMore(false);
+        }
+    }
+
+    const updateNotificationViewStatus = async (item: any) => {
+        try {
+            const payload = {
+                NotificationOccerrenceSystemId: item.Id,
+            }
+            const response = await notificationsService.updateNotificationViewStatus(payload);
+            if (response.ResponseStatus.STATUSCODE == 200) {
+                console.log('Notification view status updated successfully');
+            }
+        }
+        catch (error) {
+            console.log('Error updating notification view status:', error);
         }
     }
 
@@ -156,9 +171,10 @@ const NotificationList = () => {
                     <TouchableOpacity 
                         style={styles.tasksButton}
                         activeOpacity={0.7}
-                        onPress={() => {
+                        onPress={ () => {
                             // Handle Tasks button press
                             console.log('Tasks pressed for notification:', item);
+                            updateNotificationViewStatus(item);
                             navigation.navigate(ROUTES.VisitDetailScreen as never, { taskId: item?.TaskId });
                         }}
                     >

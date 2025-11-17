@@ -42,5 +42,7 @@ export const ROUTES = {
     ConversationListScreen: 'ConversationListScreen',
     ChatScreenMainView: 'ChatScreenMainView',
     NotificationListScreen: 'NotificationListScreen',
+    ServiceProfileScreen: 'ServiceProfileScreen',
+    ReminderListScreen: 'ReminderListScreen',
   };
   

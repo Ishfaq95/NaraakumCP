@@ -21,6 +21,7 @@ import { initializeI18Next } from './utils/language/i18nextConfig';
 import PushNotificationIOS from '@react-native-community/push-notification-ios';
 import "react-native-get-random-values"
 import AppInitializer from './components/AppInitializer';
+import { AlertProvider } from './contexts/AlertContext';
 
 const App = () => {
 
@@ -86,11 +87,13 @@ const App = () => {
                   appVersion: '1.0.0',
                   environment: 'development',
                 }}>
+                  <AlertProvider>
                 <NavigationContainer ref={navigationRef}>
                   <AppInitializer />
                   <Routes />
                   <NotificationsCenter />
                 </NavigationContainer>
+                </AlertProvider>
               </CrashlyticsProvider>
             </CrashlyticsErrorBoundary>
           </QueryClientProvider>

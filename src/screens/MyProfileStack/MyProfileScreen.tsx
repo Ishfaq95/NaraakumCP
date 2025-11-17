@@ -163,6 +163,8 @@ const MyProfileScreen = () => {
       navigation.navigate(ROUTES.PersonalProfileScreen as never);
     }else if (optionId == 'payment') {
       navigation.navigate(ROUTES.PaymentProfileScreen as never);
+    }else if (optionId == 'service') {
+      navigation.navigate(ROUTES.ServiceProfileScreen as never);
     }
   };
 

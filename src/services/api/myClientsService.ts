@@ -32,8 +32,26 @@ export const getServiceProvidersFeedback = async (credentials: any) => {
     }
 };
 
+export const getServiceProviderAndPatientBookingHistory = async (credentials: any) => {
+    try {
+        const response = await axiosInstance.post(
+            `user/GetServiceProviderandPatientbookinghistory`,
+            credentials
+        );
+        return response.data;
+    }
+    catch (error: any) {
+        throw {
+            message: error?.response?.data?.message || 'Get service provider and patient booking history failed',
+            status: error?.response?.status,
+            code: error?.response?.data?.code
+        };
+    }
+};
+
 // Export all my clients related functions
 export const myClientsService = {
     getClientsByServiceProvider,
     getServiceProvidersFeedback,
+    getServiceProviderAndPatientBookingHistory,
 }; 

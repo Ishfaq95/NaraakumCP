@@ -36,9 +36,31 @@ export const getReminderSetting = async (payload: any): Promise<any> => {
     }
 };
 
+export const addPromoCode = async (payload: any): Promise<any> => {
+    try {
+        const response = await axiosInstance.post('organization/AddUpdatePromocode', payload);
+        return response.data;
+    } catch (error: any) {
+        console.error('Error adding promo code:', error);
+        throw error;
+    }
+};
+
+export const deletePromoCode = async (payload: any): Promise<any> => {
+    try {
+        const response = await axiosInstance.post('organization/DeletePromocode', payload);
+        return response.data;
+    } catch (error: any) {
+        console.error('Error deleting promo code:', error);
+        throw error;
+    }
+};
+
 // Export all my clients related functions
 export const settingService = {
     getPromoCodeList,
     updateReminderSetting,
     getReminderSetting,
+    addPromoCode,
+    deletePromoCode,
 }; 

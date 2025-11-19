@@ -289,6 +289,16 @@ const PreViewScreen = ({navigation, route}: any) => {
     }
   };
 
+  const handleBackPress = async () => {
+    await disposeVideoTrack();
+    navigation.navigate(ROUTES.AppNavigator, {
+      screen: ROUTES.AppointmentsStack,
+      params: {
+        screen: ROUTES.AppointmentListScreen,
+      }
+    });
+  };
+
   const handleLanguageToggle = () => {
     // Toggle between Arabic and English using the separate changeLanguage function
     const newLanguage = I18nManager.isRTL ? LangCode.en : LangCode.ar;
@@ -342,7 +352,7 @@ const PreViewScreen = ({navigation, route}: any) => {
             }}>
             {I18nManager.isRTL ? (
               <TouchableOpacity
-                onPress={() => navigation.navigate(ROUTES.Home)}
+                onPress={handleBackPress}
                 style={{flexDirection: 'row', paddingHorizontal: 8}}>
                 <RightArrowIcon />
                 <Text
@@ -351,7 +361,7 @@ const PreViewScreen = ({navigation, route}: any) => {
                 </Text>
               </TouchableOpacity>
             ) : (
-              <TouchableOpacity  onPress={() => navigation.navigate(ROUTES.Home)} style={{flexDirection: 'row'}}>
+              <TouchableOpacity  onPress={handleBackPress} style={{flexDirection: 'row'}}>
                 <BackIcon />
                 <Text style={{paddingLeft: 8}}>Back</Text>
               </TouchableOpacity>

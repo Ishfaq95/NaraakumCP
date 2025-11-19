@@ -123,7 +123,7 @@ const CustomBottomSheet: React.FC<CustomBottomSheetProps> = ({
           style={[
             styles.bottomSheet,
             {
-              maxHeight: getMaxHeightValue(),
+              height: getMaxHeightValue(),
               backgroundColor,
               borderTopLeftRadius: borderRadius,
               borderTopRightRadius: borderRadius,
@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    // paddingHorizontal: 16,
+    overflow: 'hidden',
   },
 });
 

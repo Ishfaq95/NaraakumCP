@@ -5,6 +5,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import { globalTextStyles } from '../../styles/globalStyles';
 import { notificationsService } from '../../services/api/notifications';
 import { useSelector } from 'react-redux';
+import WebSocketService from '../WebSocketService';
 
 interface AppHeaderProps {
   title: string;
@@ -37,12 +38,21 @@ const AppHeader: React.FC<AppHeaderProps> = ({
   const user = useSelector((state: any) => state.root.user.user);
   const [notificationCount, setNotificationCount] = useState(0);
   const [reminderCount, setReminderCount] = useState(0);
+  const unreadMessages = useSelector((state: any) => state.root.user.unreadMessages);
+  const webSocketService = WebSocketService.getInstance();
+  console.log('unreadMessages', unreadMessages);
   useEffect(() => {
     if (isFocused) {
       getNotificationsList();
       getReminderList();
     }
   }, [isFocused]);
+
+  // useEffect(() => {
+  //   if (user && isFocused) {
+  //     webSocketService.startPeriodicUnreadCheck(user.Id);
+  //   }
+  // }, [user, isFocused]);
 
   const getReminderList = async () => {
     try {
@@ -107,6 +117,13 @@ const AppHeader: React.FC<AppHeaderProps> = ({
               style={styles.icon}
               resizeMode="contain"
             />
+            {unreadMessages > 0 && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>
+                  {unreadMessages > 99 ? '99+' : unreadMessages}
+                </Text>
+              </View>
+            )}
           </TouchableOpacity>
         )}
 

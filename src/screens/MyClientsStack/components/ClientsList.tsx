@@ -8,11 +8,15 @@ import { myClientsService } from '../../../services/api/myClientsService';
 import CustomBottomSheet from '../../../components/common/CustomBottomSheet';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import Entypo from 'react-native-vector-icons/Entypo';
+import { ROUTES } from '../../../shared/utils/routes';
+import { useNavigation } from '@react-navigation/native';
 
 const ClientsList: React.FC<{ onCountChange?: (n: number) => void }> = ({ onCountChange }) => {
   const [clientList, setClientList] = useState<any[]>([]);
   const user = useSelector((state: any) => state.root.user.user);
+  const [selectedClient, setSelectedClient] = useState<any>(null);
   const [isMoreOptionsBottomSheetVisible, setIsMoreOptionsBottomSheetVisible] = useState(false);
+  const navigation = useNavigation();
   useEffect(() => {
     getClients();
   }, []);
@@ -31,6 +35,15 @@ const ClientsList: React.FC<{ onCountChange?: (n: number) => void }> = ({ onCoun
     }
   };
 
+  const onMoreOptionsPress = (item: any) => {
+    setIsMoreOptionsBottomSheetVisible(true);
+    setSelectedClient(item);
+  };
+
+  const onBookingHistoryPress = () => {
+    navigation.navigate(ROUTES.BookingHistory as never, { Patient: selectedClient });
+  };
+
   return (
     <View style={{ flex: 1 }}>
       {/* Row 2: results count + search button */}
@@ -44,14 +57,14 @@ const ClientsList: React.FC<{ onCountChange?: (n: number) => void }> = ({ onCoun
         data={clientList}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ paddingVertical: 8 }}
-        renderItem={({ item }) => <ClientCard item={item} onMore={(item) => setIsMoreOptionsBottomSheetVisible(true)} />}
+        renderItem={({ item }) => <ClientCard item={item} onMore={(item) => onMoreOptionsPress(item)} />}
       />
 
       <CustomBottomSheet
         visible={isMoreOptionsBottomSheetVisible}
         onClose={() => setIsMoreOptionsBottomSheetVisible(false)}
         showHandle={false}
-        height="28%"
+        maxHeight="30%"
         backdropClickable={true}
       >
         <View style={styles.bottomSheetContent}>
@@ -85,7 +98,7 @@ const ClientsList: React.FC<{ onCountChange?: (n: number) => void }> = ({ onCoun
           
           <View style={styles.separator} />
           
-          <TouchableOpacity style={styles.menuItem}>
+          <TouchableOpacity style={styles.menuItem} onPress={() => onBookingHistoryPress()}>
             <Entypo name="back-in-time" size={20} color="#00A19D" />
             <Text style={styles.menuText}>Booking History</Text>
             <Ionicons name="chevron-forward" size={16} color="#6b7280" />

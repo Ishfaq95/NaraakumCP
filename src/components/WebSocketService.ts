@@ -21,6 +21,7 @@ class WebSocketService {
   private taskList: any[] = [];
   private userId: any = null;
   private messageCallbacks: Map<string, Function> = new Map();
+  private unreadCheckInterval: ReturnType<typeof setInterval> | null = null;
 
   private constructor() {
     // Private constructor to enforce singleton pattern
@@ -41,6 +42,12 @@ class WebSocketService {
       this.socket.onmessage = async event => {
         try {
           const socketEvent = JSON.parse(event.data);
+          console.log('socketEvent', socketEvent);
+
+          if(socketEvent.Command === 56){
+            this.checkUnreadMessages(this.userId);
+          }
+          // this.checkUnreadMessages(this.userId);
           // Call the appropriate handlers based on the message type
           if (socketEvent.Command === 74) {
             // We need to get dispatch from the store
@@ -60,6 +67,30 @@ class WebSocketService {
           console.error('Error processing WebSocket message:', error);
         }
       };
+    }
+  }
+
+  // Start periodic checking of unread messages
+  public startPeriodicUnreadCheck(userId: string, interval: number = 5000): void {
+    // Clear any existing interval first
+    this.stopPeriodicUnreadCheck();
+    
+    // Store the user ID
+    this.userId = userId;
+    
+    // Start a new interval
+    this.unreadCheckInterval = setInterval(() => {
+      if (this.userId) {
+        this.checkUnreadMessages(this.userId);
+      }
+    }, interval);
+  }
+
+  // Stop periodic checking
+  public stopPeriodicUnreadCheck(): void {
+    if (this.unreadCheckInterval) {
+      clearInterval(this.unreadCheckInterval);
+      this.unreadCheckInterval = null;
     }
   }
 
@@ -104,6 +135,19 @@ class WebSocketService {
       this.socket.onerror = error => {
         console.error('WebSocket error:', error.message);
       };
+    }
+  }
+
+  public checkUnreadMessages(userId: string): void {
+    if (this.socket && this.isSocketConnected() && userId) {
+      const getCountUnreadMessages = {
+        ConnectionMode: 1,
+        Command: 74,
+        FromUser: { Id: userId },
+      };
+      this.sendMessage(getCountUnreadMessages).catch(error => 
+        console.error('Error sending unread messages check:', error)
+      );
     }
   }
 

@@ -295,6 +295,52 @@ export const assignRoleAndSpecialty = async (credentials: any) => {
     }
 }
 
+export const getSpecialties = async () => {
+    try {
+        const response = await axiosInstance.get(
+            `catalogue/GetAllSpecialties`,
+        );
+        return response.data;
+    }
+    catch (error: any) {
+        throw new Error(error instanceof Error ? error.message : 'Get specialties failed');
+    }
+}
+
+export const addUpdateServiceProviderMedicalLicense = async (credentials: any) => {
+    try {
+        const response = await axiosInstance.post(
+            `user/AddServiceProviderMedicalLicense`,
+            credentials
+        );
+        return response.data;
+    }
+    catch (error: any) {
+        console.log('error', error)
+        throw {
+            message: error?.response?.data?.message || 'Add/Update medical license failed',
+            status: error?.response?.status,
+            code: error?.response?.data?.code
+        };
+    }
+}
+
+export const deleteServiceProviderMedicalLicense = async (credentials: any) => {
+    try {
+        const response = await axiosInstance.post(
+            `user/DeleteMedicalLicense`,
+            credentials
+        );
+        return response.data;
+    }
+    catch (error: any) {
+        throw {
+            message: error?.response?.data?.message || 'Delete medical license failed',
+            status: error?.response?.status,
+            code: error?.response?.data?.code
+        };
+    }
+}
 // Export all profile related functions
 export const profileService = {
     getServiceProviderByUserId,
@@ -312,4 +358,7 @@ export const profileService = {
     addServiceProviderContract,
     getServiceProviderRoleAndSpecialty,
     assignRoleAndSpecialty,
+    getSpecialties,
+    addUpdateServiceProviderMedicalLicense,
+    deleteServiceProviderMedicalLicense,
 }; 

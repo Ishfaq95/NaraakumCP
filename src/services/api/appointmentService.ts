@@ -197,6 +197,23 @@ export const getVisitMainRecordDetail = async (credentials: any) => {
         };
     }
 };
+
+export const addEditServiceProviderUnAvailability = async (credentials: any) => {
+    try {
+        const response = await axiosInstance.post(
+            `user/AddServiceProviderUnAvailability`,
+            credentials
+        );
+        return response.data;
+    }
+    catch (error: any) {
+        throw {
+            message: error?.response?.data?.message || 'Add edit service provider unavailability failed',
+            status: error?.response?.status,
+            code: error?.response?.data?.code
+        };
+    }
+};
 // Export all appointment related functions
 export const appointmentService = {
     getServiceProviderMainSummary,
@@ -211,4 +228,5 @@ export const appointmentService = {
     addEditUserRating,
     deleteUserRating,
     getVisitMainRecordDetail,
+    addEditServiceProviderUnAvailability,
 }; 

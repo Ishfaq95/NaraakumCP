@@ -3,16 +3,21 @@ import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Feather from 'react-native-vector-icons/Feather';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import CallIcon from '../../assets/icons/CallIcon';
 import moment from 'moment';
 
 interface AppointmentCardProps {
   item: any;
   onSessionDetails: (item: any) => void;
+  isCallEnabled?: boolean;
+  onJoinMeeting: (item: any) => void;
 }
 
 const AppointmentCard: React.FC<AppointmentCardProps> = ({
   item,
   onSessionDetails,
+  isCallEnabled = false,
+  onJoinMeeting,
 }) => {
   const getStatusInfo = () => {
     const statusId = item?.CatOrderStatusId?.toString();
@@ -180,10 +185,10 @@ const AppointmentCard: React.FC<AppointmentCardProps> = ({
       </View>
 
       {item?.TaskService[0].CatServiceServeTypeId == 1 ? <View style={styles.footer}>
-        <View style={styles.durationContainer}>
-          <Ionicons name="time-outline" size={18} color="#fff" />
+        <TouchableOpacity disabled={!isCallEnabled} style={[styles.durationContainer, isCallEnabled && styles.callBtnEnabled]} onPress={() => onJoinMeeting(item)}>
+          <Image source={require('../../assets/icons/cameramovie.png')} style={{ tintColor: '#fff', width: 20, height: 20 }} />
           <Text style={styles.durationText}>{item?.Duration} Minutes</Text>
-        </View>
+        </TouchableOpacity>
         <TouchableOpacity style={styles.detailsButton} onPress={() => onSessionDetails(item)}>
           <Text style={styles.detailsButtonText}>Session Details</Text>
         </TouchableOpacity>
@@ -340,6 +345,11 @@ const styles = StyleSheet.create({
     color: '#23a2a4',
     fontSize: 14,
     fontWeight: '500',
+  },
+  callBtnEnabled: {
+    backgroundColor: '#19b123',
+    borderWidth: 1,
+    borderColor: '#19b123',
   },
 });
 

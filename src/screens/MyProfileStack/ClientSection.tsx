@@ -265,7 +265,7 @@ const ClientSectionScreen = () => {
                         setEditingPreference(null);
                     }}
                     showHandle={false}
-                    height="45%"
+                    maxHeight="50%"
                     backdropClickable={true}
                 >
                     <View style={styles.modalContent}>

@@ -44,5 +44,6 @@ export const ROUTES = {
     NotificationListScreen: 'NotificationListScreen',
     ServiceProfileScreen: 'ServiceProfileScreen',
     ReminderListScreen: 'ReminderListScreen',
+    BookingHistory: 'BookingHistory',
   };
   

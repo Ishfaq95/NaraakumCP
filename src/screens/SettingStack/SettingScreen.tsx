@@ -248,7 +248,8 @@ const SettingScreen = () => {
       <CustomBottomSheet
         visible={reminderSettingBottomSheetVisible}
         onClose={() => setReminderSettingBottomSheetVisible(false)}
-        height="28%"
+        // height="28%"
+        maxHeight={220}
         showHandle={false}
         style={{ borderTopLeftRadius: 10, borderTopRightRadius: 10, overflow: 'hidden' }}
       >

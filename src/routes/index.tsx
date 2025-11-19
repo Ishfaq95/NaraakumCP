@@ -35,6 +35,8 @@ import ChatScreenMainView from '../screens/Chat/ChatScreenMainView';
 import NotificationListScreen from '../screens/Notifications/NotificationList';
 import ServiceProfileScreen from '../screens/MyProfileStack/ServiceProfile';
 import ReminderListScreen from '../screens/Notifications/ReminderList';
+import Meeting from '../screens/meeting';
+import BookingHistory from '../screens/MyClientsStack/BookingHistory';
 
 const Stack = createNativeStackNavigator();
 
@@ -79,6 +81,9 @@ const RootNavigator = () => {
       <Stack.Screen name={ROUTES.NotificationListScreen} component={NotificationListScreen} />
       <Stack.Screen name={ROUTES.ServiceProfileScreen} component={ServiceProfileScreen} />
       <Stack.Screen name={ROUTES.ReminderListScreen} component={ReminderListScreen} />
+      <Stack.Screen name={ROUTES.preViewCall} component={PreViewScreen} />
+      <Stack.Screen name={ROUTES.Meeting} component={Meeting} />
+      <Stack.Screen name={ROUTES.BookingHistory} component={BookingHistory} />
     </Stack.Navigator>
   );
 };

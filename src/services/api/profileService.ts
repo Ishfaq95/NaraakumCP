@@ -341,6 +341,40 @@ export const deleteServiceProviderMedicalLicense = async (credentials: any) => {
         };
     }
 }
+
+export const getServiceProviderHolidays = async (credentials: any) => {
+    try {
+        const response = await axiosInstance.post(
+            `organization/GetServiceProviderHolidays`,
+            credentials
+        );
+        return response.data;
+    }
+    catch (error: any) {
+        throw {
+            message: error?.response?.data?.message || 'Get service provider holidays failed',
+            status: error?.response?.status,
+            code: error?.response?.data?.code
+        };
+    }
+}
+
+export const getServiceProviderAvailability = async (credentials: any) => {
+    try {
+        const response = await axiosInstance.post(
+            `organization/GetServiceProviderAvailability`,
+            credentials
+        );
+        return response.data;
+    }
+    catch (error: any) {
+        throw {
+            message: error?.response?.data?.message || 'Get service provider availability failed',
+            status: error?.response?.status,
+            code: error?.response?.data?.code
+        };
+    }
+}
 // Export all profile related functions
 export const profileService = {
     getServiceProviderByUserId,
@@ -361,4 +395,6 @@ export const profileService = {
     getSpecialties,
     addUpdateServiceProviderMedicalLicense,
     deleteServiceProviderMedicalLicense,
+    getServiceProviderHolidays,
+    getServiceProviderAvailability,
 }; 

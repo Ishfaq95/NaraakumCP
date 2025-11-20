@@ -40,8 +40,24 @@ const ClientsList: React.FC<{ onCountChange?: (n: number) => void }> = ({ onCoun
     setSelectedClient(item);
   };
 
+  const onBookServicePress = () => {
+    setIsMoreOptionsBottomSheetVisible(false);
+    navigation.navigate(ROUTES.BookNewService as never, { Patient: selectedClient });
+  };
+
   const onBookingHistoryPress = () => {
+    setIsMoreOptionsBottomSheetVisible(false);
     navigation.navigate(ROUTES.BookingHistory as never, { Patient: selectedClient });
+  };
+
+  const onPrescriptionsPress = () => {
+    setIsMoreOptionsBottomSheetVisible(false);
+    navigation.navigate(ROUTES.PrescriptionListScreen as never,{Patient: selectedClient});
+  };
+
+  const onSendMessagePress = () => {
+    setIsMoreOptionsBottomSheetVisible(false);
+    navigation.navigate(ROUTES.ConversationListScreen as never);
   };
 
   return (
@@ -64,11 +80,11 @@ const ClientsList: React.FC<{ onCountChange?: (n: number) => void }> = ({ onCoun
         visible={isMoreOptionsBottomSheetVisible}
         onClose={() => setIsMoreOptionsBottomSheetVisible(false)}
         showHandle={false}
-        maxHeight="30%"
+        maxHeight="35%"
         backdropClickable={true}
       >
         <View style={styles.bottomSheetContent}>
-          <TouchableOpacity style={styles.menuItem}>
+          <TouchableOpacity onPress={() => onBookServicePress()} style={styles.menuItem}>
             <FontAwesome name="stethoscope" size={20} color="#00A19D" />
             <Text style={styles.menuText}>Book a Service</Text>
             <Ionicons name="chevron-forward" size={16} color="#6b7280" />
@@ -76,7 +92,7 @@ const ClientsList: React.FC<{ onCountChange?: (n: number) => void }> = ({ onCoun
           
           <View style={styles.separator} />
           
-          <TouchableOpacity style={styles.menuItem}>
+          <TouchableOpacity onPress={() => onPrescriptionsPress()} style={styles.menuItem}>
           
             <FontAwesome5 name="file-prescription" size={20} color="#00A19D" />
             <Text style={styles.menuText}>Prescriptions</Text>
@@ -85,7 +101,7 @@ const ClientsList: React.FC<{ onCountChange?: (n: number) => void }> = ({ onCoun
           
           <View style={styles.separator} />
           
-          <TouchableOpacity style={styles.menuItem}>
+          <TouchableOpacity onPress={() => onSendMessagePress()} style={styles.menuItem}>
             {/* <Ionicons name="chatbubble" size={20} color="#00A19D" /> */}
             <Image
               source={require('../../../assets/icons/messageIcon.png')}

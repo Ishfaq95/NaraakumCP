@@ -35,6 +35,7 @@ const MedicalLicenseScreen = () => {
     const [nationalities, setNationalities] = useState<any[]>([]);
     const [specialties, setSpecialties] = useState<any[]>([]);
     const [isSaving, setIsSaving] = useState(false);
+    const [isDownloading, setIsDownloading] = useState(false);
 
     // Form state
     const [selectedFile, setSelectedFile] = useState<any>(null);
@@ -114,7 +115,7 @@ const MedicalLicenseScreen = () => {
 
     const getFileNameFromUrl = (url: string) => {
         const parts = url.split('/');
-        return parts.pop();
+        return parts.pop() || 'document';
     }
 
     const handleViewFile = (license: MedicalLicense) => {
@@ -128,57 +129,53 @@ const MedicalLicenseScreen = () => {
         
     };
 
-    const downloadFIleForIOS = (url: string, fileName: string) => {
+    const downloadFIleForIOS = async (url: string, fileName: string) => {
         const {config, fs} = RNFetchBlob;
         const DocumentDir = fs.dirs.DocumentDir;
         const filePath = `${DocumentDir}/${fileName}`;
     
-        config({
-          fileCache: true,
-          path: filePath,
-        })
-          .fetch('GET', url)
-          .then(res => {
+        try {
+            const res = await config({
+                fileCache: true,
+                path: filePath,
+            }).fetch('GET', url);
+            
             Alert.alert(
-              'File downloaded successfully',
-              'The file is saved to your device.',
+                'File downloaded successfully',
+                'The file is saved to your device.',
             );
             RNFetchBlob.ios.previewDocument(filePath);
-          })
-          .catch(error => {
+        } catch (error) {
             Alert.alert('File downloading error.');
-          })
-          .finally(() => {
+        } finally {
             setIsDownloading(false);
-          });
-      };
+        }
+    };
     
-      const downloadFile = (url: string, fileName: string) => {
+    const downloadFile = async (url: string, fileName: string) => {
         const {config, fs} = RNFetchBlob;
         const DownloadDir = fs.dirs.DownloadDir;
         const filePath = `${DownloadDir}/${fileName}`;
     
-        config({
-          fileCache: true,
-          addAndroidDownloads: {
-            useDownloadManager: true,
-            notification: true,
-            mediaScannable: true,
-            title: fileName,
-            path: filePath,
-          },
-        })
-          .fetch('GET', url)
-          .then(res => {
+        try {
+            const res = await config({
+                fileCache: true,
+                addAndroidDownloads: {
+                    useDownloadManager: true,
+                    notification: true,
+                    mediaScannable: true,
+                    title: fileName,
+                    path: filePath,
+                },
+            }).fetch('GET', url);
+            
             Alert.alert('File downloaded successfully');
-          })
-          .catch(error => {
+        } catch (error) {
             Alert.alert('File downloading error.');
-          })
-          .finally(() => {
+        } finally {
             setIsDownloading(false);
-          });
-      };
+        }
+    };
 
     const handleDelete = async (license: MedicalLicense) => {
         // Handle delete action

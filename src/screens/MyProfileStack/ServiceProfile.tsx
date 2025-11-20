@@ -7,6 +7,7 @@ import { profileService } from '../../services/api/profileService';
 import { useSelector } from 'react-redux';
 import { useAlert } from '../../contexts/AlertContext';
 import CustomBottomSheet from '../../components/common/CustomBottomSheet';
+import { ROUTES } from '../../shared/utils/routes';
 
 const ServiceProfile = () => {
     const navigation = useNavigation();
@@ -235,6 +236,7 @@ const ServiceProfile = () => {
 
     // Generate menu items for Online Consultation
     const getOnlineConsultationMenuItems = () => {
+        console.log('onlineConsultationData',onlineConsultationData);
         // Return empty array if no valid data exists
         if (!onlineConsultationData || Object.keys(onlineConsultationData).length === 0) {
             return [];
@@ -243,12 +245,12 @@ const ServiceProfile = () => {
         return [
             {
                 title: 'Business hours',
-                onPress: () => {},
+                onPress: () => navigation.navigate(ROUTES.BusinessHours as never,{Data:onlineConsultationData}),
                 isComplete: isBusinessHoursComplete(onlineConsultationData)
             },
             {
                 title: 'Duration & Price',
-                onPress: () => {},
+                onPress: () => navigation.navigate(ROUTES.DurationAndPrice as never,{Data:onlineConsultationData}),
                 isComplete: isDurationPriceComplete(onlineConsultationData)
             },
         ];
@@ -256,7 +258,7 @@ const ServiceProfile = () => {
 
     // Generate menu items for Home Visit
     const getHomeVisitMenuItems = () => {
-
+        console.log('homeVisitData',homeVisitData);
         // Return empty array if no valid data exists
         if (!homeVisitData || Object.keys(homeVisitData).length === 0) {
             return [];
@@ -265,12 +267,12 @@ const ServiceProfile = () => {
         return [
             {
                 title: 'Business hours',
-                onPress: () => {},
+                onPress: () => navigation.navigate(ROUTES.BusinessHours as never,{Data:homeVisitData}),
                 isComplete: isBusinessHoursComplete(homeVisitData)
             },
             {
                 title: 'Duration & Price',
-                onPress: () => {},
+                onPress: () => navigation.navigate(ROUTES.DurationAndPrice as never,{Data:homeVisitData}),
                 isComplete: isDurationPriceComplete(homeVisitData)
             },
             {
@@ -397,15 +399,7 @@ const ServiceProfile = () => {
                     
                     {renderServiceCard(
                         'Online Consultation',
-                        <View style={styles.iconWrapper}>
-                            <View style={styles.onlineConsultationIcon}>
-                                <View style={styles.iconInner}>
-                                    <View style={styles.iconPersonLeft} />
-                                    <View style={styles.iconPersonRight} />
-                                </View>
-                                <View style={styles.iconScreen} />
-                            </View>
-                        </View>,
+                        <Image source={require('../../assets/icons/RemoteConsultant.png')} style={{width: 50,height: 50}} />,
                         onlineConsultationEnabled,
                         (value: boolean) => onToggleService('onlineConsultation', value),
                         getOnlineConsultationMenuItems()
@@ -413,17 +407,7 @@ const ServiceProfile = () => {
                     
                     {renderServiceCard(
                         'Home Visit',
-                        <View style={styles.iconWrapper}>
-                            <View style={styles.homeVisitIcon}>
-                                <View style={styles.houseRoof} />
-                                <View style={styles.houseBody}>
-                                    <View style={styles.houseDoor} />
-                                    <View style={styles.houseWindow} />
-                                </View>
-                                <View style={styles.person} />
-                                <View style={styles.medicalBag} />
-                            </View>
-                        </View>,
+                        <Image source={require('../../assets/icons/HomeVisit.png')} style={{width: 50,height: 50}} />,
                         homeVisitEnabled,
                         (value: boolean) => onToggleService('homeVisit', value),
                         getHomeVisitMenuItems()
@@ -433,6 +417,7 @@ const ServiceProfile = () => {
 
             <CustomBottomSheet
                 visible={isSpecialtyLevelBottomSheetVisible}
+                maxHeight="80%"
                 onClose={() => setIsSpecialtyLevelBottomSheetVisible(false)}
             >
                 <View style={styles.bottomSheetContent}>

@@ -45,5 +45,9 @@ export const ROUTES = {
     ServiceProfileScreen: 'ServiceProfileScreen',
     ReminderListScreen: 'ReminderListScreen',
     BookingHistory: 'BookingHistory',
+    BusinessHours: 'BusinessHours',
+    DurationAndPrice: 'DurationAndPrice',
+    PrescriptionListScreen: 'PrescriptionListScreen',
+    BookNewService: 'BookNewService',
   };
   

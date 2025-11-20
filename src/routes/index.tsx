@@ -37,6 +37,10 @@ import ServiceProfileScreen from '../screens/MyProfileStack/ServiceProfile';
 import ReminderListScreen from '../screens/Notifications/ReminderList';
 import Meeting from '../screens/meeting';
 import BookingHistory from '../screens/MyClientsStack/BookingHistory';
+import BusinessHours from '../screens/MyProfileStack/BusinessHours';
+import DurationAndPrice from '../screens/MyProfileStack/DurationAndPrice';
+import PrescriptionListScreen from '../screens/MyClientsStack/PrescriptionListScreen';
+import BookingMainScreen from '../screens/BookService/BookingMainScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -84,6 +88,10 @@ const RootNavigator = () => {
       <Stack.Screen name={ROUTES.preViewCall} component={PreViewScreen} />
       <Stack.Screen name={ROUTES.Meeting} component={Meeting} />
       <Stack.Screen name={ROUTES.BookingHistory} component={BookingHistory} />
+      <Stack.Screen name={ROUTES.BusinessHours} component={BusinessHours} />
+      <Stack.Screen name={ROUTES.DurationAndPrice} component={DurationAndPrice} />
+      <Stack.Screen name={ROUTES.PrescriptionListScreen} component={PrescriptionListScreen} />
+      <Stack.Screen name={ROUTES.BookNewService} component={BookingMainScreen} />
     </Stack.Navigator>
   );
 };

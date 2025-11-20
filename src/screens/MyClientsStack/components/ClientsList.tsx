@@ -40,6 +40,11 @@ const ClientsList: React.FC<{ onCountChange?: (n: number) => void }> = ({ onCoun
     setSelectedClient(item);
   };
 
+  const onDirectBookServicePress = (item: any) => {
+    setIsMoreOptionsBottomSheetVisible(false);
+    navigation.navigate(ROUTES.BookNewService as never, { Patient: item });
+  };
+
   const onBookServicePress = () => {
     setIsMoreOptionsBottomSheetVisible(false);
     navigation.navigate(ROUTES.BookNewService as never, { Patient: selectedClient });
@@ -73,7 +78,7 @@ const ClientsList: React.FC<{ onCountChange?: (n: number) => void }> = ({ onCoun
         data={clientList}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ paddingVertical: 8 }}
-        renderItem={({ item }) => <ClientCard item={item} onMore={(item) => onMoreOptionsPress(item)} />}
+        renderItem={({ item }) => <ClientCard item={item} onMore={(item) => onMoreOptionsPress(item)} onBook={(item) => onDirectBookServicePress(item)} />}
       />
 
       <CustomBottomSheet

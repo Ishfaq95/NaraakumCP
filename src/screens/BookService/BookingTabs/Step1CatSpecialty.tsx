@@ -10,7 +10,6 @@ import {
   View,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-
 import { bookingService } from '../../../services/api/bookingService';
 import { MediaBaseURL } from '../../../shared/utils/constants';
 import { SvgUri } from 'react-native-svg';

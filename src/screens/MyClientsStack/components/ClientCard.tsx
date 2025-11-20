@@ -4,7 +4,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons'
 import FontAwesome from 'react-native-vector-icons/FontAwesome'
 import { MediaBaseURL } from '../../../shared/utils/constants';
 
-const ClientCard: React.FC<{ item: any } & { onMore?: (item: any) => void; onBook?: () => void }> = ({ item, onMore, onBook }) => {
+const ClientCard: React.FC<{ item: any } & { onMore?: (item: any) => void; onBook?: (item: any) => void }> = ({ item, onMore, onBook }) => {
     return (
         <View style={styles.card}>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -30,7 +30,7 @@ const ClientCard: React.FC<{ item: any } & { onMore?: (item: any) => void; onBoo
             <View style={styles.divider} />
 
             <View style={styles.actionsRow}>
-                <TouchableOpacity style={styles.bookButton} onPress={() => onBook?.()}>
+                <TouchableOpacity style={styles.bookButton} onPress={() => onBook?.(item)}>
                     <FontAwesome name="stethoscope" size={18} color="#00A19D" />
                     <Text style={styles.bookText}>Book a Service</Text>
                 </TouchableOpacity>

@@ -10,22 +10,22 @@ import CheckIcon from '../../assets/icons/CheckIcon';
 import { globalTextStyles } from '../../styles/globalStyles';
 import { ROUTES } from '../../shared/utils/routes';
 import Stepper from '../../components/Stapper';
-import Step1 from './BookingTabs/Step1';
+import Step1CatSpecialty from './BookingTabs/Step1CatSpecialty';
+import Step2DoctorListing from './BookingTabs/Step2DoctorListing';
+import Step3ReviewOrder from './BookingTabs/Step3ReviewOrder';
 
 const BookingScreen = ({ navigation, route }: any) => {
     const { t } = useTranslation();
-    const [currentStep, setCurrentStep] = useState(route.params?.currentStep || 1);
+    const [currentStep, setCurrentStep] = useState(1);
     const user = useSelector((state: any) => state.root.user.user);
     const dispatch = useDispatch();
     const steps = [1, 2, 3];
 
-
-
     const renderStep = () => {
         switch (currentStep) {
-            case 1: return <Step1 />;
-            case 2: return <></>;
-            case 3: return <></>;
+            case 1: return <Step1CatSpecialty />;
+            case 2: return <Step2DoctorListing />;
+            case 3: return <Step3ReviewOrder />;
             default: return null;
         }
     };

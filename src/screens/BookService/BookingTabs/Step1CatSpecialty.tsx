@@ -13,6 +13,8 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import { bookingService } from '../../../services/api/bookingService';
 import { MediaBaseURL } from '../../../shared/utils/constants';
 import { SvgUri } from 'react-native-svg';
+import { useDispatch } from 'react-redux';
+import { setServices } from '../../../shared/redux/reducers/bookingReducer';
 
 type OfferedServiceCategory = {
   Id: string;
@@ -23,7 +25,7 @@ type OfferedServiceCategory = {
   Price?: number | string;
 };
 
-type Specialty = {                               
+type Specialty = {
   Id: string;
   TitlePlang?: string;
   TitleSlang?: string;
@@ -31,21 +33,88 @@ type Specialty = {
 };
 
 const Step1 = () => {
-  const [offeredServicesCategories, setOfferedServicesCategories] = useState<OfferedServiceCategory[]>([]);
+  const [offeredServicesCategories, setOfferedServicesCategories] = useState<
+    OfferedServiceCategory[]
+  >([]);
   const [specialties, setSpecialties] = useState<Specialty[]>([]);
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
-  const [selectedSpecialtyId, setSelectedSpecialtyId] = useState<string | null>(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
+    null,
+  );
+  const [selectedSpecialtyId, setSelectedSpecialtyId] = useState<string | null>(
+    null,
+  );
+  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
+  const [serviceQuantities, setServiceQuantities] = useState<
+    Record<string, number>
+  >({});
   const [loadingCategories, setLoadingCategories] = useState(false);
   const [loadingSpecialties, setLoadingSpecialties] = useState(false);
+  const [category, setCategory] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [offeredServices, setOfferedServices] = useState<any>(null);
+  const [offeredServicesData, setOfferedServicesData] = useState<any>(null);
+  const dispatch = useDispatch();
 
   useEffect(() => {
     getOfferedServicesCategories();
-    getAllSpecialties();
   }, []);
+
+  useEffect(() => {
+    if (category) {
+      if (category.Id == '42' || category.Id == '32') {
+        fetchServicesAndSpecialtiesData();
+      } else {
+        fetchOfferedServicesData();
+      }
+    }
+  }, [category]);
+
+  const fetchServicesAndSpecialtiesData = async () => {
+    try {
+      setLoading(true);
+      const offered = await bookingService.getOfferedServicesListByCategory({
+        abc: category?.Id,
+        Search: '',
+      });
+      const specs = await bookingService.getAllSpecialties();
+      setOfferedServices(offered);
+      // Merge CatLevelId==3 object at the start of specialties
+      let merged = Array.isArray(specs?.list) ? [...specs.list] : [];
+      const general = offered?.OfferedServices?.find(
+        (item: any) => item.CatLevelId === 3,
+      );
+      if (general) {
+        merged = [general, ...merged];
+      }
+      dispatch(setServices(offered.OfferedServices));
+      setSpecialties(merged);
+    } catch (error) {
+      console.error('Error fetching booking data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchOfferedServicesData = async () => {
+    try {
+      setLoading(true);
+      const offered = await bookingService.getOfferedServicesListByCategory({
+        abc: category?.Id,
+        Search: '',
+      });
+      setOfferedServicesData(offered?.OfferedServices);
+      // dispatch(setServices(offered?.OfferedServices));
+    } catch (error) {
+      console.error('Error fetching booking data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (offeredServicesCategories.length > 0 && !selectedCategoryId) {
       setSelectedCategoryId(offeredServicesCategories[0].Id);
+      setCategory(offeredServicesCategories[0]);
     }
   }, [offeredServicesCategories, selectedCategoryId]);
 
@@ -61,27 +130,24 @@ const Step1 = () => {
     }
   };
 
-  const getAllSpecialties = async () => {
-    try {
-      setLoadingSpecialties(true);
-      const response = await bookingService.getAllSpecialties();
-      setSpecialties(response?.list || []);
-    } catch (error) {
-      console.log('error', error);
-    } finally {
-      setLoadingSpecialties(false);
-    }
-  };
+  console.log('Offered Services Categories', offeredServicesCategories);
 
   const selectedCategory = useMemo(
-    () => offeredServicesCategories.find((category) => category.Id === selectedCategoryId),
+    () =>
+      offeredServicesCategories.find(
+        category => category.Id === selectedCategoryId,
+      ),
     [offeredServicesCategories, selectedCategoryId],
   );
 
-  const cartItemCount = selectedSpecialtyId ? 1 : 0;
+  const cartItemCount =
+    category && (category.Id == '42' || category.Id == '32')
+      ? selectedSpecialtyId
+        ? 1
+        : 0
+      : Object.values(serviceQuantities).reduce((sum, qty) => sum + qty, 0);
 
   const formatImageUrl = (path?: string | null) => {
-    
     return `${MediaBaseURL}${path}`;
   };
 
@@ -91,24 +157,49 @@ const Step1 = () => {
     return (
       <TouchableOpacity
         style={[styles.categoryCard, isActive && styles.categoryCardActive]}
-        onPress={() => setSelectedCategoryId(item.Id)}
+        onPress={() => {
+          setSelectedCategoryId(item.Id);
+          setCategory(item);
+        }}
         activeOpacity={0.8}
       >
-        <View style={[styles.categoryImageWrapper, isActive && styles.categoryImageWrapperActive]}>
+        <View
+          style={[
+            styles.categoryImageWrapper,
+            isActive && styles.categoryImageWrapperActive,
+          ]}
+        >
           {item.ImagePath ? (
-            <Image source={{ uri: item.ImagePath }} style={styles.categoryImage} resizeMode="contain" />
+            <Image
+              source={{ uri: item.ImagePath }}
+              style={styles.categoryImage}
+              resizeMode="contain"
+            />
           ) : (
             <Ionicons name="person-circle-outline" size={28} color="#00A79D" />
           )}
         </View>
         <View style={styles.categoryTextWrapper}>
           <Text style={styles.categoryLabel}>Category</Text>
-          <Text numberOfLines={2} style={[styles.categoryTitle, isActive && styles.categoryTitleActive]}>
+          <Text
+            numberOfLines={2}
+            style={[
+              styles.categoryTitle,
+              isActive && styles.categoryTitleActive,
+            ]}
+          >
             {item.TitlePlang}
           </Text>
         </View>
-        <View style={[styles.categoryBadge, isActive && styles.categoryBadgeActive]}>
-          <Text style={[styles.categoryBadgeText, isActive && styles.categoryBadgeTextActive]}>
+        <View
+          style={[styles.categoryBadge, isActive && styles.categoryBadgeActive]}
+        >
+          <Text
+            style={[
+              styles.categoryBadgeText,
+              isActive && styles.categoryBadgeTextActive,
+            ]}
+          >
             {item.Price ?? 0}
           </Text>
         </View>
@@ -119,12 +210,12 @@ const Step1 = () => {
   const getSanitizedImageUrl = (path: any) => {
     if (!path) return '';
     // Remove any double slashes after the protocol
-    return `${MediaBaseURL}${path}`.replace(/([^:]\/)/g, "$1");
+    return `${MediaBaseURL}${path}`.replace(/([^:]\/)/g, '$1');
   };
 
   const renderSpecialtyItem = ({ item }: { item: Specialty }) => {
     const isSelected = item.Id === selectedSpecialtyId;
-    
+
     const uri = getSanitizedImageUrl(item.ImagePath);
     const isSvg = uri.endsWith('.svg');
 
@@ -135,20 +226,32 @@ const Step1 = () => {
         activeOpacity={0.85}
       >
         <View style={styles.specialtyLeftContent}>
-          <View style={[styles.specialtyIconWrapper, isSelected && styles.specialtyIconWrapperActive]}>
-          {item.ImagePath ? (
-                isSvg ? (
-                  <SvgUri
-                    width="80%"
-                    height="80%"
-                    uri={uri}
-                  />
-                ) : (
-                  <Image source={{ uri }} style={styles.image} resizeMode="contain" />
-                )
-              ) : null}
+          <View
+            style={[
+              styles.specialtyIconWrapper,
+              isSelected && styles.specialtyIconWrapperActive,
+            ]}
+          >
+            {item.ImagePath ? (
+              isSvg ? (
+                <SvgUri width="80%" height="80%" uri={uri} />
+              ) : (
+                <Image
+                  source={{ uri }}
+                  style={styles.image}
+                  resizeMode="contain"
+                />
+              )
+            ) : null}
           </View>
-          <Text style={[styles.specialtyTitle, isSelected && styles.specialtyTitleActive]}>{item.TitlePlang}</Text>
+          <Text
+            style={[
+              styles.specialtyTitle,
+              isSelected && styles.specialtyTitleActive,
+            ]}
+          >
+            {item.TitlePlang}
+          </Text>
         </View>
         {isSelected && (
           <View style={styles.specialtyCheckmark}>
@@ -156,6 +259,98 @@ const Step1 = () => {
           </View>
         )}
       </TouchableOpacity>
+    );
+  };
+
+  const renderOfferedServiceItem = ({ item }: { item: any }) => {
+    const isSelected = selectedServiceIds.includes(item.Id);
+    const quantity = serviceQuantities[item.Id] || 1;
+
+    const handleSelect = () => {
+      if (!isSelected) {
+        setSelectedServiceIds(prev => [...prev, item.Id]);
+        setServiceQuantities(prev => ({ ...prev, [item.Id]: 1 }));
+      }
+    };
+
+    const handleIncreaseQuantity = () => {
+      setServiceQuantities(prev => ({
+        ...prev,
+        [item.Id]: (prev[item.Id] || 1) + 1,
+      }));
+    };
+
+    const handleDecreaseQuantity = () => {
+      if (quantity > 1) {
+        setServiceQuantities(prev => ({
+          ...prev,
+          [item.Id]: prev[item.Id] - 1,
+        }));
+      }
+    };
+
+    const handleDelete = () => {
+      setSelectedServiceIds(prev => prev.filter(id => id !== item.Id));
+      setServiceQuantities(prev => {
+        const updated = { ...prev };
+        delete updated[item.Id];
+        return updated;
+      });
+    };
+
+    return (
+      <View
+        style={[styles.serviceCard, isSelected && styles.serviceCardActive]}
+      >
+        {/* Title */}
+        <Text style={styles.serviceTitle} numberOfLines={2}>
+          {item.TitlePlang || item.TitleSlang || 'Service'}
+        </Text>
+
+        {isSelected ? (
+          /* Selected State: Quantity Controls and Delete */
+          <View style={styles.serviceSelectedContent}>
+            <View style={styles.quantityControls}>
+              <TouchableOpacity
+                style={styles.quantityButton}
+                onPress={handleIncreaseQuantity}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="add" size={20} color="#FFFFFF" />
+              </TouchableOpacity>
+              <Text style={styles.quantityText}>{quantity}</Text>
+              <TouchableOpacity
+                style={[
+                  styles.quantityButton,
+                  styles.quantityButtonMinus,
+                  quantity === 1 && styles.quantityButtonDisabled,
+                ]}
+                onPress={handleDecreaseQuantity}
+                disabled={quantity === 1}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="remove" size={20} color="#FFFFFF" />
+              </TouchableOpacity>
+            </View>
+            <TouchableOpacity
+              style={styles.deleteButton}
+              onPress={handleDelete}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="trash-outline" size={20} color="#FF3B30" />
+            </TouchableOpacity>
+          </View>
+        ) : (
+          /* Unselected State: Select Button */
+          <TouchableOpacity
+            style={styles.selectButton}
+            onPress={handleSelect}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.selectButtonText}>Select</Text>
+          </TouchableOpacity>
+        )}
+      </View>
     );
   };
 
@@ -168,17 +363,21 @@ const Step1 = () => {
       <FlatList
         horizontal
         data={offeredServicesCategories}
-        keyExtractor={(item) => item.Id}
+        keyExtractor={item => item.Id}
         renderItem={renderCategoryCard}
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.categoriesList}
         ListEmptyComponent={() =>
-          !loadingCategories ? <Text style={styles.emptyLabel}>No categories available</Text> : null
+          !loadingCategories ? (
+            <Text style={styles.emptyLabel}>No categories available</Text>
+          ) : null
         }
       />
 
       <View style={styles.specialtyHeader}>
-        <Text style={styles.specialtyHeaderTitle}>{selectedCategory?.TitlePlang || 'Specialties'}</Text>
+        <Text style={styles.specialtyHeaderTitle}>
+          {selectedCategory?.TitlePlang || 'Specialties'}
+        </Text>
         <View style={styles.specialtyHeaderLine} />
       </View>
     </View>
@@ -187,7 +386,9 @@ const Step1 = () => {
   const renderBottomBar = () => (
     <View style={styles.bottomBar}>
       <TouchableOpacity style={styles.secondaryButton} activeOpacity={0.85}>
-        <Text style={styles.secondaryButtonText}>{`Cart (${cartItemCount})`}</Text>
+        <Text
+          style={styles.secondaryButtonText}
+        >{`Cart (${cartItemCount})`}</Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.primaryButton} activeOpacity={0.85}>
         <Text style={styles.primaryButtonText}>Next</Text>
@@ -200,22 +401,36 @@ const Step1 = () => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
+        {renderListHeader()}
         {isLoading ? (
           <View style={styles.loaderWrapper}>
             <ActivityIndicator size="large" color="#00A79D" />
           </View>
         ) : (
-          <FlatList
-            data={specialties}
-            keyExtractor={(item) => item.Id}
-            renderItem={renderSpecialtyItem}
-            ListHeaderComponent={renderListHeader}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.listContent}
-            ListEmptyComponent={() => (
-              <Text style={styles.emptyLabel}>No specialties available for this category</Text>
+          <>
+            {category && (category.Id == '42' || category.Id == '32') ? (
+              <FlatList
+                data={specialties}
+                keyExtractor={item => item.Id}
+                renderItem={renderSpecialtyItem}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.listContent}
+                ListEmptyComponent={() => (
+                  <Text style={styles.emptyLabel}>
+                    No specialties available for this category
+                  </Text>
+                )}
+              />
+            ) : (
+              <FlatList
+                data={offeredServicesData}
+                keyExtractor={item => item.Id}
+                renderItem={renderOfferedServiceItem}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.listContent}
+              />
             )}
-          />
+          </>
         )}
       </View>
       {renderBottomBar()}
@@ -465,5 +680,78 @@ const styles = StyleSheet.create({
   image: {
     width: 50,
     height: 50,
+  },
+  // Service Card Styles
+  serviceCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  serviceCardActive: {
+    shadowColor: '#00A79D',
+    shadowOpacity: 0.12,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  serviceTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#0E3C47',
+    marginBottom: 12,
+    lineHeight: 22,
+  },
+  serviceSelectedContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  quantityControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  quantityButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#00A79D',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  quantityButtonMinus: {
+    backgroundColor: '#D1D5DB',
+  },
+  quantityButtonDisabled: {
+    opacity: 0.5,
+  },
+  quantityText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#0E3C47',
+    minWidth: 24,
+    textAlign: 'center',
+  },
+  deleteButton: {
+    padding: 4,
+  },
+  selectButton: {
+    borderWidth: 1.5,
+    borderColor: '#00A79D',
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  selectButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#00A79D',
   },
 });

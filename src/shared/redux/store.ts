@@ -5,16 +5,18 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import userReducer from './reducers/userReducer';
 import {TypedUseSelectorHook, useSelector} from 'react-redux';
 import generalDataReducer from './reducers/generalDataReducer';
+import bookingReducer from './reducers/bookingReducer';
 
 const persistConfig = {
   key: 'root',
   storage: AsyncStorage,
-  whitelist: ['user'],
+  whitelist: ['user','booking'],
 };
 
 const reducers = combineReducers({
   user: userReducer,
-  generalData: generalDataReducer
+  generalData: generalDataReducer,
+  booking: bookingReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, reducers);

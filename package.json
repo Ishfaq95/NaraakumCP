@@ -69,7 +69,7 @@
     "react-native-invoke-app": "^1.0.6",
     "react-native-linear-gradient": "^2.8.3",
     "react-native-loader-kit": "^2.0.8",
-    "react-native-maps": "^1.24.3",
+    "react-native-maps": "1.18.0",
     "react-native-modal-datetime-picker": "^18.0.0",
     "react-native-pager-view": "^6.8.1",
     "react-native-pdf": "^7.0.3",

@@ -49,5 +49,6 @@ export const ROUTES = {
     DurationAndPrice: 'DurationAndPrice',
     PrescriptionListScreen: 'PrescriptionListScreen',
     BookNewService: 'BookNewService',
+    SuccessScreen: 'SuccessScreen',
   };
   

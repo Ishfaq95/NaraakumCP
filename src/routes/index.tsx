@@ -41,6 +41,7 @@ import BusinessHours from '../screens/MyProfileStack/BusinessHours';
 import DurationAndPrice from '../screens/MyProfileStack/DurationAndPrice';
 import PrescriptionListScreen from '../screens/MyClientsStack/PrescriptionListScreen';
 import BookingMainScreen from '../screens/BookService/BookingMainScreen';
+import SuccessScreen from '../screens/BookService/SuccessScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -92,6 +93,7 @@ const RootNavigator = () => {
       <Stack.Screen name={ROUTES.DurationAndPrice} component={DurationAndPrice} />
       <Stack.Screen name={ROUTES.PrescriptionListScreen} component={PrescriptionListScreen} />
       <Stack.Screen name={ROUTES.BookNewService} component={BookingMainScreen} />
+      <Stack.Screen name={ROUTES.SuccessScreen} component={SuccessScreen} />
     </Stack.Navigator>
   );
 };

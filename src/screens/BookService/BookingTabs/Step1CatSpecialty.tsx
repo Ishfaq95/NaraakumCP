@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { memo, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -13,8 +13,11 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import { bookingService } from '../../../services/api/bookingService';
 import { MediaBaseURL } from '../../../shared/utils/constants';
 import { SvgUri } from 'react-native-svg';
-import { useDispatch } from 'react-redux';
-import { setServices } from '../../../shared/redux/reducers/bookingReducer';
+import { useDispatch, useSelector } from 'react-redux';
+import { addCardItem, setSelectedUniqueId, setCategory as setCategoryRedux, setServices } from '../../../shared/redux/reducers/bookingReducer';
+import { generateUniqueId } from '../../../shared/services/service';
+import CustomBottomSheet from '../../../components/common/CustomBottomSheet';
+import LocationService from '../components/LocationService';
 
 type OfferedServiceCategory = {
   Id: string;
@@ -32,7 +35,8 @@ type Specialty = {
   ImagePath?: string;
 };
 
-const Step1 = () => {
+const Step1 = ({ handleNext, Patient }: { handleNext: () => void, Patient: any }) => {
+  const [isLocationBottomSheetVisible, setIsLocationBottomSheetVisible] = useState(false);
   const [offeredServicesCategories, setOfferedServicesCategories] = useState<
     OfferedServiceCategory[]
   >([]);
@@ -53,6 +57,9 @@ const Step1 = () => {
   const [loading, setLoading] = useState(false);
   const [offeredServices, setOfferedServices] = useState<any>(null);
   const [offeredServicesData, setOfferedServicesData] = useState<any>(null);
+  const existingCardItems = useSelector((state: any) => state.root.booking.cardItems);
+  const services = useSelector((state: any) => state.root.booking.services);
+  // const SelectedCardItem = existingCardItems.length > 0 ? existingCardItems.filter((item: any) => item.ItemUniqueId === category.Id) : [];
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -130,8 +137,6 @@ const Step1 = () => {
     }
   };
 
-  console.log('Offered Services Categories', offeredServicesCategories);
-
   const selectedCategory = useMemo(
     () =>
       offeredServicesCategories.find(
@@ -180,7 +185,21 @@ const Step1 = () => {
           )}
         </View>
         <View style={styles.categoryTextWrapper}>
-          <Text style={styles.categoryLabel}>Category</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Text style={styles.categoryLabel}>Category</Text>
+            <View
+              style={[styles.categoryBadge, isActive && styles.categoryBadgeActive]}
+            >
+              <Text
+                style={[
+                  styles.categoryBadgeText,
+                  isActive && styles.categoryBadgeTextActive,
+                ]}
+              >
+                {item.Price ?? 0}
+              </Text>
+            </View>
+          </View>
           <Text
             numberOfLines={2}
             style={[
@@ -191,21 +210,91 @@ const Step1 = () => {
             {item.TitlePlang}
           </Text>
         </View>
-        <View
-          style={[styles.categoryBadge, isActive && styles.categoryBadgeActive]}
-        >
-          <Text
-            style={[
-              styles.categoryBadgeText,
-              isActive && styles.categoryBadgeTextActive,
-            ]}
-          >
-            {item.Price ?? 0}
-          </Text>
-        </View>
+
       </TouchableOpacity>
     );
   };
+
+  const onPressSpecialty = (specialty: any) => {
+    const isItemExists = existingCardItems.find((item: any) => item.CatCategoryId === category.Id);
+    if (isItemExists) {
+      const updatedCardArray = [...existingCardItems];
+
+      // Find the index of the item that matches the selectedUniqueId
+      const selectedIndex = updatedCardArray.findIndex(item => item.CatCategoryId === category.Id);
+      const selectedItem = updatedCardArray[selectedIndex];
+
+      if (specialty.CatLevelId == 3) {
+        updatedCardArray[selectedIndex] = {
+          ...specialty,
+          "ItemUniqueId": selectedItem.ItemUniqueId,
+          "CatCategoryId": selectedItem.CatCategoryId,
+          "CatServiceId": specialty.Id,
+          "CatCategoryTypeId": selectedItem.CatCategoryTypeId,
+          "Quantity": 1,
+          // "OrderID": selectedItem.OrderID,
+          // "OrderDetailId": selectedItem.OrderDetailId,
+        }
+        // dispatch(setServices(null));
+
+        dispatch(addCardItem(updatedCardArray));
+      } else {
+        updatedCardArray[selectedIndex] = {
+          ...specialty,
+          "ItemUniqueId": selectedItem.ItemUniqueId,
+          "CatCategoryId": selectedItem.CatCategoryId,
+          "CatSpecialtyId": specialty.Id,
+          "CatCategoryTypeId": selectedItem.CatCategoryTypeId,
+          "Quantity": 1,
+          // "OrderID": selectedItem.OrderID,
+          // "OrderDetailId": selectedItem.OrderDetailId,
+        }
+        const servicesArray = services.filter((item: any) => item.CatLevelId != 3);
+        dispatch(setServices(servicesArray));
+        dispatch(addCardItem(updatedCardArray));
+      }
+    } else {
+      if (specialty.CatLevelId == 3) {
+        const cardItem = {
+          ...specialty,
+          "ItemUniqueId": generateUniqueId(),
+          "CatCategoryId": category.Id,
+          "CatServiceId": specialty.Id,
+          "CatCategoryTypeId": category.CatCategoryTypeId,
+          "Quantity": 1,
+        }
+        const tempCardItems = [...existingCardItems, cardItem];
+        // dispatch(setServices(null));
+        dispatch(addCardItem(tempCardItems));
+      } else {
+        const cardItem = {
+          ...specialty,
+          "ItemUniqueId": generateUniqueId(),
+          "CatCategoryId": category.Id,
+          "CatSpecialtyId": specialty.Id,
+          "CatCategoryTypeId": category.CatCategoryTypeId,
+          "Quantity": 1,
+        }
+        const tempCardItems = [...existingCardItems, cardItem];
+        const servicesArray = services.filter((item: any) => item.CatLevelId != 3);
+        dispatch(setServices(servicesArray));
+        dispatch(addCardItem(tempCardItems));
+      }
+    }
+  };
+
+  const onPressService = (service: any) => {
+    const cardItem = {
+      "ItemUniqueId": generateUniqueId(),
+      "CatCategoryId": category.Id,
+      "CatServiceId": service.Id,
+      "CatCategoryTypeId": category.CatCategoryTypeId,
+      "ServiceTitleSlang": service.TitleSlang,
+      "Quantity": 1,
+    }
+    const tempCardItems = [...existingCardItems, cardItem];
+    dispatch(addCardItem(tempCardItems));
+  }
 
   const getSanitizedImageUrl = (path: any) => {
     if (!path) return '';
@@ -214,7 +303,8 @@ const Step1 = () => {
   };
 
   const renderSpecialtyItem = ({ item }: { item: Specialty }) => {
-    const isSelected = item.Id === selectedSpecialtyId;
+    const selectedCardItem = existingCardItems.length > 0 ? existingCardItems.find((item: any) => item.CatCategoryId === category.Id) : null;
+    const isSelected = selectedCardItem?.CatSpecialtyId === item.Id || selectedCardItem?.CatServiceId === item.Id;
 
     const uri = getSanitizedImageUrl(item.ImagePath);
     const isSvg = uri.endsWith('.svg');
@@ -222,7 +312,7 @@ const Step1 = () => {
     return (
       <TouchableOpacity
         style={[styles.specialtyCard, isSelected && styles.specialtyCardActive]}
-        onPress={() => setSelectedSpecialtyId(item.Id)}
+        onPress={() => onPressSpecialty(item)}
         activeOpacity={0.85}
       >
         <View style={styles.specialtyLeftContent}>
@@ -262,41 +352,60 @@ const Step1 = () => {
     );
   };
 
+  const handleIncreaseQuantity = (item: any) => {
+    const isItemExists = existingCardItems.length > 0 ? existingCardItems.find((existingItem: any) => existingItem.CatServiceId == item.Id) : null;
+    if (!isItemExists) return; // Item doesn't exist, can't increase
+
+    const selectedIndex = existingCardItems.findIndex((existingItem: any) => existingItem.CatServiceId == item.Id);
+    if (selectedIndex === -1) return; // Item not found, can't update
+
+    const updatedCardArray = existingCardItems.map((cardItem: any, index: number) => {
+      if (index === selectedIndex) {
+        // Create a new object with updated quantity
+        return {
+          ...cardItem,
+          Quantity: (parseInt(cardItem.Quantity) || 0) + 1
+        };
+      }
+      return cardItem;
+    });
+
+    dispatch(addCardItem(updatedCardArray));
+  };
+
+  const handleDecreaseQuantity = (item: any) => {
+    const isItemExists = existingCardItems.length > 0 ? existingCardItems.find((existingItem: any) => existingItem.CatServiceId == item.Id) : null;
+    if (!isItemExists || (parseInt(isItemExists.Quantity) || 0) <= 1) return; // Can't decrease below 1
+
+    const selectedIndex = existingCardItems.findIndex((existingItem: any) => existingItem.CatServiceId == item.Id);
+    if (selectedIndex === -1) return; // Item not found, can't update
+
+    const updatedCardArray = existingCardItems.map((cardItem: any, index: number) => {
+      if (index === selectedIndex) {
+        // Create a new object with updated quantity
+        return {
+          ...cardItem,
+          Quantity: (parseInt(cardItem.Quantity) || 1) - 1
+        };
+      }
+      return cardItem;
+    });
+
+    dispatch(addCardItem(updatedCardArray));
+  };
+
+  const handleDelete = (item: any) => {
+    const updatedCardArray = existingCardItems.filter((cardItem: any) => cardItem.CatServiceId != item.Id);
+    dispatch(addCardItem(updatedCardArray));
+  };
+
+  console.log("existingCardItems", existingCardItems);
+
   const renderOfferedServiceItem = ({ item }: { item: any }) => {
-    const isSelected = selectedServiceIds.includes(item.Id);
-    const quantity = serviceQuantities[item.Id] || 1;
-
-    const handleSelect = () => {
-      if (!isSelected) {
-        setSelectedServiceIds(prev => [...prev, item.Id]);
-        setServiceQuantities(prev => ({ ...prev, [item.Id]: 1 }));
-      }
-    };
-
-    const handleIncreaseQuantity = () => {
-      setServiceQuantities(prev => ({
-        ...prev,
-        [item.Id]: (prev[item.Id] || 1) + 1,
-      }));
-    };
-
-    const handleDecreaseQuantity = () => {
-      if (quantity > 1) {
-        setServiceQuantities(prev => ({
-          ...prev,
-          [item.Id]: prev[item.Id] - 1,
-        }));
-      }
-    };
-
-    const handleDelete = () => {
-      setSelectedServiceIds(prev => prev.filter(id => id !== item.Id));
-      setServiceQuantities(prev => {
-        const updated = { ...prev };
-        delete updated[item.Id];
-        return updated;
-      });
-    };
+    const isItemExists = existingCardItems.length > 0 ? existingCardItems.find((existingItem: any) => existingItem.CatServiceId == item.Id) : false;
+    const isSelected = isItemExists ? true : false;
+    console.log("isItemExists", isItemExists);
+    const quantity = isItemExists ? isItemExists.Quantity : 1;
 
     return (
       <View
@@ -313,7 +422,7 @@ const Step1 = () => {
             <View style={styles.quantityControls}>
               <TouchableOpacity
                 style={styles.quantityButton}
-                onPress={handleIncreaseQuantity}
+                onPress={() => handleIncreaseQuantity(item)}
                 activeOpacity={0.7}
               >
                 <Ionicons name="add" size={20} color="#FFFFFF" />
@@ -325,7 +434,7 @@ const Step1 = () => {
                   styles.quantityButtonMinus,
                   quantity === 1 && styles.quantityButtonDisabled,
                 ]}
-                onPress={handleDecreaseQuantity}
+                onPress={() => handleDecreaseQuantity(item)}
                 disabled={quantity === 1}
                 activeOpacity={0.7}
               >
@@ -334,7 +443,7 @@ const Step1 = () => {
             </View>
             <TouchableOpacity
               style={styles.deleteButton}
-              onPress={handleDelete}
+              onPress={() => handleDelete(item)}
               activeOpacity={0.7}
             >
               <Ionicons name="trash-outline" size={20} color="#FF3B30" />
@@ -344,7 +453,7 @@ const Step1 = () => {
           /* Unselected State: Select Button */
           <TouchableOpacity
             style={styles.selectButton}
-            onPress={handleSelect}
+            onPress={() => onPressService(item)}
             activeOpacity={0.8}
           >
             <Text style={styles.selectButtonText}>Select</Text>
@@ -354,25 +463,59 @@ const Step1 = () => {
     );
   };
 
+  const onNextPress = () => {
+    const selectedItem = existingCardItems[existingCardItems.length - 1];
+    if (selectedItem.CatCategoryId != '42') {
+      setIsLocationBottomSheetVisible(true);
+
+    } else {
+
+      onPressContinue();
+      
+    }
+  };
+
+  const onPressContinue = () => {
+    setIsLocationBottomSheetVisible(false);
+    const selectedItem = existingCardItems[existingCardItems.length - 1];
+    const selectedCategory = offeredServicesCategories.find((category: any) => category.Id == selectedItem.CatCategoryId);
+      console.log("selectedCategory", selectedCategory);
+      dispatch(setCategoryRedux(selectedCategory));
+      if (selectedItem.CatCategoryId == '42' || selectedItem.CatCategoryId == '32') {
+        if (selectedItem.CatServiceId) {
+          dispatch(setServices(null))
+        }
+      } else {
+        dispatch(setServices(null))
+      }
+
+      const selectedUniqueId = existingCardItems[existingCardItems.length - 1].ItemUniqueId
+      dispatch(setSelectedUniqueId(selectedUniqueId))
+      handleNext();
+  }
+
   const renderListHeader = () => (
     <View style={styles.listHeader}>
       <View style={styles.categoryHeaderRow}>
         <Text style={styles.categoryHeaderTitle}>Category</Text>
         <View style={styles.categoryHeaderLine} />
       </View>
-      <FlatList
-        horizontal
-        data={offeredServicesCategories}
-        keyExtractor={item => item.Id}
-        renderItem={renderCategoryCard}
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.categoriesList}
-        ListEmptyComponent={() =>
-          !loadingCategories ? (
-            <Text style={styles.emptyLabel}>No categories available</Text>
-          ) : null
-        }
-      />
+      <View style={{ paddingHorizontal: 16 }}>
+        <FlatList
+          horizontal
+          data={offeredServicesCategories}
+          keyExtractor={item => item.Id}
+          renderItem={renderCategoryCard}
+          showsHorizontalScrollIndicator={true}
+          indicatorStyle="black"
+          contentContainerStyle={styles.categoriesList}
+          ListEmptyComponent={() =>
+            !loadingCategories ? (
+              <Text style={styles.emptyLabel}>No categories available</Text>
+            ) : null
+          }
+        />
+      </View>
 
       <View style={styles.specialtyHeader}>
         <Text style={styles.specialtyHeaderTitle}>
@@ -388,10 +531,10 @@ const Step1 = () => {
       <TouchableOpacity style={styles.secondaryButton} activeOpacity={0.85}>
         <Text
           style={styles.secondaryButtonText}
-        >{`Cart (${cartItemCount})`}</Text>
+        >{`Cart (${existingCardItems.length})`}</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.primaryButton} activeOpacity={0.85}>
-        <Text style={styles.primaryButtonText}>Next</Text>
+      <TouchableOpacity onPress={onNextPress} disabled={existingCardItems.length === 0} style={styles.primaryButton} activeOpacity={0.85}>
+        <Text style={[styles.primaryButtonText, existingCardItems.length === 0 && styles.primaryButtonTextDisabled]}>Next</Text>
       </TouchableOpacity>
     </View>
   );
@@ -434,11 +577,22 @@ const Step1 = () => {
         )}
       </View>
       {renderBottomBar()}
+
+
+      <CustomBottomSheet
+        visible={isLocationBottomSheetVisible}
+        onClose={() => setIsLocationBottomSheetVisible(false)}
+        maxHeight="90%"
+        backdropClickable={true}
+        showHandle={false}
+      >
+       <LocationService onPressLocation={() => onPressContinue()} />
+      </CustomBottomSheet>
     </SafeAreaView>
   );
 };
 
-export default Step1;
+export default memo(Step1);
 
 const styles = StyleSheet.create({
   safeArea: {
@@ -457,7 +611,7 @@ const styles = StyleSheet.create({
   listContent: {
     paddingHorizontal: 16,
     paddingTop: 8,
-    paddingBottom: 140,
+    paddingBottom: 40,
   },
   listHeader: {
     marginBottom: 12,
@@ -466,6 +620,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 10,
+    paddingHorizontal: 16,
   },
   categoryHeaderTitle: {
     fontSize: 14,
@@ -488,7 +643,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
     borderWidth: 1,
     borderColor: '#D2E7E4',
-    width: 180,
+    width: 220,
     flexDirection: 'row',
     alignItems: 'center',
   },
@@ -525,7 +680,7 @@ const styles = StyleSheet.create({
     color: '#6D7A80',
   },
   categoryTitle: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '600',
     color: '#6D7A80',
   },
@@ -533,8 +688,8 @@ const styles = StyleSheet.create({
     color: '#00A79D',
   },
   categoryBadge: {
-    width: 34,
-    height: 34,
+    width: 30,
+    height: 30,
     borderRadius: 17,
     borderWidth: 1,
     borderColor: '#A1CACA',
@@ -557,6 +712,7 @@ const styles = StyleSheet.create({
   specialtyHeader: {
     marginTop: 20,
     marginBottom: 12,
+    paddingHorizontal: 16,
   },
   specialtyHeaderTitle: {
     fontSize: 16,
@@ -725,10 +881,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   quantityButtonMinus: {
-    backgroundColor: '#D1D5DB',
+    // backgroundColor: '#D1D5DB',
   },
   quantityButtonDisabled: {
-    opacity: 0.5,
+    backgroundColor: '#D1D5DB',
   },
   quantityText: {
     fontSize: 16,
@@ -753,5 +909,9 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     color: '#00A79D',
+  },
+  primaryButtonTextDisabled: {
+    color: '#fff',
+    opacity: 0.5,
   },
 });

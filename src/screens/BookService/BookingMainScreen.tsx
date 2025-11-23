@@ -13,19 +13,32 @@ import Stepper from '../../components/Stapper';
 import Step1CatSpecialty from './BookingTabs/Step1CatSpecialty';
 import Step2DoctorListing from './BookingTabs/Step2DoctorListing';
 import Step3ReviewOrder from './BookingTabs/Step3ReviewOrder';
+import { addCardItem } from '../../shared/redux/reducers/bookingReducer';
 
 const BookingScreen = ({ navigation, route }: any) => {
+    const { Patient } = route.params;
     const { t } = useTranslation();
     const [currentStep, setCurrentStep] = useState(1);
     const user = useSelector((state: any) => state.root.user.user);
+    console.log('Patient', Patient);
     const dispatch = useDispatch();
     const steps = [1, 2, 3];
 
+    const handleNext = () => {
+        console.log('handleNext');
+        if(currentStep == 3){
+            dispatch(addCardItem([]))
+            navigation.navigate(ROUTES.SuccessScreen);
+        }else{
+            setCurrentStep(currentStep + 1);
+        }
+    };
+
     const renderStep = () => {
         switch (currentStep) {
-            case 1: return <Step1CatSpecialty />;
-            case 2: return <Step2DoctorListing />;
-            case 3: return <Step3ReviewOrder />;
+            case 1: return <Step1CatSpecialty handleNext={handleNext} Patient={Patient} />;
+            case 2: return <Step2DoctorListing handleNext={handleNext} />;
+            case 3: return <Step3ReviewOrder handleNext={handleNext} Patient={Patient} />;
             default: return null;
         }
     };
@@ -40,7 +53,12 @@ const BookingScreen = ({ navigation, route }: any) => {
     );
 
     const backButtonPress = () => {
+        dispatch(addCardItem([]))
         navigation.goBack();
+    };
+
+    const handleStepPress = (step: number) => {
+        setCurrentStep(step);
     };
 
     return (
@@ -53,7 +71,7 @@ const BookingScreen = ({ navigation, route }: any) => {
             >
                 {renderHeader()}
                 <View style={{ backgroundColor: '#fff' }}>
-                    <Stepper currentStep={currentStep} steps={steps} />
+                    <Stepper currentStep={currentStep} steps={steps} onStepPress={handleStepPress} />
 
                 </View>
                 <View style={styles.content}>

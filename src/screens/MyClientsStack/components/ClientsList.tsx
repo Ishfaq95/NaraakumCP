@@ -107,7 +107,6 @@ const ClientsList: React.FC<{ onCountChange?: (n: number) => void }> = ({ onCoun
           <View style={styles.separator} />
           
           <TouchableOpacity onPress={() => onSendMessagePress()} style={styles.menuItem}>
-            {/* <Ionicons name="chatbubble" size={20} color="#00A19D" /> */}
             <Image
               source={require('../../../assets/icons/messageIcon.png')}
               style={styles.icon}

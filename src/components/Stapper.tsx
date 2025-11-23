@@ -1,9 +1,9 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import CheckIcon from '../assets/icons/CheckIcon';
 import { globalTextStyles } from '../styles/globalStyles';
 
-const Stepper = ({ currentStep,steps }: { currentStep: number,steps: any }) => {
+const Stepper = ({ currentStep,steps, onStepPress }: { currentStep: number,steps: any, onStepPress: (step: number) => void }) => {
   return (
     <View style={styles.container}>
       {steps?.map((step:any, idx:any) => {
@@ -11,6 +11,7 @@ const Stepper = ({ currentStep,steps }: { currentStep: number,steps: any }) => {
         const isActive = step === currentStep;
         return (
           <React.Fragment key={step}>
+            <TouchableOpacity disabled={step != 1} onPress={() => onStepPress(step)}>
             <View style={[
               styles.circle,
               isCompleted && styles.completed,
@@ -25,6 +26,7 @@ const Stepper = ({ currentStep,steps }: { currentStep: number,steps: any }) => {
                 ]}>{step}</Text>
               )}
             </View>
+            </TouchableOpacity>
             {idx < steps.length - 1 && (
               <View style={styles.line} />
             )}

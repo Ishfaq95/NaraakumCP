@@ -57,3 +57,43 @@ export function encryptText(text, key) {
   const encrypted = CryptoJS.AES.encrypt(text, key).toString();
   return btoa(encrypted);
 }
+
+export const generateUniqueId = () => {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let id = '';
+  for (let i = 0; i < 6; i++) {
+    id += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return id;
+};
+
+export const convertArabicTimeTo24Hour = (timeString: string): string => {
+  if (!timeString) return timeString;
+
+  const parts = timeString.trim().split(' ');
+  if (parts.length < 2) {
+    return timeString;
+  }
+
+  const timePart = parts[0];
+  const periodPart = parts[1];
+
+  const [hours, minutes] = timePart.split(':').map(Number);
+
+  let hour24 = hours;
+
+  if (periodPart === 'ص') {
+    if (hours === 12) {
+      hour24 = 0;
+    }
+  } else if (periodPart === 'م') {
+    if (hours !== 12) {
+      hour24 = hours + 12;
+    }
+  } else {
+  }
+
+  const result = `${hour24.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+
+  return result;
+};

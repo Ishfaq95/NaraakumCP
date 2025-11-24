@@ -25,6 +25,7 @@ import FinalDetailsStep from '../../components/AuthModule/FinalDetailsStep';
 import SuccessScreen from '../../components/AuthModule/SuccessScreen';
 import { setUser } from '../../shared/redux/reducers/userReducer';
 import { useDispatch } from 'react-redux';
+import { useNavigation } from '@react-navigation/native';
 
 const MIN_HEIGHT = 550; // Absolute minimum height
 const OPTIMAL_HEIGHT = 750; // Height for medium screens
@@ -49,7 +50,7 @@ const SignUpScreen = () => {
     const [userInfo, setUserInfo] = useState<any>(null);
     const [userData, setUserData] = useState<any>(null);
     const { t } = useTranslation();
-
+    const navigation = useNavigation();
     const handleProviderSelect = (providerId: string) => {
         setSelectedProvider(providerId);
     };
@@ -81,6 +82,9 @@ const SignUpScreen = () => {
     };
 
     const handlePrevious = () => {
+        if(currentStep === 1){
+            navigation.goBack();
+        }
         if (currentStep > 1) {
             if (currentStep === 3) {
                 setOtpVerified(false);

@@ -35,16 +35,23 @@ const WelcomeScreen: React.FC = () => {
 
     return (
         <SafeAreaView style={styles.container}>
+            <View style={{width: '100%', alignItems: 'flex-end',paddingHorizontal: 16}}>
+            <Image source={require('../../assets/images/lang.png')} style={{
+                    width: 40,
+                    height: 40,
+                    resizeMode: 'contain',
+                }} />
+            </View>
             <View style={styles.logoWrap}>
-            <Image source={require('../../assets/icons/logo.png')} style={{
-                    width: width * 0.98,
-                    height: width * 0.98 * (188 / 375),
+                <Image source={require('../../assets/icons/logo.png')} style={{
+                    width: width * 0.70,
+                    height: width * 0.70 * (188 / 375),
                     resizeMode: 'contain',
                 }} />
             </View>
 
             <View style={styles.illustrationWrap}>
-                <Image source={require('../../assets/icons/doctorvector.png')} style={{
+                <Image source={require('../../assets/images/doctorvector.png')} style={{
                     width: width * 0.98,
                     height: width * 0.98 * (188 / 375),
                     resizeMode: 'contain',
@@ -59,18 +66,23 @@ const WelcomeScreen: React.FC = () => {
                     style={{
                         width: '100%',
                         height: '100%',
-                        justifyContent: 'center',
-                        alignItems: 'center',
+                        // justifyContent: 'center',
+                        // alignItems: 'center',
                     }}
                 >
                     <View style={styles.actionsContainer}>
                         <TouchableOpacity activeOpacity={0.8} style={styles.loginButton} onPress={() => navigation.navigate(ROUTES.Login as never)}>
                             <Text style={styles.loginButtonText}>{t('login')}</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity activeOpacity={0.8} style={styles.createButton} onPress={() => {navigation.navigate(ROUTES.SignUp as never)}}>
+                        <TouchableOpacity activeOpacity={0.8} style={styles.createButton} onPress={() => { navigation.navigate(ROUTES.SignUp as never) }}>
                             <Text style={styles.createButtonText}>{t('create_new_account')}</Text>
                         </TouchableOpacity>
+                        
                     </View>
+                    <View style={styles.bottomContainer}>
+                            <Text style={styles.bottomText}>{'Version 1.0.0'}</Text>
+                        </View>
+
 
                 </ImageBackground>
 
@@ -96,17 +108,18 @@ const styles = StyleSheet.create({
     illustrationWrap: {
         width: '100%',
         marginBottom: -30,
-        alignItems:"center"
+        alignItems: "center"
     },
     actions: {
         width: '100%',
-        height: '25%',
+        height: '30%',
         justifyContent: 'flex-end',
         alignItems: 'center',
     },
     actionsContainer: {
         width: '100%',
-        height: '100%',
+        height: '85%',
+        paddingTop: 16,
         justifyContent: 'center',
         alignItems: 'center',
         // paddingHorizontal: 16,
@@ -140,10 +153,10 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     loginButton: {
-        backgroundColor: '#22A6A7',
+        backgroundColor: '#239EA0',
         borderRadius: 8,
         width: width * 0.90,
-        paddingVertical: 14,
+        paddingVertical: 10,
         alignItems: 'center',
         marginBottom: 12,
     },
@@ -152,16 +165,24 @@ const styles = StyleSheet.create({
     },
     createButton: {
         borderWidth: 1.5,
-        borderColor: '#22A6A7',
+        borderColor: '#239EA0',
         borderRadius: 8,
         width: width * 0.90,
-        paddingVertical: 14,
+        paddingVertical: 10,
         alignItems: 'center',
-        marginBottom: 16,
+        // marginBottom: 16,
     },
     createButtonText: {
         ...globalTextStyles.buttonMedium,
-        color: '#22A6A7',
+        color: '#239EA0',
+    },
+    bottomContainer: {
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    bottomText: {
+        ...globalTextStyles.bodySmall,
+        color: '#ABABAB',
     },
 });
 

@@ -7,6 +7,7 @@ import {
     Image,
     I18nManager,
     ScrollView,
+    TouchableWithoutFeedback,
 } from 'react-native';
 import { globalTextStyles } from '../../styles/globalStyles';
 import { authService } from '../../services/api/authService';
@@ -29,6 +30,7 @@ const ServiceProviderSelection: React.FC<ServiceProviderSelectionProps> = ({
     const isFocused = useIsFocused();
     const isRTL = I18nManager.isRTL;
     const [serviceProviders, setServiceProviders] = useState<any[]>([]);
+    console.log("selectedProvider", selectedProvider);
 
     useEffect(() => {
         if (isFocused) {
@@ -50,9 +52,16 @@ const ServiceProviderSelection: React.FC<ServiceProviderSelectionProps> = ({
     return (
         <View style={styles.selectionContainer}>
             <Text style={styles.selectionTitle}>Service Provider Type</Text>
-            <ScrollView>
-                <View style={styles.cardsGrid}>
-                    {serviceProviders.map((provider) => {
+            <ScrollView 
+                style={styles.scrollViewContainer}
+                contentContainerStyle={styles.scrollViewContent}
+                scrollEnabled={true}
+                showsVerticalScrollIndicator={true}
+                bounces={true}
+            >
+                <TouchableWithoutFeedback>
+                    <View style={styles.cardsGrid}>
+                        {serviceProviders.map((provider) => {
                         return (
                             <TouchableOpacity
                                 key={provider.Id}
@@ -67,7 +76,7 @@ const ServiceProviderSelection: React.FC<ServiceProviderSelectionProps> = ({
                                     selectedProvider === provider.Id && styles.selectionIndicatorActive
                                 ]}>
                                     {selectedProvider === provider.Id && (
-                                        <Text style={styles.checkmark}>✓</Text>
+                                        <Ionicons name="checkmark-sharp" size={20} color="#fff" />
                                     )}
                                 </View>
 
@@ -88,10 +97,11 @@ const ServiceProviderSelection: React.FC<ServiceProviderSelectionProps> = ({
                             </TouchableOpacity>
                         );
                     })}
-                </View>
+                    </View>
+                </TouchableWithoutFeedback>
             </ScrollView>
             <View style={styles.navigationContainer}>
-                <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
+                <TouchableOpacity disabled={!selectedProvider} style={[styles.nextButton, !selectedProvider && styles.nextButtonDisabled]} onPress={handleNext}>
                     <Text style={styles.nextButtonText}>{`Next 1/4`}</Text>
                     <Ionicons name="arrow-forward" size={22} color="#fff" />
                 </TouchableOpacity>
@@ -103,14 +113,22 @@ const ServiceProviderSelection: React.FC<ServiceProviderSelectionProps> = ({
 const styles = StyleSheet.create({
     selectionContainer: {
         flex: 1,
-        paddingHorizontal: 16,
+        // paddingHorizontal: 16,
     },
     selectionTitle: {
         ...globalTextStyles.bodySmall,
         color: '#666',
         fontWeight: '600',
-        marginBottom: 24,
+        marginTop: 16,
+        marginBottom: 22,
         textAlign: I18nManager.isRTL ? 'right' : 'left',
+    },
+    scrollViewContainer: {
+        flex: 1,
+    },
+    scrollViewContent: {
+        paddingBottom: 20,
+        minHeight: '100%',
     },
     cardsGrid: {
         flexDirection: 'row',
@@ -123,7 +141,7 @@ const styles = StyleSheet.create({
         aspectRatio: 1,
         backgroundColor: '#fff',
         borderRadius: 12,
-        borderWidth: 2,
+        borderWidth: 1,
         borderColor: '#E0E0E0',
         padding: 16,
         marginBottom: 16,
@@ -149,8 +167,8 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     selectionIndicatorActive: {
-        backgroundColor: '#20B2AA',
-        borderColor: '#20B2AA',
+        backgroundColor: '#239EA0',
+        borderColor: '#239EA0',
     },
     checkmark: {
         color: '#fff',
@@ -175,16 +193,16 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     providerNameSelected: {
-        color: '#20B2AA',
+        color: '#239EA0',
     },
     navigationContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginVertical: 10,
+        marginVertical: 8,
     },
     previousButton: {
         padding: 10,
-        backgroundColor: '#20B2AA',
+        backgroundColor: '#239EA0',
         borderRadius: 8,
     },
     previousButtonText: {
@@ -193,15 +211,14 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     nextButton: {
-        backgroundColor: '#20B2AA',
+        backgroundColor: '#239EA0',
         borderRadius: 12,
-        paddingVertical: 16,
-        paddingHorizontal: 24,
+        paddingVertical: 10,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        flex: 1,
-        marginLeft: 12,
+        width: '100%',
+        // marginLeft: 12,
     },
     nextButtonText: {
         color: '#fff',
@@ -213,6 +230,9 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 18,
         fontWeight: 'bold',
+    },
+    nextButtonDisabled: {
+        backgroundColor: '#E0E0E0',
     },
 });
 

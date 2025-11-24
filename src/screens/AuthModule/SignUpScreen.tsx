@@ -166,7 +166,7 @@ const SignUpScreen = () => {
                     </View> : <View style={styles.contentContainer}>
                         {/* Fixed Header */}
                         <View style={styles.headerContainer}>
-                            <Text style={globalTextStyles.h3}>
+                            <Text style={globalTextStyles.h2}>
                                 {t('create_new_account')}
                             </Text>
                         </View>

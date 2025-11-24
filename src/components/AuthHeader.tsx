@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, TouchableOpacity, Text, StyleSheet, I18nManager } from 'react-native';
+import { View, TouchableOpacity, Text, StyleSheet, I18nManager, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Svg, { Path } from 'react-native-svg';
 import { changeLanguage } from '../utils/language/i18nextConfig';
@@ -42,7 +42,11 @@ const AuthHeader = ({
       </TouchableOpacity>
       <View style={{ flex: 1 }} />
       <TouchableOpacity disabled={true} style={styles.langBtn} onPress={onChangeLanguage}>
-        {/* <Text style={styles.langText}>{I18nManager.isRTL ? 'En' : 'Ar'}</Text> */}
+        <Image source={require('../assets/images/lang.png')} style={{
+          width: 40,
+          height: 40,
+          resizeMode: 'contain',
+        }} />
       </TouchableOpacity>
     </View>
   );
@@ -54,22 +58,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: '#eaf6f6',
-    paddingTop: 16,
+    // paddingTop: 16,
     paddingHorizontal: 16,
     paddingBottom: 8,
     minHeight: 56,
   },
   backBtn: {
-    padding: 4,
+    // padding: 4,
   },
   langBtn: {
     // backgroundColor: '#22A6A7',
     borderRadius: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    minWidth: 36,
     alignItems: 'center',
     justifyContent: 'center',
+    marginRight: 10,
   },
   langText: {
     ...globalTextStyles.buttonMedium,

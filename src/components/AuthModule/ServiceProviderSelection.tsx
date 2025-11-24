@@ -9,7 +9,7 @@ import {
     ScrollView,
     TouchableWithoutFeedback,
 } from 'react-native';
-import { globalTextStyles } from '../../styles/globalStyles';
+import { CAIRO_FONT_FAMILY, globalTextStyles } from '../../styles/globalStyles';
 import { authService } from '../../services/api/authService';
 import { useIsFocused } from '@react-navigation/native';
 import { MediaBaseURL } from '../../shared/utils/constants';
@@ -116,12 +116,12 @@ const styles = StyleSheet.create({
         // paddingHorizontal: 16,
     },
     selectionTitle: {
-        ...globalTextStyles.bodySmall,
-        color: '#666',
+        fontSize: 14,
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
         fontWeight: '600',
+        color: '#666',
         marginTop: 16,
         marginBottom: 22,
-        textAlign: I18nManager.isRTL ? 'right' : 'left',
     },
     scrollViewContainer: {
         flex: 1,
@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
     providerName: {
         ...globalTextStyles.bodyMedium,
         fontWeight: '600',
-        color: '#666',
+        color: '#000',
         textAlign: 'center',
     },
     providerNameSelected: {

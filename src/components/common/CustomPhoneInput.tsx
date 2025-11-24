@@ -13,6 +13,7 @@ import {
   Platform,
   I18nManager,
 } from 'react-native';
+import CountryFlag from 'react-native-country-flag';
 import { globalTextStyles } from '../../styles/globalStyles';
 import CustomBottomSheet from './CustomBottomSheet';
 
@@ -1070,7 +1071,9 @@ const CustomPhoneInput: React.FC<CustomPhoneInputProps> = ({
       onPress={() => handleCountrySelect(item)}
     >
       <View style={styles.countryItemContent}>
-        <Text style={styles.countryFlagModal}>{item.flag}</Text>
+        <View style={[styles.flagContainer, {marginLeft: 12}]}>
+          <CountryFlag isoCode={item.code} size={16} />
+        </View>
         <View style={styles.countryInfo}>
           <Text style={styles.countryName}>{item.name}</Text>
           <Text style={styles.countryNameAr}>{item.nameAr}</Text>
@@ -1092,7 +1095,9 @@ const CustomPhoneInput: React.FC<CustomPhoneInputProps> = ({
           }}
           disabled={disabled}
         >
-          <Text style={styles.countryFlag}>{selectedCountry.flag}</Text>
+          <View style={styles.flagContainer}>
+            <CountryFlag isoCode={selectedCountry.code} size={16} />
+          </View>
           <Text style={styles.countryCode}>{selectedCountry.dialCode}</Text>
           <Text style={styles.dropdownIcon}>▼</Text>
         </TouchableOpacity>
@@ -1106,7 +1111,7 @@ const CustomPhoneInput: React.FC<CustomPhoneInputProps> = ({
           style={[styles.phoneInput, Platform.OS === 'android' && styles.androidPhoneInput]}
           value={value}
           onChangeText={handlePhoneNumberChange}
-          placeholder={placeholder}
+          placeholder={'00 000 0000'}
           placeholderTextColor="#999"
           keyboardType="phone-pad"
           maxLength={selectedCountry.pattern.length}
@@ -1118,7 +1123,7 @@ const CustomPhoneInput: React.FC<CustomPhoneInputProps> = ({
       <CustomBottomSheet
         visible={showCountryModal}
         onClose={() => setShowCountryModal(false)}
-        height="65%"
+        maxHeight="65%"
         backdropClickable={true}
         showHandle={true}
       >
@@ -1183,7 +1188,7 @@ const styles = StyleSheet.create({
   countryCode: {
     ...globalTextStyles.bodyMedium,
     fontWeight: '600',
-    color: '#333',
+    color: '#000',
     marginLeft: 4,
   },
   dropdownIcon: {
@@ -1265,9 +1270,11 @@ const styles = StyleSheet.create({
     flexDirection: I18nManager.isRTL?'row-reverse':'row',
     alignItems: 'center',
   },
-  countryFlagModal: {
-    fontSize: 24,
-    marginLeft: 12,
+  flagContainer: {
+    marginLeft: 6,
+    marginRight: 4,
+    overflow: 'hidden',
+    borderRadius: 2,
   },
   countryInfo: {
     flex: 1,

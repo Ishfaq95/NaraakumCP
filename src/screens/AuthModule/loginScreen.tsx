@@ -374,12 +374,12 @@ const LoginScreen = () => {
               styles.contentContainer
             ]}>
               <View style={{ height: 100, width: '100%', borderRadius: 12, padding: 16, alignItems: 'flex-start', justifyContent: 'flex-end' }}>
-                <Text style={globalTextStyles.h3}>
+                <Text style={globalTextStyles.h2}>
                   {t('login')}
                 </Text>
               </View>
               <View style={{ flex: 1, backgroundColor: '#fff', borderRadius: 20, paddingHorizontal: 16, paddingTop: 20 }}>
-                <Text style={[globalTextStyles.bodySmall, { color: '#666', textAlign: 'left' }]}>{t('login_with')}</Text>
+                <Text style={[{ textAlign: 'left', ...globalTextStyles.buttonMedium,color: '#666' }]}>{t('login_with')}</Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 10 }}>
                   <TouchableOpacity onPress={() => setActiveTab('mobile')} style={[styles.tab, activeTab === 'mobile' && styles.activeTab]}>
                     <Text style={[styles.tabText, activeTab === 'mobile' && styles.activeTabText]}>{t('phone_username')}</Text>
@@ -687,30 +687,32 @@ const styles = StyleSheet.create({
     height: 18,
     borderRadius: 4,
     borderWidth: 2,
-    borderColor: '#008080',
+    borderColor: '#666666',
     marginRight: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },
   checkedBox: {
     backgroundColor: '#008080',
+    borderColor: '#008080',
   },
   rememberText: {
     ...globalTextStyles.caption,
-    color: '#008080',
+    color: '#666666',
     fontFamily: globalTextStyles.h5.fontFamily,
   },
   forgotPassword: {
-    ...globalTextStyles.caption,
+    ...globalTextStyles.label,
+    textDecorationLine: 'underline',
     color: '#008080',
-    fontFamily: globalTextStyles.h5.fontFamily,
+    fontFamily: globalTextStyles.h4.fontFamily,
   },
   loginButton: {
     backgroundColor: '#008080',
     borderRadius: 8,
     padding: 12,
     alignItems: 'center',
-    marginTop: 10,
+    marginTop: 14,
     elevation: 2,
     zIndex: 1,
   },

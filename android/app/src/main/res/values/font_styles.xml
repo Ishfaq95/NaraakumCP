@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Cairo font family -->
+    <style name="CairoRegular" parent="android:TextAppearance">
+        <item name="android:fontFamily">@font/cairo_regular</item>
+    </style>
+    <style name="CairoLight" parent="android:TextAppearance">
+        <item name="android:fontFamily">@font/cairo_light</item>
+    </style>
+    <style name="CairoMedium" parent="android:TextAppearance">
+        <item name="android:fontFamily">@font/cairo_medium</item>
+    </style>
+    <style name="CairoSemiBold" parent="android:TextAppearance">
+        <item name="android:fontFamily">@font/cairo_semibold</item>
+    </style>
+    <style name="CairoBold" parent="android:TextAppearance">
+        <item name="android:fontFamily">@font/cairo_bold</item>
+    </style>
+    <style name="CairoExtraBold" parent="android:TextAppearance">
+        <item name="android:fontFamily">@font/cairo_extrabold</item>
+    </style>
+    <style name="CairoBlack" parent="android:TextAppearance">
+        <item name="android:fontFamily">@font/cairo_black</item>
+    </style>
+</resources>

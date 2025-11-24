@@ -183,6 +183,7 @@ const styles = StyleSheet.create({
     bottomText: {
         ...globalTextStyles.bodySmall,
         color: '#ABABAB',
+        fontFamily: 'Cairo-Medium',
     },
 });
 

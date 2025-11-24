@@ -2,6 +2,34 @@
   "migIndex": 1,
   "data": [
     {
+      "path": "src/assets/fonts/Cairo-Black.ttf",
+      "sha1": "121c43d7cd98f9bbfd5118c30ed39a008a6dd412"
+    },
+    {
+      "path": "src/assets/fonts/Cairo-Bold.ttf",
+      "sha1": "10fe90fb4ad3cc769c05fc52a31c7bcdc9192201"
+    },
+    {
+      "path": "src/assets/fonts/Cairo-ExtraBold.ttf",
+      "sha1": "536b44d9afef343eeddb53a4cca73ce8c2957153"
+    },
+    {
+      "path": "src/assets/fonts/Cairo-Light.ttf",
+      "sha1": "88fe243461a16e2921854c049b74345a63cc932c"
+    },
+    {
+      "path": "src/assets/fonts/Cairo-Medium.ttf",
+      "sha1": "4c97527251533247095d036af04957d632648642"
+    },
+    {
+      "path": "src/assets/fonts/Cairo-Regular.ttf",
+      "sha1": "cdcb12e9107216e6c2721bc4e4fbbb7e5b442650"
+    },
+    {
+      "path": "src/assets/fonts/Cairo-SemiBold.ttf",
+      "sha1": "734518dbd9ff9506f94589aa35ab81bcfcfaeedb"
+    },
+    {
       "path": "node_modules/react-native-vector-icons/Fonts/AntDesign.ttf",
       "sha1": "4e77868439280fb434d4697c7b911271406c81f3"
     },

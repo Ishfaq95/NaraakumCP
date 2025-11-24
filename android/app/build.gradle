@@ -86,6 +86,7 @@ android {
     compileSdk rootProject.ext.compileSdkVersion
 
     namespace "com.naraakum_cp"
+    
     defaultConfig {
         applicationId "com.naraakum_cp"
         minSdkVersion rootProject.ext.minSdkVersion

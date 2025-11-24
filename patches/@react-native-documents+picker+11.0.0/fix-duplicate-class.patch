@@ -1,0 +1,16 @@
+diff --git a/android/build.gradle b/android/build.gradle
+index 7b3c0a7..4e8c0a7 100644
+--- a/android/build.gradle
++++ b/android/build.gradle
+@@ -59,6 +59,11 @@ android {
+     defaultConfig {
+         minSdkVersion safeExtGet('minSdkVersion', 21)
+         targetSdkVersion safeExtGet('targetSdkVersion', 33)
++        
++        // Fix for duplicate class error
++        packagingOptions {
++            exclude 'com/reactnativedocumentpicker/RNDocumentPickerPackage.class'
++        }
+     }
+     
+     buildTypes {

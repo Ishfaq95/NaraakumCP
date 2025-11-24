@@ -1,0 +1,17 @@
+diff --git a/node_modules/@react-native-documents/picker/android/build.gradle b/node_modules/@react-native-documents/picker/android/build.gradle
+index 536f07e..400abbc 100644
+--- a/node_modules/@react-native-documents/picker/android/build.gradle
++++ b/node_modules/@react-native-documents/picker/android/build.gradle
+@@ -53,6 +53,12 @@ android {
+         minSdkVersion getExtOrIntegerDefault('minSdkVersion')
+         targetSdkVersion getExtOrIntegerDefault('targetSdkVersion')
+         buildConfigField "boolean", "IS_NEW_ARCHITECTURE_ENABLED", isNewArchitectureEnabled().toString()
++        
++        // Fix for duplicate class error
++        packagingOptions {
++            exclude 'com/reactnativedocumentpicker/RNDocumentPickerPackage.class'
++            pickFirst 'com/reactnativedocumentpicker/RNDocumentPickerModule.class'
++        }
+     }
+ 
+     sourceSets.main {

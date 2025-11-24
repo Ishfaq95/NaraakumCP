@@ -50,7 +50,6 @@
     "react-native-audio-record": "^0.2.2",
     "react-native-background-fetch": "^4.2.8",
     "react-native-background-timer": "^2.4.1",
-    "react-native-blob-util": "^0.23.1",
     "react-native-calendars": "^1.1313.0",
     "react-native-config": "^1.5.9",
     "react-native-device-info": "^14.0.4",

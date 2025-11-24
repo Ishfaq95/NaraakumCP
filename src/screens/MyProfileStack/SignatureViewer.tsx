@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import Pdf from 'react-native-pdf';
+// import Pdf from 'react-native-pdf';
 import Share from 'react-native-share';
 import RNFS from 'react-native-fs';
 import { CAIRO_FONT_FAMILY } from '../../styles/globalStyles';
@@ -172,7 +172,7 @@ const getServiceProviderContractSigning = async () => {
       {renderHeader()}
       
       <View style={styles.pdfContainer}>
-        <Pdf
+        {/* <Pdf
           source={{ uri: `${MediaBaseURL}${pdfPath}` }}
           style={styles.pdf}
           onLoadComplete={onLoadComplete}
@@ -183,7 +183,7 @@ const getServiceProviderContractSigning = async () => {
           spacing={10}
           fitPolicy={0}
           horizontal={false}
-        />
+        /> */}
         
         {loading && (
           <View style={styles.loadingContainer}>

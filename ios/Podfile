@@ -75,7 +75,8 @@ target 'Naraakum_CP' do
   pod 'RNInAppBrowser', :path => '../node_modules/react-native-inappbrowser-reborn'
   pod 'react-native-webrtc', :path => '../node_modules/@videosdk.live/react-native-webrtc'
   pod 'GoogleSignIn', '~> 7.1'
-  pod 'react-native-maps/Google', :path => '../node_modules/react-native-maps'
+  pod 'react-native-maps', :path => '../node_modules/react-native-maps'
+  pod 'GoogleMaps'
 
   pod 'RNFBApp', :path => '../node_modules/@react-native-firebase/app'
   pod 'RNFBCrashlytics', :path => '../node_modules/@react-native-firebase/crashlytics'
@@ -94,5 +95,21 @@ target 'Naraakum_CP' do
       :mac_catalyst_enabled => false,
       # :ccache_enabled => true
     )
+    
+    # Fix deployment target warnings
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |config|
+        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.1'
+      end
+    end
+    
+    # Fix for RNShare linker error
+    installer.pods_project.targets.each do |target|
+      if target.name == 'RNShare'
+        target.build_configurations.each do |config|
+          config.build_settings['BUILD_LIBRARY_FOR_DISTRIBUTION'] = 'YES'
+        end
+      end
+    end
   end
 end

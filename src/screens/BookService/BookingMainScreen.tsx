@@ -14,6 +14,7 @@ import Step1CatSpecialty from './BookingTabs/Step1CatSpecialty';
 import Step2DoctorListing from './BookingTabs/Step2DoctorListing';
 import Step3ReviewOrder from './BookingTabs/Step3ReviewOrder';
 import { addCardItem } from '../../shared/redux/reducers/bookingReducer';
+import SuccessScreen from './SuccessScreen';
 
 const BookingScreen = ({ navigation, route }: any) => {
     const { Patient } = route.params;
@@ -28,10 +29,14 @@ const BookingScreen = ({ navigation, route }: any) => {
         console.log('handleNext');
         if(currentStep == 3){
             dispatch(addCardItem([]))
-            navigation.navigate(ROUTES.SuccessScreen);
+            setCurrentStep(4);
         }else{
             setCurrentStep(currentStep + 1);
         }
+    };
+
+    const handleModalClose = () => {
+        navigation.goBack();
     };
 
     const renderStep = () => {
@@ -78,6 +83,16 @@ const BookingScreen = ({ navigation, route }: any) => {
                     {renderStep()}
                 </View>
             </LinearGradient>
+            
+            {/* Success Modal */}
+            <Modal
+                visible={currentStep === 4}
+                animationType="slide"
+                transparent={false}
+                onRequestClose={handleModalClose}
+            >
+                <SuccessScreen onAgree={handleModalClose} />
+            </Modal>
         </SafeAreaView>
     );
 };

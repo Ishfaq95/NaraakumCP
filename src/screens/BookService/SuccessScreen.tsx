@@ -6,10 +6,8 @@ import {
   StyleSheet,
   SafeAreaView,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { globalTextStyles, CAIRO_FONT_FAMILY } from '../../styles/globalStyles';
-import { ROUTES } from '../../shared/utils/routes';
 
 interface SuccessScreenProps {
   route?: any;
@@ -18,22 +16,19 @@ interface SuccessScreenProps {
 
 const SuccessScreen: React.FC<SuccessScreenProps> = ({
   route,
+  onAgree,
 }) => {
-const navigation=useNavigation()
-  const handleAgree = () => {
-    navigation.navigate(ROUTES.AppNavigator, {
-        screen: ROUTES.MyClientsStack,
-        params: {
-            screen: ROUTES.MyClientsScreen,
-        }
-    });
-  }
+  const handleClose = () => {
+    if (onAgree) {
+      onAgree();
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
       {/* Close Button */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.closeButton} onPress={handleAgree}>
+        <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
           <Ionicons name="close" size={24} color="#333" />
         </TouchableOpacity>
       </View>
@@ -58,7 +53,7 @@ const navigation=useNavigation()
       <View style={styles.buttonContainer}>
         <TouchableOpacity
           style={styles.agreeButton}
-          onPress={handleAgree}
+          onPress={handleClose}
           activeOpacity={0.8}
         >
           <Text style={styles.agreeButtonText}>Agree</Text>

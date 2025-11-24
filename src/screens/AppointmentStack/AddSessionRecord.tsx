@@ -100,10 +100,10 @@ const AddSessionRecord = ({ route }: { route: any }) => {
         }
     };
 
-    const handleComplete = () => {
-        // Handle form completion and save
-        navigation.goBack();
-    };
+    // const handleComplete = () => {
+    //     // Handle form completion and save
+    //     navigation.goBack();
+    // };
 
     const handleSaveRating = async () => {
         if (selectedRating === 0) {
@@ -185,6 +185,12 @@ const AddSessionRecord = ({ route }: { route: any }) => {
         }));
     };
 
+    const handleSaveAndComplete = (data: any) => {
+        // handleDataChange('step4', data);
+        // handleNext();
+        setCurrentStep(5);
+    };
+
     const backButtonPress = () => {
         dispatch(setVisitMainData(null as any));
         dispatch(setVisitMainId(null as any));
@@ -227,10 +233,10 @@ const AddSessionRecord = ({ route }: { route: any }) => {
             case 4:
                 return (
                     <Step4Treatment
-                        onComplete={handleComplete}
+                        // onComplete={handleComplete}
                         onPrevious={handlePrevious}
                         data={formData.step4}
-                        onDataChange={(data) => handleDataChange('step4', data)}
+                        onDataChange={handleSaveAndComplete}
                     />
                 );
             case 5:

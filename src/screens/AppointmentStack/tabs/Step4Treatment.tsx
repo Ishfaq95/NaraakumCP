@@ -17,7 +17,7 @@ import Notes, { NotesData } from './Step4Components/Notes';
 import SvgUri from 'react-native-svg-uri';
 
 interface Step4Props {
-  onComplete: () => void;
+  // onComplete: () => void;
   onPrevious: () => void;
   data?: {
     procedures?: ProceduresData;
@@ -39,7 +39,7 @@ type TabType =
   | 'notes';
 
 const Step4Treatment: React.FC<Step4Props> = ({
-  onComplete,
+  // onComplete,
   onPrevious,
   data,
   onDataChange,
@@ -94,7 +94,7 @@ const Step4Treatment: React.FC<Step4Props> = ({
 
   const handleComplete = () => {
     onDataChange?.(formData);
-    onComplete();
+    // onComplete();
   };
 
   const renderTabContent = () => {

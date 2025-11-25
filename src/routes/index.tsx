@@ -42,6 +42,7 @@ import DurationAndPrice from '../screens/MyProfileStack/DurationAndPrice';
 import PrescriptionListScreen from '../screens/MyClientsStack/PrescriptionListScreen';
 import BookingMainScreen from '../screens/BookService/BookingMainScreen';
 import SuccessScreen from '../screens/BookService/SuccessScreen';
+import PrivicyPolicy from '../screens/AuthModule/PrivicyPolicy';
 
 const Stack = createNativeStackNavigator();
 
@@ -58,6 +59,7 @@ const RootNavigator = () => {
         <Stack.Screen name={ROUTES.ForgotPassword} component={ForgotPassword} />
         <Stack.Screen name={ROUTES.ForgotOTP} component={ForgotOTP} />
       <Stack.Screen name={ROUTES.ConfirmPassword} component={ConfirmPassword} />
+      <Stack.Screen name={ROUTES.PrivacyPolicy} component={PrivicyPolicy} />
       </Stack.Navigator>
     );
   }
@@ -94,6 +96,7 @@ const RootNavigator = () => {
       <Stack.Screen name={ROUTES.PrescriptionListScreen} component={PrescriptionListScreen} />
       <Stack.Screen name={ROUTES.BookNewService} component={BookingMainScreen} />
       <Stack.Screen name={ROUTES.SuccessScreen} component={SuccessScreen} />
+      
     </Stack.Navigator>
   );
 };

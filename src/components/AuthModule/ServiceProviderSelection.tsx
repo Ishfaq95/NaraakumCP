@@ -15,6 +15,7 @@ import { useIsFocused } from '@react-navigation/native';
 import { MediaBaseURL } from '../../shared/utils/constants';
 import UniversalImage from '../common/UniversalImage';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import FullScreenLoader from '../FullScreenLoader';
 
 interface ServiceProviderSelectionProps {
     selectedProvider: string | null;
@@ -30,6 +31,7 @@ const ServiceProviderSelection: React.FC<ServiceProviderSelectionProps> = ({
     const isFocused = useIsFocused();
     const isRTL = I18nManager.isRTL;
     const [serviceProviders, setServiceProviders] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
     console.log("selectedProvider", selectedProvider);
 
     useEffect(() => {
@@ -39,9 +41,16 @@ const ServiceProviderSelection: React.FC<ServiceProviderSelectionProps> = ({
     }, [isFocused]);
 
     const fetchServiceProviderRoleList = async () => {
-        const response = await authService.getServiceProviderRoleList();
-        if (response?.ResponseStatus?.STATUSCODE === 200) {
-            setServiceProviders(response.list);
+        try {
+            setIsLoading(true);
+            const response = await authService.getServiceProviderRoleList();
+            if (response?.ResponseStatus?.STATUSCODE === 200) {
+                setServiceProviders(response.list);
+            }
+        } catch (error) {
+
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -106,6 +115,8 @@ const ServiceProviderSelection: React.FC<ServiceProviderSelectionProps> = ({
                     <Ionicons name="arrow-forward" size={22} color="#fff" />
                 </TouchableOpacity>
             </View>
+
+            <FullScreenLoader visible={isLoading} />
         </View>
     );
 };
@@ -187,7 +198,8 @@ const styles = StyleSheet.create({
         resizeMode: 'contain',
     },
     providerName: {
-        ...globalTextStyles.bodyMedium,
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        fontSize: 14,
         fontWeight: '600',
         color: '#000',
         textAlign: 'center',

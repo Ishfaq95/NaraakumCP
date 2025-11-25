@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { CAIRO_FONT_FAMILY } from '../../styles/globalStyles';
 
 interface StatItem {
   count: number;
@@ -48,9 +49,10 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   title: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
-    color: '#333',
+    fontFamily: CAIRO_FONT_FAMILY.semiBold,
+    color: '#191919',
     marginBottom: 16,
     textAlign: 'center',
   },

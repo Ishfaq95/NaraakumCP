@@ -26,6 +26,7 @@ import SuccessScreen from '../../components/AuthModule/SuccessScreen';
 import { setUser } from '../../shared/redux/reducers/userReducer';
 import { useDispatch } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const MIN_HEIGHT = 550; // Absolute minimum height
 const OPTIMAL_HEIGHT = 750; // Height for medium screens
@@ -84,13 +85,14 @@ const SignUpScreen = () => {
     const handlePrevious = () => {
         if(currentStep === 1){
             navigation.goBack();
+        }else if(currentStep === 2){
+            setCurrentStep(1);
+        }else if(currentStep === 3){
+            setCurrentStep(2);
+        }else if(currentStep === 4){
+            setCurrentStep(2);
         }
-        if (currentStep > 1) {
-            if (currentStep === 3) {
-                setOtpVerified(false);
-            }
-            setCurrentStep(currentStep - 1);
-        }
+        
     };
 
     const handleSuccess = () => {
@@ -150,6 +152,7 @@ const SignUpScreen = () => {
                 return false;
         }
     };
+    const insets = useSafeAreaInsets();
 
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: currentStep === 5 ? '#fff' : '#eaf6f6' }]}>
@@ -166,8 +169,8 @@ const SignUpScreen = () => {
                     </View> : <View style={styles.contentContainer}>
                         {/* Fixed Header */}
                         <View style={styles.headerContainer}>
-                            <Text style={globalTextStyles.h2}>
-                                {t('create_new_account')}
+                            <Text style={[globalTextStyles.h2,{color:'#0F4243'}]}>
+                                {currentStep === 1 ? 'Create new account' : currentStep== 3? 'Verification Code': 'Registration Info'}
                             </Text>
                         </View>
 
@@ -179,7 +182,7 @@ const SignUpScreen = () => {
                                 activeColor="#20B2AA"
                                 inactiveColor="#E0E0E0"
                                 barHeight={4}
-                                barWidth={60}
+                                barWidth={Platform.OS === 'ios' ? 60 : 50}
                                 spacing={12}
                             />
                         </View>

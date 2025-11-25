@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   ActivityIndicator,
@@ -7,34 +7,59 @@ import {
   Dimensions,
   Platform,
 } from 'react-native';
+import LoaderKit from 'react-native-loader-kit';
 
 interface FullScreenLoaderProps {
   visible: boolean;
 }
 
+const { width, height } = Dimensions.get('window');
+
 const FullScreenLoader: React.FC<FullScreenLoaderProps> = ({ visible }) => {
-  // Cleanup effect to ensure modal is properly closed
+  const [isLayoutReady, setIsLayoutReady] = useState(false);
+
+  // Reset layout state when visibility changes
   useEffect(() => {
-    return () => {
-      // Cleanup when component unmounts
-    };
-  }, []);
+    if (visible) {
+      // Small delay to ensure layout is calculated before showing content
+      const timer = setTimeout(() => {
+        setIsLayoutReady(true);
+      }, 10);
+      return () => clearTimeout(timer);
+    } else {
+      setIsLayoutReady(false);
+    }
+  }, [visible]);
 
   if (!visible) return null;
   
   return (
     <Modal
       transparent={true}
-      animationType="none"
+      animationType="fade"
       visible={visible}
       statusBarTranslucent={false}
       onRequestClose={() => {}}
       hardwareAccelerated={Platform.OS === 'android'}
       presentationStyle="overFullScreen"
     >
-      <View style={styles.container}>
-        <View style={styles.loaderContainer}>
-          <ActivityIndicator size="large" color="#008080" />
+      <View 
+        style={styles.container}
+        collapsable={false}
+        needsOffscreenAlphaCompositing={false}
+      >
+        <View 
+          style={[
+            styles.loaderContainer,
+            // Ensure loader is absolutely centered even before flex layout completes
+            { opacity: isLayoutReady ? 1 : 0 }
+          ]}
+        >
+          <LoaderKit
+            style={{ width: 100, height: 100 }}
+            name={'BallSpinFadeLoader'}
+            color={'green'}
+          />
         </View>
       </View>
     </Modal>
@@ -43,17 +68,24 @@ const FullScreenLoader: React.FC<FullScreenLoaderProps> = ({ visible }) => {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: width,
+    height: height,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   loaderContainer: {
-    backgroundColor: 'white',
     padding: 20,
     borderRadius: 10,
-    elevation: 3,
-    // Removed complex shadows that cause performance issues
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 140,
+    height: 140,
   },
 });
 

@@ -10,9 +10,10 @@ import {
     ScrollView,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { globalTextStyles } from '../../styles/globalStyles';
+import { CAIRO_FONT_FAMILY, globalTextStyles } from '../../styles/globalStyles';
 import { authService } from '../../services/api/authService';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import FullScreenLoader from '../FullScreenLoader';
 
 interface OTPVerificationStepProps {
     phoneNumber: string;
@@ -34,6 +35,7 @@ const OTPVerificationStep: React.FC<OTPVerificationStepProps> = ({
     const inputs = useRef<(TextInput | null)[]>([]);
     const [isResendSuccess, setIsResendSuccess] = useState(false);
     const [otpError, setOtpError] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
         if (countdown > 0) {
@@ -46,25 +48,68 @@ const OTPVerificationStep: React.FC<OTPVerificationStepProps> = ({
 
     const handleOTPChange = (index: number, value: string) => {
         setOtpError(false);
-        // Only allow numeric input
-        if (!/^\d*$/.test(value)) return;
+        
+        // Extract only digits from input
+        const digitsOnly = value.replace(/\D/g, '');
+        
+        // If no digits, clear the current field
+        if (!digitsOnly) {
+            const newOtp = [...otp];
+            newOtp[index] = '';
+            setOtp(newOtp);
+            return;
+        }
 
+        // Check if this is a paste operation (multiple digits detected)
+        if (digitsOnly.length > 2) {
+            // Extract first 4 digits from pasted text
+            const digits = digitsOnly.split('').slice(0, 4);
+            
+            // Fill OTP fields with pasted digits
+            const newOtp = ['', '', '', ''];
+            digits.forEach((digit, i) => {
+                if (i < 4) {
+                    newOtp[i] = digit;
+                }
+            });
+            
+            setOtp(newOtp);
+            
+            // Blur all inputs and focus on the last filled input
+            inputs.current.forEach(input => input?.blur());
+            
+            const lastFilledIndex = Math.min(digits.length - 1, 3);
+            if (lastFilledIndex >= 0) {
+                setTimeout(() => {
+                    inputs.current[lastFilledIndex]?.focus();
+                }, 100);
+            }
+            
+            // Auto-verify if all 4 digits are pasted
+            if (digits.length === 4) {
+                setTimeout(() => {
+                    handleVerifyOTP(digits.join(''));
+                }, 200);
+            }
+            
+            return;
+        }
+
+        // Single digit input (normal typing)
+        // Only take the first digit if user types normally
+        const singleDigit = digitsOnly.charAt(0);
         const newOtp = [...otp];
-        newOtp[index] = value;
+        newOtp[index] = singleDigit;
         setOtp(newOtp);
 
         // Auto-move to next input
-        if (value && index < 3) {
+        if (singleDigit && index < 3) {
             inputs.current[index + 1]?.focus();
         }
-
-        // Auto-verify when all fields are filled
-        // if (newOtp.every(digit => digit !== '') && newOtp.join('').length === 4) {
-        //     handleVerifyOTP(newOtp.join(''));
-        // }
     };
 
     const handleVerifyOTP = async (otp: string) => {
+        setIsLoading(true);
         try {
             const response = await authService.verifyOTP({
                 "UserId": userInfo.userid,
@@ -81,6 +126,8 @@ const OTPVerificationStep: React.FC<OTPVerificationStepProps> = ({
                setOtpError(true);
             }
         } catch (error) {
+        } finally {
+            setIsLoading(false);
         }
     }
 
@@ -91,6 +138,7 @@ const OTPVerificationStep: React.FC<OTPVerificationStepProps> = ({
     };
 
     const handleResendCode = async () => {
+        setOtpError(false);
         // setIsResendDisabled(true);
         // setCountdown(60);
         setOtp(['', '', '', '']);
@@ -110,6 +158,7 @@ const OTPVerificationStep: React.FC<OTPVerificationStepProps> = ({
     const isOTPComplete = otp.every(digit => digit !== '');
 
     const handleNext = () => {
+        setIsResendSuccess(false);
         if (isOTPComplete) {
             handleVerifyOTP(otp.join(''));
         }
@@ -138,7 +187,7 @@ const OTPVerificationStep: React.FC<OTPVerificationStepProps> = ({
                     {otp.map((digit, index) => (
                         <TextInput
                             key={index}
-                            ref={ref => inputs.current[index] = ref}
+                            ref={ref => { inputs.current[index] = ref; }}
                             style={[
                                 styles.otpInput,
                                 digit ? styles.otpInputFilled : null
@@ -147,7 +196,7 @@ const OTPVerificationStep: React.FC<OTPVerificationStepProps> = ({
                             onChangeText={(value) => handleOTPChange(index, value)}
                             onKeyPress={({ nativeEvent }) => handleKeyPress(index, nativeEvent.key)}
                             keyboardType="number-pad"
-                            maxLength={1}
+                            maxLength={4}
                             textAlign="center"
                             selectTextOnFocus
                         />
@@ -173,11 +222,13 @@ const OTPVerificationStep: React.FC<OTPVerificationStepProps> = ({
             {isResendSuccess && <Text style={styles.resendSuccessText}>{t('code_sent_successfully')}</Text>}
             </ScrollView>
             <View style={styles.navigationContainer}>
-                <TouchableOpacity style={[styles.nextButton, !isOTPComplete && styles.nextButtonDisabled]} onPress={handleNext}>
+                <TouchableOpacity disabled={!isOTPComplete} style={[styles.nextButton, !isOTPComplete && styles.nextButtonDisabled]} onPress={handleNext}>
                     <Text style={styles.nextButtonText}>{`Next 3/4`}</Text>
                     <Ionicons name="arrow-forward" size={22} color="#fff" />
                 </TouchableOpacity>
             </View>
+
+            <FullScreenLoader visible={isLoading} />
         </View>
     );
 };
@@ -185,17 +236,20 @@ const OTPVerificationStep: React.FC<OTPVerificationStepProps> = ({
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        paddingTop: 20,
     },
     scrollViewContent: {
-        paddingHorizontal: 16,
+        // paddingHorizontal: 16,
     },
     headerSection: {
-        marginBottom: 40,
+        marginBottom: 20,
     },
     title: {
-        ...globalTextStyles.bodyMedium,
-        fontWeight: '500',
+        fontSize: 16,
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        fontWeight: '600',
         marginBottom: 8,
+        color: '#666666',
     },
     phoneNumberContainer: {
         flexDirection: 'row',
@@ -203,23 +257,28 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
     phoneNumber: {
-        ...globalTextStyles.bodyMedium,
-        fontWeight: '500',
+        fontSize: 16,
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        fontWeight: '700',
         color: '#239EA0',
         // marginBottom: 8,
     },
     editButton: {
         borderWidth: 1,
-        borderColor: '#239EA0',
+        borderColor: '#666',
         borderRadius: 8,
-        paddingHorizontal: 8,
-        paddingVertical: 2,
+        height: 30,
+        width: 40,
         marginLeft: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     editButtonText: {
-        ...globalTextStyles.bodyMedium,
-        fontWeight: '500',
-        color: '#239EA0',
+        fontSize: 14,
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        lineHeight:Platform.OS === 'ios' ?0 : 16,
+        fontWeight: '600',
+        color: '#666',
     },
     otpSection: {
         // marginBottom: 10,
@@ -232,7 +291,10 @@ const styles = StyleSheet.create({
     },
     otpInputContainer: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 15,
+        // justifyContent: 'space-between',
         marginBottom: 10,
     },
     otpInput: {
@@ -244,19 +306,18 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: '600',
         color: '#333',
-        backgroundColor: '#F8F8F8',
+        
     },
     otpInputFilled: {
         borderColor: '#20B2AA',
-        backgroundColor: '#F0FFFE',
     },
     resendSection: {
         // alignItems: 'center',
     },
     resendButton: {
         // paddingVertical: 12,
-        borderColor: '#20B2AA',
-        borderWidth: 1,
+        marginTop: 20,
+        backgroundColor: '#E9F5F6',
         borderRadius: 8,
         width: 100,
         height: 36,
@@ -265,8 +326,10 @@ const styles = StyleSheet.create({
     },
     resendButtonText: {
         fontSize: 14,
-        color: '#20B2AA',
-        fontWeight: '500',
+        color: '#191919',
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        fontWeight: '600',
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
     },
     resendButtonTextDisabled: {
         color: '#999',
@@ -303,12 +366,12 @@ const styles = StyleSheet.create({
         backgroundColor: '#20B2AA',
         borderRadius: 12,
         paddingVertical: 16,
-        paddingHorizontal: 24,
+        // paddingHorizontal: 24,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
         flex: 1,
-        marginLeft: 12,
+        // marginLeft: 12,
     },
     nextButtonDisabled: {
         backgroundColor: '#E0E0E0',

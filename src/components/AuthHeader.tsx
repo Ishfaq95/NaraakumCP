@@ -3,6 +3,7 @@ import { View, TouchableOpacity, Text, StyleSheet, I18nManager, Image } from 're
 import { useNavigation } from '@react-navigation/native';
 import Svg, { Path } from 'react-native-svg';
 import { changeLanguage } from '../utils/language/i18nextConfig';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import { globalTextStyles } from '../styles/globalStyles';
 
 // Simple inline SVG for back arrow
@@ -38,7 +39,7 @@ const AuthHeader = ({
         onPress={onBack ? onBack : () => navigation.goBack()}
         hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
       >
-        <BackArrow />
+        <Ionicons name="arrow-back-outline" size={24} color="#000" />
       </TouchableOpacity>
       <View style={{ flex: 1 }} />
       <TouchableOpacity disabled={true} style={styles.langBtn} onPress={onChangeLanguage}>

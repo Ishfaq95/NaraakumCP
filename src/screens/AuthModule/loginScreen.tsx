@@ -16,8 +16,8 @@ import {
   Keyboard,
   TouchableWithoutFeedback,
   Alert,
-  SafeAreaView,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Dropdown } from 'react-native-element-dropdown';
 import { parsePhoneNumber, AsYouType, isValidPhoneNumber, CountryCode } from 'libphonenumber-js';
 import GoogleIcon from '../../assets/icons/GoogleIcon';
@@ -146,22 +146,27 @@ const LoginScreen = () => {
       const response = await authService.login(data);
 
       if (response?.ResponseStatus?.STATUSCODE == 200) {
-        if (response.StatusCode.STATUSCODE == 200) {
-          setIsLoading(false);
-          dispatch(setUser(response.Userinfo));
-          if (rememberMe) {
-            const data = {
-              "Username": activeTab === 'mobile' ? fullNumber : emailOrUsername,
-              "Password": password,
-              "Filter": activeTab === 'mobile' ? "mob" : "email"
+        if(response?.Userinfo?.CatUserTypeId==2 && response?.Userinfo?.CatUserRoleCategoryId==2){
+          if (response.StatusCode.STATUSCODE == 200) {
+            setIsLoading(false);
+            dispatch(setUser(response.Userinfo));
+            if (rememberMe) {
+              const data = {
+                "Username": activeTab === 'mobile' ? fullNumber : emailOrUsername,
+                "Password": password,
+                "Filter": activeTab === 'mobile' ? "mob" : "email"
+              }
+              dispatch(setRememberMeRedux(data));
+            } else {
+              dispatch(setRememberMeRedux(null));
             }
-            dispatch(setRememberMeRedux(data));
           } else {
-            dispatch(setRememberMeRedux(null));
+            setAPIError(true);
           }
-        } else {
+        }else{
           setAPIError(true);
         }
+       
 
       } else {
         Alert.alert(
@@ -356,8 +361,16 @@ const LoginScreen = () => {
     );
   };
 
+  const formatPatternToExamplePlaceHolder = (pattern: string): string => {
+    if (!pattern) return '';
+    let digitCounter = 1;
+    return pattern.replace(/#/g, '0');
+};
+
+  const insets = useSafeAreaInsets();
+
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <AuthHeader />
       <FullScreenLoader visible={isLoading} />
       <KeyboardAvoidingView
@@ -409,7 +422,7 @@ const LoginScreen = () => {
                       value={phoneNumber}
                       onChangeText={handlePhoneNumberChange}
                       onCountryChange={handleCountryChange}
-                      placeholder={t('enter_phone_number')}
+                      placeholder={formatPatternToExamplePlaceHolder(selectedCountry?.pattern)}
                       error={error}
                       initialCountry={selectedCountry}
                     />
@@ -507,7 +520,7 @@ const LoginScreen = () => {
           </ScrollView>
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -664,6 +677,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E0E0E0',
     height: '100%',
+    paddingRight: '10%',
     color: '#000'
   },
   eyeIcon: {
@@ -736,7 +750,7 @@ const styles = StyleSheet.create({
   orText: {
     marginHorizontal: 8,
     ...globalTextStyles.label,
-    color: '#000',
+    color: '#666',
   },
   signUpContainer: {
     flexDirection: 'row',

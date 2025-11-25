@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { globalTextStyles } from '../../styles/globalStyles';
+import { CAIRO_FONT_FAMILY, globalTextStyles } from '../../styles/globalStyles';
 import { notificationsService } from '../../services/api/notifications';
 import { useSelector } from 'react-redux';
 import WebSocketService from '../WebSocketService';
@@ -197,8 +197,10 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   title: {
-    ...globalTextStyles.h5,
-    color: '#333',
+    fontSize: 16,
+    fontWeight: '700',
+    fontFamily: CAIRO_FONT_FAMILY.bold,
+    color: '#191919',
   },
   iconContainer: {
     marginLeft: 16,

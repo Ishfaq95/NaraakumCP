@@ -5,6 +5,7 @@ import Feather from 'react-native-vector-icons/Feather';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import CallIcon from '../../assets/icons/CallIcon';
 import moment from 'moment';
+import { CAIRO_FONT_FAMILY } from '../../styles/globalStyles';
 
 interface AppointmentCardProps {
   item: any;
@@ -19,6 +20,72 @@ const AppointmentCard: React.FC<AppointmentCardProps> = ({
   isCallEnabled = false,
   onJoinMeeting,
 }) => {
+  const calculateDuration = () => {
+    if (!item?.SchedulingTime || !item?.SchedulingEndTime) {
+      const fallbackMinutes = item?.Duration || 0;
+      const hours = Math.floor(fallbackMinutes / 60);
+      const minutes = fallbackMinutes % 60;
+      return { hours, minutes };
+    }
+
+    try {
+      // Parse the time strings
+      const startTime = moment(item.SchedulingTime, 'HH:mm');
+      let endTime = moment(item.SchedulingEndTime, 'HH:mm:ss.SS');
+      
+      // If endTime is invalid, try parsing without milliseconds
+      if (!endTime.isValid()) {
+        endTime = moment(item.SchedulingEndTime, 'HH:mm:ss');
+      }
+      
+      // If still invalid, try with just HH:mm format
+      if (!endTime.isValid()) {
+        endTime = moment(item.SchedulingEndTime, 'HH:mm');
+      }
+      
+      if (startTime.isValid() && endTime.isValid()) {
+        const duration = moment.duration(endTime.diff(startTime));
+        const totalMinutes = Math.round(duration.asMinutes());
+        
+        if (totalMinutes > 0) {
+          const hours = Math.floor(totalMinutes / 60);
+          const minutes = totalMinutes % 60;
+          return { hours, minutes };
+        }
+      }
+    } catch (error) {
+      console.error('Error calculating duration:', error);
+    }
+    
+    // Fallback to item.Duration if calculation fails
+    const fallbackMinutes = item?.Duration || 0;
+    const hours = Math.floor(fallbackMinutes / 60);
+    const minutes = fallbackMinutes % 60;
+    return { hours, minutes };
+  };
+
+  const formatDuration = (duration: { hours: number; minutes: number }) => {
+    const parts: string[] = [];
+    
+    if (duration.hours > 0) {
+      parts.push(`${duration.hours} ${duration.hours === 1 ? 'Hour' : 'Hours'}`);
+    }
+    
+    if (duration.minutes > 0) {
+      parts.push(`${duration.minutes} ${duration.minutes === 1 ? 'Minute' : 'Minutes'}`);
+    }
+    
+    // If both are 0, show 0 Minutes
+    if (parts.length === 0) {
+      return '0 Minutes';
+    }
+    
+    return parts.join(' ');
+  };
+
+  const duration = calculateDuration();
+  const durationText = formatDuration(duration);
+
   const getStatusInfo = () => {
     const statusId = item?.CatOrderStatusId?.toString();
 
@@ -101,11 +168,13 @@ const AppointmentCard: React.FC<AppointmentCardProps> = ({
     return stars;
   };
 
+  console.log(item);
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <View style={styles.patientInfo}>
-          <Text style={{ fontSize: 13, fontWeight: '500', color: '#666666' }}>Patient name</Text>
+          <Text style={{ fontSize: 13,fontWeight:'400', fontFamily: CAIRO_FONT_FAMILY.regular, color: '#666666' }}>Patient name</Text>
           <Text style={styles.patientName}>{item.PatientPName}</Text>
           <View style={styles.genderRatingRow}>
             <Text style={styles.gender}>{item.Gender == true ? 'Male' : 'Female'}</Text>
@@ -187,7 +256,7 @@ const AppointmentCard: React.FC<AppointmentCardProps> = ({
       {item?.TaskService[0].CatServiceServeTypeId == 1 ? <View style={styles.footer}>
         <TouchableOpacity disabled={!isCallEnabled} style={[styles.durationContainer, isCallEnabled && styles.callBtnEnabled]} onPress={() => onJoinMeeting(item)}>
           <Image source={require('../../assets/icons/cameramovie.png')} style={{ tintColor: '#fff', width: 20, height: 20 }} />
-          <Text style={styles.durationText}>{item?.Duration} Minutes</Text>
+          <Text style={styles.durationText}>{durationText}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.detailsButton} onPress={() => onSessionDetails(item)}>
           <Text style={styles.detailsButtonText}>Session Details</Text>
@@ -195,7 +264,7 @@ const AppointmentCard: React.FC<AppointmentCardProps> = ({
       </View> : <View style={styles.footer}>
 
         <TouchableOpacity style={[styles.detailsButton, { width: '100%' }]} onPress={() => onSessionDetails(item)}>
-          <Text style={styles.detailsButtonText}>Session Details</Text>
+          <Text style={styles.detailsButtonText}>Visit Details</Text>
         </TouchableOpacity>
       </View>}
     </View>
@@ -224,18 +293,22 @@ const styles = StyleSheet.create({
     width: '80%',
   },
   patientName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 4,
+    fontSize: 14,
+    fontWeight: '700',
+    fontFamily: CAIRO_FONT_FAMILY.bold,
+    color: '#191919',
+    lineHeight: 20,
+    // marginBottom: 4,
   },
   genderRatingRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   gender: {
-    fontSize: 14,
-    color: '#000',
+    fontSize: 13,
+    fontWeight: '400',
+    fontFamily: CAIRO_FONT_FAMILY.regular,
+    color: '#666',
     marginRight: 8,
     borderRightWidth: 1,
     borderRightColor: '#e0e0e0',
@@ -294,7 +367,9 @@ const styles = StyleSheet.create({
   detailValue: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#333',
+    fontFamily: CAIRO_FONT_FAMILY.bold,
+    lineHeight: 20,
+    color: '#191919',
   },
   statusBadge: {
     minWidth: 74,
@@ -342,9 +417,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   detailsButtonText: {
-    color: '#23a2a4',
+    color: '#239EA0',
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '600',
+    fontFamily: CAIRO_FONT_FAMILY.semiBold,
   },
   callBtnEnabled: {
     backgroundColor: '#19b123',

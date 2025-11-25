@@ -15,8 +15,7 @@ index d94248d..fed1ef9 100644
 +        targetSdkVersion safeExtGet('LoaderKit_targetSdkVersion', 34)
          versionCode 1
          versionName "1.0"
- 
-diff --git a/node_modules/react-native-loader-kit/android/build/.transforms/2d4ca0276941010af053b788b15fd8eb/results.bin b/node_modules/react-native-loader-kit/android/build/.transforms/2d4ca0276941010af053b788b15fd8eb/results.bin
+ diff --git a/node_modules/react-native-loader-kit/android/build/.transforms/2d4ca0276941010af053b788b15fd8eb/results.bin b/node_modules/react-native-loader-kit/android/build/.transforms/2d4ca0276941010af053b788b15fd8eb/results.bin
 new file mode 100644
 index 0000000..6e09b8c
 --- /dev/null
@@ -116271,3 +116270,4 @@ diff --git a/node_modules/react-native-loader-kit/android/build/tmp/compileRelea
 new file mode 100644
 index 0000000..2301f1b
 Binary files /dev/null and b/node_modules/react-native-loader-kit/android/build/tmp/compileReleaseJavaWithJavac/previous-compilation-data.bin differ
+

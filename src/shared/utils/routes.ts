@@ -50,5 +50,6 @@ export const ROUTES = {
     PrescriptionListScreen: 'PrescriptionListScreen',
     BookNewService: 'BookNewService',
     SuccessScreen: 'SuccessScreen',
+    PrivacyPolicy: 'PrivacyPolicy',
   };
   

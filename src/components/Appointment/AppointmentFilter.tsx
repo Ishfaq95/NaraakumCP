@@ -34,8 +34,8 @@ const AppointmentFilter: React.FC<AppointmentFilterProps> = ({
       <View style={styles.card}>
         <View style={styles.availabilityRow}>
           <View style={styles.availabilityLabelContainer}>
-            <View style={[styles.statusDot, { backgroundColor: isAvailable ? '#00A19D' : '#FF6B6B' }]} />
-            <Text style={[styles.availabilityLabel, { color: isAvailable ? '#00A19D' : '#FF6B6B' }]}>{isAvailable ? 'Available' : 'Unavailable'}</Text>
+            <View style={[styles.statusDot, { backgroundColor: isAvailable ? '#2ab318' : '#b72a2a' }]} />
+            <Text style={[styles.availabilityLabel, { color: isAvailable ? '#1c2237' : '#b72a2a' }]}>{isAvailable ? 'Available' : 'Unavailable'}</Text>
           </View>
           <Switch
             value={isAvailable ?? false}

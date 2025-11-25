@@ -9,7 +9,7 @@ import {
     Alert,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { globalTextStyles } from '../../styles/globalStyles';
+import { CAIRO_FONT_FAMILY, globalTextStyles } from '../../styles/globalStyles';
 import { ROUTES } from '../../shared/utils/routes';
 import GoogleIcon from '../../assets/icons/GoogleIcon';
 import { appleAuth } from '@invertase/react-native-apple-authentication';
@@ -19,10 +19,12 @@ import { authService } from '../../services/api/authService';
 import { setUser } from '../../shared/redux/reducers/userReducer';
 import { useDispatch } from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { useNavigation } from '@react-navigation/native';
 
 const PersonalInfoStep: React.FC<{userRoleId: any, onNext: (userInfo: any, phoneNumber: string) => void}> = ({userRoleId, onNext}) => {
     const { t } = useTranslation();
     const [phoneNumber, setPhoneNumber] = useState('');
+    const navigation = useNavigation();
     const [isLoading, setIsLoading] = useState(false);
     const dispatch = useDispatch();
     const [selectedCountry, setSelectedCountry] = useState<any>({
@@ -45,6 +47,22 @@ const PersonalInfoStep: React.FC<{userRoleId: any, onNext: (userInfo: any, phone
 
     const handleCountryChange = (country: any) => {
         setSelectedCountry(country);
+    };
+
+    const formatPatternToExample = (pattern: string): string => {
+        if (!pattern) return '';
+        let digitCounter = 1;
+        return pattern.replace(/#/g, () => {
+            const digit = digitCounter;
+            digitCounter = (digitCounter % 9) + 1; // Cycle through 1-9
+            return digit.toString();
+        });
+    };
+
+    const formatPatternToExamplePlaceHolder = (pattern: string): string => {
+        if (!pattern) return '';
+        let digitCounter = 1;
+        return pattern.replace(/#/g, '0');
     };
 
     const handleGoogleLogin = async () => {
@@ -254,10 +272,11 @@ const PersonalInfoStep: React.FC<{userRoleId: any, onNext: (userInfo: any, phone
                     value={phoneNumber}
                     onChangeText={handlePhoneNumberChange}
                     onCountryChange={handleCountryChange}
-                    placeholder={t('enter_phone_number')}
+                    placeholder={formatPatternToExamplePlaceHolder(selectedCountry?.pattern)}
                     error={error}
                     initialCountry={selectedCountry}
                 />
+                <Text style={{fontSize: 12,fontFamily: CAIRO_FONT_FAMILY.semiBold, color: '#666'}}>{`e.g: ${formatPatternToExample(selectedCountry?.pattern)}`}</Text>
                 {apiError && <Text style={styles.errorText}>{t('phone_number_already_exists')}</Text>}
             </View>
             {/* Navigation Buttons */}
@@ -292,16 +311,16 @@ const PersonalInfoStep: React.FC<{userRoleId: any, onNext: (userInfo: any, phone
                 {renderSocialButtons()}
 
                 <View style={styles.signUpContainer}>
-                    <Text style={styles.signUpText}>By clicking Next or Continue,</Text>
+                    <Text style={styles.signUpText}>By Clicking Next Or Continue,</Text>
                 </View>
-                <View style={[styles.signUpContainer]}>
+                <View style={[styles.signUpContainerBelow]}>
                     <Text style={[
                         styles.signUpText,
-                    ]}>{`you agree to the`}</Text>
-                    <TouchableOpacity style={{ paddingLeft: 5 }} onPress={() => { }}>
+                    ]}>{`You Agree To The`}</Text>
+                    <TouchableOpacity  style={{ paddingLeft: 3 }} onPress={() => { navigation.navigate(ROUTES.PrivacyPolicy as never)}}>
                         <Text style={[
                             styles.signUpLink,
-                        ]}>{`Terms and Conditions`}</Text>
+                        ]}>{`Terms And Conditions`}</Text>
                     </TouchableOpacity>
                 </View>
             </View>
@@ -328,7 +347,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'flex-end',
         alignItems: 'center',
-        marginTop: 16,
+        marginTop: 20,
     },
     previousButton: {
         backgroundColor: '#fff',
@@ -347,7 +366,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#20B2AA',
         width: '100%',
         borderRadius: 12,
-        paddingVertical: 16,
+        paddingVertical: 14,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
@@ -382,22 +401,31 @@ const styles = StyleSheet.create({
     orText: {
         marginHorizontal: 8,
         ...globalTextStyles.label,
-        color: '#000',
+        color: '#666',
     },
     signUpContainer: {
         flexDirection: 'row',
         justifyContent: 'center',
         marginTop: 15,
     },
+    signUpContainerBelow: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
     signUpText: {
-        ...globalTextStyles.caption,
+        fontSize: 12,
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        lineHeight: 20,
         color: '#666',
     },
     signUpLink: {
-        ...globalTextStyles.caption,
+        fontSize: 12,
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        textDecorationLine: 'underline',
+        lineHeight: 20,
         fontWeight: '600',
         color: '#000',
-        fontFamily: globalTextStyles.h2.fontFamily,
     },
     socialButtonsRow: {
         flexDirection: 'column',

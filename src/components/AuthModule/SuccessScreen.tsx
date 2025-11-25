@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { CAIRO_FONT_FAMILY } from '../../styles/globalStyles';
 
 const SuccessScreen = ({ onNext }: any) => {
     return (
@@ -13,6 +14,7 @@ const SuccessScreen = ({ onNext }: any) => {
             <View style={styles.navigationContainer}>
                 <TouchableOpacity style={styles.nextButton} onPress={onNext}>
                     <Text style={styles.nextButtonText}>Continue</Text>
+                    <Ionicons name="arrow-forward" size={20} color="#fff" />
                 </TouchableOpacity>
             </View>
         </View>
@@ -53,11 +55,11 @@ const styles = StyleSheet.create({
         marginRight: 8,
     },
     description: {
-        marginTop: 10,
-        textAlign: 'center',
+        marginTop: 15,
         fontSize: 16,
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
         fontWeight: '600',
-        color: '#000',
+        color: '#666',
     },
 });
 

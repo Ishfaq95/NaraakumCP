@@ -39,18 +39,18 @@ function RenderTabIcon({ routeName, isFocused }: RenderTabIconProps) {
 
   switch (routeName) {
     case ROUTES.AppointmentsStack:
-      return isFocused ? <Image resizeMode="contain" source={require('../assets/icons/appointmentsSelected.png')} style={{width: 24, height: 24}} /> : <Image resizeMode="contain" source={require('../assets/icons/appointmentsSelected.png')} style={{width: 26, height: 26}} />;
+      return isFocused ? <Image resizeMode="contain" source={require('../assets/icons/appointmentsSelected.png')} style={{width: 24, height: 24}} /> : <Image resizeMode="contain" source={require('../assets/images/appointmentNotSelected.png')} style={{width: 24, height: 24}} />;
     case ROUTES.MyClientsStack:
       return (
         <View style={{ position: 'relative' }}>
-          {isFocused ? <Image resizeMode="contain" source={require('../assets/icons/appointmentsSelected.png')} style={{width: 24, height: 24}} /> : <Image resizeMode="contain" source={require('../assets/icons/myClientsUnSelected.png')} style={{width: 24, height: 24}} />}
+          {isFocused ? <Image resizeMode="contain" source={require('../assets/images/myclientSelected.png')} style={{width: 24, height: 24}} /> : <Image resizeMode="contain" source={require('../assets/icons/myClientsUnSelected.png')} style={{width: 24, height: 24}} />}
          
         </View>
       );
     case ROUTES.MyProfileStack:
-      return isFocused ? <Image resizeMode="contain" source={require('../assets/icons/appointmentsSelected.png')} style={{width: 24, height: 24}} /> : <Image resizeMode="contain" source={require('../assets/icons/profileUnSelected.png')} style={{width: 24, height: 24}} />;
+      return isFocused ? <Image resizeMode="contain" source={require('../assets/images/profileSelected.png')} style={{width: 24, height: 24}} /> : <Image resizeMode="contain" source={require('../assets/icons/profileUnSelected.png')} style={{width: 24, height: 24}} />;
     case ROUTES.SettingsStack:
-      return isFocused ? <Image resizeMode="contain" source={require('../assets/icons/appointmentsSelected.png')} style={{width: 24, height: 24}} /> : <Image resizeMode="contain" source={require('../assets/icons/settingUnSelected.png')} style={{width: 24, height: 24}} />;
+      return isFocused ? <Image resizeMode="contain" source={require('../assets/images/settingSelected.png')} style={{width: 24, height: 24}} /> : <Image resizeMode="contain" source={require('../assets/icons/settingUnSelected.png')} style={{width: 24, height: 24}} />;
     default:
       return <></>;
   }

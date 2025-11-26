@@ -228,7 +228,7 @@ const OTPVerificationStep: React.FC<OTPVerificationStepProps> = ({
                 </TouchableOpacity>
             </View>
 
-            <FullScreenLoader visible={isLoading} />
+            {/* <FullScreenLoader visible={isLoading} /> */}
         </View>
     );
 };
@@ -259,7 +259,6 @@ const styles = StyleSheet.create({
     phoneNumber: {
         fontSize: 16,
         fontFamily: CAIRO_FONT_FAMILY.bold,
-        fontWeight: '700',
         color: '#239EA0',
         // marginBottom: 8,
     },

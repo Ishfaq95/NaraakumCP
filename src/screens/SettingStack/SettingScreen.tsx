@@ -1,4 +1,4 @@
-import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native'
+import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, Alert, Platform } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import AppHeader from '../../components/common/AppHeader'
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -76,6 +76,7 @@ const SettingScreen = () => {
       title: 'Help',
       icon: 'help-circle-outline',
       iconColor: '#00A19D',
+      Image: require('../../assets/images/video.png'),
       onPress: () => handleSettingsItemPress('help'),
     },
     {
@@ -83,6 +84,7 @@ const SettingScreen = () => {
       title: 'Delete My Account',
       icon: 'trash-outline',
       iconColor: '#FF3B30',
+      Image: require('../../assets/images/delete.png'),
       onPress: () => handleSettingsItemPress('delete'),
     },
   ]);
@@ -92,15 +94,16 @@ const SettingScreen = () => {
   const [isDataLoaded, setIsDataLoaded] = useState(false);
 
   const handleNotificationPress = () => {
-    // Navigate to notifications screen or show notifications
+    navigation.navigate(ROUTES.NotificationListScreen as never);
   };
 
-  const handleSettingsPress = () => {
-    // Navigate to settings screen
+  const handleMessagesPress = () => {
+    navigation.navigate(ROUTES.ConversationListScreen as never);
   };
 
   const handleAlarmPress = () => {
-    // Navigate to calendar/appointments screen
+    console.log('Alarm pressed');
+    navigation.navigate(ROUTES.ReminderListScreen as never);
   };
   
   const handleSettingsItemPress = (itemId: string) => {
@@ -229,10 +232,10 @@ const SettingScreen = () => {
         title="Settings"
         showNotification={true}
         notificationCount={0}
-        showSettings={true}
+          showMessages={true}
         showAlarm={true}
         onNotificationPress={handleNotificationPress}
-        onSettingsPress={handleSettingsPress}
+        onMessagesPress={handleMessagesPress}
         onAlarmPress={handleAlarmPress}
       />
       <View style={{ flex: 1, backgroundColor: '#e4f1ef', padding: 16 }}>
@@ -249,7 +252,7 @@ const SettingScreen = () => {
         visible={reminderSettingBottomSheetVisible}
         onClose={() => setReminderSettingBottomSheetVisible(false)}
         // height="28%"
-        maxHeight={220}
+        maxHeight={ Platform.OS === 'ios' ? 280 : 220}
         showHandle={false}
         style={{ borderTopLeftRadius: 10, borderTopRightRadius: 10, overflow: 'hidden' }}
       >
@@ -290,7 +293,7 @@ const SettingScreen = () => {
         </View>
       </CustomBottomSheet>
 
-      <FullScreenLoader visible={loading} />
+      {/* <FullScreenLoader visible={loading} /> */}
     </SafeAreaView>
   )
 }

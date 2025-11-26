@@ -116,7 +116,7 @@ const ServiceProviderSelection: React.FC<ServiceProviderSelectionProps> = ({
                 </TouchableOpacity>
             </View>
 
-            <FullScreenLoader visible={isLoading} />
+            {/* <FullScreenLoader visible={isLoading} /> */}
         </View>
     );
 };

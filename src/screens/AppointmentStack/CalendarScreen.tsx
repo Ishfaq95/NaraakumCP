@@ -210,17 +210,17 @@ const CalendarScreen: React.FC = () => {
   const renderCustomHeader = () => {
     return (
       <View style={styles.customHeaderContainer}>
-        <TouchableOpacity onPress={() => navigateMonth('prev')}>
+        {/* <TouchableOpacity onPress={() => navigateMonth('prev')}>
           <Ionicons name="chevron-back" size={24} color="#333" />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
 
         <TouchableOpacity onPress={() => setShowYearModal(true)}>
           <Text style={styles.headerTitle}>{currentMonth}</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => navigateMonth('next')}>
+        {/* <TouchableOpacity onPress={() => navigateMonth('next')}>
           <Ionicons name="chevron-forward" size={24} color="#333" />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
     );
   };

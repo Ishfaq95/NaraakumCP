@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { CAIRO_FONT_FAMILY } from '../../styles/globalStyles';
 
 interface MenuItem {
   id: string;
@@ -34,7 +35,7 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({
         >
           <View style={styles.menuItemContent}>
             <View style={styles.leftSection}>
-              {item.Image ? <Image source={item.Image} style={{width: 24, height: 24}} resizeMode="contain" /> : <Ionicons name={item.icon} size={24} color={item.iconColor} />}
+              {item.Image ? <Image source={item.Image} style={{width: 22, height: 22}} resizeMode="contain" /> : <Ionicons name={item.icon} size={24} color={item.iconColor} />}
               <Text style={styles.menuItemText}>{item.title}</Text>
             </View>
             
@@ -89,8 +90,9 @@ const styles = StyleSheet.create({
   },
   menuItemText: {
     fontSize: 16,
-    fontWeight: '500',
-    color: '#333',
+    fontWeight: '600',
+    fontFamily: CAIRO_FONT_FAMILY.semiBold,
+    color: '#191919',
     marginLeft: 12,
   },
   logoutContainer: {

@@ -139,7 +139,7 @@ const ForgotOTP = ({ route }: any) => {
           </ScrollView>
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
-      <FullScreenLoader visible={isLoading} />
+      {/* <FullScreenLoader visible={isLoading} /> */}
     </SafeAreaView>
   )
 }

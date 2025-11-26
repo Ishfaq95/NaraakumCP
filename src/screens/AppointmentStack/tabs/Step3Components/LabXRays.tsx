@@ -2,13 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { globalTextStyles } from '../../../../styles/globalStyles';
-import {
-  pick as pickDocuments,
-  types as documentTypes,
-  isErrorWithCode,
-  errorCodes,
-  type DocumentPickerResponse,
-} from '@react-native-documents/picker';
+// import {
+//   pick as pickDocuments,
+//   types as documentTypes,
+//   isErrorWithCode,
+//   errorCodes,
+//   type DocumentPickerResponse,
+// } from '@react-native-documents/picker';
 import { MediaBaseURL } from '../../../../shared/utils/constants';
 import { useSelector } from 'react-redux';
 import CustomBottomSheet from '../../../../components/common/CustomBottomSheet';
@@ -49,7 +49,7 @@ const LabXRays: React.FC<LabXRaysProps> = ({
   const [isFileTypesBottomSheetVisible, setIsFileTypesBottomSheetVisible] = useState(false);
   const [fileTypes, setFileTypes] = useState<any>([]);
   const [selectedFileCategory, setSelectedFileCategory] = useState<number | string>('');
-  const [selectedFile, setSelectedFile] = useState<DocumentPickerResponse | null>(null);
+  const [selectedFile, setSelectedFile] = useState<any | null>(null);
   console.log("data==>", data);
 
   useEffect(() => {
@@ -111,37 +111,37 @@ const LabXRays: React.FC<LabXRaysProps> = ({
   };
 
   const handleChooseFile = async () => {
-    try {
-      const pickResult = await pickDocuments({
-        type: [documentTypes.allFiles],
-        allowMultiSelection: false,
-      });
+    // try {
+    //   const pickResult = await pickDocuments({
+    //     type: [documentTypes.allFiles],
+    //     allowMultiSelection: false,
+    //   });
 
-      if (!pickResult || pickResult.length === 0) {
-        return;
-      }
+    //   if (!pickResult || pickResult.length === 0) {
+    //     return;
+    //   }
 
-      const selected: DocumentPickerResponse = pickResult[0];
+    //   const selected: DocumentPickerResponse = pickResult[0];
 
-      if (!selected) {
-        return;
-      }
+    //   if (!selected) {
+    //     return;
+    //   }
 
-      setSelectedFile(selected);
-    } catch (err) {
-      if (isErrorWithCode(err) && err.code === errorCodes.OPERATION_CANCELED) {
-        return;
-      }
+    //   setSelectedFile(selected);
+    // } catch (err) {
+    //   if (isErrorWithCode(err) && err.code === errorCodes.OPERATION_CANCELED) {
+    //     return;
+    //   }
 
-      if (err instanceof Error) {
-        Alert.alert(
-          'Error',
-          `Failed to select file: ${err.message}. Please try again.`,
-        );
-      } else {
-        Alert.alert('Error', 'Failed to select file. Please try again.');
-      }
-    }
+    //   if (err instanceof Error) {
+    //     Alert.alert(
+    //       'Error',
+    //       `Failed to select file: ${err.message}. Please try again.`,
+    //     );
+    //   } else {
+    //     Alert.alert('Error', 'Failed to select file. Please try again.');
+    //   }
+    // }
   };
 
   const handleSaveFile = async () => {

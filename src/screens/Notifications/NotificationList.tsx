@@ -4,7 +4,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
 import { notificationsService } from '../../services/api/notifications';
 import { useSelector } from 'react-redux';
-import { globalTextStyles } from '../../styles/globalStyles';
+import { CAIRO_FONT_FAMILY, globalTextStyles } from '../../styles/globalStyles';
 import moment from 'moment';
 import { ROUTES } from '../../shared/utils/routes';
 
@@ -263,8 +263,9 @@ const styles = StyleSheet.create({
         padding: 5,
     },
     headerTitle: {
-        ...globalTextStyles.h5,
-        marginLeft: 8,
+        fontSize: 16,
+        fontFamily:CAIRO_FONT_FAMILY.bold,
+        color: '#000',
     },
     listContent: {
         padding: 16,
@@ -293,26 +294,28 @@ const styles = StyleSheet.create({
         width: 36,
         height: 36,
         borderRadius: 18,
-        backgroundColor: '#e1f4f2',
-        borderWidth: 1,
-        borderColor: '#b8e5df',
+        backgroundColor: '#e4f1ef',
         alignItems: 'center',
         justifyContent: 'center',
         flexShrink: 0,
     },
     timestamp: {
-        ...globalTextStyles.bodySmall,
+        fontSize: 12,
+        fontWeight: '600',
+        fontFamily:CAIRO_FONT_FAMILY.semiBold,
         color: '#666',
         flexShrink: 0,
     },
     title: {
-        ...globalTextStyles.bodyLarge,
-        fontWeight: '700',
+        fontSize: 16,
+        fontFamily:CAIRO_FONT_FAMILY.bold,
         color: '#000',
         flex: 1,
     },
     description: {
-        ...globalTextStyles.bodyMedium,
+        fontSize: 14,
+        fontWeight: '500',
+        fontFamily:CAIRO_FONT_FAMILY.medium,
         color: '#555',
         marginBottom: 16,
         lineHeight: 20,
@@ -330,9 +333,10 @@ const styles = StyleSheet.create({
         marginTop: 8,
     },
     tasksButtonText: {
-        ...globalTextStyles.bodySmall,
-        color: '#14b8a6',
+        fontSize: 14,
         fontWeight: '600',
+        fontFamily:CAIRO_FONT_FAMILY.medium,
+        color: '#14b8a6',
     },
     loadingContainer: {
         flex: 1,

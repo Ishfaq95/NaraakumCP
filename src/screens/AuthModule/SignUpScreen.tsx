@@ -157,7 +157,7 @@ const SignUpScreen = () => {
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: currentStep === 5 ? '#fff' : '#eaf6f6' }]}>
             {currentStep !== 5 && <AuthHeader onBack={handlePrevious} />}
-            <FullScreenLoader visible={false} />
+            {/* <FullScreenLoader visible={false} /> */}
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 style={styles.keyboardAvoidingView}>

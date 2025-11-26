@@ -4,22 +4,22 @@ import AppHeader from '../../components/common/AppHeader'
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import ClientsList from './components/ClientsList';
 import ClientsFeedback from './components/ClientsFeedback';
+import { ROUTES } from '../../shared/utils/routes';
+import { useNavigation } from '@react-navigation/native';
 
 const MyClientsScreen = () => {
-  
+  const navigation = useNavigation();
   const handleNotificationPress = () => {
-    console.log('Notification pressed');
-    // Navigate to notifications screen or show notifications
+    navigation.navigate(ROUTES.NotificationListScreen as never);
   };
 
-  const handleSettingsPress = () => {
-    console.log('Settings pressed');
-    // Navigate to settings screen
+  const handleMessagesPress = () => {
+    navigation.navigate(ROUTES.ConversationListScreen as never);
   };
 
   const handleAlarmPress = () => {
     console.log('Alarm pressed');
-    // Navigate to calendar/appointments screen
+    navigation.navigate(ROUTES.ReminderListScreen as never);
   };
 
   const [activeTab, setActiveTab] = useState<'list' | 'feedback'>('list');
@@ -52,10 +52,10 @@ const MyClientsScreen = () => {
         title="My Clients"
         showNotification={true}
         notificationCount={0}
-        showSettings={true}
+        showMessages={true}
         showAlarm={true}
         onNotificationPress={handleNotificationPress}
-        onSettingsPress={handleSettingsPress}
+        onMessagesPress={handleMessagesPress}
         onAlarmPress={handleAlarmPress}
       />
       <View style={{ flex: 1, backgroundColor: '#e4f1ef' }}>

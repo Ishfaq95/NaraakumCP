@@ -2,8 +2,6 @@ pluginManagement { includeBuild("../node_modules/@react-native/gradle-plugin") }
 plugins { id("com.facebook.react.settings") }
 extensions.configure(com.facebook.react.ReactSettingsExtension){ ex -> ex.autolinkLibrariesFromCommand() }
 rootProject.name = 'Naraakum_CP'
-include ':react-native-documents-picker'
-project(':react-native-documents-picker').projectDir = new File(rootProject.projectDir, '../node_modules/@react-native-documents/picker/android')
 include ':react-native-push-notification'
 project(':react-native-push-notification').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-push-notification/android')
 include ':rnwebrtc'

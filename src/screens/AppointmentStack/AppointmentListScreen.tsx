@@ -16,6 +16,7 @@ import WebSocketService from '../../components/WebSocketService'
 import moment from 'moment'
 import CustomBottomSheet from '../../components/common/CustomBottomSheet'
 import DateTimePicker from '@react-native-community/datetimepicker'
+import ConfirmationModal from '../../components/common/ConfirmationModal'
 
 const AppointmentListScreen = () => {
   const navigation = useNavigation();
@@ -30,6 +31,7 @@ const AppointmentListScreen = () => {
   const [hasMoreData, setHasMoreData] = useState(true);
   const { user } = useSelector((state: any) => state.root.user);
   const { topic } = useSelector((state: any) => state.root.user);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
   const enabledAppointmentsRef = useRef<Set<string>>(new Set());
   const timerRef = useRef<any>(null);
   const dispatch = useDispatch();
@@ -333,7 +335,6 @@ const AppointmentListScreen = () => {
   };
 
   const handleAvailabilityChange = (value: boolean) => {
-    setIsAvailable(value);
     if (!value) {
       // Reset form when creating new unavailability
       setStartDate(new Date());
@@ -343,7 +344,8 @@ const AppointmentListScreen = () => {
       setReason('');
       setUnAvailableBottomSheetVisible(true);
     } else {
-      handleAddServiceProviderAvailability(unAvailabilityList[0]);
+      setShowConfirmModal(true);
+      // handleAddServiceProviderAvailability(unAvailabilityList[0]);
     }
   };
 
@@ -542,15 +544,8 @@ const AppointmentListScreen = () => {
   };
 
   const handleSaveUnavailability = () => {
-    // Implement save logic here
-    console.log('Save unavailability:', {
-      startDate: moment(startDate).format('DD/MM/YYYY'),
-      startTime: moment(startTime).format('HH:mm'),
-      endDate: moment(endDate).format('DD/MM/YYYY'),
-      endTime: moment(endTime).format('HH:mm'),
-      reason,
-    });
-    setUnAvailableBottomSheetVisible(false);
+    handleAddServiceProviderAvailability(unAvailabilityList[0]);
+    setShowConfirmModal(false);
   };
 
   const handleCancelUnavailability = () => {
@@ -683,7 +678,7 @@ const AppointmentListScreen = () => {
                 !refreshing ? (
                   <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                     <Image source={require('../../assets/images/EmptyList.png')} style={{ width: 50, height: 50 }} />
-                    <Text style={{ color: '#666', fontSize: 16,paddingTop: 10 }}>There are no appointments available</Text>
+                    <Text style={{ color: '#666', fontSize: 16, paddingTop: 10 }}>There are no appointments available</Text>
                   </View>
                 ) : null
               )}
@@ -879,6 +874,16 @@ const AppointmentListScreen = () => {
         {renderDateTimePicker('date', endDate, handleEndDateChange, showEndDateModal, setShowEndDateModal, 'End Date')}
         {renderDateTimePicker('time', endTime, handleEndTimeChange, showEndTimeModal, setShowEndTimeModal, 'End Time')}
       </CustomBottomSheet>
+
+      <ConfirmationModal
+        visible={showConfirmModal}
+        message="Are You Sure To Remove The Unavailability Time?"
+        onYes={handleSaveUnavailability}
+        onNo={() => {
+          setShowConfirmModal(false);
+        }}
+        title="Confirmation"
+      />
     </SafeAreaView>
   )
 }

@@ -95,7 +95,7 @@ const SavedAddresses = ({ onPressLocation }: { onPressLocation: () => void }) =>
           <Text style={styles.buttonText}>تأكيد الموقع</Text>
         </TouchableOpacity>
       </View>
-      <FullScreenLoader visible={loading} />
+      {/* <FullScreenLoader visible={loading} /> */}
     </View>
   )
 }

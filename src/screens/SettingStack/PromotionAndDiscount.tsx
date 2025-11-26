@@ -2,14 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, FlatList, TouchableOpacity, Alert, Image, TextInput, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import CustomScreensHeader from '../../components/common/CustomScreensHeader';
 import PromotionItem from '../../components/PromotionItem';
-import { globalTextStyles } from '../../styles/globalStyles';
+import { CAIRO_FONT_FAMILY, globalTextStyles } from '../../styles/globalStyles';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { settingService } from '../../services/api/settingService';
 import { useSelector } from 'react-redux';
 import CustomBottomSheet from '../../components/common/CustomBottomSheet';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import { useNavigation } from '@react-navigation/native';
 
 const PromotionAndDiscount: React.FC = () => {
+    const navigation = useNavigation();
     const [promoCodeList, setPromoCodeList] = useState<any[]>([]);
     const user = useSelector((state: any) => state.root.user.user);
     const [addPromoCodeBottomSheetVisible, setAddPromoCodeBottomSheetVisible] = useState(false);
@@ -220,15 +223,27 @@ const PromotionAndDiscount: React.FC = () => {
         }
     };
 
+    const handleBack = () => {
+        navigation.goBack();
+    };
+
+    const renderHeader = () => (
+        <View style={styles.header}>
+            <TouchableOpacity onPress={handleBack} style={styles.backButton}>
+                <Ionicons name="chevron-back" size={24} color="#333" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Promotions & Discounts</Text>
+        </View>
+    );
+
     return (
         <SafeAreaView style={styles.container}>
-            <CustomScreensHeader title="Promotions & Discounts" />
-
+{renderHeader()}
             <View style={styles.content}>
                 {/* Header Section with Icon and Title */}
                 <View style={styles.headerSection}>
                     <View style={styles.iconContainer}>
-                        <Image source={require('../../assets/icons/PromotionIcon.png')} style={{ width: 48, height: 48 }} resizeMode="contain" />
+                        <Image source={require('../../assets/icons/PromotionIcon.png')} style={{ width: 32, height: 32 }} resizeMode="contain" />
                     </View>
                     <Text style={styles.mainTitle}>Promotions & Discounts</Text>
                 </View>
@@ -466,13 +481,16 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#FFFFFF',
     },
+    backButton: {
+        padding: 5,
+    },
     content: {
         flex: 1,
         backgroundColor: '#E4F1EF', // Light teal background as shown in image
     },
     headerSection: {
         alignItems: 'center',
-        paddingVertical: 8,
+        marginTop: 16,
         paddingHorizontal: 16,
         marginBottom: 16,
     },
@@ -480,9 +498,9 @@ const styles = StyleSheet.create({
         marginBottom: 8,
     },
     mainTitle: {
-        ...globalTextStyles.h3,
-        fontWeight: 'bold',
-        color: '#000',
+        fontSize: 16,
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        color: '#191919',
         textAlign: 'center',
     },
     flatListContainer: {
@@ -504,7 +522,7 @@ const styles = StyleSheet.create({
     addButton: {
         backgroundColor: '#00A19D',
         borderRadius: 12,
-        paddingVertical: 16,
+        paddingVertical: 10,
         alignItems: 'center',
         shadowColor: '#000',
         shadowOffset: {
@@ -516,9 +534,25 @@ const styles = StyleSheet.create({
         elevation: 5,
     },
     addButtonText: {
-        ...globalTextStyles.buttonLarge,
-        fontWeight: 'bold',
+        fontSize: 16,
+        fontFamily: CAIRO_FONT_FAMILY.bold,
         color: '#FFFFFF',
+    },
+    header: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        height: 56,
+        backgroundColor: '#fff',
+        elevation: 2,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 3,
+    },
+    headerTitle: {
+        fontSize: 16,
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        color: '#000'
     },
 });
 
@@ -628,6 +662,7 @@ const bottomSheetStyles = StyleSheet.create({
         fontWeight: '600',
         color: '#fff',
     },
+    
 });
 
 export default PromotionAndDiscount;

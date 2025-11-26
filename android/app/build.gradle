@@ -124,11 +124,6 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-
-    // Fix duplicate class error with @react-native-documents/picker
-    packagingOptions {
-        pickFirst 'com/reactnativedocumentpicker/RNDocumentPickerPackage.class'
-    }
 }
 
 // Exclude legacy support libraries to avoid duplicate classes with AndroidX

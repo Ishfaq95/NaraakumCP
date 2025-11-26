@@ -294,7 +294,6 @@ const styles = StyleSheet.create({
   },
   patientName: {
     fontSize: 14,
-    fontWeight: '700',
     fontFamily: CAIRO_FONT_FAMILY.bold,
     color: '#191919',
     lineHeight: 20,
@@ -366,7 +365,6 @@ const styles = StyleSheet.create({
   },
   detailValue: {
     fontSize: 16,
-    fontWeight: '700',
     fontFamily: CAIRO_FONT_FAMILY.bold,
     lineHeight: 20,
     color: '#191919',

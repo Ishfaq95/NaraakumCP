@@ -372,7 +372,7 @@ const LoginScreen = () => {
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <AuthHeader />
-      <FullScreenLoader visible={isLoading} />
+      {/* <FullScreenLoader visible={isLoading} /> */}
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardAvoidingView}>

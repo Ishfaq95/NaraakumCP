@@ -2,7 +2,7 @@ import { View, Text, TouchableOpacity, StyleSheet, FlatList, Image, SafeAreaView
 import React, { useEffect, useState } from 'react'
 import { messagesAndCallService } from '../../services/api/MessagesAndCallService';
 import { useDispatch, useSelector } from 'react-redux';
-import { globalTextStyles } from '../../styles/globalStyles';
+import { CAIRO_FONT_FAMILY, globalTextStyles } from '../../styles/globalStyles';
 import Header from '../../components/common/Header';
 import { useTranslation } from 'react-i18next';
 import ArrowRightIcon from '../../assets/icons/RightArrow';
@@ -64,6 +64,7 @@ const ConversationListScreen = () => {
     }
 
     const renderConversationTile = ({ item }: any) => {
+        console.log('item', item);
         return (
             <TouchableOpacity
                 style={styles.conversationTile}
@@ -79,8 +80,8 @@ const ConversationListScreen = () => {
                         }}
                         style={styles.avatar}
                     /> :
-                        <View style={[styles.avatar, { alignItems: 'center', justifyContent: 'center', backgroundColor: 'gray' }]}>
-                            <Ionicons name="person" size={36} color="#fff" />
+                        <View style={[styles.avatar, { alignItems: 'center', justifyContent: 'center', backgroundColor: '#DDDDDD' }]}>
+                            <Ionicons name="person" size={30} color="#AFAFAF" />
                         </View>
                     }
                 </View>
@@ -97,7 +98,7 @@ const ConversationListScreen = () => {
 
                     <View style={styles.messageRow}>
                         <Text style={styles.lastMessage} numberOfLines={1}>
-                            {item?.lastmessage}
+                            {item.lastmessageType == "FilePath" ? 'File' : item?.lastmessage}
                         </Text>
                         {item.unseenmsgCount > 0 && (
                             <View style={styles.unreadBadge}>
@@ -128,9 +129,10 @@ const ConversationListScreen = () => {
     )
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
+        
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
             {renderHeader()}
-            <View style={{ flex: 1 }}>
+            <View style={{ flex: 1, backgroundColor: '#e4f1ef' }}>
                 <FlatList
                     data={conversationList}
                     renderItem={renderConversationTile}
@@ -149,6 +151,8 @@ const ConversationListScreen = () => {
 
 const styles = StyleSheet.create({
     headerTitle: {
+        fontSize: 16,
+        fontFamily: CAIRO_FONT_FAMILY.bold,
         color: '#000'
     },
     headerContainer: {
@@ -190,7 +194,7 @@ const styles = StyleSheet.create({
         width: 50,
         height: 50,
         borderRadius: 25,
-        backgroundColor: '#f0f0f0',
+        backgroundColor: '#DDDDDD',
     },
     statusIndicator: {
         position: 'absolute',
@@ -213,17 +217,19 @@ const styles = StyleSheet.create({
         width: '100%'
     },
     userName: {
-        ...globalTextStyles.bodyLarge,
+        fontSize: 16,
+        fontFamily: CAIRO_FONT_FAMILY.bold,
         width: '70%',
-        fontWeight: '600',
         color: '#000',
     },
     timestamp: {
         width: '30%',
         textAlign: 'right',
-        ...globalTextStyles.bodySmall,
-        color: '#666',
         fontSize: 12,
+        lineHeight: 18,
+        fontWeight: '500',
+        fontFamily: CAIRO_FONT_FAMILY.medium,
+        color: '#666',
     },
     messageRow: {
         flexDirection: 'row',
@@ -231,7 +237,10 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     lastMessage: {
-        ...globalTextStyles.bodyMedium,
+        fontSize: 14,
+        fontWeight: '500',
+        fontFamily: CAIRO_FONT_FAMILY.medium,
+        lineHeight: 20,
         color: '#666',
     },
     unreadBadge: {

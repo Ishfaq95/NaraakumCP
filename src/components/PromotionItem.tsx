@@ -1,6 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { globalTextStyles } from '../styles/globalStyles';
+import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { CAIRO_FONT_FAMILY, globalTextStyles } from '../styles/globalStyles';
 import moment from 'moment';
 
 
@@ -103,14 +103,16 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   labelText: {
-    ...globalTextStyles.caption,
-    color: '#818181',
-    marginBottom: 4,
+    fontSize: 14,
+    fontFamily: CAIRO_FONT_FAMILY.regular,
+    fontWeight: '400',
+    color: '#666666',
   },
   valueText: {
-    ...globalTextStyles.h6,
-    fontWeight: 'bold',
-    color: '#00A19D',
+    fontSize: 14,
+    fontFamily: CAIRO_FONT_FAMILY.bold,
+    color: '#239EA0',
+    lineHeight:20
   },
   detailsSection: {
     marginBottom: 16,
@@ -122,13 +124,15 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   detailLabel: {
-    ...globalTextStyles.bodyMedium,
-    color: '#555',
+    fontSize: 14,
+    fontFamily: CAIRO_FONT_FAMILY.regular,
+    fontWeight: '400',
+    color: '#444444',
   },
   detailValue: {
-    ...globalTextStyles.bodySmall,
-    color: '#000',
-    fontWeight: '700',
+    fontSize: 14,
+    fontFamily: CAIRO_FONT_FAMILY.bold,
+    color: '#191919',
   },
   actionButtons: {
     flexDirection: 'row',
@@ -139,29 +143,34 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#00A19D',
+    borderColor: '#239EA0',
     borderRadius: 8,
-    paddingVertical: 12,
+    paddingVertical: 8,
     alignItems: 'center',
   },
   editButtonText: {
-    ...globalTextStyles.buttonMedium,
-    color: '#00A19D',
-    fontWeight: 'bold',
+    fontSize: 14,
+    fontFamily: CAIRO_FONT_FAMILY.semiBold,
+    fontWeight: '600',
+    color: '#239EA0',
+    lineHeight:Platform.OS === 'ios' ? 0 : 16
   },
   deleteButton: {
     flex: 1,
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#FF3B30',
+    borderColor: '#EF6666',
     borderRadius: 8,
-    paddingVertical: 12,
+    paddingVertical: 8,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   deleteButtonText: {
-    ...globalTextStyles.buttonMedium,
-    color: '#FF3B30',
-    fontWeight: 'bold',
+    fontSize: 14,
+    fontFamily: CAIRO_FONT_FAMILY.semiBold,
+    fontWeight: '600',
+    color: '#EF6666',
+    lineHeight:Platform.OS === 'ios' ? 0 : 16
   },
 });
 

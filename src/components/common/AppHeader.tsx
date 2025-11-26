@@ -198,7 +198,6 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 16,
-    fontWeight: '700',
     fontFamily: CAIRO_FONT_FAMILY.bold,
     color: '#191919',
   },
@@ -217,7 +216,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FF3B30',
     borderRadius: 10,
     height: 18,
-    width:18,
+    width:22,
     justifyContent: 'center',
     alignItems: 'center',
     // paddingHorizontal: 2,
@@ -227,6 +226,8 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 10,
     fontWeight: '600',
+    fontFamily: CAIRO_FONT_FAMILY.medium,
+    lineHeight: 18,
   },
 });
 

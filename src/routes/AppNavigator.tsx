@@ -1,9 +1,8 @@
-import React, { useEffect, useState } from "react";
-import { StatusBar, TouchableOpacity, View, Image, Text } from "react-native";
+import React from "react";
+import { TouchableOpacity, View, Image, Text } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useDispatch, useSelector } from "react-redux";
 import { CommonActions } from '@react-navigation/native'; // Add this import
 import { ROUTES } from "../shared/utils/routes";
 import { useTranslation } from "react-i18next";
@@ -12,9 +11,6 @@ import AppointmentListScreen from "../screens/AppointmentStack/AppointmentListSc
 import MyClientsScreen from "../screens/MyClientsStack/MyClientsScreen";
 import MyProfileScreen from "../screens/MyProfileStack/MyProfileScreen";
 import SettingScreen from "../screens/SettingStack/SettingScreen";
-import PromotionAndDiscount from "../screens/SettingStack/PromotionAndDiscount";
-
-
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -24,19 +20,7 @@ type RenderTabIconProps = {
   isFocused: boolean;
 };
 
-const HamburgerManu = () => (
-  <View style={{
-    width: 24, height: 24, borderRadius: 12, backgroundColor: '#ccc',
-    alignItems: 'center', justifyContent: 'center'
-  }}>
-    <Text style={[globalTextStyles.bodyMedium, { color: '#888' }]}>≡</Text>
-  </View>
-);
-
 function RenderTabIcon({ routeName, isFocused }: RenderTabIconProps) {
-  // const cardItems = useSelector((state: any) => state.root.booking.cardItems);
-  // const cardItemsCount = cardItems.length;
-
   switch (routeName) {
     case ROUTES.AppointmentsStack:
       return isFocused ? <Image resizeMode="contain" source={require('../assets/icons/appointmentsSelected.png')} style={{width: 24, height: 24}} /> : <Image resizeMode="contain" source={require('../assets/images/appointmentNotSelected.png')} style={{width: 24, height: 24}} />;

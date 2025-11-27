@@ -58,8 +58,8 @@ const RootNavigator = () => {
         <Stack.Screen name={ROUTES.SignUp} component={SignUpScreen} />
         <Stack.Screen name={ROUTES.ForgotPassword} component={ForgotPassword} />
         <Stack.Screen name={ROUTES.ForgotOTP} component={ForgotOTP} />
-      <Stack.Screen name={ROUTES.ConfirmPassword} component={ConfirmPassword} />
-      <Stack.Screen name={ROUTES.PrivacyPolicy} component={PrivicyPolicy} />
+        <Stack.Screen name={ROUTES.ConfirmPassword} component={ConfirmPassword} />
+        <Stack.Screen name={ROUTES.PrivacyPolicy} component={PrivicyPolicy} />
       </Stack.Navigator>
     );
   }
@@ -96,7 +96,7 @@ const RootNavigator = () => {
       <Stack.Screen name={ROUTES.PrescriptionListScreen} component={PrescriptionListScreen} />
       <Stack.Screen name={ROUTES.BookNewService} component={BookingMainScreen} />
       <Stack.Screen name={ROUTES.SuccessScreen} component={SuccessScreen} />
-      
+
     </Stack.Navigator>
   );
 };

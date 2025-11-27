@@ -1,4 +1,4 @@
-import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet } from 'react-native'
+import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, Platform } from 'react-native'
 import React, { useState } from 'react'
 import AppHeader from '../../components/common/AppHeader'
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -6,6 +6,7 @@ import ClientsList from './components/ClientsList';
 import ClientsFeedback from './components/ClientsFeedback';
 import { ROUTES } from '../../shared/utils/routes';
 import { useNavigation } from '@react-navigation/native';
+import { CAIRO_FONT_FAMILY } from '../../styles/globalStyles';
 
 const MyClientsScreen = () => {
   const navigation = useNavigation();
@@ -78,7 +79,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#2aa7a9',
-    paddingTop: 12,
+    // paddingTop: 12,
   },
   fullTabButton: {
     flex: 1,
@@ -91,9 +92,10 @@ const styles = StyleSheet.create({
     opacity: 1,
   },
   tabText: {
-    color: '#e5f3f2',
-    fontSize: 15,
-    fontWeight: 'bold',
+    color: '#E9F5F6',
+    fontSize: 16,
+    fontFamily: CAIRO_FONT_FAMILY.bold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
   },
   tabTextActive: {
     color: '#fff',

@@ -1,7 +1,9 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image } from 'react-native';
+import { View, Text, StyleSheet, Image, Platform } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { MediaBaseURL } from '../../shared/utils/constants';
+import { CAIRO_FONT_FAMILY } from '../../styles/globalStyles';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
 
 interface ProfileHeaderProps {
   name: string;
@@ -41,24 +43,25 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
     <View style={styles.container}>
       <View style={styles.header}>
         <View style={styles.profileSection}>
-          <Image 
-            source={profileImage ? { uri: `${MediaBaseURL}${profileImage}` } : require('../../assets/icons/doctor-vector.svg')} 
-            style={styles.profileImage} 
-          />
+          {profileImage ? <Image
+            source={profileImage ? { uri: `${MediaBaseURL}${profileImage}` } : require('../../assets/icons/doctor-vector.svg')}
+            style={styles.profileImage}
+          /> : 
+          <View style={{ width: 50, height: 50, borderRadius: 25,alignItems: 'center', justifyContent: 'center', backgroundColor: '#DDDDDD' }} >
+            <Ionicons name="person" size={28} color="#AFAFAF" />
+          </View>}
           <View style={styles.userInfo}>
             <Text style={styles.name}>{name}</Text>
-            <Text style={styles.gender}>{gender}</Text>
             <View style={styles.ratingContainer}>
-              <View style={styles.stars}>
-                {renderStars()}
-              </View>
-              <Text style={styles.reviewCount}>{rating} ({reviewCount} Person)</Text>
+              <Text style={styles.gender}>{gender}</Text>
+              <FontAwesome name={'star'} size={14} color="#FFC107" style={{ marginRight: 2, marginLeft: 4 }} />
+              <Text style={styles.reviewCount}><Text style={{ fontSize: 14, fontFamily: CAIRO_FONT_FAMILY.bold, color: '#191919' }}>{rating}</Text> ({reviewCount} Person)</Text>
             </View>
           </View>
         </View>
         <View style={styles.statusContainer}>
-          <View style={styles.statusDot} />
-          <Text style={styles.statusText}>Active</Text>
+          <View style={[styles.statusDot, { backgroundColor: isActive ? '#23a2a4' : '#de574d' }]} />
+          <Text style={[styles.statusText, { color: isActive ? '#23a2a4' : '#de574d' }]}>{isActive ? 'Active' : 'Inactive'}</Text>
         </View>
       </View>
 
@@ -104,13 +107,15 @@ const styles = StyleSheet.create({
   },
   name: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
+    fontFamily: CAIRO_FONT_FAMILY.bold,
+    color: '#191919',
     marginBottom: 2,
   },
   gender: {
     fontSize: 14,
+    fontFamily: CAIRO_FONT_FAMILY.regular,
     color: '#666',
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
     marginBottom: 2,
   },
   ratingContainer: {
@@ -123,7 +128,9 @@ const styles = StyleSheet.create({
   },
   reviewCount: {
     fontSize: 12,
+    fontFamily: CAIRO_FONT_FAMILY.regular,
     color: '#666',
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
   },
   statusContainer: {
     flexDirection: 'row',
@@ -133,13 +140,12 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#00A19D',
     marginRight: 4,
   },
   statusText: {
     fontSize: 14,
-    fontWeight: '500',
-    color: '#00A19D',
+    fontFamily: CAIRO_FONT_FAMILY.bold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
   },
   progressContainer: {
     flexDirection: 'row',
@@ -161,7 +167,8 @@ const styles = StyleSheet.create({
   },
   progressText: {
     fontSize: 14,
-    fontWeight: '500',
+    fontFamily: CAIRO_FONT_FAMILY.bold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
     color: '#333',
     width: 40,
     textAlign: 'right',

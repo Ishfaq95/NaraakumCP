@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, Platform } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Feather from 'react-native-vector-icons/Feather';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
@@ -295,8 +295,9 @@ const styles = StyleSheet.create({
   patientName: {
     fontSize: 14,
     fontFamily: CAIRO_FONT_FAMILY.bold,
+    textAlign: 'left',
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
     color: '#191919',
-    lineHeight: 20,
     // marginBottom: 4,
   },
   genderRatingRow: {

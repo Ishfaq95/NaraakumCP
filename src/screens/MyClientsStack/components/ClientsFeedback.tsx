@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Platform } from 'react-native';
 import { myClientsService } from '../../../services/api/myClientsService';
 import { useSelector } from 'react-redux';
 import ClientFeedbackCard from './ClientFeedbackCard';
+import { CAIRO_FONT_FAMILY } from '../../../styles/globalStyles';
 
 const ClientsFeedback: React.FC = () => {
   const user = useSelector((state: any) => state.root.user.user);
@@ -44,9 +45,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   title: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#666',
+    fontSize: 14,
+    fontFamily: CAIRO_FONT_FAMILY.semiBold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
+    color: '#191919',
   },
   subtitle: {
     marginTop: 6,

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { CAIRO_FONT_FAMILY } from '../../styles/globalStyles';
 
 type TabType = 'previous' | 'today' | 'upcoming';
 
@@ -97,7 +98,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 8,
   },
   activeTab: {
     borderRadius: 25,
@@ -105,12 +106,13 @@ const styles = StyleSheet.create({
   },
   tabText: {
     fontSize: 14,
-    fontWeight: '500',
+    fontFamily: CAIRO_FONT_FAMILY.semiBold,
+    textAlign: 'left',
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
     color: '#666',
   },
   activeTabText: {
     color: '#FFFFFF',
-    fontWeight: '600',
   },
 });
 

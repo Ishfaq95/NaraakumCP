@@ -317,8 +317,7 @@ const AppointmentListScreen = () => {
   };
 
   const handleCompleteProfile = () => {
-    // Navigate to profile completion screen
-    navigation.navigate('MyProfile' as never);
+    navigation.navigate(ROUTES.MyProfileStack, { screen: ROUTES.MyProfileScreen })
   };
 
   const handleNotificationPress = () => {

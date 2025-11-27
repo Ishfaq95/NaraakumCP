@@ -1,8 +1,9 @@
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native'
+import { View, Text, StyleSheet, TouchableOpacity, Image, Platform } from 'react-native'
 import React from 'react'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 import FontAwesome from 'react-native-vector-icons/FontAwesome'
 import { MediaBaseURL } from '../../../shared/utils/constants';
+import { CAIRO_FONT_FAMILY } from '../../../styles/globalStyles';
 
 const ClientCard: React.FC<{ item: any } & { onMore?: (item: any) => void; onBook?: (item: any) => void }> = ({ item, onMore, onBook }) => {
     return (
@@ -13,7 +14,7 @@ const ClientCard: React.FC<{ item: any } & { onMore?: (item: any) => void; onBoo
                     style={styles.avatar}
                 /> :
                     <View style={styles.avatar}>
-                        <Ionicons name="person" size={28} color="gray" />
+                        <Ionicons name="person" size={22} color="#AFAFAF" />
                     </View>
                 }
                 <View style={{ flex: 1 }}>
@@ -61,32 +62,39 @@ const styles = StyleSheet.create({
         height: 40,
         borderRadius: 20,
         marginRight: 10,
-        backgroundColor: 'lightgray',
+        backgroundColor: '#DDDDDD',
         justifyContent: 'center',
         alignItems: 'center',
     },
     name: {
         fontSize: 16,
-        fontWeight: '700',
-        color: '#1f2937',
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        textAlign: 'left',
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
+        color: '#191919',
     },
     gender: {
         fontSize: 13,
-        color: '#6b7280',
+        fontFamily: CAIRO_FONT_FAMILY.regular,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
+        color: '#666',
     },
     rating: {
         fontSize: 13,
-        color: '#111827',
-        fontWeight: '600',
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
+        color: '#191919',
     },
     ratingCount: {
         fontSize: 11,
-        color: '#6b7280',
+        fontFamily: CAIRO_FONT_FAMILY.regular,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
+        color: '#666',
         marginLeft: 4,
     },
     divider: {
         height: 1,
-        backgroundColor: '#e5e7eb',
+        backgroundColor: '#E0E0E0',
         marginVertical: 10,
     },
     actionsRow: {
@@ -99,8 +107,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     bookText: {
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#666',
-        fontWeight: '600',
         marginLeft: 6,
     },
     moreButton: {
@@ -108,6 +117,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     moreText: {
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#666',
         marginLeft: 6,
     },

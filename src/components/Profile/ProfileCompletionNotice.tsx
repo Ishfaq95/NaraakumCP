@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { CAIRO_FONT_FAMILY } from '../../styles/globalStyles';
 
 interface ProfileSummary {
   ProfileManagement?: string;
@@ -17,6 +18,7 @@ const ProfileCompletionNotice: React.FC<ProfileCompletionNoticeProps> = ({
   profileSummary,
   onCompleteProfile,
 }) => {
+  console.log('profileSummary', profileSummary?.OrganizationStatus);
   const calculateCompletionPercentage = (): number => {
     let completionPercentage = 0;
     
@@ -42,7 +44,7 @@ const ProfileCompletionNotice: React.FC<ProfileCompletionNoticeProps> = ({
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Your profile is incomplete</Text>
+      <Text style={styles.title}>Your profile is incomplete <Text style={{color: 'red',fontSize: 14,fontFamily: CAIRO_FONT_FAMILY.bold}}>{profileSummary?.OrganizationStatus ? '' : '(UnApproved)'}</Text></Text>
       <Text style={styles.subtitle}>
         Your profile will not appear in care providers' list
         until you complete your profile
@@ -109,15 +111,16 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   button: {
-    backgroundColor: '#23a2a4',
+    borderColor: '#23a2a4',
+    borderWidth: 1,
     borderRadius: 8,
-    paddingVertical: 12,
+    paddingVertical: 10,
     alignItems: 'center',
   },
   buttonText: {
-    color: '#fff',
+    color: '#23a2a4',
     fontSize: 16,
-    fontWeight: '500',
+    fontFamily: CAIRO_FONT_FAMILY.bold,
   },
 });
 

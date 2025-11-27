@@ -15,7 +15,7 @@ const MyProfileScreen = () => {
     {
       id: 'service',
       title: 'Service Profile',
-      icon: 'medical-outline',
+      image: require('../../assets/images/ServiceManagement.png'),
       iconColor: '#00A19D',
       isComplete: false,
       onPress: () => handleProfileOptionPress('service'),
@@ -23,7 +23,7 @@ const MyProfileScreen = () => {
     {
       id: 'personal',
       title: 'Personal Profile',
-      icon: 'person-outline',
+      image: require('../../assets/images/PersonalProfile.png'),
       iconColor: '#00A19D',
       isComplete: false,
       onPress: () => handleProfileOptionPress('personal'),
@@ -31,7 +31,7 @@ const MyProfileScreen = () => {
     {
       id: 'payment',
       title: 'Payment Profile',
-      icon: 'wallet-outline',
+      image: require('../../assets/images/PaymentProfile.png'),
       iconColor: '#00A19D',
       isComplete: false,
       onPress: () => handleProfileOptionPress('payment'),
@@ -39,7 +39,7 @@ const MyProfileScreen = () => {
     {
       id: 'clients',
       title: 'Clients Profile',
-      icon: 'people-outline',
+      image: require('../../assets/images/ClientsProfile.png'),
       iconColor: '#00A19D',
       isComplete: true,
       onPress: () => handleProfileOptionPress('clients'),
@@ -50,7 +50,7 @@ const MyProfileScreen = () => {
   const user = useSelector((state: any) => state.root.user.user);
   const [profileSummary, setProfileSummary] = useState<any>({});
   const navigation = useNavigation();
-  console.log('profileSummary',profileSummary);
+  console.log('serviceProvider',serviceProvider);
 
   useEffect(() => {
     getServiceProviderByUserId();
@@ -185,9 +185,9 @@ const MyProfileScreen = () => {
           <ProfileHeader
             name={serviceProvider?.FullNamePlang}
             gender={serviceProvider?.Gender == true ? "Male" : "Female"}
-            rating={serviceProvider?.AccumulativeRatingAvg}
-            reviewCount={serviceProvider?.AccumulativeRatingNum}
-            isActive={profileSummary?.OrganizationStatus == true ? true : false}
+            rating={serviceProvider?.AccumulativeRatingAvg || 0}
+            reviewCount={serviceProvider?.AccumulativeRatingNum || 0}
+            isActive={serviceProvider?.isApproved == true ? true : false}
             completionPercentage={calculateCompletionPercentage()}
             profileImage={serviceProvider?.ImagePath}
           />

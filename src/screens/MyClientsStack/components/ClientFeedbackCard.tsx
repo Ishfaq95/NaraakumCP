@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, Platform } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import colors from '../../../styles/colors';
 import { CAIRO_FONT_FAMILY, globalTextStyles } from '../../../styles/globalStyles';
@@ -42,9 +42,9 @@ const ClientFeedbackCard: React.FC<Props> = ({ item, onDelete }) => {
                         source={{ uri: `${MediaBaseURL}${avatarUri}` }}
                         style={styles.avatar}
                     /> :
-                        <View style={styles.avatar}>
-                            <Ionicons name="person" size={28} color="gray" />
-                        </View>
+                    <View style={styles.avatar}>
+                    <Ionicons name="person" size={22} color="#AFAFAF" />
+                </View>
                     }
                     <View style={{ marginLeft: 8 }}>
                         <Text style={styles.name}>{name}</Text>
@@ -88,23 +88,34 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     avatar: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        marginRight: 10,
+        backgroundColor: '#DDDDDD',
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     name: {
-        ...globalTextStyles.h5,
+        fontSize: 16,
         fontFamily: CAIRO_FONT_FAMILY.bold,
-        color: '#000',
+        textAlign: 'left',
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
+        color: '#191919',
     },
     dateText: {
-        ...globalTextStyles.bodySmall,
-        color: '#9AA1A6',
+        fontSize: 12,
+        fontFamily: CAIRO_FONT_FAMILY.regular,
+        textAlign: 'left',
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
+        color: '#666',
     },
     ratingText: {
-        ...globalTextStyles.bodyMedium,
-        fontFamily: CAIRO_FONT_FAMILY.bold,
-        color: '#000',
+        fontSize: 13,
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        textAlign: 'left',
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
+        color: '#191919',
     },
     separator: {
         height: 1,
@@ -112,8 +123,11 @@ const styles = StyleSheet.create({
         marginVertical: 12,
     },
     secondaryDate: {
-        ...globalTextStyles.bodyMedium,
-        color: '#6E6E6E',
+        fontSize: 13,
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        textAlign: 'left',
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
+        color: '#666',
         marginBottom: 12,
     },
     deleteBtn: {

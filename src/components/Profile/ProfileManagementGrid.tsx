@@ -1,18 +1,10 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform, Image } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-
-interface ProfileOption {
-  id: string;
-  title: string;
-  icon: string;
-  iconColor: string;
-  isComplete: boolean;
-  onPress: () => void;
-}
+import { CAIRO_FONT_FAMILY } from '../../styles/globalStyles';
 
 interface ProfileManagementGridProps {
-  options: ProfileOption[];
+  options: any[];
 }
 
 const ProfileManagementGrid: React.FC<ProfileManagementGridProps> = ({ options }) => {
@@ -28,8 +20,8 @@ const ProfileManagementGrid: React.FC<ProfileManagementGridProps> = ({ options }
             onPress={option.onPress}
           >
             <View style={styles.cardContent}>
-              <View style={[styles.iconContainer, { borderColor: option.iconColor }]}>
-                <Ionicons name={option.icon} size={28} color={option.iconColor} />
+              <View style={[styles.iconContainer]}>
+                <Image source={option.image} style={{ width: 34, height: 34 }} />
               </View>
 
               {option.id !== 'clients' && (
@@ -59,8 +51,9 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
+    fontFamily: CAIRO_FONT_FAMILY.bold,
+    color: '#191919',
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
     marginBottom: 12,
   },
   grid: {
@@ -72,7 +65,8 @@ const styles = StyleSheet.create({
     width: '48%',
     backgroundColor: '#FFFFFF',
     borderRadius: 10,
-    padding: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 10,
     marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -89,7 +83,6 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 25,
-    borderWidth: 2,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -105,7 +98,8 @@ const styles = StyleSheet.create({
   completeText: {
     color: '#fff',
     fontSize: 12,
-    fontWeight: '500',
+    fontFamily: CAIRO_FONT_FAMILY.semiBold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
   },
   incompleteTag: {
     position: 'absolute',
@@ -119,11 +113,13 @@ const styles = StyleSheet.create({
   incompleteText: {
     color: '#FF6B6B',
     fontSize: 12,
-    fontWeight: '500',
+    fontFamily: CAIRO_FONT_FAMILY.semiBold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
   },
   optionTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: CAIRO_FONT_FAMILY.bold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
     color: '#333',
     marginTop: 8,
   },

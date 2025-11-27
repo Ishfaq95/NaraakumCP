@@ -2,7 +2,7 @@
   "project_info": {
     "project_number": "1060639338997",
     "project_id": "naraakum-c8d6a",
-    "storage_bucket": "naraakum-c8d6a.appspot.com"
+    "storage_bucket": "naraakum-c8d6a.firebasestorage.app"
   },
   "client": [
     {
@@ -12,12 +12,7 @@
           "package_name": "com.innotech.naraakum"
         }
       },
-      "oauth_client": [
-        {
-          "client_id": "1060639338997-bu8p0ksr9rak5k2u8gtdb0oo2qbuq06u.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
+      "oauth_client": [],
       "api_key": [
         {
           "current_key": "AIzaSyBmZEGo2Wm4AYHMdvNKNjPpGJb-zkFBqL8"
@@ -27,14 +22,14 @@
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "1060639338997-296fl0l13uc6o4jc8349cscmmbk8hhct.apps.googleusercontent.com",
+              "client_id": "1060639338997-trk5clk7fhaln0klkrum6a5fritpn3t6.apps.googleusercontent.com",
               "client_type": 3
             },
             {
-              "client_id": "1060639338997-ur76dj8polae4vkkclj64gb3nf99dt38.apps.googleusercontent.com",
+              "client_id": "1060639338997-thf3ipba2kcnnhn495dbqnukildkk5t9.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.naraakum.naraakum"
+                "bundle_id": "com.naraakum.naraakumPatient"
               }
             }
           ]
@@ -50,8 +45,20 @@
       },
       "oauth_client": [
         {
-          "client_id": "1060639338997-bu8p0ksr9rak5k2u8gtdb0oo2qbuq06u.apps.googleusercontent.com",
-          "client_type": 3
+          "client_id": "1060639338997-jaq1rhht9d0058ubafq5ql12he694btk.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.naraakum_cp",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "1060639338997-v62arnetq98i06if54ds6jjdl0e55me1.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.naraakum_cp",
+            "certificate_hash": "8e8b789b09f4e8c19645ac9df18dd447d1a7584b"
+          }
         }
       ],
       "api_key": [
@@ -63,14 +70,14 @@
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "1060639338997-296fl0l13uc6o4jc8349cscmmbk8hhct.apps.googleusercontent.com",
+              "client_id": "1060639338997-trk5clk7fhaln0klkrum6a5fritpn3t6.apps.googleusercontent.com",
               "client_type": 3
             },
             {
-              "client_id": "1060639338997-ur76dj8polae4vkkclj64gb3nf99dt38.apps.googleusercontent.com",
+              "client_id": "1060639338997-thf3ipba2kcnnhn495dbqnukildkk5t9.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.naraakum.naraakum"
+                "bundle_id": "com.naraakum.naraakumPatient"
               }
             }
           ]
@@ -86,8 +93,20 @@
       },
       "oauth_client": [
         {
-          "client_id": "1060639338997-bu8p0ksr9rak5k2u8gtdb0oo2qbuq06u.apps.googleusercontent.com",
-          "client_type": 3
+          "client_id": "1060639338997-9spg36j5m2hcnv0p2nsm51n34ts59esc.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.naraakum_patient",
+            "certificate_hash": "56af8d3afcb88ee2aceb0600999826cad7deed3e"
+          }
+        },
+        {
+          "client_id": "1060639338997-sgjk0nuctcb6dqu64qd4vcbn2h8tj4ka.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.naraakum_patient",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
         }
       ],
       "api_key": [
@@ -99,14 +118,14 @@
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "1060639338997-296fl0l13uc6o4jc8349cscmmbk8hhct.apps.googleusercontent.com",
+              "client_id": "1060639338997-trk5clk7fhaln0klkrum6a5fritpn3t6.apps.googleusercontent.com",
               "client_type": 3
             },
             {
-              "client_id": "1060639338997-ur76dj8polae4vkkclj64gb3nf99dt38.apps.googleusercontent.com",
+              "client_id": "1060639338997-thf3ipba2kcnnhn495dbqnukildkk5t9.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.naraakum.naraakum"
+                "bundle_id": "com.naraakum.naraakumPatient"
               }
             }
           ]

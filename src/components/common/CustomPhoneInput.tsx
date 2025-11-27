@@ -14,7 +14,7 @@ import {
   I18nManager,
 } from 'react-native';
 import CountryFlag from 'react-native-country-flag';
-import { globalTextStyles } from '../../styles/globalStyles';
+import { CAIRO_FONT_FAMILY, globalTextStyles } from '../../styles/globalStyles';
 import CustomBottomSheet from './CustomBottomSheet';
 
 interface Country {
@@ -2500,9 +2500,10 @@ const styles = StyleSheet.create({
     marginLeft: 6,
   },
   countryCode: {
-    ...globalTextStyles.bodyMedium,
-    fontWeight: '600',
-    color: '#000',
+    fontSize: 16,
+    fontFamily: CAIRO_FONT_FAMILY.semiBold,
+    lineHeight: 20,
+    color: '#191919',
     marginLeft: 4,
   },
   dropdownIcon: {

@@ -21,7 +21,7 @@ import { useSelector } from 'react-redux';
 import { appointmentService } from '../../services/api/appointmentService';
 import CustomBottomSheet from '../../components/common/CustomBottomSheet';
 import AppointmentCard from '../../components/Appointment/AppointmentCard';
-import { globalTextStyles } from '../../styles/globalStyles';
+import { CAIRO_FONT_FAMILY, globalTextStyles } from '../../styles/globalStyles';
 import Header from '../../components/common/Header';
 import { useNavigation } from '@react-navigation/native';
 
@@ -231,7 +231,7 @@ const CalendarScreen: React.FC = () => {
         <Ionicons name="chevron-back" size={24} color="#333" />
 
       </TouchableOpacity>
-      <Text style={{fontSize:16,fontWeight:'bold',color:'#333'}}>Appointment Calendar</Text>
+      <Text style={{fontSize:16,fontFamily:CAIRO_FONT_FAMILY.bold,lineHeight:20,color:'#191919'}}>Appointment Calendar</Text>
     </View>
   );
 
@@ -429,13 +429,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
+      fontSize: 16,
+      fontFamily: CAIRO_FONT_FAMILY.bold,
+      lineHeight: 20,
+    color: '#191919',
   },
   subHeaderText: {
     fontSize: 14,
-    color: '#666',
+    fontFamily: CAIRO_FONT_FAMILY.semiBold,
+    lineHeight: 20,
+    color: '#191919',
     marginTop: 4,
   },
   calendar: {

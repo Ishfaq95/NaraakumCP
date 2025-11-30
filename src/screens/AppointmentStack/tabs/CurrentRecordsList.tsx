@@ -1,9 +1,10 @@
 import React from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Platform } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { MediaBaseURL } from '../../../shared/utils/constants';
 import moment from 'moment';
+import { CAIRO_FONT_FAMILY } from '../../../styles/globalStyles';
 
 interface CurrentRecordsListProps {
     records: any[];
@@ -32,12 +33,13 @@ const CurrentRecordsList: React.FC<CurrentRecordsListProps> = ({ records, onVisi
 
             <View style={styles.detailRow}>
                 <Ionicons name="calendar-outline" size={20} color="#14b8a6" />
-                <Text style={styles.detailLabel}>Visit Date</Text>
+                <Text style={styles.detailLabel}>{item.CatCategoryId == '42' ? 'Session Date' : 'Visit Date'}</Text>
                 <Text style={styles.detailValue}>{moment.utc(item.VisitDate).local().format('DD/MM/YYYY')}</Text>
             </View>
 
             <TouchableOpacity style={styles.infoButton} onPress={() => onVisitRecordPress && onVisitRecordPress(item)}>
-                    <Text style={styles.infoButtonText}>Visit Record Information</Text>
+            {item.CatCategoryId == '42' &&<Image source={require('../../../assets/icons/cameramovie.png')} style={{ tintColor: '#808080',marginRight: 8, width: 18, height: 18 }} />}
+            <Text style={styles.infoButtonText}>{item.CatCategoryId == '42' ? 'Session Record Information' : 'Visit Record Information'}</Text>
             </TouchableOpacity>
         </View>
     );
@@ -125,7 +127,8 @@ const styles = StyleSheet.create({
     },
     detailValue: {
         fontSize: 14,
-        fontWeight: '600',
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        lineHeight:Platform.OS === 'ios' ? 0 : 20,
         color: '#000',
     },
     infoButton: {
@@ -133,7 +136,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         backgroundColor: '#fff',
-        borderWidth: 1.5,
+        borderWidth: 1,
         borderColor: '#14b8a6',
         borderRadius: 8,
         paddingVertical: 12,

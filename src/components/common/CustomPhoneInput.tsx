@@ -2467,8 +2467,6 @@ const CustomPhoneInput: React.FC<CustomPhoneInputProps> = ({
           />
         </View>
       </CustomBottomSheet>
-
-      
     </View>
   );
 };
@@ -2502,7 +2500,7 @@ const styles = StyleSheet.create({
   countryCode: {
     fontSize: 16,
     fontFamily: CAIRO_FONT_FAMILY.semiBold,
-    lineHeight: 20,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
     color: '#191919',
     marginLeft: 4,
   },

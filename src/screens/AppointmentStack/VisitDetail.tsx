@@ -1,13 +1,15 @@
 import { useNavigation } from '@react-navigation/native';
-import { View, Text, SafeAreaView, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, SafeAreaView, StyleSheet, TouchableOpacity, ScrollView, Linking } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useEffect, useState } from 'react';
 import { appointmentService } from '../../services/api/appointmentService';
 import TaskDetailTab from './tabs/TaskDetailTab';
 import MedicalHistoryTab from './tabs/MedicalHistoryTab';
 import PatientRatingTab from './tabs/PatientRatingTab';
+import { CAIRO_FONT_FAMILY } from '../../styles/globalStyles';
+import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
 
-const VisitDetailScreen = ({route}: any) => {
+const VisitDetailScreen = ({ route }: any) => {
     const { taskId } = route.params;
     const navigation = useNavigation();
     const [taskDetail, setTaskDetail] = useState<any>(null);
@@ -31,18 +33,29 @@ const VisitDetailScreen = ({route}: any) => {
         }
     }
 
+    const callPatient = () => {
+        Linking.openURL(`tel:${taskDetail.CellNumber}`);
+      }
+
     const renderHeader = () => (
         <View style={styles.header}>
-            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                <Ionicons name="chevron-back" size={24} color="#333" />
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>{taskDetail?.LoginUserFullnamePlang || 'Visit Details'}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+                    <Ionicons name="arrow-back-outline" size={24} color="#000" />
+                </TouchableOpacity>
+                <Text style={styles.headerTitle}>{taskDetail?.LoginUserFullnamePlang || 'Visit Details'}</Text>
+            </View>
+            <View style={{}}>
+                <TouchableOpacity onPress={() => callPatient()} style={{ backgroundColor: '#2ab318', paddingHorizontal: 20, paddingVertical: 10, borderRadius: 15, marginRight: 10, alignItems: 'center', justifyContent: 'center' }}>
+                    <FontAwesome6 name="phone-volume" size={12} color="#fff" />
+                </TouchableOpacity>
+            </View>
         </View>
     );
 
     const renderTabs = () => (
         <View style={styles.tabContainer}>
-            <TouchableOpacity 
+            <TouchableOpacity
                 style={[styles.tab, activeTab === 'taskDetail' && styles.activeTab]}
                 onPress={() => setActiveTab('taskDetail')}
             >
@@ -50,8 +63,8 @@ const VisitDetailScreen = ({route}: any) => {
                     Task Details
                 </Text>
             </TouchableOpacity>
-            
-            <TouchableOpacity 
+
+            <TouchableOpacity
                 style={[styles.tab, activeTab === 'medicalHistory' && styles.activeTab]}
                 onPress={() => setActiveTab('medicalHistory')}
             >
@@ -59,8 +72,8 @@ const VisitDetailScreen = ({route}: any) => {
                     Medical History
                 </Text>
             </TouchableOpacity>
-            
-            <TouchableOpacity 
+
+            <TouchableOpacity
                 style={[styles.tab, activeTab === 'patientRating' && styles.activeTab]}
                 onPress={() => setActiveTab('patientRating')}
             >
@@ -97,7 +110,7 @@ const VisitDetailScreen = ({route}: any) => {
             <View style={styles.mainContent}>
                 {renderHeader()}
                 {renderTabs()}
-                <View style={{flex: 1}}>
+                <View style={{ flex: 1 }}>
                     {renderTabContent()}
                 </View>
             </View>
@@ -117,6 +130,7 @@ const styles = StyleSheet.create({
     header: {
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'space-between',
         height: 56,
         backgroundColor: '#fff',
         // paddingHorizontal: 16,
@@ -131,13 +145,14 @@ const styles = StyleSheet.create({
         // marginRight: 12,
     },
     headerTitle: {
-        fontSize: 18,
-        fontWeight: '600',
+        fontSize: 17,
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: 20,
         color: '#333',
     },
     tabContainer: {
         flexDirection: 'row',
-        backgroundColor: '#0d9488',
+        backgroundColor: '#239EA0',
     },
     tab: {
         flex: 1,
@@ -150,9 +165,10 @@ const styles = StyleSheet.create({
         borderBottomColor: '#fff',
     },
     tabText: {
-        fontSize: 14,
-        fontWeight: '500',
+        fontSize: 16,
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
         color: '#ffffffa8',
+        lineHeight: 20,
     },
     activeTabText: {
         color: '#fff',

@@ -1,15 +1,17 @@
 import React from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Platform } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { MediaBaseURL } from '../../../shared/utils/constants';
 import moment from 'moment';
+import { CAIRO_FONT_FAMILY } from '../../../styles/globalStyles';
 
 interface OtherRecordsListProps {
     records: any[];
 }
 
 const OtherRecordsList: React.FC<OtherRecordsListProps> = ({ records }) => {
+    console.log('records', records);
     const renderRecordItem = ({ item }: { item: any }) => (
         <View style={styles.recordCard}>
             <View style={styles.providerHeader}>
@@ -17,10 +19,10 @@ const OtherRecordsList: React.FC<OtherRecordsListProps> = ({ records }) => {
                     <Text style={styles.providerLabel}>Care Provider</Text>
                     <Text style={styles.providerName}>{item.FullnamePlang}</Text>
                 </View>
-                    <Image 
-                        source={{ uri: item.LogoImagePath ? `${MediaBaseURL}${item.LogoImagePath}` : `${MediaBaseURL}${item.ImagePath}`}} 
-                        style={styles.providerImage}
-                    />
+                <Image
+                    source={{ uri: item.LogoImagePath ? `${MediaBaseURL}${item.LogoImagePath}` : `${MediaBaseURL}${item.ImagePath}` }}
+                    style={styles.providerImage}
+                />
             </View>
 
             <View style={styles.detailRow}>
@@ -31,12 +33,13 @@ const OtherRecordsList: React.FC<OtherRecordsListProps> = ({ records }) => {
 
             <View style={styles.detailRow}>
                 <Ionicons name="calendar-outline" size={20} color="#14b8a6" />
-                <Text style={styles.detailLabel}>Visit Date</Text>
+                <Text style={styles.detailLabel}>{item.CatCategoryId == '42' ? 'Session Date' : 'Visit Date'}</Text>
                 <Text style={styles.detailValue}>{moment.utc(item.VisitDate).local().format('DD/MM/YYYY')}</Text>
             </View>
 
             <TouchableOpacity style={styles.infoButton}>
-                <Text style={styles.infoButtonText}>Visit Record Information</Text>
+                {item.CatCategoryId == '42' && <Image source={require('../../../assets/icons/cameramovie.png')} style={{ tintColor: '#808080', marginRight: 8, width: 18, height: 18 }} />}
+                <Text style={styles.infoButtonText}>{item.CatCategoryId == '42' ? 'Session Record Information' : 'Visit Record Information'}</Text>
             </TouchableOpacity>
         </View>
     );
@@ -124,7 +127,8 @@ const styles = StyleSheet.create({
     },
     detailValue: {
         fontSize: 14,
-        fontWeight: '600',
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#000',
     },
     infoButton: {
@@ -132,16 +136,17 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         backgroundColor: '#fff',
-        borderWidth: 1.5,
-        borderColor: '#14b8a6',
+        borderWidth: 1,
+        borderColor: '#23a2a4',
         borderRadius: 8,
         paddingVertical: 12,
         marginTop: 12,
     },
     infoButtonText: {
         fontSize: 14,
-        fontWeight: '600',
-        color: '#14b8a6',
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
+        color: '#23a2a4',
     },
     emptyContainer: {
         alignItems: 'center',

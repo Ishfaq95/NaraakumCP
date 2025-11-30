@@ -7,6 +7,7 @@ import { MediaBaseURL } from '../../../shared/utils/constants';
 import { useSelector } from 'react-redux';
 import { useIsFocused } from '@react-navigation/native';
 import CustomBottomSheet from '../../../components/common/CustomBottomSheet';
+import { CAIRO_FONT_FAMILY } from '../../../styles/globalStyles';
 
 interface PatientRatingTabProps {
     data: any;
@@ -17,7 +18,6 @@ const PatientRatingTab: React.FC<PatientRatingTabProps> = ({ data }) => {
     const [commentList, setCommentList] = useState<any[]>([]);
     const user = useSelector((state: any) => state.root.user.user);
     const isFocused = useIsFocused();
-    console.log("data==>", data);
     const [isAddEditBottomSheetVisible, setIsAddEditBottomSheetVisible] = useState(false);
     const [selectedRating, setSelectedRating] = useState(0);
     const [commentText, setCommentText] = useState('');
@@ -226,7 +226,7 @@ const PatientRatingTab: React.FC<PatientRatingTabProps> = ({ data }) => {
 
             {/* Add Comment Button */}
             <View style={styles.addButtonContainer}>
-                <TouchableOpacity disabled={isAddButtonDisabled} style={[styles.addButton,isAddButtonDisabled && {backgroundColor: '#ccc'}]} onPress={() => setIsAddEditBottomSheetVisible(true)}>
+                <TouchableOpacity disabled={isAddButtonDisabled} style={[styles.addButton,isAddButtonDisabled && {opacity: 0.5}]} onPress={() => setIsAddEditBottomSheetVisible(true)}>
                     <Ionicons name="add-circle-outline" size={20} color="#fff" />
                     <Text style={styles.addButtonText}>Add Comment</Text>
                 </TouchableOpacity>
@@ -236,7 +236,7 @@ const PatientRatingTab: React.FC<PatientRatingTabProps> = ({ data }) => {
                 visible={isAddEditBottomSheetVisible}
                 onClose={handleCloseBottomSheet}
                 showHandle={false}
-                height="45%"
+                maxHeight="45%"
                 backdropClickable={false}
             >
                 <KeyboardAvoidingView
@@ -318,12 +318,15 @@ const styles = StyleSheet.create({
     },
     patientLabel: {
         fontSize: 13,
+        fontFamily: CAIRO_FONT_FAMILY.regular,
+        lineHeight:Platform.OS === 'ios' ? 0 : 20,
         color: '#666',
         marginBottom: 4,
     },
     patientName: {
         fontSize: 16,
-        fontWeight: '600',
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight:Platform.OS === 'ios' ? 0 : 20,
         color: '#000',
         textAlign: 'left',
     },
@@ -338,11 +341,14 @@ const styles = StyleSheet.create({
     },
     averageRating: {
         fontSize: 18,
-        fontWeight: '700',
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight:Platform.OS === 'ios' ? 0 : 20,
         color: '#000',
     },
     ratingCount: {
         fontSize: 10,
+        fontFamily: CAIRO_FONT_FAMILY.regular,
+        lineHeight:Platform.OS === 'ios' ? 0 : 20,
         color: '#666',
     },
     commentsHeader: {
@@ -351,7 +357,8 @@ const styles = StyleSheet.create({
     },
     commentsTitle: {
         fontSize: 16,
-        fontWeight: '700',
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight:Platform.OS === 'ios' ? 0 : 20,
         color: '#000',
     },
     commentCard: {
@@ -377,12 +384,15 @@ const styles = StyleSheet.create({
     },
     doctorName: {
         fontSize: 15,
-        fontWeight: '700',
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight:Platform.OS === 'ios' ? 0 : 20,
         color: '#000',
         marginBottom: 4,
     },
     hospitalName: {
         fontSize: 13,
+        fontFamily: CAIRO_FONT_FAMILY.regular,
+        lineHeight:Platform.OS === 'ios' ? 0 : 20,
         color: '#666',
     },
     ratingBadge: {
@@ -392,13 +402,15 @@ const styles = StyleSheet.create({
     },
     ratingText: {
         fontSize: 14,
-        fontWeight: '600',
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight:Platform.OS === 'ios' ? 0 : 20,
         color: '#000',
     },
     commentText: {
         fontSize: 14,
+        fontFamily: CAIRO_FONT_FAMILY.regular,
         color: '#333',
-        lineHeight: 20,
+        lineHeight:Platform.OS === 'ios' ? 0 : 20,
         marginBottom: 12,
     },
     commentFooter: {
@@ -426,17 +438,18 @@ const styles = StyleSheet.create({
         backgroundColor: '#e4f1ef',
     },
     addButton: {
-        backgroundColor: '#14b8a6',
+        backgroundColor: '#23a2a4',
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: 14,
+        paddingVertical: 12,
         borderRadius: 8,
         gap: 8,
     },
     addButtonText: {
         fontSize: 16,
-        fontWeight: '600',
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight:Platform.OS === 'ios' ? 0 : 20,
         color: '#fff',
     },
     editButton: {
@@ -488,7 +501,8 @@ const styles = StyleSheet.create({
     },
     bottomSheetTitle: {
         fontSize: 16,
-        fontWeight: '700',
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight:Platform.OS === 'ios' ? 0 : 20,
         color: '#000',
     },
     bottomSheetContent: {
@@ -527,7 +541,8 @@ const styles = StyleSheet.create({
     },
     saveButtonText: {
         fontSize: 16,
-        fontWeight: '600',
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight:Platform.OS === 'ios' ? 0 : 20,
         color: '#fff',
     },
 });

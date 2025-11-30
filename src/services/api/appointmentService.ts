@@ -113,6 +113,23 @@ export const getTaskDetail = async (credentials: any) => {
     }
 };
 
+export const updateOrderStatus = async (credentials: any) => {
+    try {
+        const response = await axiosInstance.post(
+            `user/UpdateOrderStatus`,
+            credentials
+        );
+        return response.data;
+    }
+    catch (error: any) {
+        throw {
+            message: error?.response?.data?.message || 'Get task detail failed',
+            status: error?.response?.status,
+            code: error?.response?.data?.code
+        };
+    }
+};
+
 export const getVisitRecordList = async (credentials: any) => {
     try {
         const response = await axiosInstance.post(
@@ -229,4 +246,5 @@ export const appointmentService = {
     deleteUserRating,
     getVisitMainRecordDetail,
     addEditServiceProviderUnAvailability,
+    updateOrderStatus,
 }; 

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Platform } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { appointmentService } from '../../../services/api/appointmentService';
@@ -9,6 +9,7 @@ import { ROUTES } from '../../../shared/utils/routes';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
 import { setVisitMainId } from '../../../shared/redux/reducers/generalDataReducer';
 import { useDispatch } from 'react-redux';
+import { CAIRO_FONT_FAMILY } from '../../../styles/globalStyles';
 
 interface MedicalHistoryTabProps {
     data: any;
@@ -53,7 +54,7 @@ const MedicalHistoryTab: React.FC<MedicalHistoryTabProps> = ({ data }) => {
     return (
         <View style={styles.container}>
             {/* Patient Info Section */}
-            <View style={{ backgroundColor: '#fff', margin: 8, borderRadius: 8 }}>
+            <View style={{ backgroundColor: '#fff', marginHorizontal: 12, marginVertical: 15, borderRadius: 8 }}>
                 <View style={styles.patientInfoSection}>
                     <View >
                         <Text style={styles.patientLabel}>Patient Name</Text>
@@ -83,6 +84,8 @@ const MedicalHistoryTab: React.FC<MedicalHistoryTabProps> = ({ data }) => {
                 </Text>
             </View>
 
+            <View style={{height: 1, backgroundColor: '#00000033', marginHorizontal: 12,marginBottom: 12,}} />
+
             {/* Tab Pills */}
             <View style={styles.tabPillsContainer}>
                 <TouchableOpacity
@@ -97,7 +100,7 @@ const MedicalHistoryTab: React.FC<MedicalHistoryTabProps> = ({ data }) => {
                     style={[styles.tabPill, activeTab === 'other' && styles.activeTabPill]}
                     onPress={() => setActiveTab('other')}
                 >
-                    <Text style={[styles.tabPillText, activeTab === 'other' && styles.activeTabPillText]}>
+                    <Text style={[styles.tabPillText,{color:'#000'}, activeTab === 'other' && styles.activeTabPillText]}>
                         Other
                     </Text>
                 </TouchableOpacity>
@@ -140,10 +143,12 @@ const styles = StyleSheet.create({
         fontSize: 13,
         color: '#666',
         marginBottom: 4,
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
     },
     patientName: {
         fontSize: 16,
-        fontWeight: '600',
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        lineHeight:Platform.OS === 'ios' ? 0 : 20,
         color: '#000',
         textAlign: 'left',
     },
@@ -166,8 +171,8 @@ const styles = StyleSheet.create({
     actionButton: {
         flex: 1,
         backgroundColor: '#fff',
-        borderWidth: 1.5,
-        borderColor: '#14b8a6',
+        borderWidth: 1,
+        borderColor: '#23a2a4',
         borderRadius: 8,
         paddingVertical: 16,
         paddingHorizontal: 12,
@@ -176,19 +181,20 @@ const styles = StyleSheet.create({
     },
     actionButtonText: {
         fontSize: 14,
-        fontWeight: '500',
-        color: '#14b8a6',
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        color: '#23a2a4',
         textAlign: 'center',
-        lineHeight: 20,
+        lineHeight:Platform.OS === 'ios' ? 0 : 20,
     },
     recordsHeader: {
         paddingHorizontal: 16,
-        marginBottom: 12,
+        marginBottom: 10,
     },
     recordsTitle: {
         fontSize: 16,
-        fontWeight: '700',
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
         color: '#000',
+        lineHeight:Platform.OS === 'ios' ? 0 : 20,
     },
     tabPillsContainer: {
         flexDirection: 'row',
@@ -202,16 +208,17 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         backgroundColor: '#fff',
         borderWidth: 1.5,
-        borderColor: '#14b8a6',
+        borderColor: '#23a2a4',
     },
     activeTabPill: {
-        backgroundColor: '#14b8a6',
-        borderColor: '#14b8a6',
+        backgroundColor: '#23a2a4',
+        borderColor: '#23a2a4',
     },
     tabPillText: {
         fontSize: 14,
-        fontWeight: '500',
-        color: '#14b8a6',
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        color: '#23a2a4',
+        lineHeight:Platform.OS === 'ios' ? 0 : 20,
     },
     activeTabPillText: {
         color: '#fff',
@@ -221,21 +228,22 @@ const styles = StyleSheet.create({
     },
     addButtonContainer: {
         paddingHorizontal: 16,
-        paddingVertical: 12,
+        paddingVertical: 8,
         backgroundColor: '#e4f1ef',
     },
     addButton: {
-        backgroundColor: '#14b8a6',
+        backgroundColor: '#23a2a4',
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: 14,
+        paddingVertical: 12,
         borderRadius: 8,
         gap: 8,
     },
     addButtonText: {
         fontSize: 16,
-        fontWeight: '600',
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        lineHeight:Platform.OS === 'ios' ? 0 : 20,
         color: '#fff',
     },
 });

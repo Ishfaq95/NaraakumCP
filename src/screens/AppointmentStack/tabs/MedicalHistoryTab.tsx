@@ -105,7 +105,7 @@ const MedicalHistoryTab: React.FC<MedicalHistoryTabProps> = ({ data }) => {
                 <View style={styles.patientInfoSection}>
                     <View >
                         <Text style={styles.patientLabel}>Patient Name</Text>
-                        <Text style={styles.patientName}>{data.PatientPlang || 'دادود'}</Text>
+                        <Text style={styles.patientName}>{data.PatientPlang || ''}</Text>
                     </View>
                     <View style={styles.avatarCircle}>
                         <Ionicons name="person-outline" size={24} color="#666" />
@@ -122,7 +122,6 @@ const MedicalHistoryTab: React.FC<MedicalHistoryTabProps> = ({ data }) => {
                     </TouchableOpacity>
                 </View>
             </View>
-
 
             {/* Visit/Session Records Header */}
             <View style={styles.recordsHeader}>

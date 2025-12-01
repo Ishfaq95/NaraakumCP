@@ -11,6 +11,7 @@ import { authService } from '../../services/api/authService';
 import { ROUTES } from '../../shared/utils/routes';
 import FullScreenLoader from '../../components/FullScreenLoader';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const { width } = Dimensions.get('window');
 
@@ -35,11 +36,11 @@ const ForgotOTP = ({ route }: any) => {
   const renderHeader = () => (
     <Header
       centerComponent={
-        <Text numberOfLines={1} style={[globalTextStyles.h5, styles.headerTitle]}>{'تغيير كلمة المرور'}</Text>
+        <Text numberOfLines={1} style={[globalTextStyles.h5, styles.headerTitle]}>{'Change Password'}</Text>
       }
       leftComponent={
         <TouchableOpacity onPress={handleBack} style={styles.bookButton}>
-          <ArrowRightIcon />
+          <Ionicons name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
       }
       containerStyle={styles.headerContainer}
@@ -98,7 +99,7 @@ const ForgotOTP = ({ route }: any) => {
 
               {/* Main Heading */}
               <Text style={styles.mainHeading}>
-                الرجاء إدخال رمز التحقق المرسل إلى
+              Please enter the verification code sent to
               </Text>
 
               {/* Sub Text */}
@@ -109,14 +110,14 @@ const ForgotOTP = ({ route }: any) => {
             <View style={styles.formContainer}>
               <View style={styles.inputGroup}>
                 <View style={styles.questionRow}>
-                  <Text style={styles.questionText}>{'رمز التحقق'}</Text>
+                  <Text style={styles.questionText}>{'Verification Code'}</Text>
                   <Text style={styles.requiredAsterisk}> *</Text>
                 </View>
                 <TextInput
                   style={[styles.textInput, otpError && {borderColor: '#FF0000', borderWidth: 1}]}
-                  placeholder="رمز التحقق"
+                  placeholder="Verification Code"
                   placeholderTextColor="#999"
-                  textAlign="right"
+                  textAlign="left"
                   value={otp}
                   keyboardType="numeric"
                   onChangeText={(text) => {
@@ -128,14 +129,14 @@ const ForgotOTP = ({ route }: any) => {
 
               <View style={styles.buttonContainer}>
                 <TouchableOpacity onPress={handleVerifyOTP} style={styles.button}>
-                  <Text style={styles.buttonText}>{'تاكيد'}</Text>
+                  <Text style={styles.buttonText}>{'Confirm'}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.buttonWithBorder}>
-                  <Text style={styles.buttonTextWithBorder}>{'تغيير الرقم او بريد الكتروني'}</Text>
+                  <Text style={styles.buttonTextWithBorder}>{'Change Phone Number or Email Address'}</Text>
                 </TouchableOpacity>
               </View>
             </View>
-            {APIError && <Text style={styles.errorText}>{'خطأ في التحقق'}</Text>}
+            {APIError && <Text style={styles.errorText}>{'Error in verification'}</Text>}
           </ScrollView>
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>

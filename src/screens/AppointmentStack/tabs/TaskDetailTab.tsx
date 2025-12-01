@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, TextInput, Linking } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, TextInput, Linking, Platform } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { CAIRO_FONT_FAMILY, globalTextStyles } from '../../../styles/globalStyles';
@@ -10,6 +10,9 @@ import AntDesign from 'react-native-vector-icons/AntDesign';
 import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
 import AppointmentTrackingMap from '../../../components/AppointmentTrackingMap';
 import { MediaBaseURL } from '../../../shared/utils/constants';
+import moment from 'moment';
+import { ROUTES } from '../../../shared/utils/routes';
+import { useNavigation } from '@react-navigation/native';
 
 interface TaskDetailTabProps {
     data: any;
@@ -21,6 +24,7 @@ const TaskDetailTab: React.FC<TaskDetailTabProps> = ({ data }) => {
     const [incompleteReason, setIncompleteReason] = useState<string>('');
     const [openGoogleMapBottomSheet, setOpenGoogleMapBottomSheet] = useState(false);
     const [routeInfo, setRouteInfo] = useState<any>(null);
+    const navigation = useNavigation();
     const user = useSelector((state: any) => state.root.user.user);
     const formatDate = (dateString: string) => {
         if (!dateString) return 'N/A';
@@ -202,6 +206,65 @@ const TaskDetailTab: React.FC<TaskDetailTabProps> = ({ data }) => {
         );
     };
 
+    const checkTimeCondition = (appointment: any) => {
+        const now = moment();
+        const appointmentDate = moment.utc(appointment?.SchedulingDate).local();
+        const startTime = moment.utc(appointment?.SchedulingTime, 'HH:mm').local();
+        const endTime = moment.utc(appointment?.SchedulingEndTime, 'HH:mm').local();
+
+        startTime.set({
+            year: appointmentDate.year(),
+            month: appointmentDate.month(),
+            date: appointmentDate.date()
+        });
+        endTime.set({
+            year: appointmentDate.year(),
+            month: appointmentDate.month(),
+            date: appointmentDate.date()
+        });
+
+        return now.isSameOrAfter(startTime) &&
+            now.isBefore(endTime) &&
+            now.isSame(appointmentDate, 'day');
+    }
+
+    const handleJoinMeeting = (appointment: any) => {
+        // Parse the date and time separately
+        const date = moment.utc(appointment.SchedulingDate);
+        const [startHours, startMinutes] = appointment.SchedulingTime.split(':');
+        const [endHours, endMinutes] = appointment.SchedulingEndTime.split(':');
+    
+        // Create UTC moments with the correct time
+        let startTimeUTC = moment.utc(date).set({
+          hours: parseInt(startHours),
+          minutes: parseInt(startMinutes)
+        });
+    
+        let endDateTimeUTC = moment.utc(date).set({
+          hours: parseInt(endHours),
+          minutes: parseInt(endMinutes)
+        });
+    
+        // Convert to local time
+        let startTimeLocal = startTimeUTC.local();
+        let endTimeLocal = endDateTimeUTC.local();
+    
+        let meetingInfo = {
+          toUserId: appointment.PatientUserProfileInfoId,
+          sessionStartTime: startTimeLocal.toISOString(),
+          bookingId: appointment.Detail[0].TaskMainId,
+          patientProfileId: appointment.PatientUserProfileInfoId,
+          meetingId: appointment.VideoSDKMeetingID,
+          Name: appointment.PatientPlang,
+          displayName: user?.OrgTitlePlang,
+          sessionEndTime: endTimeLocal.toISOString(),
+          patientId: appointment.PatientUserProfileInfoId,
+          serviceProviderId: appointment.UserloginInfoId
+        };
+    
+        navigation.navigate(ROUTES.preViewCall, { Data: meetingInfo });
+      }
+
     return (
         <View style={{ flex: 1 }}>
             <ScrollView style={styles.container}>
@@ -281,24 +344,24 @@ const TaskDetailTab: React.FC<TaskDetailTabProps> = ({ data }) => {
                 {/* Session Information Section */}
                 <View style={styles.section}>
                     <View style={styles.sectionHeader}>
-                        <Text style={styles.sectionTitle}>{data.CatServiceServeTypeId == 1 ? 'Session Information' : 'Visiting Information'}</Text>
+                        <Text style={styles.sectionTitle}>{data.Detail[0].CatServiceServeTypeId == 1 ? 'Session Information' : 'Visiting Information'}</Text>
                     </View>
 
                     <View style={styles.sessionRow}>
                         <Ionicons name="calendar-outline" size={20} color="#0d9488" />
-                        <Text style={styles.sessionLabel}>{data.CatServiceServeTypeId == 1 ? 'Online Session Date' : 'Appointment Date'}</Text>
+                        <Text style={styles.sessionLabel}>{data.Detail[0].CatServiceServeTypeId == 1 ? 'Online Session Date' : 'Appointment Date'}</Text>
                         <Text style={styles.sessionValue}>{formatDate(data.SchedulingDate)}</Text>
                     </View>
 
                     <View style={styles.sessionRow}>
                         <Ionicons name="time-outline" size={20} color="#0d9488" />
-                        <Text style={styles.sessionLabel}>{data.CatServiceServeTypeId == 1 ? 'Online Session Time' : 'Appointment Time'}</Text>
+                        <Text style={styles.sessionLabel}>{data.Detail[0].CatServiceServeTypeId == 1 ? 'Online Session Time' : 'Appointment Time'}</Text>
                         <Text style={styles.sessionValue}>
                             {data.SchedulingTime ? formatTime(data.SchedulingTime) : formatTime(data.VisitTime)}
                         </Text>
                     </View>
 
-                    {data.CatServiceServeTypeId == 1 ? <View style={styles.sessionRow}>
+                    {data.Detail[0].CatServiceServeTypeId == 1 ? <View style={styles.sessionRow}>
                         <MaterialIcons name="timer" size={20} color="#0d9488" />
                         <Text style={styles.sessionLabel}>Session Duration</Text>
                         <Text style={styles.sessionValue}>
@@ -377,17 +440,20 @@ const TaskDetailTab: React.FC<TaskDetailTabProps> = ({ data }) => {
 
             </ScrollView>
             {data.Detail[0]?.CatServiceServeTypeId == 1 ?
-                <View style={{ backgroundColor: '#fff', paddingHorizontal: 16, paddingVertical: 8 }}>
-                    <TouchableOpacity style={{ backgroundColor: 'gray', alignItems: 'center', justifyContent: 'center', padding: 10, borderRadius: 8 }}>
-                        <Text style={{ color: '#fff', fontSize: 14, fontWeight: '500' }}>Start Video Call</Text>
-                    </TouchableOpacity>
-                </View> :
+                <TouchableOpacity
+                    onPress={() => handleJoinMeeting(data)}
+                    disabled={!checkTimeCondition(data)}
+                    style={[{ marginHorizontal: 16, marginBottom: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',  padding: 10, borderRadius: 8 },{backgroundColor: checkTimeCondition(data) ? '#23a2a4' : '#0f0f0f', opacity: checkTimeCondition(data) ? 1 : 0.5}]}
+                >
+                    <Image source={require('../../../assets/icons/cameramovie.png')} style={{ tintColor: checkTimeCondition(data) ? '#fff' : '#6c757d', width: 20, height: 20 }} />
+                    <Text style={{ color: checkTimeCondition(data) ? '#fff' : '#6c757d', fontSize: 16, fontFamily: CAIRO_FONT_FAMILY.semiBold, lineHeight: Platform.OS === 'ios' ? 0 : 20, marginLeft: 5 }}>Start Video Call</Text>
+                </TouchableOpacity> :
                 <TouchableOpacity
                     onPress={() => setIsBottomSheetVisible(true)}
                     style={{ marginHorizontal: 16, marginBottom: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#23a2a4', padding: 10, borderRadius: 8 }}
                 >
                     <Ionicons name="settings-sharp" size={20} color="#fff" />
-                    <Text style={{ color: '#fff', fontSize: 16, fontFamily: CAIRO_FONT_FAMILY.semiBold, lineHeight: 20, marginLeft: 5 }}>Order Status Settings</Text>
+                    <Text style={{ color: '#fff', fontSize: 16, fontFamily: CAIRO_FONT_FAMILY.semiBold, lineHeight: Platform.OS === 'ios' ? 0 : 20, marginLeft: 5 }}>Order Status Settings</Text>
                 </TouchableOpacity>
             }
 
@@ -546,7 +612,7 @@ const TaskDetailTab: React.FC<TaskDetailTabProps> = ({ data }) => {
                                 <View style={{ height: 40, width: 40, backgroundColor: '#23a2a4', borderRadius: 10, alignItems: "center", justifyContent: "center" }}>
                                     <Image source={{ uri: `${MediaBaseURL}${data?.imagePath}` }} style={{ width: '100%', height: '100%', borderRadius: 10 }} />
                                 </View>
-                                <View style={{flex: 1,alignItems: 'flex-start', marginLeft: 10}}>
+                                <View style={{ flex: 1, alignItems: 'flex-start', marginLeft: 10 }}>
                                     <Text style={{ ...globalTextStyles.bodyLarge, color: '#000' }}>{data?.PatientPlang}</Text>
                                     {/* <Text style={{ ...globalTextStyles.bodySmall, lineHeight: 15, color: '#222' }}>{data?.OrgTitlePlang}</Text> */}
                                     <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center" }}>

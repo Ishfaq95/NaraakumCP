@@ -168,8 +168,6 @@ const AppointmentCard: React.FC<AppointmentCardProps> = ({
     return stars;
   };
 
-  console.log(item);
-
   return (
     <View style={styles.container}>
       <View style={styles.header}>

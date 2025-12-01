@@ -1,6 +1,6 @@
 import { View, Text, TouchableOpacity, StyleSheet, Dimensions, TextInput, ScrollView, SafeAreaView, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback } from 'react-native'
 import React, { useState } from 'react'
-import { globalTextStyles } from '../../styles/globalStyles';
+import { CAIRO_FONT_FAMILY, globalTextStyles } from '../../styles/globalStyles';
 import Header from '../../components/common/Header';
 import ArrowRightIcon from '../../assets/icons/RightArrow';
 import { useTranslation } from 'react-i18next';
@@ -12,6 +12,7 @@ import { authService } from '../../services/api/authService';
 import { ROUTES } from '../../shared/utils/routes';
 import FullScreenLoader from '../../components/FullScreenLoader';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const { width } = Dimensions.get('window');
 
@@ -46,11 +47,11 @@ const ForgotPassword = () => {
     const renderHeader = () => (
         <Header
             centerComponent={
-                <Text numberOfLines={1} style={[globalTextStyles.h5, styles.headerTitle]}>{'تغيير كلمة المرور'}</Text>
+                <Text numberOfLines={1} style={[globalTextStyles.h5, styles.headerTitle]}>{'Change Password'}</Text>
             }
             leftComponent={
                 <TouchableOpacity onPress={handleBack} style={styles.bookButton}>
-                    <ArrowRightIcon />
+                    <Ionicons name="arrow-back" size={24} color="#000" />
                 </TouchableOpacity>
             }
             containerStyle={styles.headerContainer}
@@ -132,23 +133,22 @@ const ForgotPassword = () => {
 
                             {/* Main Heading */}
                             <Text style={styles.mainHeading}>
-                                فقدت كلمة المرور !
+                            Forgot your password?
                             </Text>
 
                             {/* Sub Text */}
                             <Text style={styles.subText}>
-                                يمكنك تغيير كلمة المرور فقط استخدم الطريقة المناسبة لستلام{' '}
-                                <Text style={styles.boldText}>رمز التحقق</Text>
+                            You can change your password. Just use the appropriate method to receive the verification code.
                             </Text>
 
                         </View>
                         <View style={styles.formContainer}>
                             <View style={styles.tabContainer}>
                                 <TouchableOpacity onPress={() => setActiveTab('mobile')} style={[styles.tab, activeTab === 'mobile' && styles.activeTab]}>
-                                    <Text style={[styles.tabText, activeTab === 'mobile' && styles.activeTabText]}>{t('mobile_number')}</Text>
+                                    <Text style={[styles.tabText, activeTab === 'mobile' && styles.activeTabText]}>{'Mobile Number'}</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity onPress={() => setActiveTab('email')} style={[styles.tab, activeTab === 'email' && styles.activeTab]}>
-                                    <Text style={[styles.tabText, activeTab === 'email' && styles.activeTabText]}> {t('email_username')}</Text>
+                                    <Text style={[styles.tabText, activeTab === 'email' && styles.activeTabText]}> {'Email'}</Text>
                                 </TouchableOpacity>
                             </View>
 
@@ -161,7 +161,7 @@ const ForgotPassword = () => {
                                             styles.ltrInput,
                                             emailError && styles.inputError
                                         ]}
-                                        placeholder={"example@info.com"}
+                                        placeholder={"info@info.com"}
                                         value={emailOrUsername}
                                         onChangeText={handleEmailChange}
                                         placeholderTextColor="#999"
@@ -172,18 +172,18 @@ const ForgotPassword = () => {
                                         value={phoneNumber}
                                         onChangeText={handlePhoneNumberChange}
                                         onCountryChange={handleCountryChange}
-                                        placeholder="رقم الجوال"
+                                        placeholder="00 000 0000"
                                         error={error}
                                         initialCountry={selectedCountry}
                                     />
                                 )}
                             </View>
 
-                            {apiError && <Text style={styles.errorText}>{'المستخدم غير موجود'}</Text>}
+                            {apiError && <Text style={styles.errorText}>{'User not found'}</Text>}
 
                             <View style={{ marginTop: 20 }}>
                                 <TouchableOpacity style={styles.button} onPress={handleContinue}>
-                                    <Text style={styles.buttonText}>{'استمرار'}</Text>
+                                    <Text style={styles.buttonText}>{'Continue'}</Text>
                                 </TouchableOpacity>
                             </View>
                         </View>
@@ -238,7 +238,7 @@ const styles = StyleSheet.create({
         color: '#666', // Gray color as shown in the image
         textAlign: 'center',
         lineHeight: 24,
-        paddingHorizontal: 20,
+        paddingHorizontal: 16,
     },
     boldText: {
         fontWeight: 'bold',
@@ -261,6 +261,8 @@ const styles = StyleSheet.create({
     tabText: {
         ...globalTextStyles.bodySmall,
         color: '#666',
+        fontFamily: CAIRO_FONT_FAMILY.medium,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
     },
     activeTab: {
         backgroundColor: '#eaf6f6'

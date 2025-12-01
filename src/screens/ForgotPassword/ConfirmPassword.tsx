@@ -13,6 +13,7 @@ import EyeIcon from '../../assets/icons/EyeIcon';
 import EyeOffIcon from '../../assets/icons/EyeOffIcon';
 import FullScreenLoader from '../../components/FullScreenLoader';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const { width } = Dimensions.get('window');
 
@@ -41,11 +42,11 @@ const ConfirmPassword = ({ route }: any) => {
   const renderHeader = () => (
     <Header
       centerComponent={
-        <Text numberOfLines={1} style={[globalTextStyles.h5, styles.headerTitle]}>{'تغيير كلمة المرور'}</Text>
+        <Text numberOfLines={1} style={[globalTextStyles.h5, styles.headerTitle]}>{'Change Password'}</Text>
       }
       leftComponent={
         <TouchableOpacity onPress={handleBack} style={styles.bookButton}>
-          <ArrowRightIcon />
+          <Ionicons name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
       }
       containerStyle={styles.headerContainer}
@@ -55,13 +56,13 @@ const ConfirmPassword = ({ route }: any) => {
   const handleConfirmPassword = async () => {
     
     if (newPassword.trim() === '') {
-      setNewPasswordError('كلمة المرور الجديدة مطلوبة');
+      setNewPasswordError('New password is required');
       return;
     } else {
       setNewPasswordError('');
     }
     if (confirmPassword.trim() === '') {
-      setConfirmPasswordError('تأكيد كلمة المرور مطلوبة');
+      setConfirmPasswordError('Confirm password is required');
       return;
     } else {
       setConfirmPasswordError('');
@@ -111,13 +112,13 @@ const ConfirmPassword = ({ route }: any) => {
 
               {/* Main Heading */}
               <Text style={styles.mainHeading}>
-                الرجاء إدخال رمز التحقق المرسل إلى
+              Set New Password
               </Text>
             </View>
             <View style={styles.formContainer}>
               <View style={styles.inputGroup}>
                 <View style={styles.questionRow}>
-                  <Text style={styles.questionText}>{'كلمة المرور الجديدة '}</Text>
+                  <Text style={styles.questionText}>{'New Password'}</Text>
                   <Text style={styles.requiredAsterisk}> *</Text>
                 </View>
                 {/* Password Input */}
@@ -154,7 +155,7 @@ const ConfirmPassword = ({ route }: any) => {
 
               <View style={styles.inputGroup}>
                 <View style={styles.questionRow}>
-                  <Text style={styles.questionText}>{'تأكيد كلمة المرور '}</Text>
+                  <Text style={styles.questionText}>{'Confirm Password'}</Text>
                   <Text style={styles.requiredAsterisk}> *</Text>
                 </View>
                 {/* Password Input */}
@@ -189,11 +190,11 @@ const ConfirmPassword = ({ route }: any) => {
                 </View>
               </View>
 
-              {PasswordNotMatch && <Text style={styles.errorText}>{'تأكيد كلمة المرور وكلمة المرور غير متطابقة'}</Text>}
+              {PasswordNotMatch && <Text style={styles.errorText}>{'Confirm password and new password do not match'}</Text>}
 
               <View style={styles.buttonContainer}>
                 <TouchableOpacity onPress={handleConfirmPassword} style={styles.button}>
-                  <Text style={styles.buttonText}>{'تاكيد'}</Text>
+                  <Text style={styles.buttonText}>{'Confirm'}</Text>
                 </TouchableOpacity>
               </View>
             </View>

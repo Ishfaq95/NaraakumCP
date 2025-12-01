@@ -513,7 +513,7 @@ const requestStoragePermission = async (): Promise<boolean> => {
   }
 };
 
-const shareFile = async (filePath: string, fileName: string) => {
+export const shareFile = async (filePath: string, fileName: string) => {
   try {
     
     // Ensure the file exists
@@ -596,7 +596,7 @@ const shareFile = async (filePath: string, fileName: string) => {
   }
 };
 
-const downloadFIleForIOS = (url: string, fileName: string) => {
+export const downloadFIleForIOS = (url: string, fileName: string) => {
   const { config, fs } = RNFetchBlob;
 
   // For iOS, we'll use the Documents directory and then share the file
@@ -639,7 +639,7 @@ const downloadFIleForIOS = (url: string, fileName: string) => {
 };
 
 // Download file for Android
-const downloadFile = async (filePath: string, fileName: string): Promise<string> => {
+export const downloadFile = async (filePath: string, fileName: string): Promise<string> => {
   const { fs } = RNFetchBlob;
 
   try {

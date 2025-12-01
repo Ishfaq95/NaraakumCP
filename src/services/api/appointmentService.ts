@@ -231,6 +231,40 @@ export const addEditServiceProviderUnAvailability = async (credentials: any) => 
         };
     }
 };
+
+export const getPatientMedicalHistoryReports = async (credentials: any) => {
+    try {
+        const response = await axiosInstance.post(
+            `patients/GetPatientMedicalHistoryReports`,
+            credentials
+        );
+        return response.data;
+    }
+    catch (error: any) {
+        throw {
+            message: error?.response?.data?.message || 'Get patient medical history reports failed',
+            status: error?.response?.status,
+            code: error?.response?.data?.code
+        };
+    }
+};
+
+export const getPatientMedicalHistory = async (credentials: any) => {
+    try {
+        const response = await axiosInstance.post(
+            `patients/GetPatientMedicalHistory`,
+            credentials
+        );
+        return response.data;
+    }
+    catch (error: any) {
+        throw {
+            message: error?.response?.data?.message || 'Get patient medical history failed',
+            status: error?.response?.status,
+            code: error?.response?.data?.code
+        };
+    }
+};
 // Export all appointment related functions
 export const appointmentService = {
     getServiceProviderMainSummary,
@@ -247,4 +281,6 @@ export const appointmentService = {
     getVisitMainRecordDetail,
     addEditServiceProviderUnAvailability,
     updateOrderStatus,
+    getPatientMedicalHistoryReports,
+    getPatientMedicalHistory,
 }; 

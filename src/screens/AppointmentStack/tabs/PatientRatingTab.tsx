@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, TextInput, KeyboardAvoidingView, Platform, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, TextInput, KeyboardAvoidingView, Platform, ScrollView, Alert, Keyboard } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import moment from 'moment';
 import { appointmentService } from '../../../services/api/appointmentService';
@@ -8,6 +8,7 @@ import { useSelector } from 'react-redux';
 import { useIsFocused } from '@react-navigation/native';
 import CustomBottomSheet from '../../../components/common/CustomBottomSheet';
 import { CAIRO_FONT_FAMILY } from '../../../styles/globalStyles';
+import Voice from '@dev-amirzubair/react-native-voice';
 
 interface PatientRatingTabProps {
     data: any;
@@ -22,11 +23,81 @@ const PatientRatingTab: React.FC<PatientRatingTabProps> = ({ data }) => {
     const [selectedRating, setSelectedRating] = useState(0);
     const [commentText, setCommentText] = useState('');
     const [editingComment, setEditingComment] = useState<any>(null);
+    const [starRatingError, setStarRatingError] = useState(false);
+    const [ratingBottomSheetHeight, setRatingBottomSheetHeight] = useState( Platform.OS === 'ios' ? 350 : 320);
     useEffect(() => {
         if (data?.PatientUserProfileInfoId) {
             getUserRatingForPatient();
         }
-    }, [data,isFocused]);
+    }, [data, isFocused]);
+
+    useEffect(() => {
+        // Only attach keyboard listeners on iOS to avoid any mismatch with RCTKeyboardObserver
+        if (Platform.OS !== 'ios') {
+            return;
+        }
+
+        const showSub = Keyboard.addListener('keyboardDidShow', (e) => {
+            console.log('keyboardDidShow', e.endCoordinates.height);
+            setRatingBottomSheetHeight(340 + e.endCoordinates.height);
+        });
+
+        const hideSub = Keyboard.addListener('keyboardDidHide', () => {
+            setRatingBottomSheetHeight(350);
+        });
+
+        return () => {
+            // Clean up only the listeners we registered
+            showSub?.remove?.();
+            hideSub?.remove?.();
+        };
+    }, []);
+
+    const [isListening, setIsListening] = useState(false);
+
+    useEffect(() => {
+        Voice.onSpeechStart = () => setIsListening(true);
+        Voice.onSpeechEnd = () => setIsListening(false);
+        Voice.onSpeechResults = (e) => {
+            const newText = e.value?.[0] ?? '';
+            if (Platform.OS === 'android') {
+                // Merge text for Android - append new speech result to existing text
+                setCommentText(prevText => {
+                    const trimmedPrev = prevText.trim();
+                    const trimmedNew = newText.trim();
+                    if (trimmedPrev && trimmedNew) {
+                        return `${trimmedPrev} ${trimmedNew}`;
+                    }
+                    return trimmedPrev || trimmedNew;
+                });
+            } else {
+                // iOS behavior - replace text (working fine as is)
+                setCommentText(newText);
+            }
+        };
+        Voice.onSpeechError = (e) => setIsListening(false);
+
+        return () => {
+            setIsListening(false)
+            Voice.destroy().then(Voice.removeAllListeners);
+        };
+    }, []);
+
+    const startListening = async () => {
+        try {
+            await Voice.start('en-US');
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    const stopListening = async () => {
+        try {
+            await Voice.stop();
+        } catch (e) {
+            console.error(e);
+        }
+    };
 
     const getUserRatingForPatient = async () => {
         const payload = {
@@ -49,11 +120,11 @@ const PatientRatingTab: React.FC<PatientRatingTabProps> = ({ data }) => {
 
     const handleSaveComment = async () => {
         if (selectedRating === 0) {
-            Alert.alert('Rating Required', 'Please select a rating before saving');
+            setStarRatingError(true);
             return;
         }
 
-        const payload ={
+        const payload = {
             "UserloginInfoId": user?.Id,
             "Comment": commentText,
             "OrderId": data?.OrderID,
@@ -90,7 +161,10 @@ const PatientRatingTab: React.FC<PatientRatingTabProps> = ({ data }) => {
                 {[1, 2, 3, 4, 5].map((star) => (
                     <TouchableOpacity
                         key={star}
-                        onPress={() => setSelectedRating(star)}
+                        onPress={() => {
+                            setSelectedRating(star);
+                            setStarRatingError(false);
+                        }}
                         activeOpacity={0.7}
                     >
                         <Ionicons
@@ -100,6 +174,7 @@ const PatientRatingTab: React.FC<PatientRatingTabProps> = ({ data }) => {
                         />
                     </TouchableOpacity>
                 ))}
+                
             </View>
         );
     };
@@ -156,13 +231,13 @@ const PatientRatingTab: React.FC<PatientRatingTabProps> = ({ data }) => {
                 <Text style={styles.commentText}>{item.Comment}</Text>
             )}
 
-            {(user?.Id == item.RatedById && item.TaskMainId == data?.Detail[0]?.TaskMainId) && <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',paddingBottom: 12 }}>
+            {(user?.Id == item.RatedById && item.TaskMainId == data?.Detail[0]?.TaskMainId) && <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingBottom: 12 }}>
 
                 <TouchableOpacity style={styles.editButton} onPress={() => handleEditRating(item)}>
                     <Text style={styles.editButtonText}>Edit</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeleteRating(item)}>
-                    
+
                     <Text style={styles.deleteButtonText}>Delete</Text>
                 </TouchableOpacity>
             </View>}
@@ -226,7 +301,7 @@ const PatientRatingTab: React.FC<PatientRatingTabProps> = ({ data }) => {
 
             {/* Add Comment Button */}
             <View style={styles.addButtonContainer}>
-                <TouchableOpacity disabled={isAddButtonDisabled} style={[styles.addButton,isAddButtonDisabled && {opacity: 0.5}]} onPress={() => setIsAddEditBottomSheetVisible(true)}>
+                <TouchableOpacity disabled={isAddButtonDisabled} style={[styles.addButton, isAddButtonDisabled && { opacity: 0.5 }]} onPress={() => setIsAddEditBottomSheetVisible(true)}>
                     <Ionicons name="add-circle-outline" size={20} color="#fff" />
                     <Text style={styles.addButtonText}>Add Comment</Text>
                 </TouchableOpacity>
@@ -236,7 +311,7 @@ const PatientRatingTab: React.FC<PatientRatingTabProps> = ({ data }) => {
                 visible={isAddEditBottomSheetVisible}
                 onClose={handleCloseBottomSheet}
                 showHandle={false}
-                maxHeight="45%"
+                maxHeight={ratingBottomSheetHeight}
                 backdropClickable={false}
             >
                 <KeyboardAvoidingView
@@ -253,14 +328,14 @@ const PatientRatingTab: React.FC<PatientRatingTabProps> = ({ data }) => {
                         </TouchableOpacity>
                     </View>
 
-                    <ScrollView 
+                    <ScrollView
                         style={styles.bottomSheetContent}
                         showsVerticalScrollIndicator={false}
                         keyboardShouldPersistTaps="handled"
                     >
                         {/* Star Rating Selector */}
                         {renderStarSelector()}
-
+                        {starRatingError && <Text style={styles.starRatingErrorText}>Rating is required</Text>}
                         {/* Comment Input */}
                         <View style={styles.inputContainer}>
                             <TextInput
@@ -273,10 +348,16 @@ const PatientRatingTab: React.FC<PatientRatingTabProps> = ({ data }) => {
                                 onChangeText={setCommentText}
                                 textAlignVertical="top"
                             />
+                            {!isListening ? <TouchableOpacity style={styles.micButton} onPress={startListening} >
+                                <Ionicons name="mic" size={20} color="#666" />
+                            </TouchableOpacity> :
+                                <TouchableOpacity style={styles.micButton} onPress={stopListening} >
+                                    <Ionicons name="mic-off" size={20} color="#666" />
+                                </TouchableOpacity>}
                         </View>
 
                         {/* Save Button */}
-                        <TouchableOpacity 
+                        <TouchableOpacity
                             style={styles.saveButton}
                             onPress={handleSaveComment}
                             activeOpacity={0.8}
@@ -319,14 +400,14 @@ const styles = StyleSheet.create({
     patientLabel: {
         fontSize: 13,
         fontFamily: CAIRO_FONT_FAMILY.regular,
-        lineHeight:Platform.OS === 'ios' ? 0 : 20,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#666',
         marginBottom: 4,
     },
     patientName: {
         fontSize: 16,
         fontFamily: CAIRO_FONT_FAMILY.bold,
-        lineHeight:Platform.OS === 'ios' ? 0 : 20,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#000',
         textAlign: 'left',
     },
@@ -342,13 +423,13 @@ const styles = StyleSheet.create({
     averageRating: {
         fontSize: 18,
         fontFamily: CAIRO_FONT_FAMILY.bold,
-        lineHeight:Platform.OS === 'ios' ? 0 : 20,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#000',
     },
     ratingCount: {
         fontSize: 10,
         fontFamily: CAIRO_FONT_FAMILY.regular,
-        lineHeight:Platform.OS === 'ios' ? 0 : 20,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#666',
     },
     commentsHeader: {
@@ -358,7 +439,7 @@ const styles = StyleSheet.create({
     commentsTitle: {
         fontSize: 16,
         fontFamily: CAIRO_FONT_FAMILY.bold,
-        lineHeight:Platform.OS === 'ios' ? 0 : 20,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#000',
     },
     commentCard: {
@@ -385,14 +466,14 @@ const styles = StyleSheet.create({
     doctorName: {
         fontSize: 15,
         fontFamily: CAIRO_FONT_FAMILY.bold,
-        lineHeight:Platform.OS === 'ios' ? 0 : 20,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#000',
         marginBottom: 4,
     },
     hospitalName: {
         fontSize: 13,
         fontFamily: CAIRO_FONT_FAMILY.regular,
-        lineHeight:Platform.OS === 'ios' ? 0 : 20,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#666',
     },
     ratingBadge: {
@@ -403,14 +484,14 @@ const styles = StyleSheet.create({
     ratingText: {
         fontSize: 14,
         fontFamily: CAIRO_FONT_FAMILY.bold,
-        lineHeight:Platform.OS === 'ios' ? 0 : 20,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#000',
     },
     commentText: {
         fontSize: 14,
         fontFamily: CAIRO_FONT_FAMILY.regular,
         color: '#333',
-        lineHeight:Platform.OS === 'ios' ? 0 : 20,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         marginBottom: 12,
     },
     commentFooter: {
@@ -449,12 +530,12 @@ const styles = StyleSheet.create({
     addButtonText: {
         fontSize: 16,
         fontFamily: CAIRO_FONT_FAMILY.bold,
-        lineHeight:Platform.OS === 'ios' ? 0 : 20,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#fff',
     },
     editButton: {
         height: 40,
-        width :'48%',
+        width: '48%',
         alignItems: 'center',
         justifyContent: 'center',
         borderWidth: 1,
@@ -468,7 +549,7 @@ const styles = StyleSheet.create({
     },
     deleteButton: {
         height: 40,
-        width :'48%',
+        width: '48%',
         alignItems: 'center',
         justifyContent: 'center',
         borderWidth: 1,
@@ -502,7 +583,7 @@ const styles = StyleSheet.create({
     bottomSheetTitle: {
         fontSize: 16,
         fontFamily: CAIRO_FONT_FAMILY.bold,
-        lineHeight:Platform.OS === 'ios' ? 0 : 20,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#000',
     },
     bottomSheetContent: {
@@ -515,7 +596,8 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         gap: 8,
-        paddingVertical: 24,
+        paddingTop: 24,
+        paddingBottom: 8,
     },
     inputContainer: {
         marginBottom: 20,
@@ -525,6 +607,7 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#ddd',
         borderRadius: 8,
+        paddingRight: 40,
         padding: 12,
         fontSize: 14,
         color: '#333',
@@ -542,8 +625,29 @@ const styles = StyleSheet.create({
     saveButtonText: {
         fontSize: 16,
         fontFamily: CAIRO_FONT_FAMILY.bold,
-        lineHeight:Platform.OS === 'ios' ? 0 : 20,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#fff',
+    },
+    micButton: {
+        position: 'absolute',
+        right: 8,
+        top: '38%',
+        backgroundColor: '#e4f1ef',
+        padding: 5,
+        borderRadius: 20,
+    },
+    micButtonText: {
+        fontSize: 16,
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
+        color: '#fff',
+    },
+    starRatingErrorText: {
+        fontSize: 14,
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
+        color: '#dc3545',
+        textAlign: 'center',
     },
 });
 

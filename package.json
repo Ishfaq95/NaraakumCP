@@ -11,6 +11,7 @@
     "postinstall": "patch-package"
   },
   "dependencies": {
+    "@dev-amirzubair/react-native-voice": "^1.0.4",
     "@invertase/react-native-apple-authentication": "^2.4.1",
     "@notifee/react-native": "^9.1.8",
     "@ptomasroos/react-native-multi-slider": "^2.2.2",

@@ -1,5 +1,5 @@
 import { useNavigation } from '@react-navigation/native';
-import { View, Text, SafeAreaView, StyleSheet, TouchableOpacity, ScrollView, Linking } from 'react-native';
+import { View, Text, SafeAreaView, StyleSheet, TouchableOpacity, ScrollView, Linking, Platform } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useEffect, useState } from 'react';
 import { appointmentService } from '../../services/api/appointmentService';
@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontFamily: CAIRO_FONT_FAMILY.semiBold,
         color: '#ffffffa8',
-        lineHeight: 20,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
     },
     activeTabText: {
         color: '#fff',

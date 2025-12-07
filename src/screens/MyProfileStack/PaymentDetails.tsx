@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, FlatList } from 'react-native'
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, FlatList, Platform } from 'react-native'
 import React, { useEffect, useState, useCallback } from 'react'
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
@@ -27,6 +27,7 @@ const PaymentDetailsScreen = () => {
             const payload = {
                 UserloginInfoId: user?.Id,
             };
+
             const response = await profileService.getServiceProviderPaymentDetails(payload);
             if (response?.ResponseStatus?.STATUSCODE === 200) {
                 setPaymentDetails(response?.PaymentProfileDetail || []);
@@ -34,7 +35,7 @@ const PaymentDetailsScreen = () => {
                 setTotalBookings(response?.PaymentProfileDetail?.length || 0);
             }
         } catch (error: any) {
-            console.log('error', error)
+            console.log('error', error);
         }
         finally {
             setIsLoading(false);
@@ -61,7 +62,7 @@ const PaymentDetailsScreen = () => {
     const renderScreenHeader = () => (
         <View style={styles.screenHeader}>
             <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                <Ionicons name="chevron-back" size={24} color="#333" />
+            <Ionicons name="arrow-back-outline" size={24} color="#000" />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Payment Details</Text>
         </View>
@@ -79,8 +80,6 @@ const PaymentDetailsScreen = () => {
         );
     }, [expandedItems, toggleExpand, formatTime, formatDate]);
 
-    const keyExtractor = useCallback((item: any) => item.Id.toString(), []);
-
     const renderListHeaderComponent = useCallback(() => (
         <>
             {/* Summary Card */}
@@ -93,28 +92,28 @@ const PaymentDetailsScreen = () => {
                 <View style={styles.totalAmountRow}>
                     <Text style={styles.totalAmountLabel}>Total Amounts</Text>
                     <Text style={styles.totalAmountValue}>
-                        {paymentAmount?.TotalAmount?.toFixed(2) || '0.00'} SAR
+                        {paymentAmount?.TotalAmount?.toFixed(2) || '0.00'} <Text style={styles.totalAmountCurrency}>SAR</Text>
                     </Text>
                 </View>
 
                 <View style={styles.transferredContainer}>
-                    <View style={styles.transferredBox}>
+                    <View style={{}}>
                         <Text style={styles.transferredLabel}>Transferred</Text>
                         <Text style={styles.transferredAmount}>
-                            {paymentAmount?.TotalPaid || 0} SAR
+                            {paymentAmount?.TotalPaid || 0} <Text style={styles.totalAmountCurrency}>SAR</Text>
                         </Text>
                     </View>
 
-                    <View style={styles.notTransferredBox}>
+                    <View style={{}}>
                         <Text style={styles.notTransferredLabel}>Not Transferred</Text>
                         <Text style={styles.notTransferredAmount}>
-                            {paymentAmount?.TotalUnpaid?.toFixed(2) || '0.00'} SAR
+                            {paymentAmount?.TotalUnpaid?.toFixed(2) || '0.00'} <Text style={styles.totalAmountCurrency}>SAR</Text>
                         </Text>
                     </View>
                 </View>
             </View>
 
-           
+
         </>
     ), [totalBookings, paymentAmount]);
 
@@ -124,32 +123,35 @@ const PaymentDetailsScreen = () => {
         </View>
     ), []);
 
+    console.log('paymentDetails', paymentDetails);
+
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.mainContainer}>
                 {renderScreenHeader()}
-                <View style={{backgroundColor: '#239ea0',paddingHorizontal: 16,paddingVertical: 10}}>
-                {renderListHeaderComponent()}
+                <View style={{ backgroundColor: '#239ea0', paddingHorizontal: 16, paddingVertical: 16}}>
+                    {renderListHeaderComponent()}
                 </View>
-                <View style={{backgroundColor: '#e4f1ef',padding: 12}}>
-                 {/* Payment Transaction Section Header */}
-            <View style={styles.transactionSectionHeader}>
-                <Text style={styles.transactionSectionTitle}>Payment Transaction</Text>
-            </View>
-                <FlatList
-                    data={paymentDetails}
-                    renderItem={renderTransactionItem}
-                    keyExtractor={keyExtractor}
-                    // ListHeaderComponent={renderListHeaderComponent}
-                    ListEmptyComponent={renderEmptyComponent}
-                    contentContainerStyle={styles.flatListContent}
-                    showsVerticalScrollIndicator={false}
-                    removeClippedSubviews={true}
-                    maxToRenderPerBatch={10}
-                    updateCellsBatchingPeriod={50}
-                    initialNumToRender={10}
-                    windowSize={10}
-                />
+                <View style={styles.flatListContainer}>
+                    <FlatList
+                        data={paymentDetails}
+                        renderItem={renderTransactionItem}
+                        keyExtractor={(item, index) => `${item.Id.toString()}-${index}`}
+                        ListHeaderComponent={
+                            <View style={styles.transactionSectionHeader}>
+                                <Text style={styles.transactionSectionTitle}>Payment Transaction</Text>
+                            </View>
+                        }
+                        ListEmptyComponent={renderEmptyComponent}
+                        contentContainerStyle={styles.flatListContent}
+                        showsVerticalScrollIndicator={false}
+                        removeClippedSubviews={false}
+                        nestedScrollEnabled={true}
+                        maxToRenderPerBatch={10}
+                        updateCellsBatchingPeriod={50}
+                        initialNumToRender={10}
+                        windowSize={10}
+                    />
                 </View>
             </View>
         </SafeAreaView>
@@ -179,12 +181,17 @@ const styles = StyleSheet.create({
     },
     headerTitle: {
         fontSize: 16,
-        fontWeight: 'bold',
-        color: '#333',
         fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
+        color: '#333',
+    },
+    flatListContainer: {
+        flex: 1,
+        backgroundColor: '#e4f1ef',
+        padding: 12,
     },
     flatListContent: {
-        flexGrow: 1,
+        paddingBottom: 40,
     },
     // Summary Card Styles
     summaryCard: {
@@ -202,38 +209,46 @@ const styles = StyleSheet.create({
     summaryTitle: {
         fontSize: 15,
         color: '#333',
-        fontFamily: CAIRO_FONT_FAMILY.medium,
+        fontFamily: CAIRO_FONT_FAMILY.bold,
     },
     summaryTitleValue: {
         fontSize: 16,
-        color: '#17a2b8',
+        color: '#239EA0',
         fontFamily: CAIRO_FONT_FAMILY.bold,
     },
     totalAmountRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingVertical: 14,
-        borderTopWidth: 1,
-        borderTopColor: '#ddd',
-        borderBottomWidth: 1,
-        borderBottomColor: '#ddd',
-        marginBottom: 14,
+        paddingVertical: 6,
+        borderWidth: 1,
+        borderColor: '#e0e0e0',
+        borderRadius: 12,
+        paddingHorizontal: 12,
+        marginBottom: 12,
+        overflow: 'hidden',
     },
     totalAmountLabel: {
         fontSize: 15,
         color: '#555',
-        fontFamily: CAIRO_FONT_FAMILY.regular,
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
     },
     totalAmountValue: {
         fontSize: 16,
-        color: '#17a2b8',
+        color: '#239EA0',
         fontFamily: CAIRO_FONT_FAMILY.bold,
     },
     transferredContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
+        borderWidth: 1,
+        borderColor: '#ddd',
+        borderRadius: 8,
+        paddingHorizontal: 12,
+        paddingVertical: 10,
         gap: 10,
+        overflow: 'hidden',
     },
     transferredBox: {
         flex: 1,
@@ -242,17 +257,19 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         borderWidth: 1,
         borderColor: '#ddd',
+        overflow: 'hidden',
     },
     transferredLabel: {
         fontSize: 14,
         color: '#666',
-        fontFamily: CAIRO_FONT_FAMILY.regular,
-        marginBottom: 6,
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
     },
     transferredAmount: {
         fontSize: 15,
-        color: '#333',
+        color: '#239EA0',
         fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
     },
     notTransferredBox: {
         flex: 1,
@@ -261,16 +278,17 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         borderWidth: 1,
         borderColor: '#ddd',
+        overflow: 'hidden',
     },
     notTransferredLabel: {
         fontSize: 14,
         color: '#666',
-        fontFamily: CAIRO_FONT_FAMILY.regular,
-        marginBottom: 6,
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
     },
     notTransferredAmount: {
         fontSize: 15,
-        color: '#17a2b8',
+        color: '#239EA0',
         fontFamily: CAIRO_FONT_FAMILY.bold,
     },
     // Transaction Section Styles
@@ -279,8 +297,9 @@ const styles = StyleSheet.create({
     },
     transactionSectionTitle: {
         fontSize: 15,
-        color: '#333',
-        fontFamily: CAIRO_FONT_FAMILY.medium,
+        color: '#666',
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
     },
     emptyContainer: {
         padding: 20,
@@ -288,11 +307,18 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
         borderRadius: 8,
         marginTop: 12,
+        overflow: 'hidden',
     },
     emptyText: {
         fontSize: 14,
         color: '#999',
         fontFamily: CAIRO_FONT_FAMILY.regular,
+    },
+    totalAmountCurrency: {
+        fontSize: 15,
+        color: '#666',
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
     },
 });
 

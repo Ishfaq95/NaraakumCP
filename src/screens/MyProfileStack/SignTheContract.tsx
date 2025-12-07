@@ -12,6 +12,7 @@ import RNHTMLtoPDF from 'react-native-html-to-pdf';
 import RNFS from 'react-native-fs';
 import Share from 'react-native-share';
 import { ROUTES } from '../../shared/utils/routes';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
 
 const SignTheContractScreen = () => {
     const navigation = useNavigation();
@@ -235,7 +236,7 @@ const SignTheContractScreen = () => {
     const renderScreenHeader = () => (
         <View style={styles.screenHeader}>
             <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                <Ionicons name="chevron-back" size={24} color="#333" />
+                <Ionicons name="arrow-back-outline" size={24} color="#000" />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Contract Details</Text>
         </View>
@@ -285,7 +286,8 @@ const SignTheContractScreen = () => {
             direction: rtl;
             text-align: right;
             padding: 15px;
-            background-color: #e4f1ef;
+            border-radius: 12px;
+            background-color: #fff;
             line-height: 1.8;
             font-size: 14px;
         }
@@ -466,32 +468,35 @@ const SignTheContractScreen = () => {
                     </View>
                 ) : contractSigningData?.DescriptionSlang ? (
                     // Contract WebView
-                    <>
-                        <WebView
-                            source={{ html: getHTMLContent() }}
-                            style={styles.webview}
-                            showsVerticalScrollIndicator={true}
-                            showsHorizontalScrollIndicator={false}
-                            scalesPageToFit={true}
-                            bounces={true}
-                            javaScriptEnabled={true}
-                            domStorageEnabled={true}
-                            startInLoadingState={true}
-                            renderLoading={() => (
-                                <View style={styles.webviewLoading}>
-                                    <ActivityIndicator size="small" color="#0066cc" />
-                                </View>
-                            )}
-                        />
+                    <View style={styles.webviewContainer}>
+                        <View style={styles.webviewWrapper}>
+                            <WebView
+                                source={{ html: getHTMLContent() }}
+                                style={styles.webview}
+                                showsVerticalScrollIndicator={true}
+                                showsHorizontalScrollIndicator={false}
+                                scalesPageToFit={true}
+                                bounces={true}
+                                javaScriptEnabled={true}
+                                domStorageEnabled={true}
+                                startInLoadingState={true}
+                                renderLoading={() => (
+                                    <View style={styles.webviewLoading}>
+                                        <ActivityIndicator size="small" color="#0066cc" />
+                                    </View>
+                                )}
+                            />
+                        </View>
                         <View style={styles.buttonContainer}>
                             <TouchableOpacity
                                 style={styles.button}
                                 onPress={handleAgreeAndContinue}
                             >
-                                <Text style={styles.buttonText}>Agree & Continue</Text>
+                                <Text style={styles.buttonText}>Agree & Next</Text>
+                                <Ionicons name="arrow-forward-outline" size={20} color="#fff" />
                             </TouchableOpacity>
                         </View>
-                    </>
+                    </View>
                 ) : (
                     <View style={styles.emptyContainer}>
                         <Ionicons name="document-text-outline" size={64} color="#ccc" />
@@ -528,14 +533,25 @@ const styles = StyleSheet.create({
     },
     headerTitle: {
         fontSize: 16,
-        fontWeight: 'bold',
-        color: '#333',
+        color: '#191919',
         fontFamily: CAIRO_FONT_FAMILY.bold,
-        marginLeft: 10,
+        marginLeft: 4,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
+    },
+    webviewContainer: {
+        flex: 1,
+        backgroundColor: '#e4f1ef',
+        padding: 16,
+    },
+    webviewWrapper: {
+        flex: 1,
+        borderRadius: 12,
+        overflow: 'hidden',
+        backgroundColor: '#fff',
     },
     webview: {
         flex: 1,
-        backgroundColor: '#e4f1ef',
+        backgroundColor: 'transparent',
     },
     loadingContainer: {
         flex: 1,
@@ -557,7 +573,8 @@ const styles = StyleSheet.create({
         bottom: 0,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#e4f1ef',
+        backgroundColor: '#fff',
+        borderRadius: 12,
     },
     emptyContainer: {
         flex: 1,
@@ -573,15 +590,16 @@ const styles = StyleSheet.create({
         fontFamily: CAIRO_FONT_FAMILY.regular,
     },
     buttonContainer: {
-        padding: 10,
+        paddingTop: 6,
         backgroundColor: '#e4f1ef',
         borderRadius: 10,
     },
     button: {
-        padding: 10,
-        backgroundColor: '#239ea0',
+        flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
+        padding: 10,
+        backgroundColor: '#239ea0',
         borderRadius: 10,
     },
     buttonText: {
@@ -589,6 +607,7 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
         fontFamily: CAIRO_FONT_FAMILY.bold,
+        marginRight: 8,
     },
     // Signature Canvas Styles
     signatureContainer: {

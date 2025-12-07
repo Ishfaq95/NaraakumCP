@@ -17,6 +17,7 @@ import moment from 'moment'
 import CustomBottomSheet from '../../components/common/CustomBottomSheet'
 import DateTimePicker from '@react-native-community/datetimepicker'
 import ConfirmationModal from '../../components/common/ConfirmationModal'
+import { CAIRO_FONT_FAMILY } from '../../styles/globalStyles'
 
 const AppointmentListScreen = () => {
   const navigation = useNavigation();
@@ -275,6 +276,7 @@ const AppointmentListScreen = () => {
       } else if (response?.ResponseStatus?.STATUSCODE === 201) {
         if (!isLoadMore) {
           setAppointments([]);
+          setTotalRecords(0);
         }
         setHasMoreData(false);
       }
@@ -655,6 +657,7 @@ const AppointmentListScreen = () => {
 
           <View style={{ flex: 1 }}>
             {/* Appointment list will be shown here */}
+            <Text style={{ color: '#666', fontSize: 14,fontFamily:CAIRO_FONT_FAMILY.semiBold,lineHeight:Platform.OS === 'ios' ? 0 : 20,marginTop:-10 }}>{`${activeTab === 'today' ? "Today's" : activeTab === 'upcoming' ? 'Upcoming' : 'Previous'} Appointments: (${totalRecords})`}</Text>
             <FlatList
               data={appointments}
               keyExtractor={(item) => item.RowId}

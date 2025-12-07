@@ -11,6 +11,7 @@ interface State {
   mediaTokenExpiresAt:any;
   rememberMeRedux:any;
   unreadMessages: number;
+  step2PhoneNumber: any;
 }
 
 const initialState: State = {
@@ -23,6 +24,7 @@ const initialState: State = {
   mediaTokenExpiresAt: null,
   rememberMeRedux: false,
   unreadMessages: 0,
+  step2PhoneNumber: null,
 };
 
 export const userReducer = createSlice({
@@ -45,6 +47,9 @@ export const userReducer = createSlice({
     setUser: (state, action) => {
       state.user = action.payload;
     },
+    setStep2PhoneNumber: (state, action) => {
+      state.step2PhoneNumber = action.payload;
+    },
     setMediaToken: (state = initialState, action) => {
       return {
         ...state,
@@ -58,6 +63,6 @@ export const userReducer = createSlice({
   },
 });
 
-export const { setTopic,setToken,setMediaToken,setRememberMeRedux,setUser,setUnreadMessages } = userReducer.actions;
+export const { setTopic,setToken,setMediaToken,setRememberMeRedux,setUser,setUnreadMessages,setStep2PhoneNumber } = userReducer.actions;
 
 export default userReducer.reducer;

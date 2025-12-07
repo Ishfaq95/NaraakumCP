@@ -1,7 +1,8 @@
 import React, { memo } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { CAIRO_FONT_FAMILY } from '../../styles/globalStyles';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
 
 interface TransactionItemProps {
     item: any;
@@ -12,6 +13,72 @@ interface TransactionItemProps {
 }
 
 const TransactionItem = memo(({ item, isExpanded, onToggle, formatTime, formatDate }: TransactionItemProps) => {
+    console.log('item', item);
+    const getStatusInfo = () => {
+        const statusId = item?.CatOrderStatusId?.toString();
+    
+        switch (statusId) {
+          case '1':
+          case '17':
+            return {
+              backgroundColor: '#e6f8eb',
+              borderColor: '#54b196',
+              textColor: '#008b62',
+              text: 'Accepted'
+            };
+          case '7':
+            return {
+              backgroundColor: '#fef2e6',
+              borderColor: '#faa754',
+              textColor: '#f87b00',
+              text: 'On the way'
+            };
+          case '8':
+            return {
+              backgroundColor: '#fef2e6',
+              borderColor: '#faa754',
+              textColor: '#f87b00',
+              text: 'In Progress'
+            };
+          case '19':
+          case '10':
+            return {
+              backgroundColor: '#e9f5f6',
+              borderColor: '#6cbebf',
+              textColor: '#239ea0',
+              text: 'Completed'
+            };
+          case '9':
+          case '4':
+            return {
+              backgroundColor: '#fde8e8',
+              borderColor: '#ef6666',
+              textColor: '#ec4949',
+              text: 'Cancelled'
+            };
+          case '23':
+            return {
+              backgroundColor: '#fde8e8',
+              borderColor: '#ef6666',
+              textColor: '#ec4949',
+              text: 'Incomplete'
+            };
+          case '24':
+            return {
+              backgroundColor: '#fde8e8',
+              borderColor: '#ef6666',
+              textColor: '#ec4949',
+              text: 'Missed'
+            };
+          default:
+            return {
+              backgroundColor: '#e6f8eb',
+              borderColor: '#54b196',
+              textColor: '#008b62',
+              text: 'New'
+            };
+        }
+      };
     return (
         <View style={styles.transactionCard}>
             <TouchableOpacity
@@ -32,7 +99,7 @@ const TransactionItem = memo(({ item, isExpanded, onToggle, formatTime, formatDa
                             color="#000"
                         />
                     </View>
-                    
+
                 </View>
             </TouchableOpacity>
 
@@ -40,7 +107,7 @@ const TransactionItem = memo(({ item, isExpanded, onToggle, formatTime, formatDa
                 <View style={styles.transactionDetails}>
                     <View style={styles.detailRow}>
                         <View style={styles.detailIconContainer}>
-                            <Ionicons name="medical" size={18} color="#17a2b8" />
+                        <FontAwesome name="stethoscope" size={20} color="#239EA0" />
                         </View>
                         <Text style={styles.detailLabel}>Service</Text>
                         <Text style={styles.detailValue}>{item.CategoryName}</Text>
@@ -48,7 +115,7 @@ const TransactionItem = memo(({ item, isExpanded, onToggle, formatTime, formatDa
 
                     <View style={styles.detailRow}>
                         <View style={styles.detailIconContainer}>
-                            <Ionicons name="calendar-outline" size={18} color="#17a2b8" />
+                            <Ionicons name="calendar-outline" size={18} color="#239EA0" />
                         </View>
                         <Text style={styles.detailLabel}>Date</Text>
                         <Text style={styles.detailValue}>{formatDate(item.SchedulingDate)}</Text>
@@ -56,7 +123,7 @@ const TransactionItem = memo(({ item, isExpanded, onToggle, formatTime, formatDa
 
                     <View style={styles.detailRow}>
                         <View style={styles.detailIconContainer}>
-                            <Ionicons name="time-outline" size={18} color="#17a2b8" />
+                            <Ionicons name="time-outline" size={18} color="#239EA0" />
                         </View>
                         <Text style={styles.detailLabel}>Time</Text>
                         <Text style={styles.detailValue}>{formatTime(item.SchedulingTime)}</Text>
@@ -64,29 +131,43 @@ const TransactionItem = memo(({ item, isExpanded, onToggle, formatTime, formatDa
 
                     <View style={styles.detailRow}>
                         <View style={styles.detailIconContainer}>
-                            <Ionicons name="information-circle-outline" size={18} color="#17a2b8" />
+                            <Ionicons name="information-circle-outline" size={18} color="#239EA0" />
                         </View>
                         <Text style={styles.detailLabel}>Status</Text>
-                        <View style={styles.statusBadge}>
-                            <Text style={styles.statusText}>{item.TitlePlang}</Text>
-                        </View>
+                        {(() => {
+            const statusInfo = getStatusInfo();
+            return (
+              <View style={[
+                styles.statusBadge,
+                {
+                  backgroundColor: statusInfo.backgroundColor,
+                  borderLeftWidth: 4,
+                  borderLeftColor: statusInfo.borderColor
+                }
+              ]}>
+                <Text style={[styles.statusText, { color: statusInfo.textColor }]}>
+                  {statusInfo.text}
+                </Text>
+              </View>
+            );
+          })()}
                     </View>
 
                     <View style={styles.divider} />
 
                     <View style={styles.amountRow}>
                         <Text style={styles.amountLabel}>Total Amount</Text>
-                        <Text style={styles.amountValue}>{item.ServiceCharges} SAR</Text>
+                        <Text style={styles.amountValue}>{item.ServiceCharges} <Text style={styles.amountValueCurrency}>SAR</Text></Text>
                     </View>
 
                     <View style={styles.amountRow}>
                         <Text style={styles.amountLabel}>System Charges</Text>
-                        <Text style={styles.amountValue}>{item.PlatformPercentageAmount} SAR</Text>
+                        <Text style={styles.amountValue}>{item.PlatformPercentageAmount} <Text style={styles.amountValueCurrency}>SAR</Text></Text>
                     </View>
 
                     <View style={styles.amountRow}>
                         <Text style={styles.amountLabel}>Tax</Text>
-                        <Text style={styles.amountValue}>{item.VatAmount} SAR</Text>
+                        <Text style={styles.amountValue}>{item.VatAmount} <Text style={styles.amountValueCurrency}>SAR</Text></Text>
                     </View>
                 </View>
             )}
@@ -119,7 +200,7 @@ const styles = StyleSheet.create({
         fontSize: 15,
         color: '#333',
         fontFamily: CAIRO_FONT_FAMILY.bold,
-        marginBottom: 4,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         textAlign: 'left',
     },
     transactionService: {
@@ -139,10 +220,10 @@ const styles = StyleSheet.create({
         fontSize: 13,
         color: '#fff',
         fontFamily: CAIRO_FONT_FAMILY.bold,
-        backgroundColor: '#17a2b8',
-        paddingHorizontal: 10,
-        paddingVertical: 5,
-        borderRadius: 5,
+        backgroundColor: '#239EA0',
+        paddingHorizontal: 6,
+        paddingVertical: 3,
+        borderRadius: 10,
     },
     transactionDetails: {
         padding: 14,
@@ -152,9 +233,7 @@ const styles = StyleSheet.create({
     detailRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 11,
-        borderBottomWidth: 1,
-        borderBottomColor: '#e0e0e0',
+        paddingVertical: 2,
     },
     detailIconContainer: {
         width: 28,
@@ -165,12 +244,12 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#666',
         fontFamily: CAIRO_FONT_FAMILY.regular,
-        marginLeft: 10,
+        marginLeft: 4,
     },
     detailValue: {
         fontSize: 14,
         color: '#333',
-        fontFamily: CAIRO_FONT_FAMILY.medium,
+        fontFamily: CAIRO_FONT_FAMILY.bold,
     },
     statusBadge: {
         backgroundColor: '#ffe6e6',
@@ -193,17 +272,23 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingVertical: 5,
     },
     amountLabel: {
         fontSize: 14,
         color: '#666',
-        fontFamily: CAIRO_FONT_FAMILY.regular,
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
     },
     amountValue: {
         fontSize: 14,
         color: '#333',
         fontFamily: CAIRO_FONT_FAMILY.bold,
+    },
+    amountValueCurrency: {
+        fontSize: 14,
+        color: '#666',
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
     },
 });
 

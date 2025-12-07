@@ -11,6 +11,8 @@ import moment from 'moment';
 import { useTranslation } from 'react-i18next';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import CustomPhoneInput, { COUNTRIES } from '../common/CustomPhoneInput';
+import { setStep2PhoneNumber } from '../../shared/redux/reducers/userReducer';
+import { useDispatch } from 'react-redux';
 
 interface FinalDetailsStepProps {
     phoneNumber: string;
@@ -45,6 +47,7 @@ const FinalDetailsStep: React.FC<FinalDetailsStepProps> = ({ phoneNumber, userIn
     const [fullNameEn, setFullNameEn] = useState('');
     const [fullNameAr, setFullNameAr] = useState('');
     const [experience, setExperience] = useState('');
+    const dispatch = useDispatch();
     const [language, setLanguage] = useState<string | number>('');
     const [dob, setDob] = useState('');
     // Initialize date to 18 years ago (maximum selectable date)
@@ -380,6 +383,7 @@ const FinalDetailsStep: React.FC<FinalDetailsStepProps> = ({ phoneNumber, userIn
             const response = await authService.addIndividualServiceProviderStep3(payload);
             if (response.ResponseStatus.STATUSCODE) {
                 if (response.StatusCode.STATUSCODE == 11028) {
+                    dispatch(setStep2PhoneNumber(null));    
                     onSubmit(response.Userinfo);
                 }
             }

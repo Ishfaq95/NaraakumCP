@@ -1,5 +1,5 @@
-import CustomPhoneInput from '../common/CustomPhoneInput';
-import React, { useState } from 'react';
+import CustomPhoneInput, { COUNTRIES } from '../common/CustomPhoneInput';
+import React, { useEffect, useState } from 'react';
 import {
     View,
     Text,
@@ -16,14 +16,16 @@ import { appleAuth } from '@invertase/react-native-apple-authentication';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import { signInWithGoogle } from '../../services/auth/googleAuthService';
 import { authService } from '../../services/api/authService';
-import { setUser } from '../../shared/redux/reducers/userReducer';
-import { useDispatch } from 'react-redux';
+import { setStep2PhoneNumber, setUser } from '../../shared/redux/reducers/userReducer';
+import { useDispatch, useSelector } from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 
 const PersonalInfoStep: React.FC<{userRoleId: any, onNext: (userInfo: any, phoneNumber: string) => void}> = ({userRoleId, onNext}) => {
     const { t } = useTranslation();
     const [phoneNumber, setPhoneNumber] = useState('');
+    const step2PhoneNumber = useSelector((state: any) => state.root.user.step2PhoneNumber);
+    console.log("step2PhoneNumber", step2PhoneNumber);
     const navigation = useNavigation();
     const [isLoading, setIsLoading] = useState(false);
     const dispatch = useDispatch();
@@ -38,6 +40,38 @@ const PersonalInfoStep: React.FC<{userRoleId: any, onNext: (userInfo: any, phone
     });
     const [error, setError] = useState(false);
     const [apiError, setAPIError] = useState(false);
+
+    // Function to extract country code and phone number from full number
+    const extractPhoneInfo = (fullNumber: string) => {
+        if (!fullNumber) return { countryCode: 'SA', phoneNumber: '' };
+
+        // Remove any spaces or special characters
+        const cleanNumber = fullNumber.replace(/\s/g, '');
+
+        // Build country code map from COUNTRIES array
+        // Sort by dial code length (longest first) to handle cases like +1268 before +1
+        const sortedCountries = [...COUNTRIES].sort((a, b) => b.dialCode.length - a.dialCode.length);
+
+        // Try to match the phone number with country dial codes
+        for (const country of sortedCountries) {
+            if (cleanNumber.startsWith(country.dialCode)) {
+                const phoneNumber = cleanNumber.substring(country.dialCode.length);
+                return { countryCode: country.code, phoneNumber };
+            }
+        }
+
+        // Default to Saudi Arabia if no match found
+        return { countryCode: 'SA', phoneNumber: cleanNumber.replace(/^\+/, '') };
+    };
+
+    useEffect(() => {
+        if (step2PhoneNumber) {
+            const phoneInfo = extractPhoneInfo(step2PhoneNumber || '');
+            const getCountry = COUNTRIES.find((c: any) => c.code === phoneInfo.countryCode);
+            setSelectedCountry(getCountry);
+            setPhoneNumber(phoneInfo.phoneNumber);
+        }
+    }, [step2PhoneNumber]);
 
     const handlePhoneNumberChange = (text: string) => {
         setPhoneNumber(text);
@@ -254,6 +288,7 @@ const PersonalInfoStep: React.FC<{userRoleId: any, onNext: (userInfo: any, phone
                     setIsLoading(false);
                     return;
                 }
+                dispatch(setStep2PhoneNumber(fullNumber));
                 onNext(response.Userinfo, fullNumber);
             }
 

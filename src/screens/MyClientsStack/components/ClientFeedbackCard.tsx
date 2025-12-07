@@ -42,16 +42,16 @@ const ClientFeedbackCard: React.FC<Props> = ({ item, onDelete }) => {
                         source={{ uri: `${MediaBaseURL}${avatarUri}` }}
                         style={styles.avatar}
                     /> :
-                    <View style={styles.avatar}>
-                    <Ionicons name="person" size={22} color="#AFAFAF" />
-                </View>
+                        <View style={styles.avatar}>
+                            <Ionicons name="person" size={22} color="#AFAFAF" />
+                        </View>
                     }
                     <View style={{ marginLeft: 8 }}>
                         <Text style={styles.name}>{name}</Text>
                         {!!primaryDate && <Text style={styles.dateText}>{primaryDate}</Text>}
                     </View>
                 </View>
-                <View style={[styles.rowStart,{alignItems: 'flex-start',justifyContent: 'flex-start'}]}>
+                <View style={[styles.rowStart, { alignItems: 'center', justifyContent: 'center' }]}>
                     <Icon name="star" size={16} color="#FFC107" style={{ marginRight: 4 }} />
                     <Text style={styles.ratingText}>{String(rating)}</Text>
                 </View>
@@ -111,8 +111,8 @@ const styles = StyleSheet.create({
         color: '#666',
     },
     ratingText: {
-        fontSize: 13,
-        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        fontSize: 14,
+        fontFamily: CAIRO_FONT_FAMILY.bold,
         textAlign: 'left',
         lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#191919',

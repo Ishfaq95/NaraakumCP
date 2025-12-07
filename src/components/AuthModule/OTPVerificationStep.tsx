@@ -36,7 +36,7 @@ const OTPVerificationStep: React.FC<OTPVerificationStepProps> = ({
     const [isResendSuccess, setIsResendSuccess] = useState(false);
     const [otpError, setOtpError] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-
+    const [otpCodeExpired, setOTPCodeExpired] = useState(false);
     useEffect(() => {
         if (countdown > 0) {
             const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
@@ -122,7 +122,11 @@ const OTPVerificationStep: React.FC<OTPVerificationStepProps> = ({
                 return;
             }
 
-            if(response.StatusCode.STATUSCODE === 3016 || response.StatusCode.STATUSCODE === 3005){
+            if(response.StatusCode.STATUSCODE === 3016){
+                setOTPCodeExpired(true);
+                return;
+            }
+            if(response.StatusCode.STATUSCODE === 3005){
                setOtpError(true);
             }
         } catch (error) {
@@ -204,6 +208,7 @@ const OTPVerificationStep: React.FC<OTPVerificationStepProps> = ({
                 </View>
 
                 {otpError && <Text style={styles.otpErrorText}>{t('invalid_otp')}</Text>}
+                {otpCodeExpired && <Text style={styles.otpErrorText}>{'Verification Code Expired'}</Text>}
             </View>
 
             <TouchableOpacity

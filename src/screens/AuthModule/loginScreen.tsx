@@ -369,9 +369,17 @@ const LoginScreen = () => {
 
   const insets = useSafeAreaInsets();
 
+  const handleBack = () => {
+    if(navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      navigation.navigate(ROUTES.welcomeScreen as never);
+    }
+  }
+
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      <AuthHeader />
+      <AuthHeader onBack={handleBack} />
       {/* <FullScreenLoader visible={isLoading} /> */}
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}

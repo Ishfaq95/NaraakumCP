@@ -102,7 +102,10 @@ const ClientsList: React.FC<{ onCountChange?: (n: number) => void }> = ({ onCoun
 
   const handleCloseSearch = () => {
     Keyboard.dismiss();
-    setSearchText('');
+    if(searchText.length > 0) {
+      setSearchText('');
+      setFilteredClientList(clientList);
+    }
     setSearchBottomSheetVisible(false);
   };
 
@@ -111,9 +114,9 @@ const ClientsList: React.FC<{ onCountChange?: (n: number) => void }> = ({ onCoun
     <View style={{ flex: 1 }}>
       {/* Row 2: results count + search button */}
       <View style={styles.resultsRow}>
-        <Text style={styles.resultsText}>{clientList.length} Results</Text>
+        <Text style={styles.resultsText}>{filteredClientList.length} Results</Text>
         <TouchableOpacity style={styles.searchButton} onPress={() => setSearchBottomSheetVisible(true)}>
-          <Ionicons name="search" size={18} color={'#00A19D'} />
+          {searchText.length > 0 ? <Ionicons name="close" size={18} color={'#00A19D'} /> : <Ionicons name="search" size={18} color={'#00A19D'} />}
         </TouchableOpacity>
       </View>
       <FlatList
@@ -121,6 +124,11 @@ const ClientsList: React.FC<{ onCountChange?: (n: number) => void }> = ({ onCoun
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ paddingVertical: 8 }}
         renderItem={({ item }) => <ClientCard item={item} onMore={(item) => onMoreOptionsPress(item)} onBook={(item) => onDirectBookServicePress(item)} />}
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>No clients found</Text>
+          </View>
+        }
       />
 
       <CustomBottomSheet
@@ -407,6 +415,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: CAIRO_FONT_FAMILY.bold,
     color: '#FFFFFF',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyText: {
+    fontSize: 16,
+    fontFamily: CAIRO_FONT_FAMILY.semiBold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
+    color: '#191919',
   },
 });
 

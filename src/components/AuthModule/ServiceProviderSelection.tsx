@@ -16,6 +16,8 @@ import { MediaBaseURL } from '../../shared/utils/constants';
 import UniversalImage from '../common/UniversalImage';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FullScreenLoader from '../FullScreenLoader';
+import { setStep2PhoneNumber } from '../../shared/redux/reducers/userReducer';
+import { useDispatch } from 'react-redux';
 
 interface ServiceProviderSelectionProps {
     selectedProvider: string | null;
@@ -28,6 +30,7 @@ const ServiceProviderSelection: React.FC<ServiceProviderSelectionProps> = ({
     onProviderSelect,
     onNext,
 }) => {
+    const dispatch = useDispatch();
     const isFocused = useIsFocused();
     const isRTL = I18nManager.isRTL;
     const [serviceProviders, setServiceProviders] = useState<any[]>([]);
@@ -55,6 +58,7 @@ const ServiceProviderSelection: React.FC<ServiceProviderSelectionProps> = ({
     };
 
     const handleNext = () => {
+        dispatch(setStep2PhoneNumber(null));
         onNext();
     }
 

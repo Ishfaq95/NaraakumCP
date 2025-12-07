@@ -29,6 +29,7 @@ const ConfirmPassword = ({ route }: any) => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [newPasswordError, setNewPasswordError] = useState('');
+  const [newPasswordInvalid, setNewPasswordInvalid] = useState(false);
   const [confirmPasswordError, setConfirmPasswordError] = useState('');
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -53,13 +54,31 @@ const ConfirmPassword = ({ route }: any) => {
     />
   );
 
+  const validatePassword = (pwd: string) => {
+    // At least 8 characters, at least one uppercase, one lowercase, one number, one special character
+    const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/;
+    return regex.test(pwd);
+  };
+
   const handleConfirmPassword = async () => {
-    
+
     if (newPassword.trim() === '') {
       setNewPasswordError('New password is required');
       return;
     } else {
       setNewPasswordError('');
+    }
+
+
+    if (newPassword.trim() === '') {
+      setNewPasswordError('New password is required');
+      return;
+    } else {
+      setNewPasswordError('');
+    }
+    if (newPassword.trim() !== '' && !validatePassword(newPassword)) {
+      setNewPasswordInvalid(true);
+      return;
     }
     if (confirmPassword.trim() === '') {
       setConfirmPasswordError('Confirm password is required');
@@ -82,7 +101,11 @@ const ConfirmPassword = ({ route }: any) => {
       }
       const response = await authService.resetPassword(payload);
       if (response.ResponseStatus.STATUSCODE == 200) {
-        navigation.navigate(ROUTES.Login);
+
+        navigation.reset({
+          index: 0,
+          routes: [{ name: ROUTES.Login }],
+        });
       } else {
       }
     } catch (error) {
@@ -93,13 +116,13 @@ const ConfirmPassword = ({ route }: any) => {
   return (
     <SafeAreaView style={styles.container}>
       {renderHeader()}
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 25}
       >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <ScrollView 
+          <ScrollView
             contentContainerStyle={{ flexGrow: 1 }}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
@@ -112,7 +135,7 @@ const ConfirmPassword = ({ route }: any) => {
 
               {/* Main Heading */}
               <Text style={styles.mainHeading}>
-              Set New Password
+                Set New Password
               </Text>
             </View>
             <View style={styles.formContainer}>
@@ -134,6 +157,7 @@ const ConfirmPassword = ({ route }: any) => {
                     onChangeText={(text) => {
                       setNewPassword(text);
                       if (newPasswordError) setNewPasswordError('');
+                      if (newPasswordInvalid) setNewPasswordInvalid(false);
                     }}
                     secureTextEntry={!showNewPassword}
                     placeholderTextColor="#999"
@@ -151,9 +175,10 @@ const ConfirmPassword = ({ route }: any) => {
                     )}
                   </TouchableOpacity>
                 </View>
+                {newPasswordInvalid && <Text style={{ color: '#ff3b30', fontSize: 12,fontFamily: CAIRO_FONT_FAMILY.regular, fontWeight: '400' }}>{'New password must be minimum of 8 characters having alphabets, numeric, special character, an upper & lowercase letter.'}</Text>}
               </View>
 
-              <View style={styles.inputGroup}>
+              <View style={[styles.inputGroup,{marginBottom: PasswordNotMatch ? 0 : 15}]}>
                 <View style={styles.questionRow}>
                   <Text style={styles.questionText}>{'Confirm Password'}</Text>
                   <Text style={styles.requiredAsterisk}> *</Text>
@@ -171,6 +196,7 @@ const ConfirmPassword = ({ route }: any) => {
                     onChangeText={(text) => {
                       setConfirmPassword(text);
                       if (confirmPasswordError) setConfirmPasswordError('');
+                      if (PasswordNotMatch) setPasswordNotMatch(false);
                     }}
                     secureTextEntry={!showConfirmPassword}
                     placeholderTextColor="#999"
@@ -190,7 +216,7 @@ const ConfirmPassword = ({ route }: any) => {
                 </View>
               </View>
 
-              {PasswordNotMatch && <Text style={styles.errorText}>{'Confirm password and new password do not match'}</Text>}
+              {PasswordNotMatch && <Text style={{ color: '#ff3b30', fontSize: 12,fontFamily: CAIRO_FONT_FAMILY.regular, fontWeight: '400' }}>{'Confirm password and new password do not match'}</Text>}
 
               <View style={styles.buttonContainer}>
                 <TouchableOpacity onPress={handleConfirmPassword} style={styles.button}>

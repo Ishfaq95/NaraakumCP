@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, Image, Alert, ActivityIndicator } from 'react-native'
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, Image, Alert, ActivityIndicator, Platform } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
@@ -6,6 +6,7 @@ import CustomScreensHeader from '../../components/common/CustomScreensHeader';
 import { ROUTES } from '../../shared/utils/routes';
 import { profileService } from '../../services/api/profileService';
 import { useSelector } from 'react-redux';
+import { CAIRO_FONT_FAMILY } from '../../styles/globalStyles';
 
 const PaymentProfileScreen = () => {
     const [paymentMenuItems, setPaymentMenuItems] = useState([
@@ -13,7 +14,7 @@ const PaymentProfileScreen = () => {
             id: 'paymentDetails',
             title: 'Payment Details',
             icon: 'person-outline',
-            Image: require('../../assets/icons/careProviderBio.png'),
+            Image: require('../../assets/images/PaymentProfile.png'),
             iconColor: '#00A19D',
             isComplete: false,
         },
@@ -21,7 +22,7 @@ const PaymentProfileScreen = () => {
             id: 'signingTheContract',
             title: 'Signing The Contract',
             icon: 'person-outline',
-            Image: require('../../assets/icons/medicalLicense.png'),
+            Image: require('../../assets/images/signingContract.png'),
             iconColor: '#00A19D',
             isComplete: false,
         },
@@ -143,8 +144,8 @@ const PaymentProfileScreen = () => {
                                             <Text style={styles.menuItemText}>{item.title}</Text>
                                         </View>
                                         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end' }}>
-                                            {item.id != 'paymentDetails' && <View style={{ backgroundColor: item.isComplete ? '#198754' : '#ffdcdc', padding: 5, borderRadius: 10 }}>
-                                                <Text style={{ fontSize: 12, fontWeight: 'bold', color: item.isComplete ? '#fff' : '#c50d0d' }}>{item.isComplete ? 'Complete' : 'Incomplete'}</Text>
+                                            {item.id != 'paymentDetails' && <View style={{ backgroundColor: item.isComplete ? '#198754' : '#FFDCDC', paddingHorizontal: 5, paddingVertical: 2, borderRadius: 10 }}>
+                                                <Text style={{ fontSize: 12, fontFamily: CAIRO_FONT_FAMILY.regular,lineHeight: Platform.OS === 'ios' ? 0 : 16, color: item.isComplete ? '#fff' : '#C50D0D' }}>{item.isComplete ? 'Complete' : 'Incomplete'}</Text>
                                             </View>}
                                             <Ionicons name="chevron-forward" size={20} color="#999" />
                                         </View>
@@ -190,15 +191,16 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         paddingHorizontal: 16,
-        paddingVertical: 16,
+        paddingVertical: 10,
     },
     leftSection: {
         flexDirection: 'row',
         alignItems: 'center',
     },
     menuItemText: {
-        fontSize: 16,
-        fontWeight: '500',
+        fontSize: 15,
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#333',
         marginLeft: 12,
     },

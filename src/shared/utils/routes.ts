@@ -51,5 +51,6 @@ export const ROUTES = {
     BookNewService: 'BookNewService',
     SuccessScreen: 'SuccessScreen',
     PrivacyPolicy: 'PrivacyPolicy',
+    AfterContractSign: 'AfterContractSign',
   };
   

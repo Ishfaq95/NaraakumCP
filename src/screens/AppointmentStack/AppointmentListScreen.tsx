@@ -67,6 +67,8 @@ const AppointmentListScreen = () => {
   const [showEndDateModal, setShowEndDateModal] = useState(false);
   const [showEndTimeModal, setShowEndTimeModal] = useState(false);
 
+  console.log("User", user);
+
   // Handle WebSocket connection
   useEffect(() => {
     if (user && isFocused) {

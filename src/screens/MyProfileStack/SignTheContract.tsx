@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ActivityIndicator, Dimensions, Alert, Platform } from 'react-native'
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ActivityIndicator, Dimensions, Alert, Platform, Image } from 'react-native'
 import React, { useEffect, useState, useRef } from 'react'
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
@@ -43,27 +43,7 @@ const SignTheContractScreen = () => {
             };
             const response = await profileService.addServiceProviderContract(payload);
             if (response?.ResponseStatus?.STATUSCODE === 200) {
-                // Show success alert with options
-                Alert.alert(
-                    'Success',
-                    'Contract signed and uploaded successfully!',
-                    [
-                        {
-                            text: 'View PDF',
-                            onPress: () => {
-                                (navigation as any).navigate(ROUTES.SignatureViewerScreen, {
-                                    pdfPath: pdfFilePath,
-                                    title: 'Signed Contract',
-                                });
-                            },
-                        },
-                        {
-                            text: 'Done',
-                            onPress: () => navigation.goBack(),
-                            style: 'cancel',
-                        },
-                    ]
-                );
+                navigation.navigate(ROUTES.AfterContractSign as never);
             }
         } catch (error: any) {
             Alert.alert('Error', 'Failed to submit contract. Please try again.');
@@ -164,7 +144,6 @@ const SignTheContractScreen = () => {
     // Handle signature confirmation
     const handleSignature = async (signature: string) => {
         setSignatureBase64(signature);
-        setShowSignature(false);
 
         // Upload signature image
         await saveAndUploadSignature(signature);
@@ -207,7 +186,7 @@ const SignTheContractScreen = () => {
             if (pdf.filePath) {
                 // Save PDF file path for viewing later
                 setPdfFilePath(pdf.filePath);
-                
+
                 // Upload PDF to server
                 await uploadPDFContract(pdf.filePath);
             }
@@ -238,7 +217,7 @@ const SignTheContractScreen = () => {
             <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
                 <Ionicons name="arrow-back-outline" size={24} color="#000" />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>Contract Details</Text>
+            <Text style={styles.headerTitle}>Signing The Contract</Text>
         </View>
     );
 
@@ -404,13 +383,14 @@ const SignTheContractScreen = () => {
                 {isLoading ? (
                     <View style={styles.loadingContainer}>
                         <ActivityIndicator size="large" color="#0066cc" />
-                        <Text style={styles.loadingText}>جاري تحميل العقد...</Text>
+                        <Text style={styles.loadingText}>Loading...</Text>
                     </View>
                 ) : showSignature ? (
                     // Signature Canvas View
                     <View style={styles.signatureContainer}>
-                        <Text style={styles.signatureTitle}>Please sign below</Text>
-                        <Text style={styles.signatureSubtitle}>Draw your signature in the box</Text>
+                        <Image source={require('../../assets/images/signaturePancil.png')} style={styles.signaturePancilImage} />
+                        <Text style={styles.signatureTitle}>Please sign in the box below</Text>
+                        <Text style={styles.signatureSubtitle}>Make sure the signature looks like the one in your id</Text>
                         <View style={styles.signatureCanvasWrapper}>
                             <SignatureScreen
                                 key={signatureKey}
@@ -423,7 +403,6 @@ const SignTheContractScreen = () => {
                                 webStyle={`
                                     .m-signature-pad {
                                         box-shadow: none;
-                                        border: 2px solid #239ea0;
                                         border-radius: 10px;
                                     }
                                     .m-signature-pad--body {
@@ -439,25 +418,19 @@ const SignTheContractScreen = () => {
                                 `}
                             />
                         </View>
-                        <View style={styles.signatureButtonsContainer}>
-                            <TouchableOpacity
-                                style={styles.signatureClearButton}
-                                onPress={handleClear}
-                            >
-                                <Text style={styles.signatureClearText}>Clear</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={styles.signatureSaveButton}
-                                onPress={() => signatureRef.current?.readSignature()}
-                            >
-                                <Text style={styles.signatureSaveText}>Save Signature</Text>
-                            </TouchableOpacity>
-                        </View>
                         <TouchableOpacity
-                            style={styles.signatureBackButton}
-                            onPress={() => setShowSignature(false)}
+                            style={styles.signatureClearButton}
+                            onPress={handleClear}
                         >
-                            <Text style={styles.signatureBackText}>Back to Contract</Text>
+                            <Text style={styles.signatureClearText}>Repeat</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={styles.signatureSaveButton}
+                            onPress={() => signatureRef.current?.readSignature()}
+                        >
+                            <Ionicons name="checkmark-outline" size={24} color="#fff" />
+                            <Text style={styles.signatureSaveText}>Save</Text>
                         </TouchableOpacity>
                     </View>
                 ) : isGeneratingPDF ? (
@@ -500,7 +473,7 @@ const SignTheContractScreen = () => {
                 ) : (
                     <View style={styles.emptyContainer}>
                         <Ionicons name="document-text-outline" size={64} color="#ccc" />
-                        <Text style={styles.emptyText}>لا يوجد عقد متاح</Text>
+                        <Text style={styles.emptyText}>No contract available</Text>
                     </View>
                 )}
             </View>
@@ -612,31 +585,30 @@ const styles = StyleSheet.create({
     // Signature Canvas Styles
     signatureContainer: {
         flex: 1,
-        backgroundColor: '#fff',
+        backgroundColor: '#e4f1ef',
         padding: 20,
     },
     signatureTitle: {
         fontSize: 20,
-        fontWeight: 'bold',
         color: '#333',
-        textAlign: 'center',
-        marginBottom: 10,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         fontFamily: CAIRO_FONT_FAMILY.bold,
+        marginTop: Platform.OS === 'ios' ? 0 : 6,
+        marginBottom: Platform.OS === 'ios' ? 0 : 6,
     },
     signatureSubtitle: {
-        fontSize: 14,
+        fontSize: 16,
         color: '#666',
-        textAlign: 'center',
         marginBottom: 20,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         fontFamily: CAIRO_FONT_FAMILY.regular,
     },
     signatureCanvasWrapper: {
-        flex: 1,
-        borderWidth: 2,
-        borderColor: '#239ea0',
+        height: '50%',
+        width: '100%',
         borderRadius: 10,
         overflow: 'hidden',
-        marginBottom: 20,
+        marginBottom: 15,
     },
     signatureButtonsContainer: {
         flexDirection: 'row',
@@ -645,32 +617,38 @@ const styles = StyleSheet.create({
         marginBottom: 15,
     },
     signatureClearButton: {
-        flex: 1,
-        padding: 12,
-        backgroundColor: '#fff',
-        borderWidth: 2,
-        borderColor: '#ff6b6b',
+        height: 40,
+        width: 100,
+        backgroundColor: 'transparent',
+        borderWidth: 1,
+        borderColor: '#239ea0',
         borderRadius: 10,
         alignItems: 'center',
+        justifyContent: 'center',
     },
     signatureClearText: {
-        color: '#ff6b6b',
+        color: '#239ea0',
         fontSize: 16,
-        fontWeight: 'bold',
-        fontFamily: CAIRO_FONT_FAMILY.bold,
+        fontFamily: CAIRO_FONT_FAMILY.regular,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
     },
     signatureSaveButton: {
-        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'absolute',
+        bottom: 10,
+        width: '100%',
         padding: 12,
         backgroundColor: '#239ea0',
         borderRadius: 10,
-        alignItems: 'center',
+        alignSelf: 'center',
     },
     signatureSaveText: {
         color: '#fff',
         fontSize: 16,
-        fontWeight: 'bold',
         fontFamily: CAIRO_FONT_FAMILY.bold,
+        marginLeft: 8,
     },
     signatureBackButton: {
         padding: 12,
@@ -682,6 +660,11 @@ const styles = StyleSheet.create({
         color: '#666',
         fontSize: 14,
         fontFamily: CAIRO_FONT_FAMILY.regular,
+    },
+    signaturePancilImage: {
+        width: 36,
+        height: 36,
+        resizeMode: 'contain',
     },
 });
 

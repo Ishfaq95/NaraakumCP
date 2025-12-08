@@ -131,10 +131,10 @@ const getServiceProviderContractSigning = async () => {
   const renderHeader = () => (
     <View style={styles.header}>
       <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-        <Ionicons name="chevron-back" size={24} color="#333" />
+        <Ionicons name="arrow-back-outline" size={24} color="#333" />
       </TouchableOpacity>
       <Text style={styles.headerTitle} numberOfLines={1}>
-        {title}
+        {'Contract details'}
       </Text>
       <View style={styles.headerActions}>
         <TouchableOpacity onPress={sharePDF} style={styles.actionButton}>
@@ -219,10 +219,8 @@ const styles = StyleSheet.create({
   headerTitle: {
     flex: 1,
     fontSize: 16,
-    fontWeight: 'bold',
     color: '#333',
     fontFamily: CAIRO_FONT_FAMILY.bold,
-    marginHorizontal: 10,
   },
   headerActions: {
     flexDirection: 'row',

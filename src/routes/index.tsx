@@ -43,6 +43,7 @@ import PrescriptionListScreen from '../screens/MyClientsStack/PrescriptionListSc
 import BookingMainScreen from '../screens/BookService/BookingMainScreen';
 import SuccessScreen from '../screens/BookService/SuccessScreen';
 import PrivicyPolicy from '../screens/AuthModule/PrivicyPolicy';
+import AfterContractSign from '../screens/MyProfileStack/AfterContractSign';
 
 const Stack = createNativeStackNavigator();
 
@@ -96,7 +97,7 @@ const RootNavigator = () => {
       <Stack.Screen name={ROUTES.PrescriptionListScreen} component={PrescriptionListScreen} />
       <Stack.Screen name={ROUTES.BookNewService} component={BookingMainScreen} />
       <Stack.Screen name={ROUTES.SuccessScreen} component={SuccessScreen} />
-
+      <Stack.Screen name={ROUTES.AfterContractSign} component={AfterContractSign} />
     </Stack.Navigator>
   );
 };

@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, FlatList, TextInput, ScrollView, KeyboardAvoidingView, Platform, Alert, ActivityIndicator } from 'react-native'
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, FlatList, TextInput, ScrollView, KeyboardAvoidingView, Platform, Alert, ActivityIndicator, Image, Keyboard } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -12,6 +12,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { launchImageLibrary } from 'react-native-image-picker';
 import RNFetchBlob from 'react-native-blob-util';
 import { MediaBaseURL } from '../../shared/utils/constants';
+import { CAIRO_FONT_FAMILY } from '../../styles/globalStyles';
 
 interface MedicalLicense {
     Id: number;
@@ -36,13 +37,12 @@ const MedicalLicenseScreen = () => {
     const [specialties, setSpecialties] = useState<any[]>([]);
     const [isSaving, setIsSaving] = useState(false);
     const [isDownloading, setIsDownloading] = useState(false);
-
     // Form state
     const [selectedFile, setSelectedFile] = useState<any>(null);
     const [uploadedFileData, setUploadedFileData] = useState<any>(null);
     const [licenseNo, setLicenseNo] = useState('');
     const [placeOfIssue, setPlaceOfIssue] = useState<string | number>('');
-    const [expiryDate, setExpiryDate] = useState(new Date());
+    const [expiryDate, setExpiryDate] = useState<any>(null);
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [speciality, setSpeciality] = useState<string | number>('');
     const [editingLicenseId, setEditingLicenseId] = useState<number | null>(null);
@@ -68,6 +68,23 @@ const MedicalLicenseScreen = () => {
             console.log('error', error)
         }
     }
+
+    // useEffect(() => {
+    //     Keyboard.addListener('keyboardDidShow', (event) => {
+    //         if(Platform.OS === 'ios'){
+    //             setLicenseeBottomSheetHeight(450 + event.endCoordinates.height);
+    //         }
+    //     });
+    //     Keyboard.addListener('keyboardDidHide', (event) => {
+    //         if(Platform.OS === 'ios'){
+    //             setLicenseeBottomSheetHeight(450);
+    //         }
+    //     });
+    //     return () => {
+    //         Keyboard.removeAllListeners('keyboardDidShow');
+    //         Keyboard.removeAllListeners('keyboardDidHide');
+    //     };
+    // }, []);
 
     const getSpecialties = async () => {
         try {
@@ -199,7 +216,7 @@ const MedicalLicenseScreen = () => {
         setUploadedFileData(null);
         setLicenseNo('');
         setPlaceOfIssue('');
-        setExpiryDate(new Date());
+        setExpiryDate(null);
         setSpeciality('');
         setEditingLicenseId(null);
         // Reset errors
@@ -295,10 +312,10 @@ const MedicalLicenseScreen = () => {
         }
 
         // Validate speciality
-        if (!speciality || speciality === '') {
-            setSpecialityError(true);
-            hasError = true;
-        }
+        // if (!speciality || speciality === '') {
+        //     setSpecialityError(true);
+        //     hasError = true;
+        // }
 
         if (hasError) {
             return;
@@ -344,15 +361,15 @@ const MedicalLicenseScreen = () => {
     const renderHeader = () => (
         <View style={styles.header}>
             <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                <Ionicons name="chevron-back" size={24} color="#333" />
+                <Ionicons name="arrow-back-outline" size={24} color="#333" />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>Medical License</Text>
+            <Text style={{ fontSize: 16, fontFamily: CAIRO_FONT_FAMILY.bold, color: '#333', lineHeight: Platform.OS === 'ios' ? 0 : 20 }}>Medical License</Text>
         </View>
     );
 
     const renderEmptyHeader = () => (
         <View style={styles.emptyHeaderContainer}>
-            <MaterialCommunityIcons name="file-document-outline" size={40} color="#00A896" />
+            <Image source={require('../../assets/images/Medicallicense.png')} style={{ width: 40, height: 40 }} resizeMode="contain" />
             <Text style={styles.emptyHeaderTitle}>Medical License</Text>
             <Text style={styles.emptyHeaderSubtitle}>Please upload your valid license to practice</Text>
         </View>
@@ -425,7 +442,7 @@ const MedicalLicenseScreen = () => {
                         style={{ backgroundColor: '#00A896', borderRadius: 12, paddingVertical: 10, alignItems: 'center' }}
                         onPress={handleAddLicense}
                     >
-                        <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600' }}>Add License</Text>
+                        <Text style={{ color: '#fff', fontSize: 16, fontFamily: CAIRO_FONT_FAMILY.semiBold, lineHeight: Platform.OS === 'ios' ? 0 : 20 }}>Add License</Text>
                     </TouchableOpacity>
                 </View>
             </View>
@@ -437,7 +454,7 @@ const MedicalLicenseScreen = () => {
                     setIsAddLicenseBottomSheetVisible(false);
                 }}
                 showHandle={false}
-                maxHeight="60%"
+                maxHeight={Platform.OS === 'ios' ? '80%' : 400}
                 backdropClickable={true}
             >
                 <KeyboardAvoidingView
@@ -532,16 +549,16 @@ const MedicalLicenseScreen = () => {
                                 <Text style={bottomSheetStyles.label}>Expiry Date</Text>
                                 <TouchableOpacity
                                     style={bottomSheetStyles.dateInputContainer}
-                                    onPress={() => setShowDatePicker(true)}
+                                    onPress={() => showDatePicker ? setShowDatePicker(false) : setShowDatePicker(true)}
                                 >
                                     <Text style={bottomSheetStyles.dateText}>
-                                        {formatDate(expiryDate)}
+                                        { expiryDate ? formatDate(expiryDate) : '--/--/----'}
                                     </Text>
                                     <MaterialIcons name="calendar-today" size={20} color="#666" />
                                 </TouchableOpacity>
                                 {showDatePicker && (
                                     <DateTimePicker
-                                        value={expiryDate}
+                                        value={expiryDate ? new Date(expiryDate) : new Date()}
                                         mode="date"
                                         display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                                         onChange={handleDateChange}
@@ -610,13 +627,14 @@ const styles = StyleSheet.create({
     },
     headerTitle: {
         fontSize: 16,
-        fontWeight: 'bold',
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#333',
-        marginLeft: 8,
     },
     contentContainer: {
         flex: 1,
         padding: 16,
+        paddingTop:20
     },
     listContent: {
         paddingBottom: 40,
@@ -627,14 +645,16 @@ const styles = StyleSheet.create({
     },
     emptyHeaderTitle: {
         fontSize: 18,
-        fontWeight: '600',
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#333',
         marginTop: 12,
     },
     emptyHeaderSubtitle: {
         fontSize: 14,
         color: '#666',
-        marginTop: 4,
+        fontFamily: CAIRO_FONT_FAMILY.regular,
+        lineHeight:  20,
         textAlign: 'center',
     },
     licenseCard: {
@@ -655,7 +675,8 @@ const styles = StyleSheet.create({
     },
     licenseCardTitle: {
         fontSize: 16,
-        fontWeight: '600',
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#333',
         marginTop: 8,
     },
@@ -677,12 +698,14 @@ const styles = StyleSheet.create({
     detailLabel: {
         fontSize: 14,
         color: '#666',
-        fontWeight: '400',
+        fontFamily: CAIRO_FONT_FAMILY.regular,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
     },
     detailValue: {
         fontSize: 14,
         color: '#333',
-        fontWeight: '600',
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
     },
     statusValid: {
         color: '#00A896',
@@ -702,7 +725,8 @@ const styles = StyleSheet.create({
     viewButtonText: {
         color: '#00A896',
         fontSize: 14,
-        fontWeight: '600',
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
     },
     deleteButton: {
         flex: 1,
@@ -715,7 +739,8 @@ const styles = StyleSheet.create({
     deleteButtonText: {
         color: '#FF6B6B',
         fontSize: 14,
-        fontWeight: '600',
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
     },
     addButton: {
         position: 'absolute',
@@ -735,7 +760,8 @@ const styles = StyleSheet.create({
     addButtonText: {
         color: '#fff',
         fontSize: 16,
-        fontWeight: '600',
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
     },
 });
 
@@ -747,7 +773,7 @@ const bottomSheetStyles = StyleSheet.create({
     header: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center',
+        justifyContent: 'space-between',
         paddingVertical: 16,
         paddingHorizontal: 16,
         borderBottomWidth: 1,
@@ -755,7 +781,8 @@ const bottomSheetStyles = StyleSheet.create({
     },
     headerTitle: {
         fontSize: 18,
-        fontWeight: '600',
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#000',
     },
     closeButton: {
@@ -772,7 +799,7 @@ const bottomSheetStyles = StyleSheet.create({
         paddingBottom: 20,
     },
     uploadContainer: {
-        borderWidth: 2,
+        borderWidth: 1,
         borderColor: '#B8E6E1',
         borderStyle: 'dashed',
         borderRadius: 12,
@@ -789,7 +816,8 @@ const bottomSheetStyles = StyleSheet.create({
     },
     uploadTitle: {
         fontSize: 16,
-        fontWeight: '500',
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#000',
         marginTop: 12,
     },
@@ -820,7 +848,8 @@ const bottomSheetStyles = StyleSheet.create({
     },
     label: {
         fontSize: 14,
-        fontWeight: '400',
+        fontFamily: CAIRO_FONT_FAMILY.regular,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#000',
         marginBottom: 8,
     },
@@ -836,7 +865,7 @@ const bottomSheetStyles = StyleSheet.create({
     },
     inputError: {
         borderColor: '#FF3B30',
-        borderWidth: 2,
+        borderWidth: 1,
     },
     dateInputContainer: {
         flexDirection: 'row',
@@ -862,13 +891,14 @@ const bottomSheetStyles = StyleSheet.create({
     saveButton: {
         backgroundColor: '#00A896',
         borderRadius: 12,
-        paddingVertical: 16,
+        paddingVertical: 10,
         alignItems: 'center',
         justifyContent: 'center',
     },
     saveButtonText: {
         fontSize: 16,
-        fontWeight: '600',
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#fff',
     },
 });

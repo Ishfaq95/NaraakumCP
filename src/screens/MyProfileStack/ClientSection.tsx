@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, Image, FlatList, Dimensions, TouchableWithoutFeedback } from 'react-native'
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, Image, FlatList, Dimensions, TouchableWithoutFeedback, Platform } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
@@ -8,6 +8,7 @@ import { useSelector } from 'react-redux';
 import CustomBottomSheet from '../../components/common/CustomBottomSheet';
 import MultiSlider from '@ptomasroos/react-native-multi-slider';
 import FullScreenLoader from '../../components/FullScreenLoader';
+import { CAIRO_FONT_FAMILY } from '../../styles/globalStyles';
 
 const { width: screenWidth } = Dimensions.get('window');
 const SLIDER_WIDTH = screenWidth - 80; // Account for padding
@@ -21,7 +22,7 @@ const ClientSectionScreen = () => {
     const [editingPreference, setEditingPreference] = useState<any>(null);
     
     // Modal state
-    const [selectedGender, setSelectedGender] = useState('Male');
+    const [selectedGender, setSelectedGender] = useState<any>(null);
     const [showGenderDropdown, setShowGenderDropdown] = useState(false);
 
     // Range slider state - simple and clean
@@ -82,7 +83,7 @@ const ClientSectionScreen = () => {
         setEditingPreference(item);
         
         // Pre-fill the form with existing values
-        setSelectedGender(item.ClientGender === 1 || item.ClientGender === 'Male' ? 'Male' : 'Female');
+        setSelectedGender((item.ClientGender == null || item.ClientGender == 'Both') ? null : item.ClientGender === 1 || item.ClientGender === 'Male' ? 'Male' : 'Female');
         setAgeValues([item.ClientAgeLowerLimit, item.ClientAgeUperLimit]);
         
         // Open the modal
@@ -112,7 +113,7 @@ const ClientSectionScreen = () => {
         setEditingPreference(null);
         
         // Reset to default values when opening modal
-        setSelectedGender('Male');
+        setSelectedGender(null as any);
         setAgeValues([25, 70]);
         setIsAddPreferenceBottomSheetVisible(true);
     };
@@ -122,7 +123,7 @@ const ClientSectionScreen = () => {
             setIsLoading(true);
             const payload: any = {
                 UserloginInfoId: user.Id,
-                ClientGender: selectedGender == 'Male' ? 1 : 0,
+                ClientGender: selectedGender == null ? null : selectedGender == 'Male' ? 1 : 0,
                 ClientAgeLowerLimit: ageValues[0],
                 ClientAgeUperLimit: ageValues[1],
             };
@@ -136,7 +137,7 @@ const ClientSectionScreen = () => {
             if (response?.ResponseStatus?.STATUSCODE === 200) {
                 setIsAddPreferenceBottomSheetVisible(false);
                 setEditingPreference(null);
-                setSelectedGender('Male');
+                setSelectedGender(null as any);
                 setAgeValues([25, 70]);
                 getServiceProviderPreferences(); // Refresh the list
             }
@@ -205,10 +206,10 @@ const ClientSectionScreen = () => {
     const renderHeader = () => (
         <View style={{ flexDirection: 'row', alignItems: 'center', height: 50, backgroundColor: '#fff', padding: 10 }}>
             <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                <Ionicons name="chevron-back" size={24} color="#333" />
+                <Ionicons name="arrow-back-outline" size={24} color="#333" />
 
             </TouchableOpacity>
-            <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#333' }}>Client Section</Text>
+            <Text style={{ fontSize: 16, fontFamily: CAIRO_FONT_FAMILY.bold, color: '#333', lineHeight: Platform.OS === 'ios' ? 0 : 20 }}>Client Section</Text>
         </View>
     );
 
@@ -236,7 +237,7 @@ const ClientSectionScreen = () => {
                 <View style={{ flex: 1, padding: 12 }}>
                     <Text style={styles.title}>You can specify the gender and age group of clients who can book an appointment with you</Text>
                     <View style={{ flex: 1, marginTop: 10 }}>
-                        <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#333', paddingBottom: 10 }}>My Preferences</Text>
+                        <Text style={{ fontSize: 20, fontFamily: CAIRO_FONT_FAMILY.bold, color: '#333', lineHeight: Platform.OS === 'ios' ? 0 : 20, paddingBottom: 10 }}>My Preferences</Text>
 
                         <FlatList
                             data={serviceProviderPreferences}
@@ -244,7 +245,7 @@ const ClientSectionScreen = () => {
                             renderItem={({ item }) => renderPreferenceItem(item)}
                             ListEmptyComponent={
                                 <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', marginTop: 10 }}>
-                                    <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#333', paddingBottom: 10 }}>No preferences found</Text>
+                                    <Text style={{ fontSize: 16, fontFamily: CAIRO_FONT_FAMILY.bold, color: '#333', lineHeight: Platform.OS === 'ios' ? 0 : 20, paddingBottom: 10 }}>No preferences found</Text>
                                 </View>
                             }
                         />
@@ -295,12 +296,21 @@ const ClientSectionScreen = () => {
                                     style={styles.dropdownButton}
                                     onPress={() => setShowGenderDropdown(!showGenderDropdown)}
                                 >
-                                    <Text style={styles.dropdownText}>{selectedGender}</Text>
+                                    <Text style={styles.dropdownText}>{selectedGender == null ? '--Select--' : selectedGender == 'Male' ? 'Male' : 'Female'}</Text>
                                     <Ionicons name="chevron-down" size={16} color="#333" />
                                 </TouchableOpacity>
 
                                 {showGenderDropdown && (
                                     <View style={styles.dropdown}>
+                                        <TouchableOpacity
+                                            style={styles.dropdownItem}
+                                            onPress={() => {
+                                                setSelectedGender(null as any);
+                                                setShowGenderDropdown(false);
+                                            }}
+                                        >
+                                            <Text style={styles.dropdownItemText}>--Select--</Text>
+                                        </TouchableOpacity>
                                         <TouchableOpacity
                                             style={styles.dropdownItem}
                                             onPress={() => {
@@ -362,10 +372,10 @@ const styles = StyleSheet.create({
     },
     title: {
         fontSize: 16,
-        fontWeight: 'bold',
+        fontFamily: CAIRO_FONT_FAMILY.bold,
         color: '#666',
-        lineHeight: 24,
-        paddingVertical: 10,
+        lineHeight: 20,
+        paddingVertical: 6,
     },
     menuItem: {
         backgroundColor: '#FFFFFF',
@@ -409,17 +419,19 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginVertical: 8,
+        marginVertical: 4,
     },
     label: {
         fontSize: 16,
-        fontWeight: '400',
+        fontFamily: CAIRO_FONT_FAMILY.regular,
         color: '#333',
+        lineHeight: 20,
     },
     value: {
         fontSize: 16,
-        fontWeight: 'bold',
+        fontFamily: CAIRO_FONT_FAMILY.bold,
         color: '#333',
+        lineHeight:  20,
     },
     separator: {
         height: 1,
@@ -453,12 +465,14 @@ const styles = StyleSheet.create({
     },
     editButtonText: {
         fontSize: 14,
-        fontWeight: '400',
+        fontFamily: CAIRO_FONT_FAMILY.regular,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#23a2a4',
     },
     deleteButtonText: {
         fontSize: 14,
-        fontWeight: '400',
+        fontFamily: CAIRO_FONT_FAMILY.regular,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#ff4444',
     },
     addButton: {
@@ -467,12 +481,14 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         backgroundColor: '#23a2a4',
         borderRadius: 10,
-        padding: 10,
+        paddingHorizontal: 12,
+        paddingVertical: 6,
         marginTop: 10,
     },
     addButtonText: {
         fontSize: 18,
-        fontWeight: 'bold',
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#fff',
     },
     modalContent: {
@@ -491,7 +507,8 @@ const styles = StyleSheet.create({
     },
     modalTitle: {
         fontSize: 18,
-        fontWeight: 'bold',
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#333',
     },
     closeButton: {
@@ -507,7 +524,8 @@ const styles = StyleSheet.create({
     },
     inputLabel: {
         fontSize: 16,
-        fontWeight: '400',
+        fontFamily: CAIRO_FONT_FAMILY.regular,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#333',
         marginBottom: 10,
     },
@@ -568,7 +586,8 @@ const styles = StyleSheet.create({
     },
     ageRangeValue: {
         fontSize: 14,
-        fontWeight: 'bold',
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#23a2a4',
     },
     addPreferenceButton: {
@@ -579,7 +598,8 @@ const styles = StyleSheet.create({
     },
     addPreferenceButtonText: {
         fontSize: 16,
-        fontWeight: 'bold',
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#FFFFFF',
     },
 });

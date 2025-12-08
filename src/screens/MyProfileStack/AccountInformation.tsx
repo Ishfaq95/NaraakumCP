@@ -9,6 +9,7 @@ import { profileService } from '../../services/api/profileService';
 import { useSelector } from 'react-redux';
 import Dropdown from '../../components/common/Dropdown';
 import moment from 'moment';
+import { MediaBaseURL } from '../../shared/utils/constants';
 
 const genders = [
     { label: 'Male', value: 'male' },
@@ -18,6 +19,7 @@ const genders = [
 const AccountInformationScreen = () => {
     const navigation = useNavigation();
     const [englishName, setEnglishName] = useState('');
+    const [profileImage, setProfileImage] = useState<any>(null);
     const [arabicName, setArabicName] = useState('');
     const [englishNameInputError, setEnglishNameInputError] = useState(false);
     const [arabicNameInputError, setArabicNameInputError] = useState(false);
@@ -70,33 +72,15 @@ const AccountInformationScreen = () => {
         // Remove any spaces or special characters
         const cleanNumber = fullNumber.replace(/\s/g, '');
 
-        // Check for Saudi Arabia number (+966)
-        if (cleanNumber.startsWith('+966')) {
-            const phoneNumber = cleanNumber.substring(4); // Remove +966
-            return { countryCode: 'SA', phoneNumber };
-        }
+        // Build country code map from COUNTRIES array
+        // Sort by dial code length (longest first) to handle cases like +1268 before +1
+        const sortedCountries = [...COUNTRIES].sort((a, b) => b.dialCode.length - a.dialCode.length);
 
-        // Check for other country codes (you can add more as needed)
-        const countryCodeMap: { [key: string]: string } = {
-            '+971': 'AE', // UAE
-            '+973': 'BH', // Bahrain
-            '+964': 'IQ', // Iraq
-            '+98': 'IR',  // Iran
-            '+962': 'JO', // Jordan
-            '+965': 'KW', // Kuwait
-            '+961': 'LB', // Lebanon
-            '+968': 'OM', // Oman
-            '+970': 'PS', // Palestine
-            '+974': 'QA', // Qatar
-            '+963': 'SY', // Syria
-            '+90': 'TR',  // Turkey
-            '+967': 'YE'  // Yemen
-        };
-
-        for (const [code, country] of Object.entries(countryCodeMap)) {
-            if (cleanNumber.startsWith(code)) {
-                const phoneNumber = cleanNumber.substring(code.length);
-                return { countryCode: country, phoneNumber };
+        // Try to match the phone number with country dial codes
+        for (const country of sortedCountries) {
+            if (cleanNumber.startsWith(country.dialCode)) {
+                const phoneNumber = cleanNumber.substring(country.dialCode.length);
+                return { countryCode: country.code, phoneNumber };
             }
         }
 
@@ -106,6 +90,8 @@ const AccountInformationScreen = () => {
 
     useEffect(() => {
         if (userInfo) {
+            console.log('userInfo', userInfo)
+            setProfileImage(userInfo.ImagePath);
             setEnglishName(userInfo.FullNamePlang);
             setArabicName(userInfo.FullNameSlang);
             const phoneInfo = extractPhoneInfo(userInfo.CellNumber || '');
@@ -192,11 +178,11 @@ const AccountInformationScreen = () => {
                 <View style={{ height: 100, backgroundColor: '#23a2a4' }} />
                 <View style={{ flex: 1, paddingHorizontal: 16, marginTop: -70 }}>
                     <View style={{ height: 80, marginTop: 50, backgroundColor: '#fff', borderRadius: 10, padding: 10, justifyContent: 'center', alignItems: 'center' }}>
-                        <View style={{ position: 'absolute', height: 100, borderWidth: 2, borderColor: '#fff', width: 100, bottom: 50, backgroundColor: '#999', borderRadius: 50, padding: 10 }}>
-
-                            <View style={{ position: 'absolute', height: 30, width: 30, backgroundColor: '#fff', borderRadius: 15, bottom: 0, right: 0, alignItems: 'center', justifyContent: 'center' }}>
+                        <View style={{ position: 'absolute', height: 100, borderWidth: 2, borderColor: '#fff', width: 100, bottom: 50, backgroundColor: '#999', borderRadius: 50, }}>
+                            <Image source={{ uri: `${MediaBaseURL}${profileImage}` }} style={{ width: '100%', height: '100%', borderRadius: 50 }} />
+                            <TouchableOpacity style={{ position: 'absolute', height: 30, width: 30, backgroundColor: '#fff', borderRadius: 15, bottom: 0, right: 0, alignItems: 'center', justifyContent: 'center' }}>
                                 <Ionicons name="camera" size={20} color="#333" />
-                            </View>
+                            </TouchableOpacity>
                         </View>
                         <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#333', bottom: -15 }}>Upload Image</Text>
                     </View>

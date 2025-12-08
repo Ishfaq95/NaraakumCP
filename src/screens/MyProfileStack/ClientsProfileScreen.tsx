@@ -1,9 +1,10 @@
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, Image } from 'react-native'
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, Image, Platform } from 'react-native'
 import React, { useState } from 'react'
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 import CustomScreensHeader from '../../components/common/CustomScreensHeader';
 import { ROUTES } from '../../shared/utils/routes';
+import { CAIRO_FONT_FAMILY } from '../../styles/globalStyles';
 
 const ClientsProfileScreen = () => {
     const [clientsMenuItems, setClientsMenuItems] = useState([
@@ -27,7 +28,7 @@ const ClientsProfileScreen = () => {
     const renderHeader = () => (
         <View style={{ flexDirection: 'row', alignItems: 'center', height: 50, backgroundColor: '#fff', padding: 10 }}>
             <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                <Ionicons name="chevron-back" size={24} color="#333" />
+                <Ionicons name="arrow-back-outline" size={24} color="#333" />
 
             </TouchableOpacity>
             <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#333' }}>Clients Profile</Text>
@@ -74,9 +75,10 @@ const styles = StyleSheet.create({
     },
     title: {
         fontSize: 16,
-        fontWeight: 'bold',
         color: '#666',
-        paddingVertical: 10,
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
+        paddingVertical: 6,
     },
     menuItem: {
         backgroundColor: '#FFFFFF',
@@ -93,7 +95,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         paddingHorizontal: 16,
-        paddingVertical: 16,
+        paddingVertical: 10,
     },
     leftSection: {
         flexDirection: 'row',
@@ -101,7 +103,8 @@ const styles = StyleSheet.create({
     },
     menuItemText: {
         fontSize: 16,
-        fontWeight: '500',
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#333',
         marginLeft: 12,
     },

@@ -3,7 +3,7 @@ import RNHTMLtoPDF from 'react-native-html-to-pdf';
 import RNFS from 'react-native-fs';
 // import Share from 'react-native-share';
 import moment from 'moment';
-import RNFetchBlob from 'rn-fetch-blob';
+import RNFetchBlob from 'react-native-blob-util';
 import { Alert, Platform, PermissionsAndroid, Share } from 'react-native';
 import { store } from '../shared/redux/store';
 

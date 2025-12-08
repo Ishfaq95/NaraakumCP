@@ -17,7 +17,7 @@ import DocumentIcon from '../../assets/icons/DocumentIcon';
 import DocumentIconBlack from '../../assets/icons/DocumentIconBlack';
 import RNFS from 'react-native-fs';
 import {Alert} from 'react-native';
-import RNFetchBlob from 'rn-fetch-blob';
+import RNFetchBlob from 'react-native-blob-util';
 import DownloadIcon from '../../assets/icons/DownloadIcon';
 import DownloadIconBlack from '../../assets/icons/DownloadIconBlack';
 import Sound from 'react-native-sound';

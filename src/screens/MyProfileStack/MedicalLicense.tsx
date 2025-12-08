@@ -10,7 +10,7 @@ import CustomBottomSheet from '../../components/common/CustomBottomSheet';
 import Dropdown from '../../components/common/Dropdown';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { launchImageLibrary } from 'react-native-image-picker';
-    import RNFetchBlob from 'rn-fetch-blob';
+import RNFetchBlob from 'react-native-blob-util';
 import { MediaBaseURL } from '../../shared/utils/constants';
 
 interface MedicalLicense {

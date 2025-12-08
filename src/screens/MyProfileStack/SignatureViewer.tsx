@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-// import Pdf from 'react-native-pdf';
+import Pdf from 'react-native-pdf';
 import Share from 'react-native-share';
 import RNFS from 'react-native-fs';
 import { CAIRO_FONT_FAMILY } from '../../styles/globalStyles';
@@ -20,6 +20,7 @@ import { profileService } from '../../services/api/profileService';
 import { useSelector } from 'react-redux';
 import { MediaBaseURL } from '../../shared/utils/constants';
 import FullScreenLoader from '../../components/FullScreenLoader';
+import RNFetchBlob from 'react-native-blob-util';
 
 const { width, height } = Dimensions.get('window');
 
@@ -39,6 +40,7 @@ const SignatureViewer = () => {
   const user = useSelector((state: any) => state.root.user.user);
   const [pdfPath, setPdfPath] = useState<string>('');
   const [title, setTitle] = useState<string>('Signed Contract');
+  const [isDownloading, setIsDownloading] = useState(false);
   useEffect(() => {
     getServiceProviderContractSigning();
 }, []);
@@ -79,51 +81,109 @@ const getServiceProviderContractSigning = async () => {
     setCurrentPage(page);
   };
 
-  // Download PDF to device
-  const downloadPDF = async () => {
-    try {
-      const fileName = `Contract_${Date.now()}.pdf`;
-      const destPath = `${RNFS.DownloadDirectoryPath || RNFS.DocumentDirectoryPath}/${fileName}`;
+  const getFileNameFromUrl = (url: string) => {
+    const parts = url.split('/');
+    return parts.pop() || 'document';
+}
 
-      // Check if source file exists
-      const exists = await RNFS.exists(`${MediaBaseURL}${pdfPath}`);
-      if (!exists) {
-        Alert.alert('Error', 'PDF file not found.');
-        return;
-      }
-
-      // Copy file to Downloads/Documents
-      await RNFS.copyFile(`${MediaBaseURL}${pdfPath}`, destPath);
-
-      Alert.alert(
-        'Success',
-        `PDF downloaded successfully!\nLocation: ${Platform.OS === 'ios' ? 'Documents' : 'Downloads'}`,
-        [
-          {
-            text: 'OK',
-            style: 'default',
-          },
-        ]
-      );
-    } catch (error) {
-      console.error('Download error:', error);
-      Alert.alert('Error', 'Failed to download PDF. Please try again.');
+const handleViewFile = () => {
+    if(Platform.OS === 'ios'){
+        downloadFIleForIOS(`${MediaBaseURL}${pdfPath}`, getFileNameFromUrl(pdfPath));
+    }else{
+        downloadFile(`${MediaBaseURL}${pdfPath}`, getFileNameFromUrl(pdfPath));
     }
+};
+
+const downloadFIleForIOS = async (url: string, fileName: string) => {
+    const {config, fs} = RNFetchBlob;
+    const DocumentDir = fs.dirs.DocumentDir;
+    const filePath = `${DocumentDir}/${fileName}`;
+
+    try {
+        const res = await config({
+            fileCache: true,
+            path: filePath,
+        }).fetch('GET', url);
+        
+        Alert.alert(
+            'File downloaded successfully',
+            'The file is saved to your device.',
+        );
+        RNFetchBlob.ios.previewDocument(filePath);
+    } catch (error) {
+        Alert.alert('File downloading error.');
+    } finally {
+        setIsDownloading(false);
+    }
+};
+
+const downloadFile = async (url: string, fileName: string) => {
+    const {config, fs} = RNFetchBlob;
+    const DownloadDir = fs.dirs.DownloadDir;
+    const filePath = `${DownloadDir}/${fileName}`;
+
+    try {
+        const res = await config({
+            fileCache: true,
+            addAndroidDownloads: {
+                useDownloadManager: true,
+                notification: true,
+                mediaScannable: true,
+                title: fileName,
+                path: filePath,
+            },
+        }).fetch('GET', url);
+        
+        Alert.alert('File downloaded successfully');
+    } catch (error) {
+        Alert.alert('File downloading error.');
+    } finally {
+        setIsDownloading(false);
+    }
+};
+
+  // Ensure the PDF is available locally and return a local file URI (file://)
+  const ensureLocalPdf = async (): Promise<string> => {
+    const sourceUrl = pdfPath?.startsWith('http') || pdfPath?.startsWith('file:')
+      ? pdfPath
+      : `${MediaBaseURL}${pdfPath}`;
+
+    if (!sourceUrl) {
+      throw new Error('PDF path is missing');
+    }
+
+    // If already a local file, return as-is (ensure file:// prefix)
+    if (sourceUrl.startsWith('file://')) {
+      return sourceUrl;
+    }
+
+    // Download to cache for sharing (works on Android & iOS)
+    const fileName = getFileNameFromUrl(sourceUrl) || `contract_${Date.now()}.pdf`;
+    const cachePath = `${RNFetchBlob.fs.dirs.CacheDir}/${fileName}`;
+
+    await RNFetchBlob.config({ path: cachePath, fileCache: true }).fetch('GET', sourceUrl);
+
+    // Always return with file:// prefix for Share.open
+    return `file://${cachePath}`;
   };
 
   // Share PDF
   const sharePDF = async () => {
     try {
-      const shareOptions = {
+      setIsDownloading(true);
+      const localUri = await ensureLocalPdf();
+      await Share.open({
         title: 'Share Contract PDF',
-        url: Platform.OS === 'ios' ? pdfPath : `file://${pdfPath}`,
+        url: localUri,
         type: 'application/pdf',
-      };
-      await Share.open(shareOptions);
+      });
     } catch (error: any) {
       if (error?.message !== 'User did not share') {
         console.error('Share error:', error);
+        Alert.alert('Error', 'Unable to share the file. Please try again.');
       }
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -140,7 +200,7 @@ const getServiceProviderContractSigning = async () => {
         <TouchableOpacity onPress={sharePDF} style={styles.actionButton}>
           <Ionicons name="share-outline" size={24} color="#239ea0" />
         </TouchableOpacity>
-        <TouchableOpacity onPress={downloadPDF} style={styles.actionButton}>
+        <TouchableOpacity onPress={handleViewFile} style={styles.actionButton}>
           <Ionicons name="download-outline" size={24} color="#239ea0" />
         </TouchableOpacity>
       </View>
@@ -167,12 +227,14 @@ const getServiceProviderContractSigning = async () => {
     );
   }
 
+  console.log('pdfPath', `${MediaBaseURL}${pdfPath}`);
+
   return (
     <SafeAreaView style={styles.container}>
       {renderHeader()}
       
       <View style={styles.pdfContainer}>
-        {/* <Pdf
+        <Pdf
           source={{ uri: `${MediaBaseURL}${pdfPath}` }}
           style={styles.pdf}
           onLoadComplete={onLoadComplete}
@@ -183,7 +245,7 @@ const getServiceProviderContractSigning = async () => {
           spacing={10}
           fitPolicy={0}
           horizontal={false}
-        /> */}
+        />
         
         {loading && (
           <View style={styles.loadingContainer}>

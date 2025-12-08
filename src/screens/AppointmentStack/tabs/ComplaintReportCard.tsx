@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Platform, Alert, Share } from
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { CAIRO_FONT_FAMILY } from '../../../styles/globalStyles';
 import { MediaBaseURL } from '../../../shared/utils/constants';
-import RNFetchBlob from 'rn-fetch-blob';
+import RNFetchBlob from 'react-native-blob-util';
 import { shareFile } from '../../../services/InvoiceService';
 
 interface ComplaintReportCardProps {

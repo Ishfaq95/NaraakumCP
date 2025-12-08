@@ -6,7 +6,7 @@ import InAppBrowser from 'react-native-inappbrowser-reborn';
 import messaging from '@react-native-firebase/messaging';
 import { useDispatch, useSelector } from 'react-redux';
 import { setTopic } from '../shared/redux/reducers/userReducer';
-import RNFetchBlob from 'rn-fetch-blob';
+import RNFetchBlob from 'react-native-blob-util';
 import WebSocketService from './WebSocketService';
 import { getLocationPermission } from './LocationService';
 import useMutationHook from '../Network/useMutationHook';

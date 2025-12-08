@@ -55,7 +55,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
             <View style={styles.ratingContainer}>
               <Text style={styles.gender}>{gender}</Text>
               <FontAwesome name={'star'} size={14} color="#FFC107" style={{ marginRight: 2, marginLeft: 4 }} />
-              <Text style={styles.reviewCount}><Text style={{ fontSize: 14, fontFamily: CAIRO_FONT_FAMILY.bold, color: '#191919' }}>{rating}</Text> ({reviewCount} Person)</Text>
+              <Text style={styles.reviewCount}><Text style={{ fontSize: 14, fontFamily: CAIRO_FONT_FAMILY.bold, color: '#191919' }}>{rating.toFixed(1)}</Text> ({reviewCount} Person)</Text>
             </View>
           </View>
         </View>

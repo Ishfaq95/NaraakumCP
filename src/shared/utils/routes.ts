@@ -52,5 +52,6 @@ export const ROUTES = {
     SuccessScreen: 'SuccessScreen',
     PrivacyPolicy: 'PrivacyPolicy',
     AfterContractSign: 'AfterContractSign',
+    PrescriptionView: 'PrescriptionView',
   };
   

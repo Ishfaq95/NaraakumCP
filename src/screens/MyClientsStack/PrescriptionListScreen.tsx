@@ -1,23 +1,27 @@
-import { View, Text, SafeAreaView, StyleSheet, ScrollView, TouchableOpacity, Image, FlatList } from 'react-native'
+import { View, Text, SafeAreaView, StyleSheet, ScrollView, TouchableOpacity, Image, FlatList, Platform } from 'react-native'
 import React, { useEffect, useState } from 'react'
-import { globalTextStyles } from '../../styles/globalStyles';
+import { CAIRO_FONT_FAMILY, globalTextStyles } from '../../styles/globalStyles';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
 import { appointmentService } from '../../services/api/appointmentService';
 import { MediaBaseURL } from '../../shared/utils/constants';
 import moment from 'moment';
+import { useDispatch, useSelector } from 'react-redux';
+import { ROUTES } from '../../shared/utils/routes';
+import { setVisitMainId } from '../../shared/redux/reducers/generalDataReducer';
 
-const PrescriptionListScreen = ({route}: {route: any}) => {
+const PrescriptionListScreen = ({ route }: { route: any }) => {
     const Patient = route.params?.Patient;
-    console.log('Patient',Patient);
+    const User = useSelector((state: any) => state.root.user.user);
     const isFocused = useIsFocused();
     const navigation = useNavigation();
+    const dispatch = useDispatch();
     const [prescriptionList, setPrescriptionList] = useState<any[]>([]);
     useEffect(() => {
         if (Patient?.PatientUserProfileInfoId) {
             getVisitRecordList();
         }
-    }, [Patient,isFocused]);
+    }, [Patient, isFocused]);
 
     const getVisitRecordList = async () => {
         const payload = {
@@ -32,7 +36,7 @@ const PrescriptionListScreen = ({route}: {route: any}) => {
     const renderHeader = () => (
         <View style={styles.header}>
             <TouchableOpacity onPress={backButtonPress} style={styles.backButton}>
-                <Ionicons name="chevron-back" size={24} color="#333" />
+                <Ionicons name="arrow-back-outline" size={24} color="#333" />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Prescription List</Text>
         </View>
@@ -45,10 +49,8 @@ const PrescriptionListScreen = ({route}: {route: any}) => {
     const renderPatientInfoCard = () => {
         if (!Patient) return null;
 
-        console.log('patientInfo', Patient);
-
-        const imageUrl = Patient.ImagePath 
-            ? `${MediaBaseURL}${Patient.ImagePath}` 
+        const imageUrl = Patient.ImagePath
+            ? `${MediaBaseURL}${Patient.ImagePath}`
             : null;
 
         return (
@@ -58,7 +60,7 @@ const PrescriptionListScreen = ({route}: {route: any}) => {
                 </View>
                 <View style={styles.patientContent}>
                     {imageUrl ? (
-                        <Image 
+                        <Image
                             source={{ uri: imageUrl }}
                             style={styles.patientAvatar}
                         />
@@ -90,12 +92,18 @@ const PrescriptionListScreen = ({route}: {route: any}) => {
     };
 
     const renderPrescriptionItem = ({ item }: { item: any }) => {
-        
+
 
         const handleDetailsPress = () => {
             // Navigate to prescription details screen
             // You can add navigation logic here
             console.log('Details pressed for:', item);
+            navigation.navigate(ROUTES.PrescriptionView, { prescriptionData: item });
+        };
+
+        const handleEditPress = () => {
+            dispatch(setVisitMainId(item.Id));
+            navigation.navigate(ROUTES.AddSessionRecord, { patientData: Patient, step: 5 });
         };
 
         return (
@@ -127,14 +135,32 @@ const PrescriptionListScreen = ({route}: {route: any}) => {
                 {/* Separator */}
                 <View style={styles.separator} />
 
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <TouchableOpacity
+                        style={[styles.detailsButton, item.ServiceProviderId != User?.Id && { width: '100%' }]}
+                        onPress={handleDetailsPress}
+                        activeOpacity={0.7}
+                    >
+                        <Text style={styles.detailsButtonText}>Details</Text>
+
+                    </TouchableOpacity>
+                    {item.ServiceProviderId == User?.Id && <TouchableOpacity
+                        style={styles.detailsButton}
+                        onPress={handleEditPress}
+                        activeOpacity={0.7}
+                    >
+                        <Text style={styles.detailsButtonText}>Edit</Text>
+                    </TouchableOpacity>}
+                </View>
+
                 {/* Details Button */}
-                <TouchableOpacity 
+                {/* <TouchableOpacity
                     style={styles.detailsButton}
                     onPress={handleDetailsPress}
                     activeOpacity={0.7}
                 >
                     <Text style={styles.detailsButtonText}>Details</Text>
-                </TouchableOpacity>
+                </TouchableOpacity> */}
             </View>
         );
     };
@@ -143,13 +169,13 @@ const PrescriptionListScreen = ({route}: {route: any}) => {
         <SafeAreaView style={styles.container}>
             <View style={styles.mainContent}>
                 {renderHeader()}
-                <ScrollView 
+                <ScrollView
                     style={styles.scrollView}
                     contentContainerStyle={styles.scrollContent}
                     showsVerticalScrollIndicator={false}
                 >
                     {renderPatientInfoCard()}
-                    
+
                     {prescriptionList.length > 0 && (
                         <View style={styles.bookingDetailsSection}>
                             <Text style={styles.sectionTitle}>{`${prescriptionList.length} Prescription`}</Text>
@@ -192,8 +218,10 @@ const styles = StyleSheet.create({
         padding: 5,
     },
     headerTitle: {
-        ...globalTextStyles.h5,
-        marginLeft: 8,
+        fontSize: 16,
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
+        color: '#000',
     },
     scrollView: {
         flex: 1,
@@ -222,8 +250,9 @@ const styles = StyleSheet.create({
     },
     patientHeaderTitle: {
         fontSize: 15,
-        fontWeight: '600',
-        color: '#333',
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        lineHeight: 20,
+        color: '#666',
     },
     patientContent: {
         flexDirection: 'row',
@@ -245,10 +274,11 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     patientName: {
-        fontSize: 18,
-        fontWeight: '600',
+        fontSize: 15,
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: 20,
         color: '#333',
-        marginBottom: 6,
+        marginBottom: 4,
         textAlign: 'left',
     },
     patientMeta: {
@@ -257,6 +287,8 @@ const styles = StyleSheet.create({
     },
     patientGender: {
         fontSize: 14,
+        fontFamily: CAIRO_FONT_FAMILY.regular,
+        lineHeight: 20,
         color: '#666',
         marginRight: 12,
     },
@@ -266,12 +298,15 @@ const styles = StyleSheet.create({
     },
     ratingText: {
         fontSize: 14,
-        fontWeight: '600',
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: 20,
         color: '#333',
         marginLeft: 4,
     },
     ratingCount: {
         fontSize: 13,
+        fontFamily: CAIRO_FONT_FAMILY.regular,
+        lineHeight: 20,
         color: '#666',
         marginLeft: 4,
     },
@@ -279,9 +314,10 @@ const styles = StyleSheet.create({
         marginTop: 8,
     },
     sectionTitle: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#333',
+        fontSize: 15,
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: 20,
+        color: '#666',
         marginBottom: 12,
     },
     // Prescription Item Card
@@ -303,7 +339,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 12,
+        marginBottom: 4,
     },
     prescriptionLabel: {
         fontSize: 14,
@@ -318,12 +354,14 @@ const styles = StyleSheet.create({
     },
     prescriptionValueLeft: {
         fontSize: 15,
-        fontWeight: '600',
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: 20,
         color: '#000',
     },
     prescriptionValueRight: {
         fontSize: 15,
-        fontWeight: '600',
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: 20,
         color: '#000',
         textAlign: 'right',
     },
@@ -335,6 +373,7 @@ const styles = StyleSheet.create({
     detailsButton: {
         borderWidth: 1,
         borderColor: '#00A79D',
+        width: '48%',
         borderRadius: 8,
         paddingVertical: 12,
         alignItems: 'center',
@@ -342,8 +381,9 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
     },
     detailsButtonText: {
-        fontSize: 15,
-        fontWeight: '500',
+        fontSize: 14,
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#00A79D',
     },
 })

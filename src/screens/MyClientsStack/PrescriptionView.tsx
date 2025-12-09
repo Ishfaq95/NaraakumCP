@@ -1,271 +1,48 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, SafeAreaView, StyleSheet, TouchableOpacity, ScrollView, Image, Linking, Alert, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
-import { useNavigation } from '@react-navigation/native';
-import Stepper from './tabs/Stepper';
-import Step1PatientComplaint from './tabs/Step1PatientComplaint';
-import Step2PatientHistory from './tabs/Step2PatientHistory';
-import Step3PatientAssessment from './tabs/Step3PatientAssessment';
-import Step4Treatment from './tabs/Step4Treatment';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Image, SafeAreaView, TouchableOpacity, Alert, Linking, Platform } from 'react-native'
+import React, { useEffect, useState } from 'react'
 import { appointmentService } from '../../services/api/appointmentService';
-import { useDispatch, useSelector } from 'react-redux';
-import { setVisitMainData, setVisitMainId } from '../../shared/redux/reducers/generalDataReducer';
 import { MediaBaseURL } from '../../shared/utils/constants';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import moment from 'moment';
-import { CAIRO_FONT_FAMILY, globalTextStyles } from '../../styles/globalStyles';
-import CustomBottomSheet from '../../components/common/CustomBottomSheet';
+import { useNavigation } from '@react-navigation/native';
+import { CAIRO_FONT_FAMILY } from '../../styles/globalStyles';
 
-interface Step1Data {
-    chiefComplaint?: string;
-    presentIllness?: string;
-    durationValue?: string;
-    durationUnit?: string;
-    otherComplaint?: string;
-}
-
-interface Step2Data {
-    pastMedicalHistory?: string[];
-    pastSurgicalHistory?: string[];
-    allergy?: string[];
-    currentMeds?: string[];
-}
-
-interface Step3Data {
-    vitalSigns?: any;
-    oe?: any;
-    labXRays?: any;
-    dx?: any;
-}
-
-const AddSessionRecord = ({ route }: { route: any }) => {
+const PrescriptionView = ({ route }: { route: any }) => {
+    const prescriptionData = route.params?.prescriptionData;
+    const [visitRecordData, setVisitRecordData] = useState<any>(null);
+    const [isLoading, setIsLoading] = useState(false);
+    console.log('visitMainData', visitRecordData);
     const navigation = useNavigation();
-    const patientData: any = route?.params?.patientData || null;
-    const step: any = route?.params?.step || null;
-    const visitRecordData: any = useSelector((state: any) => state.root.generalData.visitRecordData);
-    const visitmainId: any = useSelector((state: any) => state.root.generalData.visitmainId);
-    const dispatch = useDispatch();
-    const user: any = useSelector((state: any) => state.root.user.user);
-    const [isConfirmBottomSheetVisible, setIsConfirmBottomSheetVisible] = useState(false);
-    const [selectedRating, setSelectedRating] = useState(0);
-    const [commentText, setCommentText] = useState('');
     useEffect(() => {
-        if (visitmainId) {
+        if (prescriptionData) {
             getVisitMainRecordDetail();
         }
-    }, [visitmainId]);
-
-    useEffect(() => {
-        if (step) {
-            setCurrentStep(step);
-        }
-    }, [step]);
+    }, [prescriptionData]);
 
     const getVisitMainRecordDetail = async () => {
-        const payload = {
-            VisitMainId: visitmainId,
-        };
-        const response = await appointmentService.getVisitMainRecordDetail(payload);
-        if (response?.ResponseStatus?.STATUSCODE === 200) {
-            dispatch(setVisitMainData(response));
-        }
-    };
-
-    const [currentStep, setCurrentStep] = useState(1);
-    const [formData, setFormData] = useState<{
-        step1: Step1Data;
-        step2: Step2Data;
-        step3: Step3Data;
-        step4: any;
-    }>({
-        step1: {},
-        step2: {},
-        step3: {},
-        step4: {},
-    });
-
-    const handleStepPress = (step: number) => {
-        setCurrentStep(step);
-    };
-
-    const handleNext = () => {
-        getVisitMainRecordDetail();
-        if (currentStep < 4) {
-            setCurrentStep(currentStep + 1);
-        }
-    };
-
-    const handlePrevious = () => {
-        if (currentStep > 1) {
-            setCurrentStep(currentStep - 1);
-        }
-    };
-
-    // const handleComplete = () => {
-    //     // Handle form completion and save
-    //     navigation.goBack();
-    // };
-
-    const handleSaveRating = async () => {
-        if (selectedRating === 0) {
-            Alert.alert('Rating Required', 'Please select a rating before saving');
-            return;
-        }
-
-        const patientProfileId = patientData?.PatientUserProfileInfoId || visitRecordData?.HospitalInfo?.[0]?.ServiceProviderId;
-        const orderId = patientData?.OrderID || visitRecordData?.HospitalInfo?.[0]?.OrderId;
-        const taskMainId = patientData?.Detail?.[0]?.TaskMainId || visitRecordData?.HospitalInfo?.[0]?.TaskMainId;
-        const relationOrderAndOrganizationCategoryId = patientData?.RelationOrderAndOrganizationCategoryId || visitRecordData?.HospitalInfo?.[0]?.RelationOrderAndOrganizationCategoryId;
-
-        const payload = {
-            UserloginInfoId: user?.Id,
-            Comment: commentText,
-            OrderId: orderId,
-            RelationOrderAndOrganizationCategoryId: relationOrderAndOrganizationCategoryId,
-            TaskMainId: taskMainId,
-            VisitMainId: visitmainId,
-            Rating: [{
-                TargetId: patientProfileId,
-                CatRatingTypeId: 4,
-                RatingValue: selectedRating.toString()
-            }]
-        };
-
         try {
-            const response = await appointmentService.addEditUserRating(payload);
+            setIsLoading(true);
+            const payload = {
+                VisitMainId: prescriptionData.Id,
+            };
+            const response = await appointmentService.getVisitMainRecordDetail(payload);
             if (response?.ResponseStatus?.STATUSCODE === 200) {
-                Alert.alert('Success', 'Rating and comment saved successfully', [
-                    {
-                        text: 'OK',
-                        onPress: () => {
-                            setIsConfirmBottomSheetVisible(false);
-                            setSelectedRating(0);
-                            setCommentText('');
-                            navigation.goBack();
-                        }
-                    }
-                ]);
-            } else {
-                Alert.alert('Error', 'Failed to save rating');
+                setVisitRecordData(response);
             }
         } catch (error) {
-            Alert.alert('Error', 'Failed to save rating');
+            console.log('error', error);
+        } finally {
+            setIsLoading(false);
         }
     };
 
-    const handleCloseRatingBottomSheet = () => {
-        setIsConfirmBottomSheetVisible(false);
-        setSelectedRating(0);
-        setCommentText('');
-    };
+    if (isLoading) {
+        return <ActivityIndicator size="large" color="#000" />
+    }
 
-    const renderStarSelector = () => {
-        return (
-            <View style={styles.ratingStarsContainer}>
-                {[1, 2, 3, 4, 5].map((star) => (
-                    <TouchableOpacity
-                        key={star}
-                        onPress={() => setSelectedRating(star)}
-                        activeOpacity={0.7}
-                    >
-                        <Ionicons
-                            name={star <= selectedRating ? 'star' : 'star-outline'}
-                            size={40}
-                            color={star <= selectedRating ? '#fbbf24' : '#d1d5db'}
-                        />
-                    </TouchableOpacity>
-                ))}
-            </View>
-        );
-    };
-
-    const handleDataChange = (stepKey: string, data: any) => {
-        setFormData(prev => ({
-            ...prev,
-            [stepKey]: data,
-        }));
-    };
-
-    const handleSaveAndComplete = (data: any) => {
-        // handleDataChange('step4', data);
-        // handleNext();
-        setCurrentStep(5);
-    };
-
-    const backButtonPress = () => {
-        dispatch(setVisitMainData(null as any));
-        dispatch(setVisitMainId(null as any));
-        navigation.goBack();
-    };
-
-    const renderHeader = () => (
-        <View style={styles.header}>
-            <TouchableOpacity onPress={backButtonPress} style={styles.backButton}>
-                <Ionicons name="chevron-back" size={24} color="#333" />
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>Add Session Record</Text>
-        </View>
-    );
-
-    const renderStepContent = () => {
-        switch (currentStep) {
-            case 1:
-                return (
-                    <Step1PatientComplaint
-                        patientData={patientData}
-                        onNext={handleNext}
-                    />
-                );
-            case 2:
-                return (
-                    <Step2PatientHistory
-                        onNext={handleNext}
-                        onSkip={handleNext}
-                    />
-                );
-            case 3:
-                return (
-                    <Step3PatientAssessment
-                        onNext={handleNext}
-                        onSkip={handleNext}
-                        getVisitMainRecordDetail={getVisitMainRecordDetail}
-                    />
-                );
-            case 4:
-                return (
-                    <Step4Treatment
-                        // onComplete={handleComplete}
-                        onPrevious={handlePrevious}
-                        data={formData.step4}
-                        onDataChange={handleSaveAndComplete}
-                    />
-                );
-            case 5:
-                return (
-                    <>
-                        {renderReviewContent()}
-                    </>
-                )
-            default:
-                return null;
-        }
-    };
-
-    const renderHeaderReview = () => (
-        <View style={styles.header}>
-            <TouchableOpacity onPress={backButtonPress} style={styles.backButton}>
-                <Ionicons name="chevron-back" size={24} color="#333" />
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>Session Record</Text>
-        </View>
-    );
-    const renderSectionHeader = (title: string, onEdit?: () => void) => (
+    const renderSectionHeader = (title: string) => (
         <View style={styles.sectionHeader}>
             <Text style={styles.sectionHeaderText}>{title}</Text>
-            {onEdit && (
-                <TouchableOpacity onPress={onEdit} style={styles.editIconButton}>
-                    <Ionicons name="pencil" size={20} color="#fff" />
-                </TouchableOpacity>
-            )}
         </View>
     );
 
@@ -336,9 +113,7 @@ const AddSessionRecord = ({ route }: { route: any }) => {
 
         return (
             <View style={styles.section}>
-                {renderSectionHeader('Patient complaint',()=>{
-                    setCurrentStep(1);
-                })}
+                {renderSectionHeader('Patient complaint')}
                 <View style={styles.sectionContent}>
                     <View style={styles.fieldRow}>
                         <Text style={styles.fieldLabel}>Chief Complaint "CC"</Text>
@@ -406,9 +181,7 @@ const AddSessionRecord = ({ route }: { route: any }) => {
 
         return (
             <View style={styles.section}>
-                {renderSectionHeader('Patient History',()=>{
-                    setCurrentStep(2);
-                })}
+                {renderSectionHeader('Patient History')}
                 <View style={styles.sectionContent}>
                     {pmhField}
                     {pshField}
@@ -518,9 +291,7 @@ const AddSessionRecord = ({ route }: { route: any }) => {
 
         return (
             <View style={styles.section}>
-                {renderSectionHeader('Patient assessment',()=>{
-                    setCurrentStep(3);
-                })}
+                {renderSectionHeader('Patient assessment')}
                 <View style={styles.sectionContent}>
                     {vitalSigns}
                     {oeSection}
@@ -652,9 +423,7 @@ const AddSessionRecord = ({ route }: { route: any }) => {
 
         return (
             <View style={styles.section}>
-                {renderSectionHeader('Treatment Plan',()=>{
-                    setCurrentStep(4);
-                })}
+                {renderSectionHeader('Treatment Plan')}
                 <View style={styles.sectionContent}>
                     <View style={styles.procedureContainer}>
                         <View style={styles.procedureHeader}>
@@ -817,123 +586,43 @@ const AddSessionRecord = ({ route }: { route: any }) => {
         return <>{sections}</>;
     };
 
-    const renderReviewContent = () => {
-        if (!visitRecordData) {
-            return (
-                <View style={styles.emptyContainer}>
-                    <Text style={styles.emptyText}>No data available</Text>
-                </View>
-            );
-        }
-
-        return (
-            <ScrollView
-                style={styles.scrollView}
-                contentContainerStyle={styles.scrollContent}
-                showsVerticalScrollIndicator={false}
-            >
-                {currentStep == 6 ? renderHospitalSection() : null}
-                {renderPatientComplaintSection()}
-                {renderPatientHistorySection()}
-                {renderPatientAssessmentSection()}
-                {renderDiagnosisSection()}
-                {renderLabXRaysSection()}
-                {renderTreatmentPlanSection()}
-                {renderAdditionalSections()}
-            </ScrollView>
-        );
+    const backButtonPress = () => {
+        navigation.goBack();
     };
 
-    console.log("visitRecordData", visitRecordData)
+    const renderHeader = () => (
+        <View style={styles.header}>
+            <TouchableOpacity onPress={backButtonPress} style={styles.backButton}>
+                <Ionicons name="arrow-back-outline" size={24} color="#333" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>{prescriptionData?.CatCategoryId == "42" ? 'Session Record' : 'Visit Record'}</Text>
+        </View>
+    );
 
     return (
         <SafeAreaView style={styles.container}>
-            {currentStep == 6 ? <View style={styles.mainContent}>
-                {renderHeaderReview()}
-                <View style={styles.mainContentReview}>
-                    {renderReviewContent()}
-                </View>
-            </View> : <View style={styles.mainContent}>
+            <View style={styles.mainContent}>
                 {renderHeader()}
-                <Stepper
-                    currentStep={currentStep}
-                    totalSteps={4}
-                    onStepPress={handleStepPress}
-                />
-                {renderStepContent()}
-                {currentStep == 5 && <View style={{position: 'absolute', bottom: 0, left: 0, right: 0, paddingHorizontal: 16, paddingVertical: 8, backgroundColor: '#fff'}}>
-                    <TouchableOpacity onPress={() => setIsConfirmBottomSheetVisible(true)} style={{backgroundColor: '#14b8a6', padding: 10, borderRadius: 10, width: '100%'}}>
-                        <Text style={{...globalTextStyles.buttonLarge, color: '#fff', textAlign: 'center'}}>Confirm & Save</Text>
-                    </TouchableOpacity>
-                </View>}
-            </View>}
-
-            <CustomBottomSheet
-                visible={isConfirmBottomSheetVisible}
-                onClose={handleCloseRatingBottomSheet}
-                showHandle={false}
-                backdropClickable={false}
-            >
-                <KeyboardAvoidingView
-                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                    style={styles.ratingBottomSheetContainer}
-                    keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
-                >
-                    {/* Header */}
-                    <View style={styles.ratingBottomSheetHeader}>
-                        <Text style={styles.ratingBottomSheetTitle}>Add Rating To Patient</Text>
-                        <TouchableOpacity onPress={handleCloseRatingBottomSheet}>
-                            <Ionicons name="close" size={24} color="#333" />
-                        </TouchableOpacity>
-                    </View>
-
+                <View style={styles.mainContent}>
                     <ScrollView
-                        style={styles.ratingBottomSheetContent}
+                        style={styles.scrollView}
+                        contentContainerStyle={styles.scrollContent}
                         showsVerticalScrollIndicator={false}
-                        keyboardShouldPersistTaps="handled"
                     >
-                        {/* Star Rating Section */}
-                        <View style={styles.ratingSection}>
-                            {renderStarSelector()}
-                        </View>
-
-                        {/* Add Comment Section */}
-                        <View style={styles.commentSection}>
-                            <Text style={styles.commentSectionTitle}>Add Comment</Text>
-                            <View style={styles.commentInputContainer}>
-                                <TextInput
-                                    style={styles.commentInput}
-                                    placeholder="Add Comment"
-                                    placeholderTextColor="#999"
-                                    multiline
-                                    numberOfLines={6}
-                                    value={commentText}
-                                    onChangeText={setCommentText}
-                                    textAlignVertical="top"
-                                />
-                                {/* <TouchableOpacity style={styles.micButton} onPress={() => {
-                                    // Handle microphone action (voice input)
-                                    Alert.alert('Microphone', 'Voice input feature coming soon');
-                                }}>
-                                    <Ionicons name="mic" size={20} color="#666" />
-                                </TouchableOpacity> */}
-                            </View>
-                        </View>
-
-                        {/* Confirm & Save Button */}
-                        <TouchableOpacity
-                            style={styles.confirmSaveButton}
-                            onPress={handleSaveRating}
-                            activeOpacity={0.8}
-                        >
-                            <Text style={styles.confirmSaveButtonText}>Confirm & Save</Text>
-                        </TouchableOpacity>
+                        {renderHospitalSection()}
+                        {renderPatientComplaintSection()}
+                        {renderPatientHistorySection()}
+                        {renderPatientAssessmentSection()}
+                        {renderDiagnosisSection()}
+                        {renderLabXRaysSection()}
+                        {renderTreatmentPlanSection()}
+                        {renderAdditionalSections()}
                     </ScrollView>
-                </KeyboardAvoidingView>
-            </CustomBottomSheet>
+                </View>
+            </View>
         </SafeAreaView>
-    );
-};
+    )
+}
 
 const styles = StyleSheet.create({
     container: {
@@ -960,12 +649,9 @@ const styles = StyleSheet.create({
     },
     headerTitle: {
         fontSize: 18,
-        fontWeight: '600',
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 24,
         color: '#333',
-    },
-    mainContentReview: {
-        flex: 1,
-        backgroundColor: '#fff',
     },
     scrollView: {
         flex: 1,
@@ -1475,4 +1161,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default AddSessionRecord;
+export default PrescriptionView

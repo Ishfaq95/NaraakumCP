@@ -49,11 +49,16 @@ const AppointmentListScreen = () => {
   const [unAvailabilityList, setUnAvailabilityList] = useState<any[]>([]);
 
   // Unavailability form states
-  const [startDate, setStartDate] = useState<Date>(new Date());
-  const [startTime, setStartTime] = useState<Date>(new Date());
-  const [endDate, setEndDate] = useState<Date>(new Date());
-  const [endTime, setEndTime] = useState<Date>(new Date());
+  const [startDate, setStartDate] = useState<any>(null);
+  const [startTime, setStartTime] = useState<any>(null);
+  const [endDate, setEndDate] = useState<any>(null);
+  const [endTime, setEndTime] = useState<any>(null);
   const [reason, setReason] = useState('');
+  const [startDateError, setStartDateError] = useState(false);
+  const [startTimeError, setStartTimeError] = useState(false);
+  const [endDateError, setEndDateError] = useState(false);
+  const [endTimeError, setEndTimeError] = useState(false);
+  const [reasonError, setReasonError] = useState(false);
 
   // Date/Time picker visibility states
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
@@ -340,10 +345,10 @@ const AppointmentListScreen = () => {
   const handleAvailabilityChange = (value: boolean) => {
     if (!value) {
       // Reset form when creating new unavailability
-      setStartDate(new Date());
-      setStartTime(new Date());
-      setEndDate(new Date());
-      setEndTime(new Date());
+      setStartDate(null);
+      setStartTime(null);
+      setEndDate(null);
+      setEndTime(null);
       setReason('');
       setUnAvailableBottomSheetVisible(true);
     } else {
@@ -454,15 +459,39 @@ const AppointmentListScreen = () => {
       // Refresh the unavailability list
       await getServiceProviderUnAvailability();
       // Reset form
-      setStartDate(new Date());
-      setStartTime(new Date());
-      setEndDate(new Date());
-      setEndTime(new Date());
+      setStartDate(null);
+      setStartTime(null);
+      setEndDate(null);
+      setEndTime(null);
       setReason('');
     }
   };
 
   const handleAddServiceProviderUnAvailability = async () => {
+    // Validate required fields
+    let hasError = false;
+    if (!startDate) {
+      setStartDateError(true);
+      hasError = true;
+    }
+    if (!startTime) {
+      setStartTimeError(true);
+      hasError = true;
+    }
+    if (!endDate) {
+      setEndDateError(true);
+      hasError = true;
+    }
+    if (!endTime) {
+      setEndTimeError(true);
+      hasError = true;
+    }
+    if (!reason.trim()) {
+      setReasonError(true);
+      hasError = true;
+    }
+    if (hasError) return;
+
     // Convert local date/time to UTC before sending
     const startDateTimeLocal = moment(startDate);
     startDateTimeLocal.set({
@@ -501,11 +530,16 @@ const AppointmentListScreen = () => {
       // Refresh the unavailability list
       await getServiceProviderUnAvailability();
       // Reset form
-      setStartDate(new Date());
-      setStartTime(new Date());
-      setEndDate(new Date());
-      setEndTime(new Date());
+      setStartDate(null);
+      setStartTime(null);
+      setEndDate(null);
+      setEndTime(null);
       setReason('');
+      setStartDateError(false);
+      setStartTimeError(false);
+      setEndDateError(false);
+      setEndTimeError(false);
+      setReasonError(false);
     }
   };
 
@@ -517,6 +551,7 @@ const AppointmentListScreen = () => {
     if (selectedDate) {
       setStartDate(selectedDate);
     }
+    setStartDateError(false);
   };
 
   const handleStartTimeChange = (event: any, selectedTime?: Date) => {
@@ -526,6 +561,7 @@ const AppointmentListScreen = () => {
     if (selectedTime) {
       setStartTime(selectedTime);
     }
+    setStartTimeError(false);
   };
 
   const handleEndDateChange = (event: any, selectedDate?: Date) => {
@@ -535,6 +571,7 @@ const AppointmentListScreen = () => {
     if (selectedDate) {
       setEndDate(selectedDate);
     }
+    setEndDateError(false);
   };
 
   const handleEndTimeChange = (event: any, selectedTime?: Date) => {
@@ -544,6 +581,7 @@ const AppointmentListScreen = () => {
     if (selectedTime) {
       setEndTime(selectedTime);
     }
+    setEndTimeError(false);
   };
 
   const handleSaveUnavailability = () => {
@@ -554,10 +592,10 @@ const AppointmentListScreen = () => {
   const handleCancelUnavailability = () => {
     setUnAvailableBottomSheetVisible(false);
     // Reset form
-    setStartDate(new Date());
-    setStartTime(new Date());
-    setEndDate(new Date());
-    setEndTime(new Date());
+    setStartDate(null);
+    setStartTime(null);
+    setEndDate(null);
+    setEndTime(null);
     setReason('');
   };
 
@@ -706,14 +744,19 @@ const AppointmentListScreen = () => {
         onClose={() => setUnAvailableBottomSheetVisible(false)}
         backdropClickable={true}
         showHandle={false}
-        maxHeight="60%"
+        maxHeight={Platform.OS === 'ios' ? "80%" : "60%"}
       >
-        <ScrollView
+        <KeyboardAvoidingView
           style={{ flex: 1 }}
-          contentContainerStyle={unavailabilityStyles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={true}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
         >
+          <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={unavailabilityStyles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={true}
+          >
           {/* Header */}
           <Text style={unavailabilityStyles.title}>Switch Mode To Unavailable</Text>
 
@@ -729,7 +772,7 @@ const AppointmentListScreen = () => {
             <View style={unavailabilityStyles.halfColumn}>
               <Text style={unavailabilityStyles.label}>Start Date</Text>
               <TouchableOpacity
-                style={unavailabilityStyles.inputContainer}
+                style={[unavailabilityStyles.inputContainer, startDateError && unavailabilityStyles.inputError]}
                 onPress={() => {
                   if (Platform.OS === 'ios') {
                     setShowStartDateModal(true);
@@ -739,7 +782,7 @@ const AppointmentListScreen = () => {
                 }}
               >
                 <Text style={unavailabilityStyles.inputText}>
-                  {moment(startDate).format('DD/MM/YYYY')}
+                  { startDate ? moment(startDate).format('DD/MM/YYYY') : 'dd/mm/yyyy'}
                 </Text>
                 <Ionicons name="calendar-outline" size={20} color="#666" />
               </TouchableOpacity>
@@ -748,7 +791,7 @@ const AppointmentListScreen = () => {
             <View style={unavailabilityStyles.halfColumn}>
               <Text style={unavailabilityStyles.label}>Start Time</Text>
               <TouchableOpacity
-                style={unavailabilityStyles.inputContainer}
+                style={[unavailabilityStyles.inputContainer, startTimeError && unavailabilityStyles.inputError]}
                 onPress={() => {
                   if (Platform.OS === 'ios') {
                     setShowStartTimeModal(true);
@@ -758,7 +801,7 @@ const AppointmentListScreen = () => {
                 }}
               >
                 <Text style={unavailabilityStyles.inputText}>
-                  {moment(startTime).format('HH:mm')}
+                  {startTime ? moment(startTime).format('HH:mm') : '--:--'}
                 </Text>
                 <Ionicons name="time-outline" size={20} color="#666" />
               </TouchableOpacity>
@@ -770,7 +813,7 @@ const AppointmentListScreen = () => {
             <View style={unavailabilityStyles.halfColumn}>
               <Text style={unavailabilityStyles.label}>End Date</Text>
               <TouchableOpacity
-                style={unavailabilityStyles.inputContainer}
+                style={[unavailabilityStyles.inputContainer, endDateError && unavailabilityStyles.inputError]}
                 onPress={() => {
                   if (Platform.OS === 'ios') {
                     setShowEndDateModal(true);
@@ -780,7 +823,7 @@ const AppointmentListScreen = () => {
                 }}
               >
                 <Text style={unavailabilityStyles.inputText}>
-                  {moment(endDate).format('DD/MM/YYYY')}
+                  {endDate ? moment(endDate).format('DD/MM/YYYY') : 'dd/mm/yyyy'}
                 </Text>
                 <Ionicons name="calendar-outline" size={20} color="#666" />
               </TouchableOpacity>
@@ -789,7 +832,7 @@ const AppointmentListScreen = () => {
             <View style={unavailabilityStyles.halfColumn}>
               <Text style={unavailabilityStyles.label}>End Time</Text>
               <TouchableOpacity
-                style={unavailabilityStyles.inputContainer}
+                style={[unavailabilityStyles.inputContainer, endTimeError && unavailabilityStyles.inputError]}
                 onPress={() => {
                   if (Platform.OS === 'ios') {
                     setShowEndTimeModal(true);
@@ -799,7 +842,7 @@ const AppointmentListScreen = () => {
                 }}
               >
                 <Text style={unavailabilityStyles.inputText}>
-                  {moment(endTime).format('HH:mm')}
+                  {endTime ? moment(endTime).format('HH:mm') : '--:--'}
                 </Text>
                 <Ionicons name="time-outline" size={20} color="#666" />
               </TouchableOpacity>
@@ -810,13 +853,13 @@ const AppointmentListScreen = () => {
           <View style={unavailabilityStyles.fullColumn}>
             <Text style={unavailabilityStyles.label}>Write The Reason</Text>
             <TextInput
-              style={unavailabilityStyles.textArea}
+              style={[unavailabilityStyles.textArea, reasonError && unavailabilityStyles.inputError]}
               placeholder="write the reason"
               placeholderTextColor="#999"
               multiline
               numberOfLines={4}
               value={reason}
-              onChangeText={setReason}
+              onChangeText={(text)=>{setReason(text); if(reasonError && text.trim()) setReasonError(false);}}
               textAlignVertical="top"
             />
           </View>
@@ -836,12 +879,13 @@ const AppointmentListScreen = () => {
           >
             <Text style={unavailabilityStyles.cancelButtonTextButton}>Cancel</Text>
           </TouchableOpacity>
-        </ScrollView>
+          </ScrollView>
+        </KeyboardAvoidingView>
 
         {/* Android Date/Time Pickers */}
         {Platform.OS === 'android' && showStartDatePicker && (
           <DateTimePicker
-            value={startDate}
+            value={startDate ? new Date(startDate) : new Date()}
             mode="date"
             display="default"
             onChange={handleStartDateChange}
@@ -849,7 +893,7 @@ const AppointmentListScreen = () => {
         )}
         {Platform.OS === 'android' && showStartTimePicker && (
           <DateTimePicker
-            value={startTime}
+            value={startTime ? new Date(startTime) : new Date()}
             mode="time"
             display="default"
             onChange={handleStartTimeChange}
@@ -857,7 +901,7 @@ const AppointmentListScreen = () => {
         )}
         {Platform.OS === 'android' && showEndDatePicker && (
           <DateTimePicker
-            value={endDate}
+            value={endDate ? new Date(endDate) : new Date()}
             mode="date"
             display="default"
             onChange={handleEndDateChange}
@@ -865,7 +909,7 @@ const AppointmentListScreen = () => {
         )}
         {Platform.OS === 'android' && showEndTimePicker && (
           <DateTimePicker
-            value={endTime}
+            value={endTime ? new Date(endTime) : new Date()}
             mode="time"
             display="default"
             onChange={handleEndTimeChange}
@@ -873,10 +917,10 @@ const AppointmentListScreen = () => {
         )}
 
         {/* iOS Date/Time Modals */}
-        {renderDateTimePicker('date', startDate, handleStartDateChange, showStartDateModal, setShowStartDateModal, 'Start Date')}
-        {renderDateTimePicker('time', startTime, handleStartTimeChange, showStartTimeModal, setShowStartTimeModal, 'Start Time')}
-        {renderDateTimePicker('date', endDate, handleEndDateChange, showEndDateModal, setShowEndDateModal, 'End Date')}
-        {renderDateTimePicker('time', endTime, handleEndTimeChange, showEndTimeModal, setShowEndTimeModal, 'End Time')}
+        {renderDateTimePicker('date', startDate ? new Date(startDate) : new Date(), handleStartDateChange, showStartDateModal, setShowStartDateModal, 'Start Date')}
+        {renderDateTimePicker('time', startTime ? new Date(startTime) : new Date(), handleStartTimeChange, showStartTimeModal, setShowStartTimeModal, 'Start Time')}
+        {renderDateTimePicker('date', endDate ? new Date(endDate) : new Date(), handleEndDateChange, showEndDateModal, setShowEndDateModal, 'End Date')}
+        {renderDateTimePicker('time', endTime ? new Date(endTime) : new Date(), handleEndTimeChange, showEndTimeModal, setShowEndTimeModal, 'End Time')}
       </CustomBottomSheet>
 
       <ConfirmationModal
@@ -942,8 +986,8 @@ const unavailabilityStyles = StyleSheet.create({
     paddingBottom: 40,
   },
   title: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 16,
+    fontFamily: CAIRO_FONT_FAMILY.bold,
     color: '#000',
     marginBottom: 16,
     textAlign: 'left',
@@ -957,6 +1001,7 @@ const unavailabilityStyles = StyleSheet.create({
   infoText: {
     fontSize: 14,
     color: '#666',
+    fontFamily: CAIRO_FONT_FAMILY.regular,
     lineHeight: 20,
   },
   row: {
@@ -973,7 +1018,8 @@ const unavailabilityStyles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    fontWeight: '500',
+    fontFamily: CAIRO_FONT_FAMILY.regular,
+    lineHeight: 20,
     color: '#000',
     marginBottom: 8,
   },
@@ -989,9 +1035,15 @@ const unavailabilityStyles = StyleSheet.create({
     backgroundColor: '#fff',
     minHeight: 48,
   },
+  inputError: {
+    borderColor: '#FF3B30',
+    borderWidth: 1,
+  },
   inputText: {
     fontSize: 14,
     color: '#666',
+    fontFamily: CAIRO_FONT_FAMILY.regular,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
   },
   textArea: {
     borderWidth: 1,
@@ -1003,6 +1055,8 @@ const unavailabilityStyles = StyleSheet.create({
     minHeight: 100,
     fontSize: 14,
     color: '#000',
+    fontFamily: CAIRO_FONT_FAMILY.regular,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
   },
   saveButton: {
     backgroundColor: '#00A19D',
@@ -1015,7 +1069,8 @@ const unavailabilityStyles = StyleSheet.create({
   saveButtonText: {
     color: '#fff',
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: CAIRO_FONT_FAMILY.bold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
   },
   cancelButton: {
     backgroundColor: '#fff',
@@ -1029,7 +1084,8 @@ const unavailabilityStyles = StyleSheet.create({
   cancelButtonTextButton: {
     color: '#00A19D',
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: CAIRO_FONT_FAMILY.bold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
   },
   // iOS Modal Styles
   modalOverlay: {
@@ -1053,16 +1109,20 @@ const unavailabilityStyles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
     color: '#000',
+    fontFamily: CAIRO_FONT_FAMILY.bold,
   },
   cancelButtonText: {
     fontSize: 16,
     color: '#999',
+    fontFamily: CAIRO_FONT_FAMILY.regular,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
   },
   doneButtonText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: CAIRO_FONT_FAMILY.bold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
     color: '#00A19D',
   },
 });

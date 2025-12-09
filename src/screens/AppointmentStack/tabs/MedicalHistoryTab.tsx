@@ -98,6 +98,10 @@ const MedicalHistoryTab: React.FC<MedicalHistoryTabProps> = ({ data }) => {
         navigation.navigate(ROUTES.AddSessionRecord, { patientData: data, step: 5 });
     };
 
+    const handleOtherVisitRecordPress = (item: any) => {
+        navigation.navigate(ROUTES.PrescriptionView, { prescriptionData: item });
+    };
+
     return (
         <View style={styles.container}>
             {/* Patient Info Section */}
@@ -157,7 +161,7 @@ const MedicalHistoryTab: React.FC<MedicalHistoryTabProps> = ({ data }) => {
                 {activeTab === 'current' ? (
                     <CurrentRecordsList records={currentRecords} onVisitRecordPress={handleVisitRecordPress} />
                 ) : (
-                    <OtherRecordsList records={otherRecords} />
+                    <OtherRecordsList records={otherRecords} onVisitRecordPress={handleOtherVisitRecordPress} />
                 )}
             </View>
 

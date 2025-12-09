@@ -8,9 +8,10 @@ import { CAIRO_FONT_FAMILY } from '../../../styles/globalStyles';
 
 interface OtherRecordsListProps {
     records: any[];
+    onVisitRecordPress?: (item: any) => void;
 }
 
-const OtherRecordsList: React.FC<OtherRecordsListProps> = ({ records }) => {
+const OtherRecordsList: React.FC<OtherRecordsListProps> = ({ records, onVisitRecordPress }) => {
     console.log('records', records);
     const renderRecordItem = ({ item }: { item: any }) => (
         <View style={styles.recordCard}>
@@ -37,7 +38,7 @@ const OtherRecordsList: React.FC<OtherRecordsListProps> = ({ records }) => {
                 <Text style={styles.detailValue}>{moment.utc(item.VisitDate).local().format('DD/MM/YYYY')}</Text>
             </View>
 
-            <TouchableOpacity style={styles.infoButton}>
+            <TouchableOpacity style={styles.infoButton} onPress={() => onVisitRecordPress && onVisitRecordPress(item)}>
                 {item.CatCategoryId == '42' && <Image source={require('../../../assets/icons/cameramovie.png')} style={{ tintColor: '#808080', marginRight: 8, width: 18, height: 18 }} />}
                 <Text style={styles.infoButtonText}>{item.CatCategoryId == '42' ? 'Session Record Information' : 'Visit Record Information'}</Text>
             </TouchableOpacity>

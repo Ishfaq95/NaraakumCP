@@ -1,20 +1,21 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, SafeAreaView, StyleSheet, TouchableOpacity, ScrollView, Image, FlatList } from 'react-native';
+import { View, Text, SafeAreaView, StyleSheet, TouchableOpacity, ScrollView, Image, FlatList, Platform } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { globalTextStyles } from '../../styles/globalStyles';
+import { CAIRO_FONT_FAMILY, globalTextStyles } from '../../styles/globalStyles';
 import { useNavigation } from '@react-navigation/native';
 import { myClientsService } from '../../services/api/myClientsService';
 import { useSelector } from 'react-redux';
 import moment from 'moment';
 import { MediaBaseURL } from '../../shared/utils/constants';
+import { ROUTES } from '../../shared/utils/routes';
 
-const BookingHistory = ({route}: {route: any}) => {
+const BookingHistory = ({ route }: { route: any }) => {
     const { Patient } = route.params;
-    
+
     const navigation = useNavigation();
     const [bookingHistory, setBookingHistory] = useState<any>(null);
     const user = useSelector((state: any) => state.root.user.user);
-    
+
     useEffect(() => {
         getServiceProviderAndPatientBookingHistory();
     }, []);
@@ -43,7 +44,7 @@ const BookingHistory = ({route}: {route: any}) => {
     const renderHeader = () => (
         <View style={styles.header}>
             <TouchableOpacity onPress={backButtonPress} style={styles.backButton}>
-                <Ionicons name="chevron-back" size={24} color="#333" />
+                <Ionicons name="arrow-back-outline" size={24} color="#000" />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Booking History</Text>
         </View>
@@ -56,57 +57,52 @@ const BookingHistory = ({route}: {route: any}) => {
     const renderPatientInfoCard = () => {
         if (!patientInfo) return null;
 
-        console.log('patientInfo', patientInfo);
-
-        const imageUrl = patientInfo.ImagePath 
-            ? `${MediaBaseURL}${patientInfo.ImagePath}` 
+        const imageUrl = patientInfo.ImagePath
+            ? `${MediaBaseURL}${patientInfo.ImagePath}`
             : null;
 
         return (
-            <View style={styles.patientCard}>
+            <>
                 <View style={styles.patientHeader}>
                     <Text style={styles.patientHeaderTitle}>Patient Information</Text>
                 </View>
-                <View style={styles.patientContent}>
-                    {imageUrl ? (
-                        <Image 
-                            source={{ uri: imageUrl }}
-                            style={styles.patientAvatar}
-                        />
-                    ) : (
-                        <View style={[styles.patientAvatar, styles.patientAvatarPlaceholder]}>
-                            <Ionicons name="person" size={32} color="#999" />
-                        </View>
-                    )}
-                    <View style={styles.patientInfo}>
-                        <Text style={styles.patientName}>{patientInfo.FullnamePlang?.trim()}</Text>
-                        <View style={styles.patientMeta}>
-                            <Text style={styles.patientGender}>
-                                {patientInfo.Gender ? 'Male' : 'Female'}
-                            </Text>
-                            <View style={styles.ratingContainer}>
-                                <Ionicons name="star" size={16} color="#FFA500" />
-                                <Text style={styles.ratingText}>
-                                    {patientInfo.AccumulativeRatingAvg?.toFixed(2)}
+                <View style={styles.patientCard}>
+
+                    <View style={styles.patientContent}>
+                        {imageUrl ? (
+                            <Image
+                                source={{ uri: imageUrl }}
+                                style={styles.patientAvatar}
+                            />
+                        ) : (
+                            <View style={[styles.patientAvatar, styles.patientAvatarPlaceholder]}>
+                                <Ionicons name="person" size={32} color="#999" />
+                            </View>
+                        )}
+                        <View style={styles.patientInfo}>
+                            <Text style={styles.patientName}>{patientInfo.FullnamePlang?.trim()}</Text>
+                            <View style={styles.patientMeta}>
+                                <Text style={styles.patientGender}>
+                                    {patientInfo.Gender ? 'Male' : 'Female'}
                                 </Text>
-                                <Text style={styles.ratingCount}>
-                                    ({patientInfo.AccumulativeRatingNum} Person)
-                                </Text>
+                                <View style={styles.ratingContainer}>
+                                    <Ionicons name="star" size={16} color="#FFA500" />
+                                    <Text style={styles.ratingText}>
+                                        {patientInfo.AccumulativeRatingAvg?.toFixed(2)}
+                                    </Text>
+                                    <Text style={styles.ratingCount}>
+                                        ({patientInfo.AccumulativeRatingNum} Person)
+                                    </Text>
+                                </View>
                             </View>
                         </View>
                     </View>
                 </View>
-            </View>
+            </>
         );
     };
 
     const renderBookingStats = () => {
-        if (!bookingCounts) {
-            console.log('No booking counts data!');
-            return null;
-        }
-
-        console.log('Rendering booking stats card with:', bookingCounts);
 
         return (
             <View style={styles.statsCard}>
@@ -166,6 +162,81 @@ const BookingHistory = ({route}: {route: any}) => {
     const renderBookingItem = ({ item }: { item: any }) => {
         const { date, time } = formatDateTime(item.SchedulingDate, item.SchedulingTime);
         const statusColor = getStatusColor(item.OrderStatusTitlePlang);
+        console.log('item', item);
+
+        const getStatusInfo = () => {
+            const statusId = item?.OrderMainStatus?.toString();
+
+            switch (statusId) {
+                case '1':
+                case '17':
+                    return {
+                        backgroundColor: '#e6f8eb',
+                        borderColor: '#54b196',
+                        textColor: '#008b62',
+                        text: 'Accepted'
+                    };
+                case '7':
+                    return {
+                        backgroundColor: '#fef2e6',
+                        borderColor: '#faa754',
+                        textColor: '#f87b00',
+                        text: 'On the way'
+                    };
+                case '8':
+                    return {
+                        backgroundColor: '#fef2e6',
+                        borderColor: '#faa754',
+                        textColor: '#f87b00',
+                        text: 'In Progress'
+                    };
+                case '19':
+                case '10':
+                    return {
+                        backgroundColor: '#e6f8eb',
+                        borderColor: '#54b196',
+                        textColor: '#008b62',
+                        text: 'Completed'
+                    };
+                case '9':
+                case '4':
+                    return {
+                        backgroundColor: '#fde8e8',
+                        borderColor: '#ef6666',
+                        textColor: '#ec4949',
+                        text: 'Cancelled'
+                    };
+                case '23':
+                    return {
+                        backgroundColor: '#fde8e8',
+                        borderColor: '#ef6666',
+                        textColor: '#ec4949',
+                        text: 'Incomplete'
+                    };
+                case '24':
+                    return {
+                        backgroundColor: '#fde8e8',
+                        borderColor: '#ef6666',
+                        textColor: '#ec4949',
+                        text: 'Missed'
+                    };
+                default:
+                    return {
+                        backgroundColor: '#e6f8eb',
+                        borderColor: '#54b196',
+                        textColor: '#008b62',
+                        text: 'New'
+                    };
+            }
+        };
+
+        const handlePrescriptionPress = (item: any) => {
+            const params = {
+                CatCategoryId: item.CatCategoryIds,
+                Id: item.VisitID,
+            };
+            navigation.navigate(ROUTES.PrescriptionView, { prescriptionData: params });
+        };
 
         return (
             <View style={styles.bookingCard}>
@@ -190,16 +261,30 @@ const BookingHistory = ({route}: {route: any}) => {
                         <Ionicons name="information-circle-outline" size={18} color="#00A19D" />
                         <Text style={styles.bookingLabel}>Status</Text>
                     </View>
-                    <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>
-                        <Text style={styles.statusText}>{item.OrderStatusTitlePlang}</Text>
-                    </View>
+                    {(() => {
+                        const statusInfo = getStatusInfo();
+                        return (
+                            <View style={[
+                                styles.statusBadge,
+                                {
+                                    backgroundColor: statusInfo.backgroundColor,
+                                    borderLeftWidth: 4,
+                                    borderLeftColor: statusInfo.borderColor
+                                }
+                            ]}>
+                                <Text style={[styles.statusText, { color: statusInfo.textColor }]}>
+                                    {item?.OrderStatusTitlePlang}
+                                </Text>
+                            </View>
+                        );
+                    })()}
                 </View>
 
-                {item.OrderStatusTitlePlang?.toLowerCase().includes('completed') && (
-                    <TouchableOpacity style={styles.prescriptionButton}>
+                
+                   {item?.VisitID &&  <TouchableOpacity onPress={() => handlePrescriptionPress(item)} style={styles.prescriptionButton}>
                         <Text style={styles.prescriptionButtonText}>Show Prescription</Text>
-                    </TouchableOpacity>
-                )}
+                    </TouchableOpacity>}
+                
             </View>
         );
     };
@@ -208,14 +293,16 @@ const BookingHistory = ({route}: {route: any}) => {
         <SafeAreaView style={styles.container}>
             <View style={styles.mainContent}>
                 {renderHeader()}
-                <ScrollView 
+                <ScrollView
                     style={styles.scrollView}
                     contentContainerStyle={styles.scrollContent}
                     showsVerticalScrollIndicator={false}
                 >
-                    {renderPatientInfoCard()}
-                    {renderBookingStats()}
-                    
+                    <View style={{ paddingHorizontal: 16, backgroundColor: '#23a2a4' }}>
+                        {renderPatientInfoCard()}
+                        {renderBookingStats()}
+                    </View>
+
                     {bookingData.length > 0 && (
                         <View style={styles.bookingDetailsSection}>
                             <Text style={styles.sectionTitle}>Booking Details</Text>
@@ -258,42 +345,47 @@ const styles = StyleSheet.create({
         padding: 5,
     },
     headerTitle: {
-        ...globalTextStyles.h5,
+        fontSize: 16,
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         marginLeft: 8,
+        color: '#000',
     },
     scrollView: {
         flex: 1,
     },
     scrollContent: {
-        padding: 16,
-        paddingBottom: 30,
+        // padding: 16,
+        // paddingBottom: 30,
     },
     // Patient Information Card
     patientCard: {
         backgroundColor: '#fff',
         borderRadius: 12,
-        marginBottom: 16,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
+        marginBottom: 10,
+        // shadowColor: '#000',
+        // shadowOffset: { width: 0, height: 2 },
+        // shadowOpacity: 0.1,
+        // shadowRadius: 4,
+        // elevation: 3,
     },
     patientHeader: {
-        backgroundColor: '#E8F4F3',
-        paddingHorizontal: 16,
+        backgroundColor: '#23a2a4',
+        // paddingHorizontal: 16,
         paddingVertical: 12,
         borderTopLeftRadius: 12,
         borderTopRightRadius: 12,
     },
     patientHeaderTitle: {
         fontSize: 15,
-        fontWeight: '600',
-        color: '#333',
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
+        color: '#fff',
     },
     patientContent: {
         flexDirection: 'row',
-        padding: 16,
+        paddingHorizontal: 16,
+        paddingVertical: 10,
         alignItems: 'center',
     },
     patientAvatar: {
@@ -311,10 +403,11 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     patientName: {
-        fontSize: 18,
-        fontWeight: '600',
-        color: '#333',
-        marginBottom: 6,
+        fontSize: 16,
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
+        color: '#000',
+        marginBottom: 4,
         textAlign: 'left',
     },
     patientMeta: {
@@ -323,6 +416,8 @@ const styles = StyleSheet.create({
     },
     patientGender: {
         fontSize: 14,
+        fontFamily: CAIRO_FONT_FAMILY.regular,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#666',
         marginRight: 12,
     },
@@ -332,12 +427,15 @@ const styles = StyleSheet.create({
     },
     ratingText: {
         fontSize: 14,
-        fontWeight: '600',
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#333',
         marginLeft: 4,
     },
     ratingCount: {
         fontSize: 13,
+        fontFamily: CAIRO_FONT_FAMILY.regular,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#666',
         marginLeft: 4,
     },
@@ -345,7 +443,8 @@ const styles = StyleSheet.create({
     statsCard: {
         backgroundColor: '#fff',
         borderRadius: 12,
-        padding: 16,
+        paddingHorizontal: 16,
+        paddingVertical: 10,
         marginBottom: 16,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
@@ -355,28 +454,35 @@ const styles = StyleSheet.create({
     },
     statsTitle: {
         fontSize: 15,
-        fontWeight: '600',
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#333',
-        marginBottom: 16,
         textAlign: 'center',
     },
     statsRow: {
         flexDirection: 'row',
         justifyContent: 'space-around',
         alignItems: 'center',
+        marginTop: 4,
     },
     statItem: {
         flex: 1,
         alignItems: 'center',
+
     },
     statNumber: {
         fontSize: 32,
-        fontWeight: '700',
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         marginBottom: 4,
+        paddingBottom: 4,
+        textAlign: 'center',
     },
     statLabel: {
         fontSize: 13,
-        fontWeight: '500',
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
+        textAlign: 'center',
     },
     statDivider: {
         width: 1,
@@ -386,11 +492,13 @@ const styles = StyleSheet.create({
     // Booking Details Section
     bookingDetailsSection: {
         marginTop: 8,
+        paddingHorizontal: 16,
     },
     sectionTitle: {
         fontSize: 16,
-        fontWeight: '600',
-        color: '#333',
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
+        color: '#000',
         marginBottom: 12,
     },
     bookingCard: {
@@ -408,17 +516,18 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 12,
     },
     bookingLabel: {
         fontSize: 14,
         color: '#666',
-        fontWeight: '500',
+        fontFamily: CAIRO_FONT_FAMILY.regular,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
     },
     bookingValue: {
         fontSize: 14,
-        color: '#333',
-        fontWeight: '600',
+        color: '#000',
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
     },
     statusRow: {
         flexDirection: 'row',

@@ -6,11 +6,15 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import moment from 'moment';
 import { useNavigation } from '@react-navigation/native';
 import { CAIRO_FONT_FAMILY } from '../../styles/globalStyles';
+import AntDesign from 'react-native-vector-icons/AntDesign';
+import RNHTMLtoPDF from 'react-native-html-to-pdf';
+import { downloadFIleForIOS, downloadFile } from '../../services/InvoiceService';
 
 const PrescriptionView = ({ route }: { route: any }) => {
     const prescriptionData = route.params?.prescriptionData;
     const [visitRecordData, setVisitRecordData] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
     console.log('visitMainData', visitRecordData);
     const navigation = useNavigation();
     useEffect(() => {
@@ -85,7 +89,7 @@ const PrescriptionView = ({ route }: { route: any }) => {
                         )}
                     </View>
 
-                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',marginTop: 8 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
                         <View style={styles.detailRow}>
                             <Ionicons name="business-outline" size={20} color="#666" />
                             <Text style={styles.label}>Hospital</Text>
@@ -94,7 +98,7 @@ const PrescriptionView = ({ route }: { route: any }) => {
                     </View>
 
 
-                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',marginTop: 4 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
 
                         <View style={styles.detailRow}>
                             <Ionicons name="calendar-outline" size={20} color="#666" />
@@ -589,13 +593,494 @@ const PrescriptionView = ({ route }: { route: any }) => {
     const backButtonPress = () => {
         navigation.goBack();
     };
+    
+    const generateOeHtml = (oeArray: any[]) => {
+        if (!oeArray?.length) return '<span>NA</span>';
+
+        const groupedOE = groupOEByTitle(oeArray);
+        const sequenceArray = ['General Inspection', 'Skin', 'LN', 'Eye', 'Thyroid', 'Cardiovascular signs'];
+        const allTitles = Object.keys(groupedOE);
+        const sortedTitles = allTitles.sort((a, b) => {
+            const indexA = sequenceArray.indexOf(a);
+            const indexB = sequenceArray.indexOf(b);
+            if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+            if (indexA !== -1) return -1;
+            if (indexB !== -1) return 1;
+            return 0;
+        });
+
+        return sortedTitles.map((title) => {
+            const rows = groupedOE[title]
+                .map((item: any) => `<tr><td>${item.BodyAnatomyTitle || '-'}</td><td>${item.InputValue || '-'}</td></tr>`)
+                .join('');
+            return `<table cellpadding="5" cellspacing="0" style="width:50%;margin-bottom:8px;">
+                        <tr><th colspan="2" align="left">${title}</th></tr>
+                        ${rows}
+                    </table>`;
+        }).join('');
+    };
+
+    const generateDiagnosisHtml = (diagnosis: any[]) => {
+        if (!diagnosis?.length) return '';
+
+        return diagnosis.map((dx: any) => {
+            const typeLabel = dx.CatDxType === 1 ? 'Provisional' : 'Differential';
+            const specialty = dx.DiagnosisSpecialtyTitle || dx.DiagnosisSpecialityTitle || dx.Title || 'NA';
+            return dx.Detail?.map((detail: any) => (
+                `<table cellpadding="5" cellspacing="0" style="width:50%;margin-bottom:8px;">
+                    <tr>
+                        <th colspan="2" align="left">${typeLabel} DX</th>
+                    </tr>
+                    <tr>
+                        <td>Specialty</td>
+                        <td><b>${specialty}</b></td>
+                    </tr>
+                    <tr>
+                        <td>ICD10 Code</td>
+                        <td><b>${detail?.Code || 'NA'}</b></td>
+                    </tr>
+                    <tr>
+                        <td>Diagnosis</td>
+                        <td><b>${detail?.Diagnosis || 'NA'}</b></td>
+                    </tr>
+                </table>`
+            )).join('')
+        }).join('');
+    };
+
+    const generateLabFilesHtml = (labXRays: any[]) => {
+        if (!labXRays?.length) return '';
+        return labXRays.map((file: any) => (
+            `<table cellpadding="5" cellspacing="0" style="width:50%;margin-bottom:8px;">
+                <tr>
+                    <td id="file-type-pdf">File Category : ${file?.FileTypeTitlePlang || 'Others'}</td>
+                    <td><b><a href="${MediaBaseURL}${file?.FilePath}" style="color:#32A3A4">Preview</a></b></td>
+                </tr>
+            </table>`
+        )).join('');
+    };
+
+    const generatePrescriptionHtml = (medicines: any[]) => {
+        if (!medicines?.length) return '';
+        return medicines.map((obj: any, index: number) => (
+            `<tr>
+                <td bgcolor="#FFF" colspan="2">
+                    ${index + 1}. Medicine Name: <b>${obj?.MedicineName || 'NA'}</b>
+                    <table cellpadding="10" cellspacing="5" style="width:100%;border:1px solid #DDD">
+                        <tr>
+                            <td>Drug Type<br /><b>${obj?.Title || 'NA'}</b></td>
+                            <td>Duration<br /><b>${obj?.Duration ? `${obj.Duration} ${obj?.TimeUnitPlang || ''}` : 'NA'}</b></td>
+                            <td>Quantity<br /><b>${obj?.Quantity || 'NA'}</b></td>
+                            <td>Dose<br /><b>${obj?.Dose || 'NA'}</b></td>
+                            <td>Unit<br /><b>${obj?.Unit || 'NA'}</b></td>
+                            <td>Frequency<br /><b>${obj?.Frequency || 'NA'}</b></td>
+                            <td>Route<br /><b>${obj?.Route || 'NA'}</b></td>
+                        </tr>
+                        <tr>
+                            <td bgcolor="#F4FDFE" colspan="12"><b>Description:</b><br />${obj?.Description || ''}</td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>`
+        )).join('');
+    };
+
+    const generateServicesHtml = (services: any[]) => {
+        if (!services?.length) return '';
+        return services.map((obj: any) => (
+            `<tr>
+                <td bgcolor="#F4FDFE">
+                    ${obj?.TitlePlang || obj?.TitleSlang || 'NA'}
+                </td>
+                <td bgcolor="#F4FDFE">
+                    ${obj?.Quantity || 1}
+                </td>
+            </tr>`
+        )).join('');
+    };
+
+    const generateSummaryDownloadHtml = () => {
+        const summary = visitRecordData;
+        const hospital = summary?.HospitalInfo?.[0] || {};
+        const complaint = summary?.PatientComplaint?.[0] || {};
+        const history = summary?.PatientHistory?.[0] || {};
+        const assessment = summary?.PatientAssessment?.[0] || {};
+        const treatmentPlan = summary?.TreatmentPlan?.[0] || {};
+        const notes = treatmentPlan?.Notes?.[0] || {};
+        const refer = treatmentPlan?.Refer?.[0] || {};
+
+        const recordType = hospital?.CatCategoryId == '42' ? 'Session Record' : 'Visit Record';
+        const recordDateLabel = hospital?.CatCategoryId == '42' ? 'Session Date' : 'Visit Date';
+        const visitDate = hospital?.VisitDate ? moment.utc(hospital.VisitDate).local().format('DD/MM/YYYY') : 'NA';
+
+        const durationUnit = formatDuration(complaint?.DurationOfComplaint, complaint?.CatTimeUnitId) || 'NA';
+
+        const vitalSigns = assessment?.VitalSigns?.[0] || {};
+        const diagnosisHtml = generateDiagnosisHtml(assessment?.Diagnosis || []);
+        const labFilesHtml = generateLabFilesHtml(assessment?.LabXRays || []);
+        const oeHtml = generateOeHtml(assessment?.OE || []);
+        const prescriptionHtml = generatePrescriptionHtml(treatmentPlan?.Medicines || []);
+        const servicesHtml = generateServicesHtml(summary?.AddedService || []);
+
+        const procedure = treatmentPlan?.Procedure?.[0] || {};
+
+        return `
+<!-- start download Summary Template -->
+<div id="summaryDownloadTemplate">
+    <table cellpadding="0" cellspacing="0" width="100%" align="center" style="font-family:Cairo;font-size:13px;color:#1D1D1D" dir="ltr">
+        <tr>
+            <td>
+                <table cellpadding="15" cellspacing="0" style="width:100%;">
+                    <tr>
+                        <td align="left" valign="bottom"><img src="https://dev2.innotech-sa.com/HHC/web/images/logo.svg" alt="" /></td>
+                        <td align="right" valign="bottom"><img src="https://dev2.innotech-sa.com/HHC/web/images/contact-icon.png" alt="" style="display:inline-block;vertical-align:middle" /> <p style="display:inline-block;vertical-align:middle;margin:0 0 5px">contact.us@naraakum.com</p></td>
+                        <td align="right" valign="bottom">
+                            <h2 style="font-size:24px;" id="recordType">${recordType}</h2><img src="https://dev2.innotech-sa.com/HHC/web/images/web-icon.png" style="display:inline-block;vertical-align:middle" alt="" /> <p style="display:inline-block;vertical-align:middle;margin:0 0 5px">www.naraakum.com</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        <tr>
+            <td height="1" bgcolor="#8DB4AD"></td>
+        </tr>
+        <tr>
+            <td>
+                <table cellpadding="15">
+                    <tr>
+                        <td>
+                            Patient Name <h3 style="font-size:18px;margin:0" id="patientName-pdf">${hospital?.PatientPName || 'NA'}</h3>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <table cellpadding="8" cellspacing="0" width="100%" align="center" style="border:1px solid #DDD">
+                    <tr>
+                        <th colspan="2" bgcolor="#32A3A4" style="color:#FFF;font-weight:bold;font-size:16px" align="left">
+                            Hospital
+                        </th>
+                    </tr>
+                    <tr>
+                        <td bgcolor="#F4FDFE">
+                            Hospital
+                        </td>
+                        <td bgcolor="#F4FDFE">
+                            <b id="hospitalName-pdf">${hospital?.TitlePlang || hospital?.TitleSlang || 'NA'}</b>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td bgcolor="#FFF">
+                            Care Provider
+                        </td>
+                        <td bgcolor="#FFF">
+                            <b id="providerName-pdf">${hospital?.FullnamePlang || hospital?.FullnameSlang || 'NA'}</b>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td bgcolor="#F4FDFE">
+                            Order No.
+                        </td>
+                        <td bgcolor="#F4FDFE">
+                            <b id="orderNo-pdf">${hospital?.OrderId || 'NA'}</b>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td bgcolor="#FFF" id="recordDateLabel">
+                            ${recordDateLabel}
+                        </td>
+                        <td bgcolor="#FFF">
+                            <b id="visitDate-pdf">${visitDate}</b>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        <tr>
+            <td height="15"></td>
+        </tr>
+        <tr>
+            <td>
+                <table cellpadding="8" cellspacing="0" width="100%" align="center" style="border:1px solid #DDD">
+                    <tr>
+                        <th bgcolor="#32A3A4" style="color:#FFF;font-weight:bold;font-size:16px" align="left">
+                            Patient Complaint
+                        </th>
+                    </tr>
+                    <tr>
+                        <td bgcolor="#F4FDFE">
+                            <b>Chief Complaint "CC"</b><br /> <span id="cheifComplaint">${complaint?.ChiefComplaint || 'NA'}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td bgcolor="#FFF">
+                            <b>Description Of Complaint</b><br /><span id="descriptionComplaint">${complaint?.PresentIllness || 'NA'}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td bgcolor="#F4FDFE">
+                            <b>Duration Of Complaint</b><br /> <span id="durationComplaint">${durationUnit}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td bgcolor="#FFF">
+                            <b>Other Complaint</b><br /> <span id="otherComplaint">${complaint?.OtherComplaint || 'NA'}</span>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        <tr>
+            <td height="15"></td>
+        </tr>
+        <tr>
+            <td>
+                <table cellpadding="8" cellspacing="0" width="100%" align="center" style="border:1px solid #DDD">
+                    <tr>
+                        <th colspan="2" bgcolor="#32A3A4" style="color:#FFF;font-weight:bold;font-size:16px" align="left">
+                            Patient History
+                        </th>
+                    </tr>
+                    <tr>
+                        <td bgcolor="#F4FDFE">
+                            <b>Past Medical History</b>
+                        </td>
+                        <td bgcolor="#F4FDFE" id="pmh-pdf">
+                            ${history?.PMH || 'NA'}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td bgcolor="#FFF">
+                            <b>Past Surgical History</b>
+                        </td>
+                        <td bgcolor="#FFF" id="psh-pdf">
+                            ${history?.PSH || 'NA'}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td bgcolor="#F4FDFE">
+                            <b>Allergy</b>
+                        </td>
+                        <td bgcolor="#F4FDFE" id="allergy-pdf">
+                            ${history?.Allergy || 'NA'}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td bgcolor="#FFF">
+                            <b>Current Medications</b>
+                        </td>
+                        <td bgcolor="#FFF" id="current-meds-pdf">
+                            ${history?.CurrentMeds || 'NA'}
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        <tr>
+            <td height="15"></td>
+        </tr>
+        <tr>
+            <td>
+                <table cellpadding="8" cellspacing="0" width="100%" align="center" style="border:1px solid #DDD">
+                    <tr>
+                        <th colspan="2" bgcolor="#32A3A4" style="color:#FFF;font-weight:bold;font-size:16px" align="left">
+                            Patient Assessment
+                        </th>
+                    </tr>
+                    <tr>
+                        <td bgcolor="#FFF">
+                            <table cellpadding="8" cellspacing="15" style="width:100%" align="center">
+                                <tr>
+                                    <td bgcolor="#F4FDFE" colspan="12"><b>Vital Signs</b></td>
+                                </tr>
+                                <tr>
+                                    <td bgcolor="#FFF" align="center">Tem<br /><b id="tem-pdf">${vitalSigns?.Tem || 'NA'}</b></td>
+                                    <td bgcolor="#FFF" align="center">H/R<br /><b id="hr-pdf">${vitalSigns?.HR || 'NA'}</b></td>
+                                    <td bgcolor="#FFF" align="center">P4 02<br /><b id="p4-pdf">${vitalSigns?.P4O2 || 'NA'}</b></td>
+                                    <td bgcolor="#FFF" align="center">R/R<br /><b id="rr-pdf">${vitalSigns?.RR || 'NA'}</b></td>
+                                    <td bgcolor="#FFF" align="center">BP<br /><b id="bp-pdf">${vitalSigns?.Bp || 'NA'}</b></td>
+                                </tr>
+                                <tr>
+                                    <td bgcolor="#F4FDFE" colspan="12"><b>O/E</b></td>
+                                </tr>
+                                <tr>
+                                    <td id="oe-table-container" bgcolor="#FFF" colspan="4">
+                                        ${oeHtml}
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        <tr>
+            <td height="15"></td>
+        </tr>
+        <tr>
+            <td>
+                <table cellpadding="8" cellspacing="0" width="100%" align="center" style="border:1px solid #DDD ">
+                    <tr>
+                        <td bgcolor="#FFF">
+                            <table cellpadding="8" cellspacing="15" style="width:100%" align="center">
+                                <tr>
+                                    <td bgcolor="#F4FDFE" colspan="4"><b>DX</b></td>
+                                </tr>
+                                <tr>
+                                    <td id="diagnosis-list" bgcolor="#FFF" colspan="4">
+                                        ${diagnosisHtml || 'NA'}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td bgcolor="#F4FDFE" colspan="4"><b>Lab & X-Rays</b></td>
+                                </tr>
+                                <tr>
+                                    <td id="files-list-pdf" bgcolor="#FFF" colspan="4">
+                                        ${labFilesHtml || 'NA'}
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        <tr>
+            <td height="15"></td>
+        </tr>
+        <tr>
+            <td>
+                <table cellpadding="8" cellspacing="0" width="100%" align="center" style="border:1px solid #DDD">
+                    <tr>
+                        <th colspan="2" bgcolor="#32A3A4" style="color:#FFF;font-weight:bold;font-size:16px" align="left">
+                            Treatment Plan
+                        </th>
+                    </tr>
+                    <tr>
+                        <td bgcolor="#FFF">
+                            <table cellpadding="8" cellspacing="15" style="width:100%" align="center">
+                                <tr>
+                                    <td bgcolor="#F4FDFE" colspan="2"><b>Procedures</b></td>
+                                </tr>
+                                <tr>
+                                    <td bgcolor="#FFF"><b>Procedures</b><br /><span id="procedureName">${procedure?.Procedurees || 'NA'}</span></td>
+                                </tr>
+                                <tr>
+                                    <td bgcolor="#FFF"><b>Comment</b><br /><span id="procedure-comment">${procedure?.Comments || 'NA'}</span></td>
+                                </tr>
+                                <tr>
+                                    <td bgcolor="#F4FDFE" colspan="2"><b>Prescription</b></td>
+                                </tr>
+                                <tbody id="prescription-list">
+                                    ${prescriptionHtml || ''}
+                                </tbody>
+                                
+                                <tr>
+                                    <td bgcolor="#F4FDFE" colspan="2"><b>Patient Instructions</b></td>
+                                </tr>
+                                <tr>
+                                    <td bgcolor="#FFF" colspan="2" id="patient-instruction">${notes?.Instructions || 'NA'}</td>
+                                </tr>
+
+                                <tr>
+                                    <td bgcolor="#F4FDFE" colspan="4"><b>New Service</b></td>
+                                </tr>
+                                <tr>
+                                    <tbody id="services-list-pdf">
+                                        ${servicesHtml || ''}
+                                    </tbody>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        <tr>
+            <td height="15"></td>
+        </tr>
+        <tr>
+            <td>
+                <table cellpadding="8" cellspacing="0" width="100%" align="center" style="border:1px solid #DDD">
+                    <tr>
+                        <td bgcolor="#FFF">
+                            <table cellpadding="8" cellspacing="15" style="width:100%" align="center">
+                                <tr>
+                                    <td bgcolor="#F4FDFE" colspan="3"><b>Referral / Consultation</b></td>
+                                </tr>
+                                <tr>
+                                    <td bgcolor="#FFF"><b>Specialization</b><br /> <span id="specializationName-pdf">${refer?.Title || 'NA'}</span></td>
+                                    <td bgcolor="#FFF"><b>Organization</b><br /><span id="organization-refer-pdf">${refer?.Organization || 'NA'}</span></td>
+                                    <td bgcolor="#FFF"><b>Reason Of Refer</b><br /><span id="reason-refer-pdf">${refer?.ReferTo || 'NA'}</span></td>
+                                </tr>
+                                
+                                <tr>
+                                    <td bgcolor="#F4FDFE" colspan="3"><b>Notes</b></td>
+                                </tr>
+                                <tr>
+                                    <td bgcolor="#FFF" colspan="3" id="notes-pdf">${notes?.Notes || 'NA'}</td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</div>
+<!-- end download Summary Template -->`;
+    };
+
+    const downloadButtonPress = async () => {
+        if (!visitRecordData) {
+            Alert.alert('Error', 'No visit record data available.');
+            return;
+        }
+
+        try {
+            setIsGeneratingPdf(true);
+            const html = generateSummaryDownloadHtml();
+            const baseFileName = `Visit_Record_${visitRecordData?.HospitalInfo?.[0]?.OrderId || Date.now()}`;
+            const pdf = await RNHTMLtoPDF.convert({
+                html,
+                fileName: baseFileName,
+                directory: Platform.OS === 'ios' ? 'Documents' : 'Download',
+                base64: false,
+            });
+
+            if (!pdf?.filePath) {
+                throw new Error('No file path returned from PDF generator');
+            }
+
+            const parsedFileName = pdf.filePath.split('/').pop() || `${baseFileName}.pdf`;
+
+            if (Platform.OS === 'ios') {
+                downloadFIleForIOS(pdf.filePath, parsedFileName);
+            } else {
+                const cleanedName = parsedFileName.replace(/\.pdf$/i, '');
+                await downloadFile(pdf.filePath, cleanedName);
+            }
+        } catch (error) {
+            console.error('Error generating visit record PDF:', error);
+            Alert.alert('Error', 'Failed to generate PDF. Please try again.');
+        } finally {
+            setIsGeneratingPdf(false);
+        }
+    }
 
     const renderHeader = () => (
         <View style={styles.header}>
-            <TouchableOpacity onPress={backButtonPress} style={styles.backButton}>
-                <Ionicons name="arrow-back-outline" size={24} color="#333" />
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <TouchableOpacity onPress={backButtonPress} style={styles.backButton}>
+                    <Ionicons name="arrow-back-outline" size={24} color="#333" />
+                </TouchableOpacity>
+                <Text style={styles.headerTitle}>{prescriptionData?.CatCategoryId == "42" ? 'Session Record' : 'Visit Record'}</Text>
+            </View>
+            <TouchableOpacity onPress={downloadButtonPress} style={{ padding: 10, borderRadius: 10 }}>
+                <AntDesign name="download" size={24} color="#333" />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>{prescriptionData?.CatCategoryId == "42" ? 'Session Record' : 'Visit Record'}</Text>
         </View>
     );
 
@@ -636,6 +1121,7 @@ const styles = StyleSheet.create({
     header: {
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'space-between',
         height: 56,
         backgroundColor: '#fff',
         elevation: 2,

@@ -240,6 +240,7 @@ const AccountInformationScreen = () => {
         try {
             const response = await profileService.updateServiceProviderPersonalProfile(payload);
             if (response.ResponseStatus.STATUSCODE === 200) {
+                getUserInfoByUserId()
                 showAlert({
                     title: 'Profile updated successfully',
                     message: '',

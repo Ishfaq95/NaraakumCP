@@ -375,6 +375,46 @@ export const getServiceProviderAvailability = async (credentials: any) => {
         };
     }
 }
+
+export const updateServiceProviderPersonalProfile = async (credentials: any) => {
+    try {
+        const response = await axiosInstance.post(
+            `patients/UpdateRegisteredPatientProfile`,
+            credentials
+        );
+        return response.data;
+    }
+    catch (error: any) {
+        throw {
+            message: error?.response?.data?.message || 'Update service provider personal profile failed',
+            status: error?.response?.status,
+            code: error?.response?.data?.code
+        };
+    }
+}
+
+export const userUpdatedPhone = async (payload: any): Promise<any> => {
+
+    try {
+        const response = await axiosInstance.post('patients/PhoneVerification', payload);
+        return response.data;
+    } catch (error: any) {
+        console.error('Error updating phone:', error);
+        throw error;    
+    }
+};
+
+export const verifyUserUpdatedData = async (payload: any): Promise<any> => {
+
+    try {
+        const response = await axiosInstance.post('patients/VerifyRegisteredUser', payload);
+        return response.data;
+    } catch (error: any) {
+        console.error('Error verifying user updated data:', error);
+        throw error;    
+    }
+};
+
 // Export all profile related functions
 export const profileService = {
     getServiceProviderByUserId,
@@ -397,4 +437,7 @@ export const profileService = {
     deleteServiceProviderMedicalLicense,
     getServiceProviderHolidays,
     getServiceProviderAvailability,
+    updateServiceProviderPersonalProfile,
+    userUpdatedPhone,
+    verifyUserUpdatedData,
 }; 

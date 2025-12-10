@@ -1,8 +1,8 @@
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, Image, ScrollView, TextInput } from 'react-native'
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, Image, ScrollView, TextInput, Platform, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
-import { CAIRO_FONT_FAMILY } from '../../styles/globalStyles';
+import { CAIRO_FONT_FAMILY, globalTextStyles } from '../../styles/globalStyles';
 import CustomPhoneInput, { COUNTRIES } from '../../components/common/CustomPhoneInput';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { profileService } from '../../services/api/profileService';
@@ -10,6 +10,12 @@ import { useSelector } from 'react-redux';
 import Dropdown from '../../components/common/Dropdown';
 import moment from 'moment';
 import { MediaBaseURL } from '../../shared/utils/constants';
+import DropDownWithCheckbox from '../../components/common/DropDownWithCheckbox';
+import { authService } from '../../services/api/authService';
+import { useAlert } from '../../contexts/AlertContext';
+import CustomBottomSheet from '../../components/common/CustomBottomSheet';
+import AntDesign from 'react-native-vector-icons/AntDesign';
+import EmailUpdateComponent, { VerificationCodeCompoent } from '../../components/emailUpdateComponent';
 
 const genders = [
     { label: 'Male', value: 'male' },
@@ -17,6 +23,7 @@ const genders = [
 ];
 
 const AccountInformationScreen = () => {
+    const { showAlert } = useAlert();
     const navigation = useNavigation();
     const [englishName, setEnglishName] = useState('');
     const [profileImage, setProfileImage] = useState<any>(null);
@@ -43,6 +50,26 @@ const AccountInformationScreen = () => {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false)
     const [passwordError, setPasswordError] = useState(false)
     const [confirmPasswordError, setConfirmPasswordError] = useState(false)
+    const [languages, setLanguages] = useState<any[]>([]);
+    const [countries, setCountries] = useState<any[]>([]);
+    const [country, setCountry] = useState<string | number>('');
+    const [language, setLanguage] = useState<any[]>([]);
+    const [emailBottomSheetHeight, setEmailBottomSheetHeight] = useState("35%")
+    const [phoneBottomSheetHeight, setPhoneBottomSheetHeight] = useState("35%")
+    const [selectedCountryUpdated, setSelectedCountryUpdated] = useState<any>();
+    const [updatedPhoneNumberError, setUpdatedPhoneNumberError] = useState(false);
+    const [emailInputError, setEmailInputError] = useState(false)
+    const [experience, setExperience] = useState('');
+    const [openVerifyBottomSheet, setOpenVerifyBottomSheet] = useState(false)
+    const [openVerifyBottomSheetHeight, setOpenVerifyBottomSheetHeight] = useState("63%")
+    const [otpAPIError, setOTPAPIError] = useState(false)
+    const [OTPForText, setOTPForText] = useState('')
+    const [OTPFrom, setOTPFrom] = useState('')
+    const [otpValue, setOtpValue] = useState('')
+    const [otpValueError, setOtpValueError] = useState(false)
+    const [resentCode, setResentCode] = useState(false)
+    const [isUploading, setIsUploading] = useState(false)
+    const [selectedFullPhoneNumber, setSelectedFullPhoneNumber] = useState('')
     useEffect(() => {
         if (user) {
             getUserInfoByUserId();
@@ -63,7 +90,31 @@ const AccountInformationScreen = () => {
 
     useEffect(() => {
         getNationalities();
+        getLanguages();
+        getCountries();
     }, [])
+
+    const getLanguages = async () => {
+        const response = await authService.getAllLanguages();
+        if (response.ResponseStatus.STATUSCODE) {
+            const languages = response.list.map((item: any) => ({
+                label: item.TitlePlang,
+                value: item.Id
+            }));
+            setLanguages(languages);
+        }
+    };
+
+    const getCountries = async () => {
+        const response = await authService.getAllCountries();
+        if (response.ResponseStatus.STATUSCODE) {
+            const countries = response.Data.map((item: any) => ({
+                label: item.TitlePlang,
+                value: item.Id
+            }));
+            setCountries(countries);
+        }
+    };
 
     // Function to extract country code and phone number from full number
     const extractPhoneInfo = (fullNumber: string) => {
@@ -94,9 +145,14 @@ const AccountInformationScreen = () => {
             setProfileImage(userInfo.ImagePath);
             setEnglishName(userInfo.FullNamePlang);
             setArabicName(userInfo.FullNameSlang);
+            setExperience(userInfo.YearsOFExperience.toString() || '');
+            setLanguage(userInfo.CatLanguageIds.split(",").map(Number));
+            setCountry(Number(userInfo.CountryId));
+            setNationality(Number(userInfo.CatNationalityId));
             const phoneInfo = extractPhoneInfo(userInfo.CellNumber || '');
             const getCountry = COUNTRIES.find(c => c.code === phoneInfo.countryCode);
             setSelectedCountry(getCountry);
+            setSelectedCountryUpdated(getCountry);
             setUpdatedPhoneNumber(phoneInfo.phoneNumber);
             setMobileNumber(phoneInfo.phoneNumber);
             setDateOfBirth(userInfo.DateofBirth ? moment(userInfo.DateofBirth).format('DD/MM/YYYY') : '');
@@ -104,14 +160,6 @@ const AccountInformationScreen = () => {
             setEmail(userInfo.Email);
         }
     }, [userInfo])
-
-    useEffect(() => {
-        if (userInfo && nationalities.length > 0) {
-            const nationality = nationalities.find((item: any) => item.value == parseInt(userInfo.CatNationalityId));
-            setNationality(nationality?.value || '');
-            console.log('nationality', nationality)
-        }
-    }, [userInfo, nationalities])
 
     const getUserInfoByUserId = async () => {
         try {
@@ -163,12 +211,239 @@ const AccountInformationScreen = () => {
     const renderHeader = () => (
         <View style={{ flexDirection: 'row', alignItems: 'center', height: 50, backgroundColor: '#fff', padding: 10 }}>
             <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                <Ionicons name="chevron-back" size={24} color="#333" />
+                <Ionicons name="arrow-back-outline" size={24} color="#333" />
 
             </TouchableOpacity>
-            <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#333' }}>Personal Profile</Text>
+            <Text style={{ fontSize: 16, fontFamily: CAIRO_FONT_FAMILY.bold, color: '#333', lineHeight: Platform.OS === 'ios' ? 0 : 20 }}>Personal Profile</Text>
         </View>
     );
+
+    const updateUserProfileHandler = async () => {
+        const fullPhoneNumber = `${selectedCountryUpdated?.dialCode}${updatedPhoneNumber.replace(/\s+/g, "")}`
+        const payload = {
+            "FullNamePlang": englishName,
+            "FullNameSlang": arabicName,
+            "CellNumber": fullPhoneNumber,
+            "Email": updatedEmail,
+            "CatNationalityId": nationality.toString(),
+            "IDNumber": user.IDNumber,
+            "Gender": gender === 'male' ? 1 : 0,
+            "DateofBirth": dateOfBirth,
+            "ImagePath": profileImage,
+            "Password": password,
+            "UserLoginInfoId": user.Id,
+            YearsofExperience: experience,
+            CountryId: country.toString(),
+            LanguageIds: language.join(','),
+        }
+
+        try {
+            const response = await profileService.updateServiceProviderPersonalProfile(payload);
+            if (response.ResponseStatus.STATUSCODE === 200) {
+                showAlert({
+                    title: 'Profile updated successfully',
+                    message: '',
+                    type: 'success',
+                });
+            }
+        }
+        catch (error: any) {
+            console.log('error', error)
+        }
+    }
+
+    const handleSave = async () => {
+        const fullNumber = selectedCountry.dialCode + mobileNumber;
+        const payload = {
+            "FullNamePlang": englishName,
+            "FullNameSlang": arabicName,
+            "CellNumber": fullNumber,
+            "Email": email,
+            "CatNationalityId": nationality.toString(),
+            "IDNumber": user.IDNumber,
+            "Gender": gender === 'male' ? 1 : 0,
+            "DateofBirth": dateOfBirth,
+            "ImagePath": profileImage,
+            "Password": password,
+            "UserLoginInfoId": user.Id,
+            YearsofExperience: experience,
+            CountryId: country.toString(),
+            LanguageIds: language.join(','),
+        }
+
+        if (password) {
+            payload.Password = password;
+        }
+
+        try {
+            const response = await profileService.updateServiceProviderPersonalProfile(payload);
+            if (response.ResponseStatus.STATUSCODE === 200) {
+                showAlert({
+                    title: 'Profile updated successfully',
+                    message: '',
+                    type: 'success',
+                });
+            }
+        }
+        catch (error: any) {
+            console.log('error', error)
+        }
+    }
+
+    const handlePhoneNumberUpdate = (text: string) => {
+        setUpdatedPhoneNumber(text);
+    };
+
+    const handleCountryUpdate = (country: any) => {
+        setSelectedCountryUpdated(country);
+    };
+
+    const HandlePhoneUpdate = async () => {
+        if (!updatedPhoneNumber || updatedPhoneNumber.trim() === '') {
+          setUpdatedPhoneNumberError(true)
+          return;
+        }
+        try {
+          const fullPhoneNumber = `${selectedCountryUpdated?.dialCode}${updatedPhoneNumber.replace(/\s+/g, "")}`
+          setIsUploading(true)
+          const payload = {
+            "Phonenumber": fullPhoneNumber,
+            "UserId": user.Id
+          }
+
+          const response = await profileService.userUpdatedPhone(payload)
+          if (response?.ResponseStatus?.STATUSCODE === 200) {
+            if (response?.StatusCode?.STATUSCODE == 3020) {
+              setOpenPhoneBottomSheet(false)
+                setTimeout(() => {
+                    showAlert({
+                        title: 'Phone number already exists',
+                        message: '',
+                        type: 'error',
+                    });
+                }, 500)
+              return;
+            }
+            setOpenPhoneBottomSheet(false)
+            setSelectedFullPhoneNumber(fullPhoneNumber)
+            setOTPFrom('phone')
+            setOTPForText(fullPhoneNumber)
+            setTimeout(() => {
+              setOpenVerifyBottomSheet(true)
+            }, 500)
+          }
+
+        } catch (error) {
+          console.log(error)
+        } finally {
+          setIsUploading(false)
+        }
+    }
+
+    const HandleEmailUpdate = async () => {
+        // if (!updatedEmail) {
+        //   setEmailInputError(true)
+        //   return;
+        // }
+        // try {
+        //   setIsUploading(true)
+        //   const payload = {
+        //     "Email": updatedEmail,
+        //     "UserId": user.Id
+        //   }
+
+        //   const response = await profileService.userUpdatedEmail(payload)
+        //   if (response?.ResponseStatus?.STATUSCODE === 200) {
+        //     if (response?.StatusCode?.STATUSCODE == 3002) {
+        //       setOpenEmailBottomSheet(false)
+        //       setTimeout(() => {
+        //         setAlertModalVisible(true)
+        //         setAlertModalMessage("البريد الالكتروني موجود بالفعل")
+        //       }, 500)
+        //       return;
+        //     }
+        //     setOpenEmailBottomSheet(false)
+        //     setOTPFrom('email')
+        //     setOTPForText(updatedEmail)
+        //     setTimeout(() => {
+        //       setOpenVerifyBottomSheet(true)
+        //     }, 500)
+        //   }
+
+        // } catch (error) {
+        // } finally {
+        //   setIsUploading(false);
+        // }
+    }
+
+    const HandleCloseEmailModal = () => {
+        setOpenEmailBottomSheet(false)
+        setEmailBottomSheetHeight("35%")
+    }
+
+    const HandleCloseVerifyModal = () => {
+        setOtpValue('')
+        setOpenVerifyBottomSheet(false)
+        setOpenVerifyBottomSheetHeight("63%")
+    }
+
+    const HandleOtpResendButton = async () => {
+        // try {
+        //   setIsUploading(true)
+        //   const payload = {
+        //     "UserId": user?.Id,
+        //   }
+
+        //   const response = await profileService.resendOtp(payload)
+        //   if (response?.ResponseStatus?.STATUSCODE == 3009) {
+        //     setResentCode(true)
+        //   }
+
+
+        // } catch (error) {
+        // } finally {
+        //   setIsUploading(false)
+        // }
+    }
+
+    const HandleOtpSubmit = async () => {
+        try {
+          setOTPAPIError(false)
+          if (otpValue == '' || otpValue.length < 4) {
+            setOtpValueError(true)
+            return;
+          }
+
+          setIsUploading(true)
+          const payload = {
+            "UserId": user?.Id,
+            "VerificationCode": otpValue,
+            "VerificationPlatformId": "1"
+          }
+
+          const response = await profileService.verifyUserUpdatedData(payload)
+          if (response?.StatusCode?.STATUSCODE == 3007) {
+            updateUserProfileHandler()
+          }
+          if (response?.StatusCode?.STATUSCODE == 3005) {
+            setOTPAPIError(true)
+            return;
+          }
+          setOpenVerifyBottomSheet(false)
+          setOtpValue('')
+
+        } catch (error) {
+        } finally {
+          setIsUploading(false)
+        }
+
+    }
+
+    const formatPatternToExamplePlaceHolder = (pattern: string): string => {
+        if (!pattern) return '';
+        let digitCounter = 1;
+        return pattern.replace(/#/g, '0');
+    };
 
     return (
         <SafeAreaView style={styles.container}>
@@ -187,143 +462,310 @@ const AccountInformationScreen = () => {
                         <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#333', bottom: -15 }}>Upload Image</Text>
                     </View>
 
-                    <ScrollView showsVerticalScrollIndicator={false} style={styles.scrollContainer}>
-                        <View style={{ paddingHorizontal: 10, paddingVertical: 10, backgroundColor: '#fff', borderRadius: 10 }}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-                                {/* Name */}
+                    <KeyboardAvoidingView
+                        style={{ flex: 1 }}
+                        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+                    >
+                        <ScrollView showsVerticalScrollIndicator={false} style={styles.scrollContainer}>
+                            <View style={{ paddingHorizontal: 10, paddingVertical: 10, backgroundColor: '#fff', borderRadius: 10 }}>
                                 <View style={styles.fieldGroup}>
-                                    <Text style={styles.label}>Name in English</Text>
+                                    <Text style={styles.label}>Full Name <Text style={{ fontFamily: CAIRO_FONT_FAMILY.semiBold, fontSize: 14, fontWeight: '600', color: '#666666' }}>(In English)</Text></Text>
                                     <TextInput style={[styles.input, englishNameInputError && { borderWidth: 1, borderColor: 'red' }]} value={englishName} onChangeText={setEnglishName} placeholder="Name" />
                                 </View>
+                                <View style={{ width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', }}>
+                                    {/* Name */}
+
+                                    <View style={{ width: '65%' }} >
+                                        <Text style={styles.label}>Full Name <Text style={{ fontFamily: CAIRO_FONT_FAMILY.semiBold, fontSize: 14, fontWeight: '600', color: '#666666' }}>(In Arabic)</Text></Text>
+                                        <TextInput style={[styles.input, arabicNameInputError && { borderWidth: 1, borderColor: 'red' }]} value={arabicName} onChangeText={setArabicName} placeholder="Name" />
+                                    </View>
+                                    <View style={{ width: '33%' }} >
+                                        <Text style={styles.label}>Experience</Text>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                                            <TextInput
+                                                style={[styles.input, { width: '60%' }]}
+                                                keyboardType="numeric"
+                                                placeholderTextColor="#969696"
+                                                value={experience}
+                                                placeholder="0"
+                                                maxLength={2}
+                                                onChangeText={(text) => {
+                                                    // Only allow numeric input and limit to 2 digits
+                                                    const numericText = text.replace(/[^0-9]/g, '').slice(0, 2);
+                                                    setExperience(numericText);
+                                                }}
+                                            />
+                                            <Text style={styles.suffixText}>/ Year</Text>
+                                        </View>
+                                    </View>
+                                </View>
+                                <View style={[styles.row, { marginTop: 10 }]}>
+                                    <View style={styles.col}>
+                                        <Text style={styles.label}>I Speak The Following Languages:</Text>
+                                        <DropDownWithCheckbox
+                                            data={languages}
+                                            value={Array.isArray(language) ? (language as any) : []}
+                                            error={false}
+                                            onChange={(vals) => {
+                                                setLanguage(vals as any);
+                                            }}
+                                            placeholder="-- Select --"
+                                            containerStyle={{ height: 44 }}
+                                            dropdownStyle={[{ height: 44 }]}
+                                        />
+                                        {/* {errors.language && <Text style={styles.errorText}>{errors.language}</Text>} */}
+                                    </View>
+                                </View>
+
+                                <View style={[styles.fieldGroup, styles.row, { marginTop: 10 }]}>
+
+                                    <View style={{ width: '48%', }}>
+                                        <Text style={styles.label}>Date of Birth</Text>
+                                        <TextInput style={styles.input} value={dateOfBirth} onChangeText={setDateOfBirth} placeholder="Date of Birth" keyboardType="numeric" />
+                                        <TouchableOpacity onPress={HandleOpenDateOfBirthPicker} style={[styles.dateOfBirthBtn]}>
+                                            <Icon name="calendar-month" size={18} color="#000" style={{ marginLeft: 4 }} />
+                                        </TouchableOpacity>
+                                    </View>
+                                    <View style={{ width: '48%', }}>
+                                        <Text style={styles.label}>Gender</Text>
+                                        <Dropdown data={genders} containerStyle={{ height: 50 }} dropdownStyle={{ height: 50 }} value={gender} onChange={(value: string | number) => setGender(value.toString())} placeholder="الجنس" />
+                                    </View>
+                                </View>
+
+                                <View style={[styles.row]}>
+                                    <View style={{ width: '49%' }} >
+                                        <Text style={styles.label}>Country</Text>
+                                        <Dropdown
+                                            data={countries}
+                                            value={country}
+                                            onChange={(value) => {
+                                                setCountry(value);
+                                            }}
+                                            error={false}
+                                            containerStyle={{ height: 44 }}
+                                            dropdownStyle={[{ height: 44 }]}
+                                            placeholder="--Select--"
+                                        />
+                                        {/* {errors.country && <Text style={styles.errorText}>{errors.country}</Text>} */}
+                                    </View>
+                                    <View style={{ width: '49%' }} >
+                                        <Text style={styles.label}>Nationality</Text>
+                                        <Dropdown
+                                            data={countries}
+                                            value={nationality}
+                                            onChange={(value) => {
+                                                setNationality(value);
+                                            }}
+                                            placeholder="--Select--"
+                                            error={false}
+                                            containerStyle={{ height: 44 }}
+                                            dropdownStyle={[{ height: 44 }]}
+                                        />
+                                        {/* {errors.nationality && <Text style={styles.errorText}>{errors.nationality}</Text>} */}
+                                    </View>
+                                </View>
+
+                                {/* Mobile */}
+                                <View style={[styles.fieldGroup, { marginTop: 10 }]}>
+                                    <Text style={styles.label}>Mobile Number</Text>
+                                    <View style={styles.row}>
+                                        <CustomPhoneInput
+                                            value={mobileNumber}
+                                            onChangeText={handlePhoneNumberChange}
+                                            onCountryChange={handleCountryChange}
+                                            placeholder="Mobile Number"
+                                            error={false}
+                                            disabled={true}
+                                            initialCountry={selectedCountry}
+                                        />
+                                        <TouchableOpacity onPress={HandleOpenPhoneBottomSheet} style={[styles.updateBtn, { height: 40, top: 4 }]}>
+                                            <Text style={styles.updateBtnText}>Update</Text>
+                                            <Icon name="edit" size={18} color="#fff" style={{ marginLeft: 4 }} />
+                                        </TouchableOpacity>
+                                    </View>
+                                </View>
+
+                                {/* Email */}
                                 <View style={styles.fieldGroup}>
-                                    <Text style={styles.label}>Name in Arabic</Text>
-                                    <TextInput style={[styles.input, arabicNameInputError && { borderWidth: 1, borderColor: 'red' }]} value={arabicName} onChangeText={setArabicName} placeholder="Name" />
+                                    <Text style={styles.label}>User Name</Text>
+                                    <View style={styles.row}>
+                                        <TextInput
+                                            style={[styles.input, { flex: 1, textAlign: 'left' }]}
+                                            value={email}
+                                            onChangeText={setEmail}
+                                            placeholder="abcd@xyz.com"
+                                            keyboardType="email-address"
+                                            editable={false}
+                                        />
+                                        <TouchableOpacity onPress={HandleOpenEmailBottomSheet} style={styles.updateBtn}>
+                                            <Text style={styles.updateBtnText}>Update</Text>
+                                            <Icon name="edit" size={18} color="#fff" style={{ marginLeft: 4 }} />
+                                        </TouchableOpacity>
+                                    </View>
                                 </View>
-                            </View>
-                            {/* Mobile */}
-                            <View style={styles.fieldGroup}>
-                                <Text style={styles.label}>Mobile Number</Text>
-                                <View style={styles.row}>
-                                    <CustomPhoneInput
-                                        value={mobileNumber}
-                                        onChangeText={handlePhoneNumberChange}
-                                        onCountryChange={handleCountryChange}
-                                        placeholder="Mobile Number"
-                                        error={false}
-                                        disabled={true}
-                                        initialCountry={selectedCountry}
-                                    />
-                                    <TouchableOpacity onPress={HandleOpenPhoneBottomSheet} style={[styles.updateBtn, { height: 46, top: 5 }]}>
-                                        <Text style={styles.updateBtnText}>Update</Text>
-                                        <Icon name="edit" size={18} color="#fff" style={{ marginLeft: 4 }} />
-                                    </TouchableOpacity>
-                                </View>
-                            </View>
-                            <View style={[styles.fieldGroup, styles.row]}>
 
-                                <View style={{ width: '48%', }}>
-                                    <Text style={styles.label}>Date of Birth</Text>
-                                    <TextInput style={styles.input} value={dateOfBirth} onChangeText={setDateOfBirth} placeholder="Date of Birth" keyboardType="numeric" />
-                                    <TouchableOpacity onPress={HandleOpenDateOfBirthPicker} style={[styles.dateOfBirthBtn]}>
-                                        <Icon name="calendar-month" size={18} color="#000" style={{ marginLeft: 4 }} />
-                                    </TouchableOpacity>
-                                </View>
-                                <View style={{ width: '48%', }}>
-                                    <Text style={styles.label}>Gender</Text>
-                                    <Dropdown data={genders} containerStyle={{ height: 50 }} dropdownStyle={{ height: 50 }} value={gender} onChange={(value: string | number) => setGender(value.toString())} placeholder="الجنس" />
-                                </View>
-                            </View>
-
-                            <View style={{ width: '100%', }}>
-                                <Text style={styles.label}>Nationality</Text>
-                                <Dropdown data={nationalities} containerStyle={{ height: 50 }} dropdownStyle={{ height: 50 }} value={nationality} onChange={(value: string | number) => setNationality(value)} placeholder="Nationality" />
-                            </View>
-                        </View>
-
-                        <View style={{ paddingHorizontal: 10, paddingVertical: 10, backgroundColor: '#fff', borderRadius: 10, marginTop: 10 }}>
-                            {/* Email */}
-                            <View style={styles.fieldGroup}>
-                                <Text style={styles.label}>User Name</Text>
-                                <View style={styles.row}>
+                                {/* Password Input */}
+                                <Text style={styles.label}>Password</Text>
+                                <View style={styles.passwordContainer}>
                                     <TextInput
-                                        style={[styles.input, { flex: 1, textAlign: 'left' }]}
-                                        value={email}
-                                        onChangeText={setEmail}
-                                        placeholder="abcd@xyz.com"
-                                        keyboardType="email-address"
-                                        editable={false}
+                                        style={[
+                                            styles.passwordInput,
+                                            passwordError && styles.inputError
+                                        ]}
+                                        placeholder={"********"}
+                                        value={password}
+                                        onChangeText={handlePasswordChange}
+                                        secureTextEntry={!showPassword}
+                                        textContentType='oneTimeCode'
+                                        placeholderTextColor="#999"
                                     />
-                                    <TouchableOpacity onPress={HandleOpenEmailBottomSheet} style={styles.updateBtn}>
-                                        <Text style={styles.updateBtnText}>Update</Text>
-                                        <Icon name="edit" size={18} color="#fff" style={{ marginLeft: 4 }} />
+                                    <TouchableOpacity
+                                        style={styles.eyeIcon}
+                                        onPress={() => setShowPassword(!showPassword)}
+                                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                                    >
+                                        {showPassword ? (
+                                            <Ionicons name="eye" size={22} color="#666666" />
+                                        ) : (
+                                            <Ionicons name="eye-off" size={22} color="#666666" />
+                                        )}
+                                    </TouchableOpacity>
+                                </View>
+                                {/* Confirm Password */}
+                                <Text style={styles.label}>Confirm Password</Text>
+                                <View style={styles.passwordContainer}>
+                                    <TextInput
+                                        style={[
+                                            styles.passwordInput,
+                                            confirmPasswordError && styles.inputError
+                                        ]}
+                                        placeholder={"********"}
+                                        value={confirmPassword}
+                                        textContentType='oneTimeCode'
+                                        onChangeText={handleConfirmPasswordChange}
+                                        secureTextEntry={!showConfirmPassword}
+                                        placeholderTextColor="#999"
+                                    />
+                                    <TouchableOpacity
+                                        style={styles.eyeIcon}
+                                        onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                                    >
+                                        {showConfirmPassword ? (
+                                            <Ionicons name="eye" size={22} color="#666666" />
+                                        ) : (
+                                            <Ionicons name="eye-off" size={22} color="#666666" />
+                                        )}
                                     </TouchableOpacity>
                                 </View>
                             </View>
 
-                            {/* Password Input */}
-                            <Text style={styles.label}>Password</Text>
-                            <View style={styles.passwordContainer}>
-                                <TextInput
-                                    style={[
-                                        styles.passwordInput,
-                                        passwordError && styles.inputError
-                                    ]}
-                                    placeholder={"********"}
-                                    value={password}
-                                    onChangeText={handlePasswordChange}
-                                    secureTextEntry={!showPassword}
-                                    textContentType='oneTimeCode'
-                                    placeholderTextColor="#999"
-                                />
-                                <TouchableOpacity
-                                    style={styles.eyeIcon}
-                                    onPress={() => setShowPassword(!showPassword)}
-                                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                                >
-                                    {showPassword ? (
-                                        <Ionicons name="eye" size={22} color="#666666" />
-                                    ) : (
-                                        <Ionicons name="eye-off" size={22} color="#666666" />
-                                    )}
-                                </TouchableOpacity>
-                            </View>
-                            {/* Confirm Password */}
-                            <Text style={styles.label}>Confirm Password</Text>
-                            <View style={styles.passwordContainer}>
-                                <TextInput
-                                    style={[
-                                        styles.passwordInput,
-                                        confirmPasswordError && styles.inputError
-                                    ]}
-                                    placeholder={"********"}
-                                    value={confirmPassword}
-                                    textContentType='oneTimeCode'
-                                    onChangeText={handleConfirmPasswordChange}
-                                    secureTextEntry={!showConfirmPassword}
-                                    placeholderTextColor="#999"
-                                />
-                                <TouchableOpacity
-                                    style={styles.eyeIcon}
-                                    onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                                >
-                                    {showConfirmPassword ? (
-                                        <Ionicons name="eye" size={22} color="#666666" />
-                                    ) : (
-                                        <Ionicons name="eye-off" size={22} color="#666666" />
-                                    )}
-                                </TouchableOpacity>
-                            </View>
-                        </View>
-                    </ScrollView>
+                            {/* <View style={{ paddingHorizontal: 10, paddingVertical: 10, backgroundColor: '#fff', borderRadius: 10, marginTop: 10 }}> */}
+
+                            {/* </View> */}
+                        </ScrollView>
+                    </KeyboardAvoidingView>
                     <View style={{ paddingVertical: 10 }}>
-                        <TouchableOpacity style={{ backgroundColor: '#23a2a4', padding: 10, borderRadius: 10, alignItems: 'center', justifyContent: 'center' }}>
+                        <TouchableOpacity onPress={handleSave} style={{ backgroundColor: '#23a2a4', padding: 10, borderRadius: 10, alignItems: 'center', justifyContent: 'center' }}>
                             <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>Save</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
 
             </View>
+
+            <CustomBottomSheet
+                visible={openPhoneBottomSheet}
+                onClose={() => setOpenPhoneBottomSheet(false)}
+                showHandle={false}
+                maxHeight={phoneBottomSheetHeight}
+            >
+                <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+                    <View style={[styles.modalContainer]}>
+                        <View style={{ height: 50, backgroundColor: "#e4f1ef", borderTopLeftRadius: 10, borderTopRightRadius: 10, justifyContent: 'space-between', alignItems: 'center', flexDirection: 'row', paddingHorizontal: 16 }}>
+                            <Text style={{
+                                fontSize: 16,
+                                fontFamily: CAIRO_FONT_FAMILY.bold,
+                                color: '#36454F',
+
+                            }}>Change Phone</Text>
+                            <TouchableOpacity onPress={() => {
+                                setOpenPhoneBottomSheet(false)
+                                setPhoneBottomSheetHeight("35%")
+                            }}>
+                                <AntDesign name="close" size={24} color="#979e9eff" />
+                            </TouchableOpacity>
+
+                        </View>
+                        <View style={{ paddingHorizontal: 16, marginTop: 16 }}>
+                            <Text style={styles.label}>Enter your new phone No.</Text>
+                            <CustomPhoneInput
+                                value={updatedPhoneNumber}
+                                onChangeText={handlePhoneNumberUpdate}
+                                onCountryChange={handleCountryUpdate}
+                                placeholder={formatPatternToExamplePlaceHolder(selectedCountry?.pattern)}
+                                error={updatedPhoneNumberError}
+                                initialCountry={selectedCountryUpdated}
+                            />
+                            <TouchableOpacity onPress={HandlePhoneUpdate} style={styles.saveBtn}>
+                                <Text style={styles.saveBtnText}>Save</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </TouchableWithoutFeedback>
+            </CustomBottomSheet>
+
+            <CustomBottomSheet
+                visible={openEmailBottomSheet}
+                onClose={() => setOpenEmailBottomSheet(false)}
+                showHandle={false}
+                maxHeight={emailBottomSheetHeight}
+            >
+                <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+                    <View style={[styles.modalContainer]}>
+                        <EmailUpdateComponent
+                            HandleEmailUpdate={HandleEmailUpdate}
+                            onChangeText={(text) => {
+                                setUpdatedEmail(text)
+                                setEmailInputError(false)
+                            }}
+                            value={updatedEmail}
+                            onClosePress={HandleCloseEmailModal}
+                            inputError={emailInputError}
+                        />
+
+                    </View>
+                </TouchableWithoutFeedback>
+            </CustomBottomSheet>
+
+            <CustomBottomSheet
+                visible={openVerifyBottomSheet}
+                onClose={() => setOpenVerifyBottomSheet(false)}
+                showHandle={false}
+                maxHeight={openVerifyBottomSheetHeight}
+            >
+                <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+                    <View style={[styles.modalContainer]}>
+                        <VerificationCodeCompoent
+                            onClosePress={HandleCloseVerifyModal}
+                            OTPFor={OTPForText}
+                            OTPForText={OTPFrom == 'email' ? "Change Email" : "Change Number"}
+                            OTPFrom={OTPFrom}
+                            onChangeText={(text) => {
+                                setOtpValue(text)
+                                setOtpValueError(false)
+                            }}
+                            value={otpValue}
+                            OtpSubmitButton={HandleOtpSubmit}
+                            HandleResendPress={HandleOtpResendButton}
+                            resentCode={resentCode}
+                            otpError={otpValueError}
+                            otpApiError={otpAPIError}
+                        />
+                    </View>
+                </TouchableWithoutFeedback>
+            </CustomBottomSheet>
         </SafeAreaView>
     )
 }
@@ -353,8 +795,8 @@ const styles = StyleSheet.create({
     },
     label: {
         fontSize: 15,
-        color: '#222',
-        fontFamily: CAIRO_FONT_FAMILY.medium,
+        color: '#000',
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
         marginBottom: 4,
         textAlign: 'left',
     },
@@ -432,6 +874,35 @@ const styles = StyleSheet.create({
     inputError: {
         borderColor: '#FF3B30',
         borderWidth: 1,
+    },
+    suffixText: {
+        ...globalTextStyles.bodySmall,
+        color: '#239EA0',
+        // marginLeft: 8,
+        alignSelf: 'center',
+    },
+    col: {
+        flex: 1,
+    },
+    modalContainer: {
+        width: '100%',
+        backgroundColor: 'white',
+        // padding: 20,
+        borderTopLeftRadius: 10,
+        borderTopRightRadius: 10,
+    },
+    saveBtn: {
+        backgroundColor: '#23a2a4',
+        borderRadius: 8,
+        height: 46,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: 18,
+    },
+    saveBtnText: {
+        color: '#fff',
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        fontSize: 18,
     },
 });
 

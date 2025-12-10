@@ -107,12 +107,12 @@ const BookingHistory = ({ route }: { route: any }) => {
         return (
             <View style={styles.statsCard}>
                 <Text style={styles.statsTitle}>
-                    Total Booking : {bookingCounts.TotalRecords || 0}
+                    Total Booking : {bookingCounts?.TotalRecords || 0}
                 </Text>
                 <View style={styles.statsRow}>
                     <View style={styles.statItem}>
                         <Text style={[styles.statNumber, { color: '#FFA500' }]}>
-                            {bookingCounts.TotalInProress || 0}
+                            {bookingCounts?.TotalInProress || 0}
                         </Text>
                         <Text style={[styles.statLabel, { color: '#FFA500' }]}>
                             In Progress
@@ -121,7 +121,7 @@ const BookingHistory = ({ route }: { route: any }) => {
                     <View style={styles.statDivider} />
                     <View style={styles.statItem}>
                         <Text style={[styles.statNumber, { color: '#00A19D' }]}>
-                            {bookingCounts.TotalCompleted || 0}
+                            {bookingCounts?.TotalCompleted || 0}
                         </Text>
                         <Text style={[styles.statLabel, { color: '#00A19D' }]}>
                             Complete
@@ -130,7 +130,7 @@ const BookingHistory = ({ route }: { route: any }) => {
                     <View style={styles.statDivider} />
                     <View style={styles.statItem}>
                         <Text style={[styles.statNumber, { color: '#FF6B6B' }]}>
-                            {bookingCounts.TotalCanceled || 0}
+                            {bookingCounts?.TotalCanceled || 0}
                         </Text>
                         <Text style={[styles.statLabel, { color: '#FF6B6B' }]}>
                             Cancelled
@@ -303,7 +303,7 @@ const BookingHistory = ({ route }: { route: any }) => {
                         {renderBookingStats()}
                     </View>
 
-                    {bookingData.length > 0 && (
+                    {bookingData?.length > 0 && (
                         <View style={styles.bookingDetailsSection}>
                             <Text style={styles.sectionTitle}>Booking Details</Text>
                             <FlatList

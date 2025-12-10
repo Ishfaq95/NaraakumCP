@@ -415,6 +415,28 @@ export const verifyUserUpdatedData = async (payload: any): Promise<any> => {
     }
 };
 
+export const resendOtp = async (payload: any): Promise<any> => {
+
+    try {
+        const response = await axiosInstance.post('patients/ResendRegistrationCode', payload);
+        return response.data;
+    } catch (error: any) {
+        console.error('Error resending otp:', error);
+        throw error;    
+    }
+};
+
+export const userUpdatedEmail = async (payload: any): Promise<any> => {
+
+    try {
+        const response = await axiosInstance.post('patients/EmailVerification', payload);
+        return response.data;
+    } catch (error: any) {
+        console.error('Error updating email:', error);
+        throw error;    
+    }
+};
+
 // Export all profile related functions
 export const profileService = {
     getServiceProviderByUserId,
@@ -440,4 +462,6 @@ export const profileService = {
     updateServiceProviderPersonalProfile,
     userUpdatedPhone,
     verifyUserUpdatedData,
+    resendOtp,
+    userUpdatedEmail,
 }; 

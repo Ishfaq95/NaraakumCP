@@ -22,7 +22,7 @@ const EmailUpdateComponent: React.FC<EmailUpdateProps> = ({ HandleEmailUpdate, o
     // Email format validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!value || !emailRegex.test(value)) {
-      Alert.alert("خطأ", "الرجاء إدخال بريد إلكتروني صحيح");
+      Alert.alert("Oops!", "Email is not valid");
       return;
     }
 
@@ -38,14 +38,14 @@ const EmailUpdateComponent: React.FC<EmailUpdateProps> = ({ HandleEmailUpdate, o
           fontFamily: CAIRO_FONT_FAMILY.bold,
           color: '#36454F',
 
-        }}>تغيير البريد الإلكتروني</Text>
+        }}>Change Email</Text>
         <TouchableOpacity onPress={onClosePress}>
           <AntDesign name="close" size={24} color="#979e9eff" />
         </TouchableOpacity>
 
       </View>
       <View style={{ width: '100%', paddingHorizontal: 16 }}>
-        <Text style={styles.emailTitle}>أدخل بريدك الإلكتروني الجديد</Text>
+        <Text style={styles.emailTitle}>Enter your new email</Text>
         <TouchableOpacity
           style={inputError ? { ...styles.inputView, borderWidth: 1, borderColor: 'red', borderRadius: 8 } : styles.inputView}
           activeOpacity={1}
@@ -55,7 +55,7 @@ const EmailUpdateComponent: React.FC<EmailUpdateProps> = ({ HandleEmailUpdate, o
             ref={inputRef}
             value={value}
             onChangeText={onChangeText}
-            placeholder="البريد الالكترونى"
+            placeholder="Email"
             placeholderTextColor="#d9d9d9"
             style={styles.inputText}
             keyboardType="email-address"
@@ -63,7 +63,7 @@ const EmailUpdateComponent: React.FC<EmailUpdateProps> = ({ HandleEmailUpdate, o
           />
         </TouchableOpacity>
         <TouchableOpacity onPress={validateAndSubmit} style={styles.sheetButton}>
-          <Text style={styles.saveBtnText}>حفظ</Text>
+          <Text style={styles.saveBtnText}>Save</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -776,7 +776,6 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   inputText: {
-    textAlign: 'right',
     width: '100%',
     marginLeft: 10,
     fontFamily: CAIRO_FONT_FAMILY.regular,

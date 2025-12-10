@@ -341,39 +341,42 @@ const AccountInformationScreen = () => {
     }
 
     const HandleEmailUpdate = async () => {
-        // if (!updatedEmail) {
-        //   setEmailInputError(true)
-        //   return;
-        // }
-        // try {
-        //   setIsUploading(true)
-        //   const payload = {
-        //     "Email": updatedEmail,
-        //     "UserId": user.Id
-        //   }
+        if (!updatedEmail) {
+          setEmailInputError(true)
+          return;
+        }
+        try {
+          setIsUploading(true)
+          const payload = {
+            "Email": updatedEmail,
+            "UserId": user.Id
+          }
 
-        //   const response = await profileService.userUpdatedEmail(payload)
-        //   if (response?.ResponseStatus?.STATUSCODE === 200) {
-        //     if (response?.StatusCode?.STATUSCODE == 3002) {
-        //       setOpenEmailBottomSheet(false)
-        //       setTimeout(() => {
-        //         setAlertModalVisible(true)
-        //         setAlertModalMessage("البريد الالكتروني موجود بالفعل")
-        //       }, 500)
-        //       return;
-        //     }
-        //     setOpenEmailBottomSheet(false)
-        //     setOTPFrom('email')
-        //     setOTPForText(updatedEmail)
-        //     setTimeout(() => {
-        //       setOpenVerifyBottomSheet(true)
-        //     }, 500)
-        //   }
+          const response = await profileService.userUpdatedEmail(payload)
+          if (response?.ResponseStatus?.STATUSCODE === 200) {
+            if (response?.StatusCode?.STATUSCODE == 3002) {
+              setOpenEmailBottomSheet(false)
+              setTimeout(() => {
+                    showAlert({
+                        title: 'Email already exists',
+                        message: '',
+                        type: 'error',
+                    });
+                }, 500)
+              return;
+            }
+            setOpenEmailBottomSheet(false)
+            setOTPFrom('email')
+            setOTPForText(updatedEmail)
+            setTimeout(() => {
+              setOpenVerifyBottomSheet(true)
+            }, 500)
+          }
 
-        // } catch (error) {
-        // } finally {
-        //   setIsUploading(false);
-        // }
+        } catch (error) {
+        } finally {
+          setIsUploading(false);
+        }
     }
 
     const HandleCloseEmailModal = () => {
@@ -388,22 +391,23 @@ const AccountInformationScreen = () => {
     }
 
     const HandleOtpResendButton = async () => {
-        // try {
-        //   setIsUploading(true)
-        //   const payload = {
-        //     "UserId": user?.Id,
-        //   }
+        try {
+          setIsUploading(true)
+          const payload = {
+            "UserId": user?.Id,
+          }
 
-        //   const response = await profileService.resendOtp(payload)
-        //   if (response?.ResponseStatus?.STATUSCODE == 3009) {
-        //     setResentCode(true)
-        //   }
+          const response = await profileService.resendOtp(payload)
+          if (response?.ResponseStatus?.STATUSCODE == 3009) {
+            setResentCode(true)
+            setOtpValueError(false)
+          }
 
 
-        // } catch (error) {
-        // } finally {
-        //   setIsUploading(false)
-        // }
+        } catch (error) {
+        } finally {
+          setIsUploading(false)
+        }
     }
 
     const HandleOtpSubmit = async () => {

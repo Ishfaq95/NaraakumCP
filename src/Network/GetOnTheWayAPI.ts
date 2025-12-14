@@ -27,7 +27,6 @@ export const GetOnTheWayTasks = async (UserProfileId:any) => {
     const result = await response.json();
     return result;
   } catch (error) {
-    console.error('Error making API call:', error);
     throw error;
   }
 };

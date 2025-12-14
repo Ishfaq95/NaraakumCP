@@ -39,7 +39,7 @@ const UniversalImage: React.FC<UniversalImageProps> = ({
         style={style}
         resizeMode={resizeMode}
         defaultSource={require('../../assets/icons/DoctorIcon.png')}
-        onError={(error) => console.log('Image loading error:', error.nativeEvent.error)}
+        onError={(error) => {}}
       />
     );
   }
@@ -92,7 +92,7 @@ const UniversalImage: React.FC<UniversalImageProps> = ({
       style={style}
       resizeMode={resizeMode}
       defaultSource={require('../../assets/icons/DoctorIcon.png')}
-      onError={(error) => console.log('Image loading error:', error.nativeEvent.error)}
+      onError={(error) => {}}
     />
   );
 };

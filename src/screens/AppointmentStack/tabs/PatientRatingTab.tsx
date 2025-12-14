@@ -38,7 +38,6 @@ const PatientRatingTab: React.FC<PatientRatingTabProps> = ({ data }) => {
         }
 
         const showSub = Keyboard.addListener('keyboardDidShow', (e) => {
-            console.log('keyboardDidShow', e.endCoordinates.height);
             setRatingBottomSheetHeight(340 + e.endCoordinates.height);
         });
 
@@ -87,7 +86,6 @@ const PatientRatingTab: React.FC<PatientRatingTabProps> = ({ data }) => {
         try {
             await Voice.start('en-US');
         } catch (e) {
-            console.error(e);
         }
     };
 
@@ -95,7 +93,6 @@ const PatientRatingTab: React.FC<PatientRatingTabProps> = ({ data }) => {
         try {
             await Voice.stop();
         } catch (e) {
-            console.error(e);
         }
     };
 
@@ -198,7 +195,6 @@ const PatientRatingTab: React.FC<PatientRatingTabProps> = ({ data }) => {
     };
 
     const handleDeleteRating = async (item: any) => {
-        console.log("Delete item==>", item);
         const payload = {
             UserRatingId: item.Id,
         }
@@ -210,7 +206,6 @@ const PatientRatingTab: React.FC<PatientRatingTabProps> = ({ data }) => {
 
     const isAddButtonDisabled = useMemo(() => {
         const isDisabled = commentList.find((item: any) => (item.RatedById == user?.Id && item.TaskMainId == data?.Detail[0]?.TaskMainId));
-        console.log("isDisabled==>", isDisabled);
         return isDisabled ? true : false;
     }, [commentList, user?.Id]);
 

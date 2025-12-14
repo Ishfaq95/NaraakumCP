@@ -844,8 +844,6 @@ const AddSessionRecord = ({ route }: { route: any }) => {
         );
     };
 
-    console.log("visitRecordData", visitRecordData)
-
     return (
         <SafeAreaView style={styles.container}>
             {currentStep == 6 ? <View style={styles.mainContent}>

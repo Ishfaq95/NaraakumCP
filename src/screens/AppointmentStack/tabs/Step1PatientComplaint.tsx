@@ -51,7 +51,6 @@ const Step1PatientComplaint: React.FC<Step1Props> = ({ patientData, onNext, onDa
   }, [visitRecordData]);
 
   const manageVisitRecordData = () => {
-    console.log("visitRecordData==>", visitRecordData?.PatientComplaint[0]);
     setChiefComplaint(visitRecordData?.PatientComplaint[0]?.ChiefComplaint);
     setPresentIllness(visitRecordData?.PatientComplaint[0]?.PresentIllness);
     setDurationValue(visitRecordData?.PatientComplaint[0]?.DurationOfComplaint.toString());
@@ -80,8 +79,6 @@ const Step1PatientComplaint: React.FC<Step1Props> = ({ patientData, onNext, onDa
       CatTimeUnitId: durationUnit,
       OtherComplaint: otherComplaint,
     };
-
-    console.log("payload==>", payload);
 
     const response = await addVisitRecordService.addEditVisitRecord(payload);
     if (response?.ResponseStatus?.STATUSCODE === 200) {

@@ -12,7 +12,6 @@ interface OtherRecordsListProps {
 }
 
 const OtherRecordsList: React.FC<OtherRecordsListProps> = ({ records, onVisitRecordPress }) => {
-    console.log('records', records);
     const renderRecordItem = ({ item }: { item: any }) => (
         <View style={styles.recordCard}>
             <View style={styles.providerHeader}>

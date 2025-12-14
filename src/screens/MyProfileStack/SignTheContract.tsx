@@ -111,7 +111,6 @@ const SignTheContractScreen = () => {
             await uploadContract(fileObject, 'signature');
 
         } catch (error) {
-            console.error('Error saving signature:', error);
         }
     };
 
@@ -131,7 +130,6 @@ const SignTheContractScreen = () => {
             await uploadContract(fileObject, 'contract');
 
         } catch (error) {
-            console.error('Error uploading PDF:', error);
         }
     };
 
@@ -191,7 +189,6 @@ const SignTheContractScreen = () => {
                 await uploadPDFContract(pdf.filePath);
             }
         } catch (error) {
-            console.error('Error generating PDF:', error);
             Alert.alert('Error', 'Failed to generate PDF. Please try again.');
         } finally {
             setIsGeneratingPDF(false);
@@ -208,7 +205,6 @@ const SignTheContractScreen = () => {
             };
             await Share.open(shareOptions);
         } catch (error) {
-            console.error('Error sharing PDF:', error);
         }
     };
 

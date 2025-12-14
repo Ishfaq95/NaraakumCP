@@ -12,7 +12,6 @@ const SavedAddresses = ({ onPressLocation }: { onPressLocation: () => void }) =>
   const { t } = useTranslation();
   const [savedAddresses, setSavedAddresses] = useState([]);
   const user = useSelector((state: any) => state.root.user.user);
-  console.log('user', user);
   const [loading, setLoading] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
   const [selectedLocationloc, setSelectedLocationloc] = useState<any>(null);

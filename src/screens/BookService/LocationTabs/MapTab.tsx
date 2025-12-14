@@ -68,7 +68,6 @@ const MapTab = ({ onPressLocation }: { onPressLocation: () => void }) => {
     Geolocation.getCurrentPosition(
       (position) => {
         // ✅ position is available here
-        console.log("Position:", position);
         const { latitude, longitude } = position.coords;
 
         setMarker({ latitude, longitude });
@@ -95,7 +94,6 @@ const MapTab = ({ onPressLocation }: { onPressLocation: () => void }) => {
         getAddressFromCoordinates(latitude, longitude);
       },
       (error) => {
-        console.log("❌ Geo error:", error);
       },
       {
         enableHighAccuracy: true,

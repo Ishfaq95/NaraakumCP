@@ -34,7 +34,7 @@ class LocationService {
       }
       return true;
     } catch (err) {
-      console.warn(err);
+      {}
       return false;
     }
   }

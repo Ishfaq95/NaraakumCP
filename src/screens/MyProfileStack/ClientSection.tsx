@@ -2,7 +2,6 @@ import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, Image, FlatList
 import React, { useEffect, useState } from 'react'
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
-import CustomScreensHeader from '../../components/common/CustomScreensHeader';
 import { profileService } from '../../services/api/profileService';
 import { useSelector } from 'react-redux';
 import CustomBottomSheet from '../../components/common/CustomBottomSheet';
@@ -46,7 +45,6 @@ const ClientSectionScreen = () => {
                 setServiceProviderPreferences(response.list);
             }
         } catch (error) {
-            console.log('Error getting service provider preferences:', error);
         } finally {
             setIsLoading(false);
         }
@@ -102,7 +100,6 @@ const ClientSectionScreen = () => {
             }
         } catch (error) {
             setIsLoading(false);
-            console.log('Error deleting preference:', error);
         } finally {
            
         }
@@ -144,7 +141,6 @@ const ClientSectionScreen = () => {
 
         } catch (error) {
             setIsLoading(false);
-            console.log('Error saving preference:', error);
         } finally {
             
         }

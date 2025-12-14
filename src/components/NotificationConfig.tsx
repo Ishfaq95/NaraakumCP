@@ -24,7 +24,7 @@ const createChannel = () => {
       importance: 4,
       vibrate: true,
     },
-    created => console.log(`Channel created: ${created}`),
+    created => {},
   );
 };
 

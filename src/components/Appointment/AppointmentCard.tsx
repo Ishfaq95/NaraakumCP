@@ -54,7 +54,6 @@ const AppointmentCard: React.FC<AppointmentCardProps> = ({
         }
       }
     } catch (error) {
-      console.error('Error calculating duration:', error);
     }
     
     // Fallback to item.Duration if calculation fails

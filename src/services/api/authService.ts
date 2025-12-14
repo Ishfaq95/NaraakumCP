@@ -127,7 +127,6 @@ export const signUpStep1 = async (credentials: any) => {
         );
         return response.data;
     } catch (error: any) {
-        console.log(error);
         throw {
             message: error?.response?.data?.message || 'Sign up failed',
             status: error?.response?.status,

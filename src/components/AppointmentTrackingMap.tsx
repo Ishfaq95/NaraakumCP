@@ -55,7 +55,6 @@ const AppointmentTrackingMap: React.FC<AppointmentTrackingMapProps> = ({ appoint
       await getRouteInfo(originCoords, destinationCoords);
 
     } catch (error) {
-      console.error('Error initializing map:', error);
       Alert.alert('خطأ', 'حدث خطأ في تحميل الخريطة');
     } finally {
       setLoading(false);
@@ -76,7 +75,6 @@ const AppointmentTrackingMap: React.FC<AppointmentTrackingMapProps> = ({ appoint
       
       return { latitude: lat, longitude: lng };
     } catch (error) {
-      console.error('Error parsing coordinates:', error);
       return null;
     }
   };
@@ -111,7 +109,6 @@ const AppointmentTrackingMap: React.FC<AppointmentTrackingMapProps> = ({ appoint
       fitMapToMarkers(origin, destination, simplePolyline);
       
     } catch (error) {
-      console.error('Error getting route:', error);
       // Set default route info
       setRouteInfo({
         distance: 'غير متوفر',
@@ -181,7 +178,6 @@ const AppointmentTrackingMap: React.FC<AppointmentTrackingMapProps> = ({ appoint
 
       return poly;
     } catch (error) {
-      console.error('Error decoding polyline:', error);
       return [];
     }
   };

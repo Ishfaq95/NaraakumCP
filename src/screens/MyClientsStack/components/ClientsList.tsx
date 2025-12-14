@@ -55,7 +55,6 @@ const ClientsList: React.FC<{ onCountChange?: (n: number) => void }> = ({ onCoun
         setFilteredClientList(response.list);
       }
     } catch (error) {
-      console.log(error);
     }
   };
 

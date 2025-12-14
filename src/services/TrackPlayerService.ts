@@ -26,7 +26,6 @@ export class TrackPlayerService {
       });
       TrackPlayerService.initialized = true;
     } catch (error) {
-      console.error('Error setting up track player:', error);
       throw error;
     }
   }
@@ -46,7 +45,6 @@ export class TrackPlayerService {
         duration: 0, // Will be set automatically
       });
     } catch (error) {
-      console.error('Error adding track:', error);
       throw error;
     }
   }
@@ -55,7 +53,6 @@ export class TrackPlayerService {
     try {
       await TrackPlayer.play();
     } catch (error) {
-      console.error('Error playing track:', error);
       throw error;
     }
   }
@@ -64,7 +61,6 @@ export class TrackPlayerService {
     try {
       await TrackPlayer.pause();
     } catch (error) {
-      console.error('Error pausing track:', error);
       throw error;
     }
   }
@@ -79,7 +75,6 @@ export class TrackPlayerService {
         await TrackPlayer.reset();
       }
     } catch (error) {
-      console.error('Error stopping track:', error);
       // Don't throw error for cleanup operations
     }
   }
@@ -88,7 +83,6 @@ export class TrackPlayerService {
     try {
       await TrackPlayer.seekTo(position);
     } catch (error) {
-      console.error('Error seeking track:', error);
       throw error;
     }
   }
@@ -97,7 +91,6 @@ export class TrackPlayerService {
     try {
       return await TrackPlayer.getPosition();
     } catch (error) {
-      console.error('Error getting position:', error);
       return 0;
     }
   }
@@ -106,7 +99,6 @@ export class TrackPlayerService {
     try {
       return await TrackPlayer.getDuration();
     } catch (error) {
-      console.error('Error getting duration:', error);
       return 0;
     }
   }
@@ -115,7 +107,6 @@ export class TrackPlayerService {
     try {
       return await TrackPlayer.getState();
     } catch (error) {
-      console.error('Error getting state:', error);
       return State.None;
     }
   }
@@ -129,7 +120,6 @@ export class TrackPlayerService {
       }
       TrackPlayerService.initialized = false;
     } catch (error) {
-      console.error('Error destroying track player:', error);
     }
   }
 }

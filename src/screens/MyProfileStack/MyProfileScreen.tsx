@@ -50,7 +50,6 @@ const MyProfileScreen = () => {
   const user = useSelector((state: any) => state.root.user.user);
   const [profileSummary, setProfileSummary] = useState<any>({});
   const navigation = useNavigation();
-  console.log('serviceProvider',serviceProvider);
 
   useEffect(() => {
     getServiceProviderByUserId();
@@ -74,7 +73,6 @@ const MyProfileScreen = () => {
         setServiceProvider(response.ServiceProvider[0]);
       }
     } catch (error: any) {
-      console.log(error);
     }
   };
 
@@ -150,7 +148,6 @@ const MyProfileScreen = () => {
   };
 
   const handleAlarmPress = () => {
-    console.log('Alarm pressed');
     navigation.navigate(ROUTES.ReminderListScreen as never);
   };
 

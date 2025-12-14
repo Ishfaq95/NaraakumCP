@@ -177,7 +177,6 @@ const LoginScreen = () => {
       }
       setIsLoading(false);
     } catch (error: any) {
-      console.error('Login error:', error);
       setIsLoading(false);
       // Handle login error here (show error message, etc.)
     }
@@ -239,7 +238,6 @@ const LoginScreen = () => {
       }
 
     } catch (error: any) {
-      console.error('Google login error:', error);
       Alert.alert(
         t('error'),
         error.message || t('google_login_failed'),
@@ -302,7 +300,6 @@ const LoginScreen = () => {
     } catch (error: any) {
       if (error.code === appleAuth.Error.CANCELED) {
       } else {
-        console.error('Apple Sign in error:', error);
         Alert.alert(
           t('error'),
           error.message || t('apple_login_failed'),

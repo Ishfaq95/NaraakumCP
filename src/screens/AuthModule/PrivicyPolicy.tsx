@@ -301,7 +301,6 @@ const PrivacyPolicy = () => {
     // Create a script to ensure Cairo font is applied and add debugging
     const injectScript = `
         (function() {
-            console.log('Starting font application script...');
             
             // Function to apply Cairo font to all elements
             function applyCairoFont() {
@@ -314,7 +313,6 @@ const PrivacyPolicy = () => {
                     appliedCount++;
                 }
                 
-                console.log('Applied Cairo font to ' + appliedCount + ' elements');
                 
                 // Also try setting it on the document root
                 document.documentElement.style.setProperty('font-family', "'Cairo', 'Arial', 'Helvetica', sans-serif", 'important');
@@ -338,7 +336,6 @@ const PrivacyPolicy = () => {
             // Apply font after fonts are loaded (if supported)
             if (document.fonts && document.fonts.ready) {
                 document.fonts.ready.then(function() {
-                    console.log('Fonts loaded, applying Cairo font...');
                     applyCairoFont();
                 });
             }
@@ -394,15 +391,12 @@ const PrivacyPolicy = () => {
                     bounces={false}
                     injectedJavaScript={injectScript}
                     onMessage={(event) => {
-                        console.log('WebView message:', event.nativeEvent.data);
                     }}
                     onError={(syntheticEvent) => {
                         const { nativeEvent } = syntheticEvent;
-                        console.warn('WebView error:', nativeEvent);
                     }}
                     onHttpError={(syntheticEvent) => {
                         const { nativeEvent } = syntheticEvent;
-                        console.warn('WebView HTTP error:', nativeEvent);
                     }}
                 />
             </View>

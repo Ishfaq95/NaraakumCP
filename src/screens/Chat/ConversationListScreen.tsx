@@ -64,7 +64,6 @@ const ConversationListScreen = () => {
     }
 
     const renderConversationTile = ({ item }: any) => {
-        console.log('item', item);
         return (
             <TouchableOpacity
                 style={styles.conversationTile}

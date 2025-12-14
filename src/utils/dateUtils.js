@@ -14,7 +14,7 @@ export const formatDateTimeToLocal = (date, time) => {
     // Return formatted string with Z suffix
     return dateTimeUTC.format("YYYY-MM-DDTHH:mm:ss.SSS[Z]");
   } catch (error) {
-    console.error("Error formatting date time:", error);
+    {}
     return null;
   }
 };
@@ -33,7 +33,7 @@ export const formatDateTimeToUTC = (date, time) => {
     // Return formatted string with Z suffix
     return dateTimeUTC.format("YYYY-MM-DDTHH:mm:ss.SSS[Z]");
   } catch (error) {
-    console.error("Error formatting date time:", error);
+    {}
     return null;
   }
 };

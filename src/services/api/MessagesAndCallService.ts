@@ -8,7 +8,6 @@ export const getMessagesList = async (params: any): Promise<any> => {
         );
         return response.data;
     } catch (error: any) {
-        console.error('Error fetching messages:', error);
         throw {
             message: error?.response?.data?.message || 'Failed to fetch messages',
             status: error?.response?.status,
@@ -22,7 +21,6 @@ export const getVideoSDKToken = async (): Promise<any> => {
         const response = await axiosInstance.get('videosdk/get-token');
         return response.data;
     } catch (error: any) {
-        console.error('Error fetching video SDK token:', error);
     }
 };
 
@@ -31,7 +29,6 @@ export const getConversationList = async (payload: any): Promise<any> => {
         const response = await axiosInstance.post('chat/GetConversationBycareprovider', payload);
         return response.data;
     } catch (error: any) {
-        console.error('Error fetching conversation list:', error);
     }
 };
 

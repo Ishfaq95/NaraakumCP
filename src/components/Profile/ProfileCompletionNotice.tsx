@@ -18,7 +18,6 @@ const ProfileCompletionNotice: React.FC<ProfileCompletionNoticeProps> = ({
   profileSummary,
   onCompleteProfile,
 }) => {
-  console.log('profileSummary', profileSummary?.OrganizationStatus);
   const calculateCompletionPercentage = (): number => {
     let completionPercentage = 0;
     

@@ -25,7 +25,6 @@ const PersonalInfoStep: React.FC<{userRoleId: any, onNext: (userInfo: any, phone
     const { t } = useTranslation();
     const [phoneNumber, setPhoneNumber] = useState('');
     const step2PhoneNumber = useSelector((state: any) => state.root.user.step2PhoneNumber);
-    console.log("step2PhoneNumber", step2PhoneNumber);
     const navigation = useNavigation();
     const [isLoading, setIsLoading] = useState(false);
     const dispatch = useDispatch();
@@ -143,7 +142,6 @@ const PersonalInfoStep: React.FC<{userRoleId: any, onNext: (userInfo: any, phone
             }
 
         } catch (error: any) {
-            console.error('Google login error:', error);
             Alert.alert(
                 t('error'),
                 error.message || t('google_login_failed'),
@@ -206,7 +204,6 @@ const PersonalInfoStep: React.FC<{userRoleId: any, onNext: (userInfo: any, phone
         } catch (error: any) {
             if (error.code === appleAuth.Error.CANCELED) {
             } else {
-                console.error('Apple Sign in error:', error);
                 Alert.alert(
                     t('error'),
                     error.message || t('apple_login_failed'),
@@ -293,7 +290,6 @@ const PersonalInfoStep: React.FC<{userRoleId: any, onNext: (userInfo: any, phone
             }
 
         } catch (error) {
-            console.error('Sign up error:', error);
         } finally {
             setIsLoading(false);
         }

@@ -85,7 +85,6 @@ const DeleteAccountScreen = () => {
             }
             setIsLoading(false);
         } catch (error: any) {
-            console.error('Login error:', error);
             setIsLoading(false);
             // Handle login error here (show error message, etc.)
         }
@@ -99,7 +98,6 @@ const DeleteAccountScreen = () => {
             await deleteSocialAccount(googleUser.id);
 
         } catch (error: any) {
-            console.error('Google login error:', error);
             Alert.alert(
                 "Error",
                 error.message || "Google login failed",
@@ -138,7 +136,6 @@ const DeleteAccountScreen = () => {
                 webSocketService.disconnect();
             }
         } catch (error: any) {
-            console.error('Delete social account error:', error);
         }
     }
 
@@ -163,7 +160,6 @@ const DeleteAccountScreen = () => {
         } catch (error: any) {
             if (error.code === appleAuth.Error.CANCELED) {
             } else {
-                console.error('Apple Sign in error:', error);
                 Alert.alert(
                     "Error",
                     error.message || "Apple login failed",

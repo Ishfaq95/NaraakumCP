@@ -24,7 +24,6 @@ export const getVideoSDKToken=async ()=>{
     const result = await response.json();
     return result;
   } catch (error) {
-    console.error('Error making API call:', error);
     throw error;
   }
 }
@@ -55,7 +54,7 @@ export const getVideoSDKToken=async ()=>{
 //     const result = await response.json();
 //     return result;
 //   } catch (error) {
-//     console.error('Error making API call:', error);
+
 //     throw error;
 //   }
 // };

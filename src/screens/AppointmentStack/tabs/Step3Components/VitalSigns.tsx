@@ -56,8 +56,6 @@ const VitalSigns: React.FC<VitalSignsProps> = ({ data, onDataChange }) => {
         break;
     }
 
-    console.log("updatedData==>", updatedData);
-
     let tempData = [{
       ...data?.[0],
       Tem: updatedData.temperature,

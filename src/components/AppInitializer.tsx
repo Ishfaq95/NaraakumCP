@@ -123,7 +123,6 @@ const AppInitializer = () => {
         }));
       }
     } catch (error) {
-      console.error('Error getting media token:', error);
     }
   };
 

@@ -40,7 +40,6 @@ const AppHeader: React.FC<AppHeaderProps> = ({
   const [reminderCount, setReminderCount] = useState(0);
   const unreadMessages = useSelector((state: any) => state.root.user.unreadMessages);
   const webSocketService = WebSocketService.getInstance();
-  console.log('unreadMessages', unreadMessages);
   useEffect(() => {
     if (isFocused) {
       getNotificationsList();
@@ -65,7 +64,6 @@ const AppHeader: React.FC<AppHeaderProps> = ({
         }
     }
     catch (error) {
-        console.log('Error fetching reminder list:', error);
     }
 }
 
@@ -83,7 +81,6 @@ const AppHeader: React.FC<AppHeaderProps> = ({
             
         }
     } catch (error) {
-        console.log('Error fetching notifications:', error);
     }
 }
 

@@ -131,7 +131,6 @@ interface smsProps {
 }
 
 export const VerificationCodeCompoent: React.FC<smsProps> = ({ onClosePress, OTPFor, OTPForText, headerText = "", onChangeText, value, OtpSubmitButton, HandleResendPress, resentCode, otpError = false, otpApiError = false, isLoading = false, OTPFrom }) => {
-  console.log("OTPFor", OTPFor)
   return (
     <View style={[styles.mainContainer]}>
       <View style={{ height: 50, backgroundColor: "#e4f1ef", borderTopLeftRadius: 10, borderTopRightRadius: 10, justifyContent: 'space-between', alignItems: 'center', flexDirection: 'row', paddingHorizontal: 16 }}>

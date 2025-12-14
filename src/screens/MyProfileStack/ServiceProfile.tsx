@@ -233,7 +233,6 @@ const ServiceProfile = () => {
 
     // Generate menu items for Online Consultation
     const getOnlineConsultationMenuItems = () => {
-        console.log('onlineConsultationData',onlineConsultationData);
         // Return empty array if no valid data exists
         if (!onlineConsultationData || Object.keys(onlineConsultationData).length === 0) {
             return [];
@@ -255,7 +254,6 @@ const ServiceProfile = () => {
 
     // Generate menu items for Home Visit
     const getHomeVisitMenuItems = () => {
-        console.log('homeVisitData',homeVisitData);
         // Return empty array if no valid data exists
         if (!homeVisitData || Object.keys(homeVisitData).length === 0) {
             return [];
@@ -384,8 +382,6 @@ const ServiceProfile = () => {
             });
         }
     };
-
-    console.log('selectedLevelId',selectedLevelId);
 
     return (
         <SafeAreaView style={styles.container}>

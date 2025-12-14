@@ -22,7 +22,6 @@ const ClientsFeedback: React.FC = () => {
         setClientsFeedback(response.List);
       }
     } catch (error) {
-      console.log(error);
     }
   };
   return (

@@ -18,7 +18,6 @@ export const getOfferedServicesCategories = async () => {
         );
         return response.data;
     } catch (error: any) {
-        console.error('Error getting offered services categories:', error);
         throw error;
     }
 };
@@ -30,7 +29,6 @@ export const getAllSpecialties = async () => {
         );
         return response.data;
     } catch (error: any) {
-        console.error('Error getting all specialties:', error);
         throw error;
     }
 };
@@ -43,7 +41,6 @@ export const getOfferedServicesListByCategory = async (credentials: any) => {
         );
         return response.data;
     } catch (error: any) {
-        console.error('Error getting offered services list by category:', error);
         throw error;
     }
 };
@@ -56,7 +53,6 @@ export const getServiceProviderListByServiceByIds = async (credentials: any) => 
         );
         return response.data;
     } catch (error: any) {
-        console.error('Error getting service provider list by service by ids:', error);
         throw error;
     }
 };
@@ -69,7 +65,6 @@ export const getServiceProviderSchedulingAvailability = async (credentials: any)
         );
         return response.data;
     } catch (error: any) {
-        console.error('Error getting service provider scheduling availability:', error);
         throw error;
     }
 };
@@ -82,7 +77,6 @@ export const getHospitalListByServices = async (credentials: any) => {
         );
         return response.data;
     } catch (error: any) {
-        console.error('Error getting hospital list by services:', error);
         throw error;
     }
 };
@@ -95,7 +89,6 @@ export const getOrganizationSchedulingAvailability = async (credentials: any) =>
         );
         return response.data;
     } catch (error: any) {
-        console.error('Error getting organization scheduling availability:', error);
         throw error;
     }
 };
@@ -106,7 +99,6 @@ export const getUserSavedAddresses = async (payload: any): Promise<any> => {
         const response = await axiosInstance.post('user/GetUserLocations', payload);
         return response.data;
     } catch (error: any) {
-        console.error('Error deleting order before payment:', error);
         throw error;
     }
 };
@@ -116,7 +108,6 @@ export const createOrderMainBeforePayment = async (payload: any): Promise<any> =
         const response = await axiosInstance.post('/payment/CreateOrderMainBeforePayment', payload);
         return response.data;
     } catch (error: any) {
-        console.error('Error creating order main before payment:', error);
         throw error;
     }
 };

@@ -56,7 +56,6 @@ const getServiceProviderContractSigning = async () => {
             setPdfPath(response?.ServiceProviderInfo[0]?.AgreementPDFMediaPath);
         }
     } catch (error: any) {
-        console.log('error', error)
     }
     finally {
         setIsLoading(false);
@@ -71,7 +70,6 @@ const getServiceProviderContractSigning = async () => {
 
   // Handle PDF load error
   const onError = (error: any) => {
-    console.error('PDF Load Error:', error);
     setLoading(false);
     Alert.alert('Error', 'Failed to load PDF. Please try again.');
   };
@@ -179,7 +177,6 @@ const downloadFile = async (url: string, fileName: string) => {
       });
     } catch (error: any) {
       if (error?.message !== 'User did not share') {
-        console.error('Share error:', error);
         Alert.alert('Error', 'Unable to share the file. Please try again.');
       }
     } finally {
@@ -226,8 +223,6 @@ const downloadFile = async (url: string, fileName: string) => {
       </SafeAreaView>
     );
   }
-
-  console.log('pdfPath', `${MediaBaseURL}${pdfPath}`);
 
   return (
     <SafeAreaView style={styles.container}>

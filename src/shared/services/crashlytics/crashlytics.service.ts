@@ -39,7 +39,6 @@ class CrashlyticsService {
             this.isInitialized = true;
             await this.logMessage('Crashlytics initialization successful');
         } catch (error) {
-            console.error('[CrashlyticsService] Initialization failed:', error);
         }
     }
 
@@ -47,7 +46,6 @@ class CrashlyticsService {
         try {
             await crashlytics().setUserId(userId);
         } catch (error) {
-            console.error('[CrashlyticsService] Failed to set user ID:', error);
         }
     }
 
@@ -55,7 +53,6 @@ class CrashlyticsService {
         try {
             await crashlytics().recordError(error);
         } catch (e) {
-            console.error('[CrashlyticsService] Failed to log error:', e);
         }
     }
 
@@ -63,7 +60,6 @@ class CrashlyticsService {
         try {
             await crashlytics().log(message);
         } catch (error) {
-            console.error('[CrashlyticsService] Failed to log message:', error);
         }
     }
 
@@ -72,7 +68,6 @@ class CrashlyticsService {
             await this.logMessage('Fatal error caught');
             await crashlytics().recordError(error);
         } catch (e) {
-            console.error('[CrashlyticsService] Failed to handle fatal error:', e);
         }
     }
 }

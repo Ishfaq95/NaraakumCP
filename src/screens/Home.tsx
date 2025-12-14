@@ -194,7 +194,7 @@ const HomeScreen = () => {
       } else {
       }
     } catch (err) {
-      console.warn(err);
+      {}
     }
   }
 
@@ -231,13 +231,8 @@ const HomeScreen = () => {
 
         dispatch(setMediaToken(mediaToken));
       } else {
-        console.error(
-          'Failed to get media token:',
-          data.ResponseStatus?.MESSAGE,
-        );
       }
     } catch (error) {
-      console.error('Error getting media token:', error);
     }
   };
 

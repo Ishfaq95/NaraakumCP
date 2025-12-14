@@ -144,7 +144,6 @@ const Step2PatientHistory: React.FC<Step2Props> = ({
       CurrentMeds: currentMeds.map(item => item.value).join('#'),
     }
 
-    console.log("payload==>", payload);
     const response = await addVisitRecordService.addEditVisitPatientHistory(payload);
     if (response?.StatusCode?.STATUSCODE == 12005) {
       onNext();

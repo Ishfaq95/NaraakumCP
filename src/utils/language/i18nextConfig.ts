@@ -41,7 +41,7 @@ export const initializeI18Next = async () => {
     });
 
   } catch (error) {
-    console.error('Error initializing i18n:', error);
+    {}
     // Fallback to Arabic on error
     I18nManager.forceRTL(true);
     I18nManager.allowRTL(true);

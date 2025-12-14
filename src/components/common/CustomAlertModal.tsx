@@ -49,8 +49,6 @@ const CustomAlertModal: React.FC<CustomAlertModalProps> = ({
   const iconConfig = getIconConfig();
 
   useEffect(() => {
-    console.log('CustomAlertModal visible changed:', visible);
-    console.log('CustomAlertModal message:', message);
   }, [visible, message]);
 
   const handleConfirm = () => {

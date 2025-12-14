@@ -225,8 +225,6 @@ const ServiceProviderCard: React.FC<ServiceProviderCardProps> = React.memo(({
     }
   }, [timeSlots]);
 
-  console.log("provider", provider);
-
   const onServiceSelectUpdate = (providerId: string, service: any) => {
     onSelectService && onSelectService(providerId, service.ServiceTitlePlang)
 

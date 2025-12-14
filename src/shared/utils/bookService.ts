@@ -67,7 +67,7 @@ export const convertUTCToLocalDateTime = (
       localTime
     };
   } catch (error) {
-    console.error('Error converting UTC to local datetime:', error);
+    {}
     // Return original values if conversion fails
     return {
       localDate: utcDate.split('T')[0],
@@ -107,7 +107,7 @@ export const convertLocalToUTCDateTime = (
       utcTime
     };
   } catch (error) {
-    console.error('Error converting local to UTC datetime:', error);
+    {}
     // Return original values if conversion fails
     return {
       utcDate: localDate,

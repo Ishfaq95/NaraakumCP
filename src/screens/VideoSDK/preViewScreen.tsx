@@ -122,7 +122,6 @@ const PreViewScreen = ({navigation, route}: any) => {
         setErrorMessage('Microphone permission denied');
       }
     } catch (error) {
-      console.error('Permission error: ', error);
     }
   };
 
@@ -142,7 +141,6 @@ const PreViewScreen = ({navigation, route}: any) => {
       setRecording(true);
       AudioRecord.start();
     } catch (error) {
-      console.error('Recording error: ', error);
     }
   };
 
@@ -151,7 +149,6 @@ const PreViewScreen = ({navigation, route}: any) => {
       setRecording(false);
       AudioRecord.stop();
     } catch (error) {
-      console.error('Stop recording error: ', error);
     }
   };
 

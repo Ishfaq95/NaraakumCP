@@ -96,7 +96,6 @@ const SignUpScreen = () => {
     };
 
     const handleSuccess = () => {
-        console.log("user data", userData);
        dispatch(setUser(userData));
     };
 

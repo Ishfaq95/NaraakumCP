@@ -72,8 +72,6 @@ const AppointmentListScreen = () => {
   const [showEndDateModal, setShowEndDateModal] = useState(false);
   const [showEndTimeModal, setShowEndTimeModal] = useState(false);
 
-  console.log("User", user);
-
   // Handle WebSocket connection
   useEffect(() => {
     if (user && isFocused) {
@@ -161,8 +159,6 @@ const AppointmentListScreen = () => {
     // Initialize the ref
     enabledAppointmentsRef.current = new Set<string>();
   }, []);
-
-  console.log('appointments', appointments);
 
   const checkTimeCondition = useCallback((appointment: any) => {
     const now = moment();
@@ -288,7 +284,6 @@ const AppointmentListScreen = () => {
         setHasMoreData(false);
       }
     } catch (error) {
-      console.error('Error fetching appointments:', error);
     } finally {
       setIsLoading(false);
     }
@@ -338,7 +333,6 @@ const AppointmentListScreen = () => {
   };
 
   const handleAlarmPress = () => {
-    console.log('Alarm pressed');
     navigation.navigate(ROUTES.ReminderListScreen as never);
   };
 
@@ -383,13 +377,11 @@ const AppointmentListScreen = () => {
   };
 
   const handleSessionDetails = (item: any) => {
-    console.log('View session details for appointment:', item);
     // Navigate to appointment details screen
     navigation.navigate(ROUTES.VisitDetailScreen as never, { taskId: item?.TaskId });
   };
 
   const handleJoinMeeting = (appointment: any) => {
-    console.log('appointments', appointment)
     // Parse the date and time separately
     const date = moment.utc(appointment.SchedulingDate);
     const [startHours, startMinutes] = appointment.SchedulingTime.split(':');

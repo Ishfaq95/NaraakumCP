@@ -70,7 +70,6 @@ const ForgotOTP = ({ route }: any) => {
         setAPIError(true);
       }
     } catch (error) {
-      console.log(error);
       setIsLoading(false);
       setAPIError(true);
     }

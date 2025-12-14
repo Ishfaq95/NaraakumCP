@@ -19,7 +19,6 @@ const MyClientsScreen = () => {
   };
 
   const handleAlarmPress = () => {
-    console.log('Alarm pressed');
     navigation.navigate(ROUTES.ReminderListScreen as never);
   };
 

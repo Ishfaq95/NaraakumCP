@@ -25,14 +25,11 @@ export const AlertProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   });
 
   const showAlert = (config: AlertConfig) => {
-    console.log('showAlert called with:', config);
     setAlertConfig(config);
     setVisible(true);
-    console.log('Alert visibility set to true');
   };
 
   const hideAlert = () => {
-    console.log('hideAlert called');
     setVisible(false);
   };
 

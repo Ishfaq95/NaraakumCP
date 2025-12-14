@@ -101,7 +101,6 @@ const WebViewComponent = ({ uri }:any) => {
   
       const notifeeNotifs = await notifee.getTriggerNotifications();
     } catch (error) {
-      console.error('🔥 Error scheduling notifications:', error);
     }
   };
 
@@ -113,7 +112,6 @@ const WebViewComponent = ({ uri }:any) => {
 
   //     // Optional: skip past dates
   //     if (localDate <= new Date()) {
-  //       console.log(`Skipping past notification with id: ${data.Id}`);
   //       return;
   //     }
 
@@ -166,9 +164,7 @@ const WebViewComponent = ({ uri }:any) => {
   //   });
 
   //   const notifications = await notifee.getTriggerNotifications();
-  //   console.log('notification list', notifications);
   //   PushNotification.getScheduledLocalNotifications(notifs => {
-  //     console.log('Currently Scheduled Notifications:', notifs);
   //   });
   // };
 

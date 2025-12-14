@@ -1,7 +1,6 @@
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, Platform, KeyboardAvoidingView } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { profileService } from '../../services/api/profileService';
-import CustomScreensHeader from '../../components/common/CustomScreensHeader';
 import { CAIRO_FONT_FAMILY } from '../../styles/globalStyles';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useSelector } from 'react-redux';
@@ -43,7 +42,6 @@ const ArabicBioScreen = () => {
                 setArabicBioHeads(response.list);
             }
         } catch (error: any) {
-            console.log('error', error)
         }
     }
 
@@ -54,7 +52,6 @@ const ArabicBioScreen = () => {
             };
             const response = await profileService.getServiceProviderBio(payload);
             if (response?.ResponseStatus?.STATUSCODE === 200) {
-                console.log('API Response:', response);
                 
                 // Set About Doctor
                 const serviceProviderInfo = response.ServiceProvidersInfo?.[0];
@@ -64,12 +61,10 @@ const ArabicBioScreen = () => {
                 
                 // Set the bio data array
                 const bioData = response.ServiceProvidersBio || [];
-                console.log('Service Provider Bio Data:', bioData);
                 setServiceProviderBio(bioData);
             }
         }
         catch (error: any) {
-            console.log('error', error)
         }
     }
 
@@ -80,7 +75,6 @@ const ArabicBioScreen = () => {
             
             // Process all bio items from API
             if (serviceProviderBio && Array.isArray(serviceProviderBio) && serviceProviderBio.length > 0) {
-                console.log('Processing bio data:', serviceProviderBio);
                 
                 // Group bio items by CatServiceProviderBioHeadId
                 serviceProviderBio.forEach((bioItem: any, index: number) => {
@@ -102,7 +96,6 @@ const ArabicBioScreen = () => {
                     }
                 });
                 
-                console.log('Mapped data from API:', JSON.stringify(mappedData, null, 2));
             }
             
             // Initialize empty sections for heads that don't have data
@@ -112,7 +105,6 @@ const ArabicBioScreen = () => {
                 }
             });
             
-            console.log('Final section data to set:', JSON.stringify(mappedData, null, 2));
             setSectionData(mappedData);
             setOriginalApiData(JSON.parse(JSON.stringify(mappedData))); // Store a deep copy of original data
         }
@@ -200,26 +192,20 @@ const ArabicBioScreen = () => {
     }
 
     const handleSave = async () => {
-        console.log('About Doctor:', aboutDoctor);
-        console.log('Section Data:', sectionData);
         const payload = {
             UserloginInfoId: user?.Id,
             AboutPlang: aboutDoctorPlang,
             AboutSlang: aboutDoctor,
             Bio: makeBioPayload(),
         };
-        console.log('Payload:', payload);
         const response = await profileService.updateServiceProviderBio(payload);
         if (response?.StatusCode?.STATUSCODE == 11018) {
-            console.log('Bio updated successfully');
         }
     };
 
     const renderSection = (head: BioHead) => {
         const items = sectionData[head.Id] || [];
         const isMembership = head.Id === 6; // Membership doesn't have add button
-
-        console.log(`Rendering section ${head.Id} (${head.TitleSlang}) with ${items.length} items:`, items);
 
         // If no items exist, show at least one empty input
         const displayItems = items.length > 0 ? items : [{ id: 'temp-' + head.Id, valuePlang: '', valueSlang: '' }];

@@ -73,8 +73,6 @@ const Step3PatientAssessment: React.FC<Step3Props> = ({
         getVisitMainRecordDetail();
       }
     } catch (error: any) {
-      console.log("error==>", error);
-      
     }
     
   };

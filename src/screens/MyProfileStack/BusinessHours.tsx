@@ -36,7 +36,6 @@ interface AvailabilitySlot {
 const BusinessHours = ({route}: {route: any}) => {
     const navigation = useNavigation();
     const Data = route.params?.Data;
-    console.log('Data',Data);
     const user = useSelector((state: any) => state.root.user.user);
     const [holidays, setHolidays] = useState<Holiday[]>([]);
     const [availability, setAvailability] = useState<AvailabilitySlot[]>([]);
@@ -109,7 +108,6 @@ const BusinessHours = ({route}: {route: any}) => {
                 setHolidays(response?.Holidays || []);
             }
         } catch (error: any) {
-            console.log('error', error)
         }
     };
 
@@ -126,7 +124,6 @@ const BusinessHours = ({route}: {route: any}) => {
                 setAvailability(response?.Data || []);
             }
         } catch (error: any) {
-            console.log('error', error)
         }
     };
 

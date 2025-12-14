@@ -60,8 +60,6 @@ const TaskDetailTab: React.FC<TaskDetailTabProps> = ({ data }) => {
         });
     };
 
-    console.log("data==>", data);
-
     const handleStatusChange = (status: string) => {
         setSelectedStatus(status);
         if (status !== 'Incomplete') {

@@ -21,12 +21,10 @@ const BookingScreen = ({ navigation, route }: any) => {
     const { t } = useTranslation();
     const [currentStep, setCurrentStep] = useState(1);
     const user = useSelector((state: any) => state.root.user.user);
-    console.log('Patient', Patient);
     const dispatch = useDispatch();
     const steps = [1, 2, 3];
 
     const handleNext = () => {
-        console.log('handleNext');
         if(currentStep == 3){
             dispatch(addCardItem([]))
             setCurrentStep(4);

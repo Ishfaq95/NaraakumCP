@@ -7,7 +7,6 @@ export const getAllCities = async () => {
         );
         return response.data;
     } catch (error: any) {
-        console.error('Error getting all cities:', error);
         throw error;
     }
 };
@@ -17,7 +16,6 @@ export const getSquareByCityId = async (payload: any) => {
         const response = await axiosInstance.post(`catalogue/GetSquareByCity`, payload);
         return response.data;
     } catch (error: any) {
-        console.error('Error getting square by city id:', error);
         throw error;
     }
 };

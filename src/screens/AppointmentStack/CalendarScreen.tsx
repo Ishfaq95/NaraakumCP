@@ -110,7 +110,6 @@ const CalendarScreen: React.FC = () => {
         setAllTasks(taskList);
       }
     } catch (error) {
-      console.error('Error fetching scheduled dates:', error);
     }
   };
 

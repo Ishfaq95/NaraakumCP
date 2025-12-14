@@ -447,11 +447,9 @@ const generateInvoicePDF = async (data: any): Promise<string> => {
     if (file && file.filePath) {
       return file.filePath;
     } else {
-      console.error('Failed to generate PDF, no file path returned');
       throw new Error('Failed to generate PDF');
     }
   } catch (error) {
-    console.error('Error generating PDF:', error);
     throw error;
   }
 };
@@ -508,7 +506,6 @@ const requestStoragePermission = async (): Promise<boolean> => {
       return granted === PermissionsAndroid.RESULTS.GRANTED;
     }
   } catch (err) {
-    console.warn(err);
     return false;
   }
 };
@@ -519,7 +516,6 @@ export const shareFile = async (filePath: string, fileName: string) => {
     // Ensure the file exists
     const fileExists = await RNFetchBlob.fs.exists(filePath);
     if (!fileExists) {
-      console.error('File does not exist at path:', filePath);
       Alert.alert('Error', 'File does not exist. Please try again.');
       return;
     }
@@ -535,7 +531,6 @@ export const shareFile = async (filePath: string, fileName: string) => {
       try {
         await RNFetchBlob.ios.previewDocument(filePath);
       } catch (previewError) {
-        console.error('Error previewing document:', previewError);
         
         // Fallback to share API if preview fails
         try {
@@ -544,7 +539,6 @@ export const shareFile = async (filePath: string, fileName: string) => {
             title: fileName,
           });
         } catch (shareError) {
-          console.error('Share API error:', shareError);
           throw shareError; // Re-throw to trigger the fallback copy
         }
       }
@@ -557,7 +551,6 @@ export const shareFile = async (filePath: string, fileName: string) => {
       });
     }
   } catch (error) {
-    console.error('Share error:', error);
     
     // Fallback: try to copy file to a more accessible location
     try {
@@ -590,7 +583,6 @@ export const shareFile = async (filePath: string, fileName: string) => {
         ]
       );
     } catch (copyError) {
-      console.error('Copy error:', copyError);
       Alert.alert('Error', 'Could not save file. Please try again.');
     }
   }
@@ -632,7 +624,6 @@ export const downloadFIleForIOS = (url: string, fileName: string) => {
         shareFile(res.path(), uniqueFileName);
       })
       .catch(error => {
-        console.error('Download error:', error);
         Alert.alert('File downloading error.', error.message || 'Unknown error');
       });
   }
@@ -689,7 +680,6 @@ export const downloadFile = async (filePath: string, fileName: string): Promise<
 
     return destinationPath;
   } catch (error) {
-    console.error('Error copying file:', error);
     Alert.alert('File downloading error.', error instanceof Error ? error.message : 'Unknown error');
     throw error;
   }
@@ -712,7 +702,6 @@ export const generateAndDownloadInvoice = async (data: any) => {
     }
     
   } catch (error) {
-    console.error('Error in generateAndDownloadInvoice:', error);
     Alert.alert('Error', 'Failed to generate invoice. Please try again.');
   }
 };
@@ -725,7 +714,6 @@ const generateAndShareInvoice = async (data: InvoiceData): Promise<void> => {
 
     await downloadFile(filePath, fileName);
   } catch (error) {
-    console.error('Error in generateAndShareInvoice:', error);
     throw error;
   }
 };

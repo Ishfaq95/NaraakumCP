@@ -92,7 +92,6 @@ const NotificationList = () => {
                 setPageNumber(page);
             }
         } catch (error) {
-            console.log('Error fetching notifications:', error);
         } finally {
             setIsLoading(false);
             setIsLoadingMore(false);
@@ -106,11 +105,9 @@ const NotificationList = () => {
             }
             const response = await notificationsService.updateNotificationViewStatus(payload);
             if (response.ResponseStatus.STATUSCODE == 200) {
-                console.log('Notification view status updated successfully');
             }
         }
         catch (error) {
-            console.log('Error updating notification view status:', error);
         }
     }
 
@@ -138,7 +135,6 @@ const NotificationList = () => {
             
             return '';
         } catch (error) {
-            console.error('Error formatting date:', error);
             return '';
         }
     }
@@ -172,8 +168,6 @@ const NotificationList = () => {
                         style={styles.tasksButton}
                         activeOpacity={0.7}
                         onPress={ () => {
-                            // Handle Tasks button press
-                            console.log('Tasks pressed for notification:', item);
                             updateNotificationViewStatus(item);
                             navigation.navigate(ROUTES.VisitDetailScreen as never, { taskId: item?.TaskId });
                         }}

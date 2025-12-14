@@ -56,7 +56,6 @@ const PersonalProfileScreen = () => {
                 updateProfileOptionsStatus(response?.PersonalProfileSummary[0]);
             }
         } catch (error: any) {
-            console.log('error',error)
         }
         finally {
             setIsLoading(false);

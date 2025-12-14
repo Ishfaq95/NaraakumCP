@@ -80,7 +80,6 @@ const WorkAreas = ({ route }: { route: any }) => {
                 setOrganizationInfo(response.Data[0]);
             }
         } catch (error) {
-            console.error('Error getting organization info:', error);
         }
     }
 
@@ -96,7 +95,6 @@ const WorkAreas = ({ route }: { route: any }) => {
                 return granted === PermissionsAndroid.RESULTS.GRANTED;
             }
         } catch (error) {
-            console.error('Error requesting location permission:', error);
             return false;
         }
     };
@@ -143,7 +141,6 @@ const WorkAreas = ({ route }: { route: any }) => {
 
             if (!hasPermission) {
                 // Use Riyadh as fallback if permission denied
-                console.log('Location permission denied, using Riyadh coordinates');
                 setLocationOnMap(RIYADH_COORDINATES.latitude, RIYADH_COORDINATES.longitude);
                 return;
             }
@@ -151,11 +148,9 @@ const WorkAreas = ({ route }: { route: any }) => {
             Geolocation.getCurrentPosition(
                 (position) => {
                     const { latitude, longitude } = position.coords;
-                    console.log('Current location:', latitude, longitude);
                     setLocationOnMap(latitude, longitude);
                 },
                 (error) => {
-                    console.log('Error getting location:', error);
                     // Use Riyadh as fallback on error
                     setLocationOnMap(RIYADH_COORDINATES.latitude, RIYADH_COORDINATES.longitude);
                 },
@@ -166,7 +161,6 @@ const WorkAreas = ({ route }: { route: any }) => {
                 }
             );
         } catch (error) {
-            console.error('Error in getCurrentLocation:', error);
             // Use Riyadh as fallback on error
             setLocationOnMap(RIYADH_COORDINATES.latitude, RIYADH_COORDINATES.longitude);
         }
@@ -216,13 +210,10 @@ const WorkAreas = ({ route }: { route: any }) => {
     // Populate form fields from organizationInfo when available
     useEffect(() => {
         if (organizationInfo && cities.length > 0) {
-            console.log('Populating form from organizationInfo:', organizationInfo);
-            console.log('Available cities:', cities);
             
             // Set city - check if city exists in cities array
             if (organizationInfo.CatCityId) {
                 const apiCityId = organizationInfo.CatCityId.toString();
-                console.log('Looking for city with ID:', apiCityId);
                 
                 // Find city by matching Id (handle both string and number comparison)
                 const city = cities.find(c => {
@@ -232,10 +223,7 @@ const WorkAreas = ({ route }: { route: any }) => {
                 });
                 
                 if (city) {
-                    console.log('City found:', city);
                     setSelectedCityId(city.Id);
-                } else {
-                    console.log('City not found in cities list. API ID:', apiCityId, 'Available IDs:', cities.map(c => c.Id));
                 }
             }
 
@@ -264,12 +252,9 @@ const WorkAreas = ({ route }: { route: any }) => {
     // Set square after squares are loaded and city is set
     useEffect(() => {
         if (organizationInfo && squares.length > 0 && selectedCityId) {
-            console.log('Setting square. OrganizationInfo CatSquareId:', organizationInfo.CatSquareId);
-            console.log('Available squares:', squares);
             
             if (organizationInfo.CatSquareId && organizationInfo.CatSquareId !== '0' && organizationInfo.CatSquareId !== 0) {
                 const apiSquareId = organizationInfo.CatSquareId.toString();
-                console.log('Looking for square with ID:', apiSquareId);
                 
                 // Find square by matching Id (handle both string and number comparison)
                 const square = squares.find(s => {
@@ -279,10 +264,7 @@ const WorkAreas = ({ route }: { route: any }) => {
                 });
                 
                 if (square) {
-                    console.log('Square found:', square);
                     setSelectedSquareId(square.Id);
-                } else {
-                    console.log('Square not found in squares list. API ID:', apiSquareId, 'Available IDs:', squares.map(s => s.Id));
                 }
             }
         }
@@ -302,11 +284,8 @@ const WorkAreas = ({ route }: { route: any }) => {
                 setSquares([]);
             }
         } catch (error) {
-            console.error('Error getting square by city id:', error);
         }
     }
-
-    console.log('user', user);
 
     const validateForm = (): boolean => {
         const errors = {
@@ -346,7 +325,6 @@ const WorkAreas = ({ route }: { route: any }) => {
                 setValidationErrors({ city: false, coordinates: false });
             }
         } catch (error) {
-            console.error('Error adding update organization address:', error);
         }
     }
 
@@ -374,17 +352,6 @@ const WorkAreas = ({ route }: { route: any }) => {
             return () => clearTimeout(timer);
         }
     }, [markerLocation]);
-
-    const handleSave = () => {
-        // TODO: Implement save functionality
-        console.log('Save:', {
-            city: selectedCity,
-            square: selectedSquare,
-            englishAddress,
-            arabicAddress,
-            coordinates: mapCoordinates,
-        });
-    }
 
     const handleCancel = () => {
         navigation.goBack();

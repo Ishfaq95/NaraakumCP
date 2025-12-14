@@ -41,7 +41,6 @@ const EnglishBioScreen = () => {
                 setEnglishBioHeads(response.list);
             }
         } catch (error: any) {
-            console.log('error', error)
         }
     }
 
@@ -52,7 +51,6 @@ const EnglishBioScreen = () => {
             };
             const response = await profileService.getServiceProviderBio(payload);
             if (response?.ResponseStatus?.STATUSCODE === 200) {
-                console.log('API Response:', response);
                 
                 // Set About Doctor - check multiple possible field names
                 const serviceProviderInfo = response.ServiceProvidersInfo?.[0];
@@ -61,12 +59,10 @@ const EnglishBioScreen = () => {
                 setAboutDoctorSlang(serviceProviderInfo?.AboutSlang || '');
                 // Set the bio data array
                 const bioData = response.ServiceProvidersBio || [];
-                console.log('Service Provider Bio Data:', bioData);
                 setServiceProviderBio(bioData);
             }
         }
-        catch (error: any) {
-            console.log('error', error)
+        catch (error: any) {    
         }
     }
 
@@ -78,7 +74,6 @@ const EnglishBioScreen = () => {
             
             // Process all bio items from API
             if (serviceProviderBio && Array.isArray(serviceProviderBio) && serviceProviderBio.length > 0) {
-                console.log('Processing bio data:', serviceProviderBio);
                 
                 // Group bio items by CatServiceProviderBioHeadId
                 serviceProviderBio.forEach((bioItem: any, index: number) => {
@@ -100,7 +95,6 @@ const EnglishBioScreen = () => {
                     }
                 });
                 
-                console.log('Mapped data from API:', JSON.stringify(mappedData, null, 2));
             }
             
             // Initialize empty sections for heads that don't have data
@@ -110,7 +104,6 @@ const EnglishBioScreen = () => {
                 }
             });
             
-            console.log('Final section data to set:', JSON.stringify(mappedData, null, 2));
             setSectionData(mappedData);
         }
     }, [serviceProviderBio, englishBioHeads]);
@@ -170,26 +163,20 @@ const EnglishBioScreen = () => {
 
     const handleSave = async () => {
         // TODO: Implement save functionality
-        console.log('About Doctor:', aboutDoctor);
-        console.log('Section Data:', sectionData);
         const payload = {
             UserloginInfoId: user?.Id,
             AboutPlang: aboutDoctor,
             AboutSlang: aboutDoctorSlang,
             Bio: makeBioPayload(),
         };
-        console.log('Payload:', payload);
         const response = await profileService.updateServiceProviderBio(payload);
         if (response?.StatusCode?.STATUSCODE == 11018) {
-            console.log('Bio updated successfully');
         }
     };
 
     const renderSection = (head: BioHead) => {
         const items = sectionData[head.Id] || [];
         const isMembership = head.Id === 6; // Membership doesn't have add button
-
-        console.log(`Rendering section ${head.Id} (${head.TitlePlang}) with ${items.length} items:`, items);
 
         // If no items exist, show at least one empty input
         const displayItems = items.length > 0 ? items : [{ id: 'temp-' + head.Id, value: '', valueSlang: undefined }];

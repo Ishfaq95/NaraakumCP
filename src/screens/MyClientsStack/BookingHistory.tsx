@@ -27,13 +27,10 @@ const BookingHistory = ({ route }: { route: any }) => {
                 PatientProfileId: Patient?.PatientUserProfileInfoId,
             };
             const response = await myClientsService.getServiceProviderAndPatientBookingHistory(payload);
-            console.log('Full API Response:', JSON.stringify(response, null, 2));
             if (response?.ResponseStatus?.STATUSCODE === 200) {
                 setBookingHistory(response);
-                console.log('bookingHistory set successfully');
             }
-        } catch (error) {
-            console.log('API Error:', error);
+        } catch (error) {   
         }
     };
 
@@ -162,7 +159,6 @@ const BookingHistory = ({ route }: { route: any }) => {
     const renderBookingItem = ({ item }: { item: any }) => {
         const { date, time } = formatDateTime(item.SchedulingDate, item.SchedulingTime);
         const statusColor = getStatusColor(item.OrderStatusTitlePlang);
-        console.log('item', item);
 
         const getStatusInfo = () => {
             const statusId = item?.OrderMainStatus?.toString();

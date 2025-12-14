@@ -24,7 +24,7 @@ export const getLocationPermission=async ()=>{
     }
     return true;
   } catch (err) {
-    console.warn(err);
+    {}
     return false;
   }
 }

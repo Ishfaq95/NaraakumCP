@@ -38,7 +38,6 @@ axiosInstance.interceptors.response.use(
 
     if (error.response && error.response.status === 401) {
       // Handle unauthorized errors, logout user, etc.
-      console.error('Unauthorized access - perhaps redirect to login?');
     }
     return Promise.reject(error);
   }

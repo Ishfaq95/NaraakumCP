@@ -19,7 +19,7 @@ export const getCurrentScreen = (navigation) => {
  
     return route.name;
   } catch (error) {
-    console.error("Error getting current screen:", error);
+    {}
     return null;
   }
 };
@@ -43,7 +43,7 @@ export const getCurrentScreenParams = (navigation) => {
  
     return route.params;
   } catch (error) {
-    console.error("Error getting current screen params:", error);
+    {}
     return null;
   }
 };

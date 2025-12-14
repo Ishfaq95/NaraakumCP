@@ -136,8 +136,6 @@ const Step3ReviewOrder = ({ Patient, handleNext }: { Patient: any, handleNext: (
     }
   };
 
-  console.log("selectedDoctor", existingCardItems,Patient);
-
   const getSessionDuration = (slotDuration: number) => {
     if (slotDuration < 60) {
       return `${slotDuration} Minutes`;
@@ -168,8 +166,6 @@ const Step3ReviewOrder = ({ Patient, handleNext }: { Patient: any, handleNext: (
             const item = filteredItems[0];
             let displayDate = '';
             let displayTime = '';
-
-            console.log("item", item);
 
             if (item.SchedulingDate && item.SchedulingTime) {
               displayDate = moment(item.SchedulingDate).locale('en').format('DD/MM/YYYY');

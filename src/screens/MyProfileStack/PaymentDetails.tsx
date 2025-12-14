@@ -35,7 +35,6 @@ const PaymentDetailsScreen = () => {
                 setTotalBookings(response?.PaymentProfileDetail?.length || 0);
             }
         } catch (error: any) {
-            console.log('error', error);
         }
         finally {
             setIsLoading(false);
@@ -122,8 +121,6 @@ const PaymentDetailsScreen = () => {
             <Text style={styles.emptyText}>No transactions found</Text>
         </View>
     ), []);
-
-    console.log('paymentDetails', paymentDetails);
 
     return (
         <SafeAreaView style={styles.container}>

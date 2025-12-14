@@ -103,9 +103,6 @@ const ReminderList = () => {
         setReminderMinutesAndHours('5'); // Default to 5 minutes
     }
 
-    console.log('reminderTimeUnit', reminderTimeUnit);
-    console.log('reminderMinutesAndHours', reminderMinutesAndHours);
-
     const getReminderList = async () => {
         setIsLoading(true);
         try {
@@ -118,7 +115,6 @@ const ReminderList = () => {
             }
         }
         catch (error) {
-            console.log('Error fetching reminder list:', error);
         }
         finally {
             setIsLoading(false);

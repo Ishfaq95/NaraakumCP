@@ -50,7 +50,6 @@ const LabXRays: React.FC<LabXRaysProps> = ({
   const [fileTypes, setFileTypes] = useState<any>([]);
   const [selectedFileCategory, setSelectedFileCategory] = useState<number | string>('');
   const [selectedFile, setSelectedFile] = useState<any | null>(null);
-  console.log("data==>", data);
 
   useEffect(() => {
     if (data) {
@@ -82,7 +81,6 @@ const LabXRays: React.FC<LabXRaysProps> = ({
       }
     }
     catch (error: any) {
-      console.log("error==>", error);
     }
   };
 
@@ -224,8 +222,6 @@ const LabXRays: React.FC<LabXRaysProps> = ({
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Upload failed with status:', response.status);
-        console.error('Error response:', errorText);
 
         if (response.status === 504) {
           throw new Error('Server took too long to respond. Please try again.');
@@ -261,7 +257,6 @@ const LabXRays: React.FC<LabXRaysProps> = ({
         );
       }
     } catch (error) {
-      console.error('Upload error:', error);
       Alert.alert(
         'Upload Failed',
         error instanceof Error
@@ -290,7 +285,6 @@ const LabXRays: React.FC<LabXRaysProps> = ({
       }
     }
     catch (error: any) {
-      console.log("error==>", error);
     }
   };
 

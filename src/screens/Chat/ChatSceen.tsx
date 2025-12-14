@@ -181,14 +181,12 @@ const ChatScreen = ({
           user?.id,
         );
 
-        console.log('socketConnected')
         setSocketConnected(true);
 
         // Set up socket message handler
         setupSocketListeners();
       }
     } catch (err) {
-      console.error('Socket connection error:', err);
       setSocketConnected(false);
     }
   };
@@ -257,7 +255,6 @@ const ChatScreen = ({
           }
         }
       } catch (error) {
-        console.error('Error processing WebSocket message:', error);
       }
     };
   }, [user.id, mongoConverstionId, mongoSenderId, mongoReceiverId, socketConnected, onNewMessage]);
@@ -406,8 +403,6 @@ const ChatScreen = ({
       if (page === 1) {
         setMessages(reversedMessages);
       } else {
-        // Add new messages to the beginning
-        console.log('messages', messages.length );
         setMessages(prevMessages => [...reversedMessages, ...prevMessages]);
       }
 
@@ -417,7 +412,6 @@ const ChatScreen = ({
         setPageNumber(prev => prev + 1);
       }
     } catch (error) {
-      console.error('messages list error', error);
       setError('Failed to load messages. Please try again.');
     } finally {
       setIsLoadingMore(false);
@@ -513,7 +507,6 @@ const ChatScreen = ({
         );
       })
       .catch(err => {
-        console.error('Failed to send message:', err);
         setMessages(prevMessages =>
           prevMessages.map(msg =>
             msg.Id === messageData.Id
@@ -625,7 +618,6 @@ const ChatScreen = ({
 
     //   await uploadFile(file, pickerResult);
     // } catch (err) {
-    //   console.error('File selection error:', err);
 
     //   if (DocumentPicker.isCancel(err)) {
     //     return;
@@ -690,8 +682,6 @@ const ChatScreen = ({
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Upload failed with status:', response.status);
-        console.error('Error response:', errorText);
 
         if (response.status === 504) {
           throw new Error('Server took too long to respond. Please try again.');
@@ -746,7 +736,6 @@ const ChatScreen = ({
             );
           })
           .catch(err => {
-            console.error('Failed to send message:', err);
             setMessages(prevMessages =>
               prevMessages.map(msg =>
                 msg.Id === newMessage.Id
@@ -768,7 +757,6 @@ const ChatScreen = ({
         );
       }
     } catch (error) {
-      console.error('Upload error:', error);
       Alert.alert(
         'Upload Failed',
         error instanceof Error
@@ -806,17 +794,14 @@ const ChatScreen = ({
 
       // Initialize the sound
       const sound = new Sound(tempFilePath, '', error => {
-        if (error) {
-          console.error('Failed to load the sound', error);
+        if (error) {  
           return;
         }
 
         // Play the sound
         sound.play(success => {
           if (success) {
-            console.log('Successfully finished playing');
           } else {
-            console.log('Playback failed due to audio decoding errors');
           }
           sound.release();
           setIsPlaying(false);
@@ -828,7 +813,6 @@ const ChatScreen = ({
         setCurrentSound(sound);
       });
     } catch (error) {
-      console.error('Error playing voice note:', error);
       Alert.alert('Error', 'Failed to play voice note. Please try again.');
     }
   };
@@ -858,7 +842,6 @@ const ChatScreen = ({
       await RNFS.writeFile(downloadDest, base64Data, 'base64');
       Alert.alert('Success', 'File downloaded successfully!');
     } catch (error) {
-      console.error('Error downloading file:', error);
       Alert.alert('Error', 'Failed to download file. Please try again.');
     }
   };

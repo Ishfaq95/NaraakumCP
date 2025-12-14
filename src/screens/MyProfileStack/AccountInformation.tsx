@@ -83,8 +83,7 @@ const AccountInformationScreen = () => {
                 setNationalities(response.Data.map((item: any) => ({ label: item.TitlePlang, value: item.Id })));
             }
         }
-        catch (error: any) {
-            console.log('error', error)
+        catch (error: any) {    
         }
     }
 
@@ -141,7 +140,6 @@ const AccountInformationScreen = () => {
 
     useEffect(() => {
         if (userInfo) {
-            console.log('userInfo', userInfo)
             setProfileImage(userInfo.ImagePath);
             setEnglishName(userInfo.FullNamePlang);
             setArabicName(userInfo.FullNameSlang);
@@ -172,7 +170,6 @@ const AccountInformationScreen = () => {
             }
         }
         catch (error: any) {
-            console.log('error', error)
         }
     }
 
@@ -249,7 +246,6 @@ const AccountInformationScreen = () => {
             }
         }
         catch (error: any) {
-            console.log('error', error)
         }
     }
 
@@ -292,7 +288,6 @@ const AccountInformationScreen = () => {
             }
         }
         catch (error: any) {
-            console.log('error', error)
         }
     }
 
@@ -340,7 +335,6 @@ const AccountInformationScreen = () => {
           }
 
         } catch (error) {
-          console.log(error)
         } finally {
           setIsUploading(false)
         }

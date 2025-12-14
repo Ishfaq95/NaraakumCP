@@ -97,7 +97,6 @@ const PrescriptionListScreen = ({ route }: { route: any }) => {
         const handleDetailsPress = () => {
             // Navigate to prescription details screen
             // You can add navigation logic here
-            console.log('Details pressed for:', item);
             navigation.navigate(ROUTES.PrescriptionView, { prescriptionData: item });
         };
 

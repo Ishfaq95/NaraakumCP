@@ -65,7 +65,6 @@ const MedicalLicenseScreen = () => {
             }
         }
         catch (error: any) {
-            console.log('error', error)
         }
     }
 
@@ -94,7 +93,6 @@ const MedicalLicenseScreen = () => {
             }
         }
         catch (error: any) {
-            console.log('error', error)
         }
     }
 
@@ -115,7 +113,6 @@ const MedicalLicenseScreen = () => {
             }
         }
         catch (error: any) {
-            console.log('error', error)
         }
         finally {
             setLoading(false);
@@ -196,7 +193,6 @@ const MedicalLicenseScreen = () => {
 
     const handleDelete = async (license: MedicalLicense) => {
         // Handle delete action
-        console.log('Delete license:', license.Id);
         const payload = {
             MedicalLicenseId: license.Id,
         };
@@ -260,7 +256,6 @@ const MedicalLicenseScreen = () => {
                 setFileError(false);
             }
         } catch (error) {
-            console.error('Error picking document:', error);
             Alert.alert('Error', 'Failed to pick document');
         }
     };
@@ -351,7 +346,6 @@ const MedicalLicenseScreen = () => {
 
 
         } catch (error: any) {
-            console.error('Error saving license:', error);
             Alert.alert('Error', error.message || 'Failed to save license');
         } finally {
             setIsSaving(false);

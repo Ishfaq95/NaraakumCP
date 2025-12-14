@@ -35,7 +35,6 @@ const ServiceProviderSelection: React.FC<ServiceProviderSelectionProps> = ({
     const isRTL = I18nManager.isRTL;
     const [serviceProviders, setServiceProviders] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(false);
-    console.log("selectedProvider", selectedProvider);
 
     useEffect(() => {
         if (isFocused) {

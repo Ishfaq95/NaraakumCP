@@ -96,7 +96,6 @@ const Step1 = ({ handleNext, Patient }: { handleNext: () => void, Patient: any }
       dispatch(setServices(offered.OfferedServices));
       setSpecialties(merged);
     } catch (error) {
-      console.error('Error fetching booking data:', error);
     } finally {
       setLoading(false);
     }
@@ -112,7 +111,6 @@ const Step1 = ({ handleNext, Patient }: { handleNext: () => void, Patient: any }
       setOfferedServicesData(offered?.OfferedServices);
       // dispatch(setServices(offered?.OfferedServices));
     } catch (error) {
-      console.error('Error fetching booking data:', error);
     } finally {
       setLoading(false);
     }
@@ -131,7 +129,6 @@ const Step1 = ({ handleNext, Patient }: { handleNext: () => void, Patient: any }
       const response = await bookingService.getOfferedServicesCategories();
       setOfferedServicesCategories(response?.OfferedCategories || []);
     } catch (error) {
-      console.log('error', error);
     } finally {
       setLoadingCategories(false);
     }
@@ -399,12 +396,10 @@ const Step1 = ({ handleNext, Patient }: { handleNext: () => void, Patient: any }
     dispatch(addCardItem(updatedCardArray));
   };
 
-  console.log("existingCardItems", existingCardItems);
 
   const renderOfferedServiceItem = ({ item }: { item: any }) => {
     const isItemExists = existingCardItems.length > 0 ? existingCardItems.find((existingItem: any) => existingItem.CatServiceId == item.Id) : false;
     const isSelected = isItemExists ? true : false;
-    console.log("isItemExists", isItemExists);
     const quantity = isItemExists ? isItemExists.Quantity : 1;
 
     return (
@@ -479,7 +474,6 @@ const Step1 = ({ handleNext, Patient }: { handleNext: () => void, Patient: any }
     setIsLocationBottomSheetVisible(false);
     const selectedItem = existingCardItems[existingCardItems.length - 1];
     const selectedCategory = offeredServicesCategories.find((category: any) => category.Id == selectedItem.CatCategoryId);
-      console.log("selectedCategory", selectedCategory);
       dispatch(setCategoryRedux(selectedCategory));
       if (selectedItem.CatCategoryId == '42' || selectedItem.CatCategoryId == '32') {
         if (selectedItem.CatServiceId) {

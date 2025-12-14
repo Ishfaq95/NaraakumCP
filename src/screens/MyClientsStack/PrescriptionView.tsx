@@ -15,7 +15,6 @@ const PrescriptionView = ({ route }: { route: any }) => {
     const [visitRecordData, setVisitRecordData] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
-    console.log('visitMainData', visitRecordData);
     const navigation = useNavigation();
     useEffect(() => {
         if (prescriptionData) {
@@ -34,7 +33,6 @@ const PrescriptionView = ({ route }: { route: any }) => {
                 setVisitRecordData(response);
             }
         } catch (error) {
-            console.log('error', error);
         } finally {
             setIsLoading(false);
         }
@@ -1063,7 +1061,6 @@ const PrescriptionView = ({ route }: { route: any }) => {
                 await downloadFile(pdf.filePath, cleanedName);
             }
         } catch (error) {
-            console.error('Error generating visit record PDF:', error);
             Alert.alert('Error', 'Failed to generate PDF. Please try again.');
         } finally {
             setIsGeneratingPdf(false);

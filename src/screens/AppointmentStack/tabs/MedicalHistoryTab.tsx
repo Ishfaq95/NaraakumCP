@@ -29,7 +29,6 @@ const MedicalHistoryTab: React.FC<MedicalHistoryTabProps> = ({ data }) => {
     const navigation = useNavigation();
     const dispatch = useDispatch();
     const isFocused = useIsFocused();
-    console.log("patientMedicalHistory==>", patientMedicalHistory);
     useEffect(() => {
         if (data?.PatientUserProfileInfoId) {
             getVisitRecordList();

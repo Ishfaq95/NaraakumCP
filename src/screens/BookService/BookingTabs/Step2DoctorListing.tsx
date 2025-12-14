@@ -299,7 +299,6 @@ const Step2DoctorListing = ({ handleNext }: { handleNext: () => void }) => {
       }
       setServiceProviders(response?.ServiceProviderList || []);
     } catch (error) {
-      console.error('Error fetching service providers:', error);
     } finally {
       setLoading(false);
     }
@@ -339,7 +338,6 @@ const Step2DoctorListing = ({ handleNext }: { handleNext: () => void }) => {
       // Set initial availability for selected date
       filterAvailabilityForDate(date ? moment(date) : moment(), response?.SchedulingAvailability || []);
     } catch (error) {
-      console.error('Error fetching initial availability:', error);
     } finally {
       setLoader2(false);
     }
@@ -367,7 +365,6 @@ const Step2DoctorListing = ({ handleNext }: { handleNext: () => void }) => {
 
       setHospitalList(response?.HospitalList || []);
     } catch (error) {
-      console.error('Error fetching hospital list by services:', error);
     } finally {
       setLoading(false);
     }
@@ -387,7 +384,6 @@ const Step2DoctorListing = ({ handleNext }: { handleNext: () => void }) => {
       // Set initial availability for selected date
       filterAvailabilityForDate(date ? moment(date) : moment(), response?.SchedulingAvailability || []);
     } catch (error) {
-      console.error('Error fetching organization scheduling availability:', error);
     } finally {
       setLoader2(false);
     }
@@ -399,13 +395,11 @@ const Step2DoctorListing = ({ handleNext }: { handleNext: () => void }) => {
     // Process all arrays
     arrays.forEach(array => {
       if (!Array.isArray(array)) {
-        console.warn('Skipping non-array input:', array);
         return;
       }
 
       array.forEach(item => {
         if (!item || typeof item !== 'object') {
-          console.warn('Skipping invalid item:', item);
           return;
         }
 
@@ -413,7 +407,6 @@ const Step2DoctorListing = ({ handleNext }: { handleNext: () => void }) => {
         const key = item.fullTime;
 
         if (!key) {
-          console.warn('Skipping item without fullTime:', item);
           return;
         }
 
@@ -599,8 +592,6 @@ const Step2DoctorListing = ({ handleNext }: { handleNext: () => void }) => {
       return false;
     });
   }, [HospitalWithSlots, availability, selectedDate]);
-
-  console.log("filteredHospitals", filteredHospitals)
 
 
   // Mock data - replace with actual API call
@@ -830,7 +821,6 @@ const Step2DoctorListing = ({ handleNext }: { handleNext: () => void }) => {
   }
 
   const handleSelectSlot = useCallback((provider: any, slot: any, selectedServiceValues?: any) => {
-    console.log("SelectedCardItem", selectedCardItem)
     const serviceId = selectedCardItem[0]?.CatServiceId
     if (provider.ServiceServe.length == 1) {
       handleSelectService(provider.UserId, provider.ServiceServe[0].ServiceTitlePlang);

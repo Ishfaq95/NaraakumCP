@@ -13,7 +13,6 @@ interface TransactionItemProps {
 }
 
 const TransactionItem = memo(({ item, isExpanded, onToggle, formatTime, formatDate }: TransactionItemProps) => {
-    console.log('item', item);
     const getStatusInfo = () => {
         const statusId = item?.CatOrderStatusId?.toString();
     

@@ -42,7 +42,6 @@ class WebSocketService {
       this.socket.onmessage = async event => {
         try {
           const socketEvent = JSON.parse(event.data);
-          console.log('socketEvent', socketEvent);
 
           if(socketEvent.Command === 56){
             this.checkUnreadMessages(this.userId);
@@ -64,7 +63,7 @@ class WebSocketService {
             }
           });
         } catch (error) {
-          console.error('Error processing WebSocket message:', error);
+        {}
         }
       };
     }
@@ -132,9 +131,7 @@ class WebSocketService {
         }, 5000); // Attempt to reconnect
       };
 
-      this.socket.onerror = error => {
-        console.error('WebSocket error:', error.message);
-      };
+      this.socket.onerror = error => {};
     }
   }
 
@@ -145,9 +142,7 @@ class WebSocketService {
         Command: 74,
         FromUser: { Id: userId },
       };
-      this.sendMessage(getCountUnreadMessages).catch(error => 
-        console.error('Error sending unread messages check:', error)
-      );
+      this.sendMessage(getCountUnreadMessages).catch(error => {});
     }
   }
 
@@ -170,7 +165,6 @@ class WebSocketService {
         }
       }
     } catch (error) {
-      console.error('Error fetching on the way tasks:', error);
     }
   }
 

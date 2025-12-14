@@ -234,8 +234,6 @@ export const uploadFile = async (file: any, user: any) => {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Upload failed with status:', response.status);
-        console.error('Error response:', errorText);
 
         if (response.status === 504) {
           throw new Error('Server took too long to respond. Please try again.');
@@ -250,7 +248,7 @@ export const uploadFile = async (file: any, user: any) => {
 
       return responseData;
     } catch (error: any) {
-      console.error('Upload error:', error);
+      
       throw new Error(error instanceof Error ? error.message : 'Upload failed');
     }
   };
@@ -316,7 +314,6 @@ export const addUpdateServiceProviderMedicalLicense = async (credentials: any) =
         return response.data;
     }
     catch (error: any) {
-        console.log('error', error)
         throw {
             message: error?.response?.data?.message || 'Add/Update medical license failed',
             status: error?.response?.status,
@@ -368,6 +365,7 @@ export const getServiceProviderAvailability = async (credentials: any) => {
         return response.data;
     }
     catch (error: any) {
+        
         throw {
             message: error?.response?.data?.message || 'Get service provider availability failed',
             status: error?.response?.status,
@@ -399,7 +397,7 @@ export const userUpdatedPhone = async (payload: any): Promise<any> => {
         const response = await axiosInstance.post('patients/PhoneVerification', payload);
         return response.data;
     } catch (error: any) {
-        console.error('Error updating phone:', error);
+        
         throw error;    
     }
 };
@@ -410,7 +408,7 @@ export const verifyUserUpdatedData = async (payload: any): Promise<any> => {
         const response = await axiosInstance.post('patients/VerifyRegisteredUser', payload);
         return response.data;
     } catch (error: any) {
-        console.error('Error verifying user updated data:', error);
+        
         throw error;    
     }
 };
@@ -421,7 +419,7 @@ export const resendOtp = async (payload: any): Promise<any> => {
         const response = await axiosInstance.post('patients/ResendRegistrationCode', payload);
         return response.data;
     } catch (error: any) {
-        console.error('Error resending otp:', error);
+        
         throw error;    
     }
 };
@@ -432,7 +430,7 @@ export const userUpdatedEmail = async (payload: any): Promise<any> => {
         const response = await axiosInstance.post('patients/EmailVerification', payload);
         return response.data;
     } catch (error: any) {
-        console.error('Error updating email:', error);
+        
         throw error;    
     }
 };
@@ -443,6 +441,7 @@ export const getServiceProviderBioHeads = async () => {
         return response.data;
     }
     catch (error: any) {
+        
         throw {
             message: error?.response?.data?.message || 'Get service provider bio heads failed',
             status: error?.response?.status
@@ -455,7 +454,7 @@ export const getServiceProviderBio = async (credentials: any) => {
         const response = await axiosInstance.post('user/GetServiceProviderBio', credentials);
         return response.data;
     } catch (error: any) {
-        console.error('Error getting service provider bio:', error);
+        
         throw error;    
     }
 }
@@ -465,7 +464,7 @@ export const updateServiceProviderBio = async (credentials: any) => {
         const response = await axiosInstance.post('user/AddEditServiceProviderBio', credentials);
         return response.data;
     } catch (error: any) {
-        console.error('Error updating service provider bio:', error);
+        
         throw error;    
     }
 }
@@ -475,7 +474,7 @@ export const addServiceProviderDurationAndPrice = async (credentials: any) => {
         const response = await axiosInstance.post('user/AddServiceProviderSlotDurationandPrice', credentials);
         return response.data;
     } catch (error: any) {
-        console.error('Error adding service provider duration and price:', error);
+        
         throw error;    
     }
 }
@@ -485,7 +484,7 @@ export const getServiceProviderDurationAndPrice = async (credentials: any) => {
         const response = await axiosInstance.post('user/GetServiceProviderSlotDurationandPrice', credentials);
         return response.data;
     } catch (error: any) {
-        console.error('Error getting service provider duration and price:', error);
+        
         throw error;    
     }
 }
@@ -495,7 +494,7 @@ export const addUpdateOrganizationAddress = async (credentials: any) => {
         const response = await axiosInstance.post('organization/AddUpdateOrganizationAddress', credentials);
         return response.data;
     } catch (error: any) {
-        console.error('Error adding update organization address:', error);
+        
         throw error;    
     }
 }
@@ -505,7 +504,7 @@ export const getOrganizationInfo = async (credentials: any) => {
         const response = await axiosInstance.post('organization/GetOrganizationInfo', credentials);
         return response.data;
     } catch (error: any) {
-        console.error('Error getting organization info:', error);
+        
         throw error;    
     }
 }

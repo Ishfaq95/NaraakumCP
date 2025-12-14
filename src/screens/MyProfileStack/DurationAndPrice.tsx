@@ -112,7 +112,6 @@ const DurationAndPrice = ({ route }: { route: any }) => {
 
             }
         } else {
-            console.log('Form has errors');
         }
     };
 

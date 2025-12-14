@@ -17,7 +17,6 @@ export const getMessagesList = async (payload: object) => {
 
     return response.data;
   } catch (error) {
-    console.error('Error making API call:', error);
     // Optional: You can throw the actual response error for further handling
   }
 }

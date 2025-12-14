@@ -60,8 +60,6 @@ const OE: React.FC<OEProps> = ({ data, onDataChange }) => {
   const [newCustomValue, setNewCustomValue] = useState<{ [key: string]: string }>({});
   const bottomSheetRef = useRef<any>(null);
 
-  console.log("data", data)
-
   // useEffect(() => {
   //   if (onDataChange) {
   //     onDataChange({
@@ -87,7 +85,6 @@ const OE: React.FC<OEProps> = ({ data, onDataChange }) => {
         setBodyAnatomy(response?.Data);
       }
     } catch (error: any) {
-      console.log("error==>", error);
     }
   };
   const handleMainItemPress = (item: MainItem) => {
@@ -163,7 +160,6 @@ const OE: React.FC<OEProps> = ({ data, onDataChange }) => {
   };
 
   const renderCheckbox = (item: SubListItem | SubItem) => {
-    console.log("item", item)
     const isExist = data?.find((atom: any) => atom.CatBodyAnatomyId == item.Id);
     let isChecked = false;
     if (isExist) {
@@ -172,7 +168,6 @@ const OE: React.FC<OEProps> = ({ data, onDataChange }) => {
       isChecked = false;
     }
 
-    console.log("isExist", isExist)
     // const isChecked = false;
     return (
       <View key={item.Id}>
@@ -336,9 +331,7 @@ const OE: React.FC<OEProps> = ({ data, onDataChange }) => {
       </View>
     );
   };
-
-  console.log("bodyAnatomy", bodyAnatomy)
-
+  
   return (
     <View style={styles.container}>
       <ScrollView

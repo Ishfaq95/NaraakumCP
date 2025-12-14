@@ -215,7 +215,6 @@ const VideoCallScreen = ({
           }
         }
       } catch (error) {
-        console.error('Error processing WebSocket message:', error);
       }
     };
 

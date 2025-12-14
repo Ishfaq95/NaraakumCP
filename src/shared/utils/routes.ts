@@ -55,5 +55,6 @@ export const ROUTES = {
     PrescriptionView: 'PrescriptionView',
     EnglishBioScreen: 'EnglishBioScreen',
     ArabicBioScreen: 'ArabicBioScreen',
+    WorkAreas: 'WorkAreas',
   };
   

@@ -490,6 +490,26 @@ export const getServiceProviderDurationAndPrice = async (credentials: any) => {
     }
 }
 
+export const addUpdateOrganizationAddress = async (credentials: any) => {
+    try {
+        const response = await axiosInstance.post('organization/AddUpdateOrganizationAddress', credentials);
+        return response.data;
+    } catch (error: any) {
+        console.error('Error adding update organization address:', error);
+        throw error;    
+    }
+}
+
+export const getOrganizationInfo = async (credentials: any) => {
+    try {
+        const response = await axiosInstance.post('organization/GetOrganizationInfo', credentials);
+        return response.data;
+    } catch (error: any) {
+        console.error('Error getting organization info:', error);
+        throw error;    
+    }
+}
+
 // Export all profile related functions
 export const profileService = {
     getServiceProviderByUserId,
@@ -522,4 +542,6 @@ export const profileService = {
     updateServiceProviderBio,
     addServiceProviderDurationAndPrice,
     getServiceProviderDurationAndPrice,
+    addUpdateOrganizationAddress,
+    getOrganizationInfo,
 }; 

@@ -47,6 +47,7 @@ import AfterContractSign from '../screens/MyProfileStack/AfterContractSign';
 import PrescriptionView from '../screens/MyClientsStack/PrescriptionView';
 import EnglishBioScreen from '../screens/MyProfileStack/EnglishBio';
 import ArabicBioScreen from '../screens/MyProfileStack/ArabicBio';
+import WorkAreas from '../screens/MyProfileStack/WorkAreas';
 
 const Stack = createNativeStackNavigator();
 
@@ -104,6 +105,7 @@ const RootNavigator = () => {
       <Stack.Screen name={ROUTES.PrescriptionView} component={PrescriptionView} />
       <Stack.Screen name={ROUTES.EnglishBioScreen} component={EnglishBioScreen} />
       <Stack.Screen name={ROUTES.ArabicBioScreen} component={ArabicBioScreen} />
+      <Stack.Screen name={ROUTES.WorkAreas} component={WorkAreas} />
     </Stack.Navigator>
   );
 };

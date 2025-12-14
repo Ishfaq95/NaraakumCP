@@ -274,7 +274,7 @@ const ServiceProfile = () => {
             },
             {
                 title: 'Work Areas',
-                onPress: () => {},
+                onPress: () => navigation.navigate(ROUTES.WorkAreas as never,{Data:homeVisitData}),
                 isComplete: isWorkAreasComplete(homeVisitData)
             },
         ];

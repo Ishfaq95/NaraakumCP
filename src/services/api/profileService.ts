@@ -437,6 +437,39 @@ export const userUpdatedEmail = async (payload: any): Promise<any> => {
     }
 };
 
+export const getServiceProviderBioHeads = async () => {
+    try {
+        const response = await axiosInstance.get('catalogue/GetServiceProviderBioHeads');
+        return response.data;
+    }
+    catch (error: any) {
+        throw {
+            message: error?.response?.data?.message || 'Get service provider bio heads failed',
+            status: error?.response?.status
+        };
+    }
+}
+
+export const getServiceProviderBio = async (credentials: any) => {
+    try {
+        const response = await axiosInstance.post('user/GetServiceProviderBio', credentials);
+        return response.data;
+    } catch (error: any) {
+        console.error('Error getting service provider bio:', error);
+        throw error;    
+    }
+}
+
+export const updateServiceProviderBio = async (credentials: any) => {
+    try {
+        const response = await axiosInstance.post('user/AddEditServiceProviderBio', credentials);
+        return response.data;
+    } catch (error: any) {
+        console.error('Error updating service provider bio:', error);
+        throw error;    
+    }
+}
+
 // Export all profile related functions
 export const profileService = {
     getServiceProviderByUserId,
@@ -464,4 +497,7 @@ export const profileService = {
     verifyUserUpdatedData,
     resendOtp,
     userUpdatedEmail,
+    getServiceProviderBioHeads,
+    getServiceProviderBio,
+    updateServiceProviderBio,
 }; 

@@ -272,6 +272,11 @@ const AccountInformationScreen = () => {
             LanguageIds: language.join(','),
         }
 
+        if( password.trim() !== '' && password !== confirmPassword) {
+            setConfirmPasswordError(true)
+            return;
+        }
+
         if (password) {
             payload.Password = password;
         }
@@ -473,7 +478,7 @@ const AccountInformationScreen = () => {
                         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
                     >
                         <ScrollView showsVerticalScrollIndicator={false} style={styles.scrollContainer}>
-                            <View style={{ paddingHorizontal: 10, paddingVertical: 10, backgroundColor: '#fff', borderRadius: 10 }}>
+                            <View style={[{ paddingHorizontal: 10, paddingVertical: 10, backgroundColor: '#fff', borderRadius: 10 },Keyboard.isVisible() ? { paddingBottom: 100 } : {}]}>
                                 <View style={styles.fieldGroup}>
                                     <Text style={styles.label}>Full Name <Text style={{ fontFamily: CAIRO_FONT_FAMILY.semiBold, fontSize: 14, fontWeight: '600', color: '#666666' }}>(In English)</Text></Text>
                                     <TextInput style={[styles.input, englishNameInputError && { borderWidth: 1, borderColor: 'red' }]} value={englishName} onChangeText={setEnglishName} placeholder="Name" />
@@ -664,6 +669,8 @@ const AccountInformationScreen = () => {
                                         )}
                                     </TouchableOpacity>
                                 </View>
+
+                                {confirmPasswordError && <Text style={styles.errorText}>Password and Confirm Password do not match</Text>}
                             </View>
 
                             {/* <View style={{ paddingHorizontal: 10, paddingVertical: 10, backgroundColor: '#fff', borderRadius: 10, marginTop: 10 }}> */}
@@ -851,7 +858,7 @@ const styles = StyleSheet.create({
     },
     passwordContainer: {
         position: 'relative',
-        marginBottom: 12,
+        marginBottom: 4,
         height: 50,
     },
     passwordInput: {
@@ -908,6 +915,12 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontFamily: CAIRO_FONT_FAMILY.bold,
         fontSize: 18,
+    },
+    errorText: {
+        color: 'red',
+        fontSize: 12,
+        fontFamily: CAIRO_FONT_FAMILY.regular,
+        // marginTop: 4,
     },
 });
 

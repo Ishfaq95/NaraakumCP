@@ -33,6 +33,11 @@ const CareProviderBioScreen = () => {
    
 
     const handleSettingsItemPress = (itemId: string) => {
+        if(itemId === 'englishBio') {
+            navigation.navigate(ROUTES.EnglishBioScreen as never);
+        } else if(itemId === 'arabicBio') {
+            navigation.navigate(ROUTES.ArabicBioScreen as never);
+        }
        
     };
 
@@ -42,7 +47,7 @@ const CareProviderBioScreen = () => {
                 <Ionicons name="arrow-back-outline" size={24} color="#333" />
 
             </TouchableOpacity>
-            <Text style={{ fontSize: 16, fontFamily: CAIRO_FONT_FAMILY.bold, color: '#333', lineHeight: Platform.OS === 'ios' ? 0 : 20 }}>Personal Profile</Text>
+            <Text style={{ fontSize: 16, fontFamily: CAIRO_FONT_FAMILY.bold, color: '#333', lineHeight: Platform.OS === 'ios' ? 0 : 20 }}>Care Provider Bio</Text>
         </View>
     );
 

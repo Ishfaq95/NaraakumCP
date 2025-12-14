@@ -53,5 +53,7 @@ export const ROUTES = {
     PrivacyPolicy: 'PrivacyPolicy',
     AfterContractSign: 'AfterContractSign',
     PrescriptionView: 'PrescriptionView',
+    EnglishBioScreen: 'EnglishBioScreen',
+    ArabicBioScreen: 'ArabicBioScreen',
   };
   

@@ -1,6 +1,6 @@
-import { View, Text, SafeAreaView, StyleSheet, TouchableOpacity, ScrollView, Switch, Image } from 'react-native'
+import { View, Text, SafeAreaView, StyleSheet, TouchableOpacity, ScrollView, Switch, Image, Platform } from 'react-native'
 import React, { useEffect, useState } from 'react'
-import { globalTextStyles } from '../../styles/globalStyles';
+import { CAIRO_FONT_FAMILY, globalTextStyles } from '../../styles/globalStyles';
 import { useNavigation } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { profileService } from '../../services/api/profileService';
@@ -107,11 +107,8 @@ const ServiceProfile = () => {
             };
             const response = await profileService.assignRoleAndSpecialty(payload);
             if (response?.ResponseStatus?.STATUSCODE === 200) {
-                showAlert({
-                    title: 'Role and specialty assigned successfully',
-                    message: '',
-                    type: 'success',
-                });
+                setIsSpecialtyLevelBottomSheetVisible(false);
+                getServiceProviderRoleAndSpecialty();
             }
         }
         catch (error: any) {
@@ -133,7 +130,7 @@ const ServiceProfile = () => {
     const renderHeader = () => (
         <View style={styles.header}>
             <TouchableOpacity onPress={backButtonPress} style={styles.backButton}>
-                <Ionicons name="chevron-back" size={24} color="#333" />
+                <Ionicons name="arrow-back-outline" size={24} color="#333" />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Service Profile</Text>
         </View>
@@ -159,8 +156,8 @@ const ServiceProfile = () => {
             >
                 <Text style={styles.menuItemText}>Specialty level</Text>
                 <View style={styles.menuItemRight}>
-                    <View style={[styles.completeBadge, serviceProviderRoleAndSpecialty?.Specialty?.length > 0 ? styles.completeBadge : styles.incompleteBadge]}>
-                        <Text style={styles.completeBadgeText}>{serviceProviderRoleAndSpecialty?.Specialty?.length > 0 ? 'complete' : 'incomplete'}</Text>
+                    <View style={[styles.completeBadge, serviceProviderRoleAndSpecialty?.Specialty?.length > 0 ? {backgroundColor: '#198754',paddingVertical: 3,borderRadius: 10} : {backgroundColor: '#ffdcdc',paddingVertical: 3,borderRadius: 10}]}>
+                        <Text style={[styles.completeBadgeText,{color: serviceProviderRoleAndSpecialty?.Specialty?.length > 0 ? '#fff' : '#c50d0d'}]}>{serviceProviderRoleAndSpecialty?.Specialty?.length > 0 ? 'complete' : 'incomplete'}</Text>
                     </View>
                     <Ionicons name="chevron-forward" size={20} color="#666" />
                 </View>
@@ -184,9 +181,9 @@ const ServiceProfile = () => {
                 <Switch
                     value={enabled}
                     onValueChange={onToggle}
-                    trackColor={{ false: '#d1d5db', true: '#14b8a6' }}
+                    trackColor={{ false: '#dbdbdb', true: '#239ea0' }}
                     thumbColor="#fff"
-                    ios_backgroundColor="#d1d5db"
+                    ios_backgroundColor="#dbdbdb"
                 />
             </View>
             {enabled && (
@@ -206,7 +203,7 @@ const ServiceProfile = () => {
                                     styles.completeBadge,
                                     !item.isComplete && styles.incompleteBadge
                                 ]}>
-                                    <Text style={styles.completeBadgeText}>
+                                    <Text style={[styles.completeBadgeText,{color: !item.isComplete ? '#de574d' : '#198754'}]}>
                                         {item.isComplete ? 'complete' : 'incomplete'}
                                     </Text>
                                 </View>
@@ -388,18 +385,22 @@ const ServiceProfile = () => {
         }
     };
 
+    console.log('selectedLevelId',selectedLevelId);
+
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.mainContent}>
                 {renderHeader()}
                 <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
                     {renderSpecialtyLevel()}
+
+                    <View style={styles.divider} />
                     
                     <Text style={styles.activateServicesTitle}>Activate Your Services</Text>
                     
                     {renderServiceCard(
                         'Online Consultation',
-                        <Image source={require('../../assets/icons/RemoteConsultant.png')} style={{width: 50,height: 50}} />,
+                        <Image source={require('../../assets/icons/RemoteConsultant.png')} resizeMode='contain' style={{width: 50,height: 50}} />,
                         onlineConsultationEnabled,
                         (value: boolean) => onToggleService('onlineConsultation', value),
                         getOnlineConsultationMenuItems()
@@ -407,7 +408,7 @@ const ServiceProfile = () => {
                     
                     {renderServiceCard(
                         'Home Visit',
-                        <Image source={require('../../assets/icons/HomeVisit.png')} style={{width: 50,height: 50}} />,
+                        <Image source={require('../../assets/icons/HomeVisit.png')} resizeMode='contain' style={{width: 50,height: 50}} />,
                         homeVisitEnabled,
                         (value: boolean) => onToggleService('homeVisit', value),
                         getHomeVisitMenuItems()
@@ -417,7 +418,7 @@ const ServiceProfile = () => {
 
             <CustomBottomSheet
                 visible={isSpecialtyLevelBottomSheetVisible}
-                maxHeight="80%"
+                maxHeight={selectedLevelId ? (selectedLevelId === 1 || selectedLevelId === 2) ? "80%" : "35%" : "35%"}
                 onClose={() => setIsSpecialtyLevelBottomSheetVisible(false)}
             >
                 <View style={styles.bottomSheetContent}>
@@ -477,7 +478,7 @@ const ServiceProfile = () => {
                                     return (
                                         <TouchableOpacity
                                             key={specialty.Id}
-                                            style={styles.specialtyItem}
+                                            style={[styles.specialtyItem,index == serviceProviderRoleAndSpecialty?.AllSpecialty?.length - 1 && {paddingBottom: 30}]}
                                             onPress={() => handleSpecialtyToggle(specialty.Id)}
                                         >
                                             <View style={[
@@ -534,8 +535,11 @@ const styles = StyleSheet.create({
         padding: 5,
     },
     headerTitle: {
-        ...globalTextStyles.h5,
-        marginLeft: 8,
+        fontSize: 16,
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
+        color: '#000',
+        marginLeft: 4,
     },
     scrollContent: {
         flex: 1,
@@ -548,14 +552,15 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#666',
         marginBottom: 12,
-        fontWeight: '500',
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
     },
     menuItem: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
         backgroundColor: '#fff',
-        paddingVertical: 16,
+        paddingVertical: 8,
         paddingHorizontal: 16,
         borderRadius: 8,
         elevation: 1,
@@ -566,27 +571,29 @@ const styles = StyleSheet.create({
     },
     menuItemText: {
         fontSize: 16,
-        color: '#333',
-        fontWeight: '500',
+        color: '#000',
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
     },
     menuItemRight: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 8,
+        // gap: 2,
     },
     completeBadge: {
-        backgroundColor: '#14b8a6',
-        paddingHorizontal: 12,
-        paddingVertical: 4,
+        // backgroundColor: '#198754',
+        paddingHorizontal: 8,
+        // paddingVertical: 4,
         borderRadius: 12,
     },
     incompleteBadge: {
-        backgroundColor: '#ef4444',
+        // backgroundColor: '#ef4444',
     },
     completeBadgeText: {
-        color: '#fff',
-        fontSize: 12,
-        fontWeight: '600',
+        color: '#198754',
+        fontSize: 14,
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
     },
     activateServicesTitle: {
         fontSize: 14,
@@ -594,7 +601,8 @@ const styles = StyleSheet.create({
         marginTop: 24,
         marginBottom: 12,
         marginHorizontal: 16,
-        fontWeight: '500',
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
     },
     serviceCard: {
         backgroundColor: '#fff',
@@ -625,28 +633,36 @@ const styles = StyleSheet.create({
     serviceTitle: {
         flex: 1,
         fontSize: 16,
-        color: '#333',
-        fontWeight: '600',
+        color: '#000',
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
     },
     expandedMenu: {
         borderTopWidth: 1,
         borderTopColor: '#f0f0f0',
+        marginHorizontal: 16,
+        marginBottom: 16,
     },
     expandedMenuItem: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingVertical: 16,
-        paddingHorizontal: 16,
+        borderColor:'#239ea0',
+        borderWidth: 1,
+        borderRadius: 10,
+        paddingVertical: 8,
+        paddingHorizontal: 8,
+        marginBottom:6
     },
     expandedMenuItemBorder: {
         borderBottomWidth: 1,
-        borderBottomColor: '#f0f0f0',
+        borderBottomColor: '#239ea0',
     },
     expandedMenuItemText: {
         fontSize: 15,
-        color: '#14b8a6',
-        fontWeight: '500',
+        color: '#239ea0',
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
     },
     // Online Consultation Icon Styles
     onlineConsultationIcon: {
@@ -762,9 +778,10 @@ const styles = StyleSheet.create({
         padding: 4,
     },
     bottomSheetTitle: {
-        fontSize: 20,
-        fontWeight: '700',
-        color: '#333',
+        fontSize: 18,
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
+        color: '#000',
         marginBottom: 20,
     },
     levelTabsContainer: {
@@ -774,39 +791,41 @@ const styles = StyleSheet.create({
     },
     levelTab: {
         flex: 1,
-        paddingVertical: 10,
-        paddingHorizontal: 12,
+        paddingVertical: 2,
+        paddingHorizontal: 8,
         borderRadius: 20,
-        borderWidth: 1.5,
+        borderWidth: 1,
         borderColor: 'lightgray',
         backgroundColor: '#fff',
         alignItems: 'center',
         justifyContent: 'center',
     },
     levelTabActive: {
-        borderColor: '#14b8a6',
-        borderWidth: 1.5,
-        // backgroundColor: '#14b8a6',
+        borderColor: '#239ea0',
+        borderWidth: 1,
+        backgroundColor: '#e4f1ef',
     },
     levelTabText: {
-        fontSize: 14,
-        fontWeight: '500',
+        fontSize: 15,
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: 'black',
     },
     levelTabTextActive: {
-        color: '#14b8a6',
+        color: '#239ea0',
     },
     specialtiesContainer: {
         marginBottom: 20,
     },
     specialtiesTitle: {
         fontSize: 16,
-        fontWeight: '700',
-        color: '#333',
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
+        color: '#000',
         marginBottom: 12,
     },
     specialtiesList: {
-        maxHeight: 300,
+        maxHeight: 320,
         borderWidth: 1,
         borderColor: '#e0e0e0',
         borderRadius: 8,
@@ -831,8 +850,8 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
     },
     checkboxChecked: {
-        backgroundColor: '#14b8a6',
-        borderColor: '#14b8a6',
+            backgroundColor: '#239ea0',
+        borderColor: '#239ea0',
     },
     specialtyText: {
         fontSize: 15,
@@ -840,8 +859,8 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     saveButton: {
-        backgroundColor: '#14b8a6',
-        paddingVertical: 16,
+        backgroundColor: '#239ea0',
+        paddingVertical: 12,
         borderRadius: 8,
         alignItems: 'center',
         justifyContent: 'center',
@@ -850,7 +869,14 @@ const styles = StyleSheet.create({
     saveButtonText: {
         color: '#fff',
         fontSize: 16,
-        fontWeight: '700',
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
+    },
+    divider: {
+        height: 1,
+        backgroundColor: '#0000001a',
+        marginTop: 16,
+        marginHorizontal: 16,
     },
 });
 export default ServiceProfile

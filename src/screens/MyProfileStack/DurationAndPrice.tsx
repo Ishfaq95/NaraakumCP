@@ -1,18 +1,22 @@
-import { View, Text, SafeAreaView, StyleSheet, ScrollView, Image, TouchableOpacity, TextInput } from 'react-native'
-import React, { useState } from 'react'
-import { globalTextStyles } from '../../styles/globalStyles'
+import { View, Text, SafeAreaView, StyleSheet, ScrollView, Image, TouchableOpacity, TextInput, Platform } from 'react-native'
+import React, { useEffect, useState } from 'react'
+import { CAIRO_FONT_FAMILY, globalTextStyles } from '../../styles/globalStyles'
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
+import { profileService } from '../../services/api/profileService';
+import { useSelector } from 'react-redux';
+import { useAlert } from '../../contexts/AlertContext';
 
-const DurationAndPrice = ({route}: {route: any}) => {
+const DurationAndPrice = ({ route }: { route: any }) => {
     const navigation = useNavigation();
     const Data = route.params?.Data;
-    console.log('Data',Data);
-
+    const user = useSelector((state: any) => state.root.user.user);
+    const { showAlert } = useAlert();
     const [visitDuration, setVisitDuration] = useState('');
     const [visitPrice, setVisitPrice] = useState('');
     const [allowWithNurse, setAllowWithNurse] = useState(false);
     const [nursePrice, setNursePrice] = useState('');
+    const [durationAndPriceData, setDurationAndPriceData] = useState<any>(null);
     const [errors, setErrors] = useState({
         visitDuration: false,
         visitPrice: false,
@@ -23,6 +27,35 @@ const DurationAndPrice = ({route}: {route: any}) => {
         navigation.goBack();
     }
 
+    useEffect(() => {
+        getServiceProviderDurationAndPrice();
+    }, [Data]);
+
+    useEffect(() => {
+        if (durationAndPriceData) {
+            setVisitDuration(durationAndPriceData.SlotDuration.toString());
+            setVisitPrice(durationAndPriceData.Price.toString());
+            if (durationAndPriceData.PriceWithNurse) {
+                setAllowWithNurse(true);
+                setNursePrice(durationAndPriceData.PriceWithNurse.toString());
+            } else {
+                setAllowWithNurse(false);
+                setNursePrice('');
+            }
+        }
+    }, [durationAndPriceData]);
+
+    const getServiceProviderDurationAndPrice = async () => {
+        const payload: any = {
+            UserloginInfoId: user.Id,
+            CatCategoryId: Data.CatCategoryId,
+            CatServiceServeTypeId: Data.CatServiceServeTypeId,
+        }
+        const response = await profileService.getServiceProviderDurationAndPrice(payload);
+        if (response.ResponseStatus.STATUSCODE == 200) {
+            setDurationAndPriceData(response.Data[0]);
+        }
+    };
     const validateForm = () => {
         const newErrors = {
             visitDuration: false,
@@ -54,11 +87,30 @@ const DurationAndPrice = ({route}: {route: any}) => {
         return !Object.values(newErrors).some(error => error);
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
         if (validateForm()) {
-            // Handle save logic here
-            console.log('Form is valid');
-            // You can add your save API call here
+
+            const payload: any = {
+                UserloginInfoId: user.Id,
+                CatCategoryId: Data.CatCategoryId,
+                SlotDuration: visitDuration,
+                Price: visitPrice,
+                CatServiceServeTypeId: Data.CatServiceServeTypeId,
+            };
+
+            if (allowWithNurse) {
+                payload.PriceWithNurse = nursePrice;
+            }
+
+            const response = await profileService.addServiceProviderDurationAndPrice(payload);
+            if (response.StatusCode.STATUSCODE == 11025) {
+                showAlert({
+                    title: response.StatusCode.MESSAGE,
+                    message: '',
+                    type: 'success',
+                });
+
+            }
         } else {
             console.log('Form has errors');
         }
@@ -67,21 +119,22 @@ const DurationAndPrice = ({route}: {route: any}) => {
     const renderHeader = () => (
         <View style={styles.header}>
             <TouchableOpacity onPress={backButtonPress} style={styles.backButton}>
-                <Ionicons name="chevron-back" size={24} color="#333" />
+                <Ionicons name="arrow-back-outline" size={24} color="#333" />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Duration & Price</Text>
         </View>
     );
-    
+
     return (
         <SafeAreaView style={styles.container}>
             {renderHeader()}
             <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
                 <View style={styles.mainContent}>
                     <View style={styles.headerSection}>
-                        <Image 
-                            source={Data?.CatServiceServeTypeId == 1 ? require('../../assets/icons/RemoteConsultant.png') : require('../../assets/icons/HomeVisit.png')} 
-                            style={styles.headerIcon} 
+                        <Image
+                            source={Data?.CatServiceServeTypeId == 1 ? require('../../assets/icons/RemoteConsultant.png') : require('../../assets/icons/HomeVisit.png')}
+                            style={styles.headerIcon}
+                            resizeMode='contain'
                         />
                         <Text style={styles.headerText}>
                             {Data?.CatServiceServeTypeId == 1 ? `Online Consultation Duration & Price` : `Home Visit Duration & Price`}
@@ -97,13 +150,13 @@ const DurationAndPrice = ({route}: {route: any}) => {
 
                         {/* Visit Duration */}
                         <View style={styles.inputGroup}>
-                            <Text style={styles.label}>Visit Duration (Min 1-60)</Text>
+                            <Text style={styles.label}>{Data?.CatServiceServeTypeId == 1 ? 'Session Duration' : 'Visit Duration'} (Min 1-60)</Text>
                             <TextInput
                                 style={[styles.input, errors.visitDuration && styles.inputError]}
                                 value={visitDuration}
                                 onChangeText={(text) => {
                                     setVisitDuration(text);
-                                    setErrors({...errors, visitDuration: false});
+                                    setErrors({ ...errors, visitDuration: false });
                                 }}
                                 keyboardType="numeric"
                                 placeholder="0"
@@ -113,14 +166,14 @@ const DurationAndPrice = ({route}: {route: any}) => {
 
                         {/* Visit Price */}
                         <View style={styles.inputGroup}>
-                            <Text style={styles.label}>Visit Price</Text>
+                            <Text style={styles.label}>{Data?.CatServiceServeTypeId == 1 ? 'Session Price' : 'Visit Price'}</Text>
                             <View style={[styles.priceInputContainer, errors.visitPrice && styles.inputError]}>
                                 <TextInput
                                     style={styles.priceInput}
                                     value={visitPrice}
                                     onChangeText={(text) => {
                                         setVisitPrice(text);
-                                        setErrors({...errors, visitPrice: false});
+                                        setErrors({ ...errors, visitPrice: false });
                                     }}
                                     keyboardType="numeric"
                                     placeholder="0"
@@ -131,7 +184,7 @@ const DurationAndPrice = ({route}: {route: any}) => {
                         </View>
 
                         {/* Allow with nurse checkbox */}
-                        {Data?.CatServiceServeTypeId == 2 && <TouchableOpacity 
+                        {Data?.CatServiceServeTypeId == 2 && <TouchableOpacity
                             style={styles.checkboxContainer}
                             onPress={() => setAllowWithNurse(!allowWithNurse)}
                             activeOpacity={0.7}
@@ -154,7 +207,7 @@ const DurationAndPrice = ({route}: {route: any}) => {
                                         value={nursePrice}
                                         onChangeText={(text) => {
                                             setNursePrice(text);
-                                            setErrors({...errors, nursePrice: false});
+                                            setErrors({ ...errors, nursePrice: false });
                                         }}
                                         keyboardType="numeric"
                                         placeholder="0"
@@ -170,7 +223,7 @@ const DurationAndPrice = ({route}: {route: any}) => {
 
             {/* Save Button */}
             <View style={styles.buttonContainer}>
-                <TouchableOpacity 
+                <TouchableOpacity
                     style={styles.saveButton}
                     onPress={handleSave}
                     activeOpacity={0.8}
@@ -210,9 +263,11 @@ const styles = StyleSheet.create({
         padding: 5,
     },
     headerTitle: {
-        ...globalTextStyles.h6,
-        marginLeft: 8,
-        flex: 1,
+        fontSize: 16,
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
+        color: '#000',
+        marginLeft: 4,
     },
     headerSection: {
         padding: 16,
@@ -226,8 +281,9 @@ const styles = StyleSheet.create({
         marginBottom: 8,
     },
     headerText: {
-        fontSize: 16,
-        fontWeight: '600',
+        fontSize: 15,
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#666',
     },
     formContainer: {
@@ -239,38 +295,42 @@ const styles = StyleSheet.create({
         marginTop: 16,
     },
     sectionHeader: {
-        backgroundColor: '#D1E8E4',
+        backgroundColor: '#e4f1ef',
         paddingVertical: 12,
         paddingHorizontal: 16,
+        borderRadius: 10,
+        overflow: 'hidden',
     },
     sectionTitle: {
         fontSize: 16,
-        fontWeight: '700',
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#000',
     },
     inputGroup: {
-        paddingHorizontal: 16,
+        paddingHorizontal: 8,
         paddingTop: 16,
     },
     label: {
         fontSize: 14,
-        fontWeight: '500',
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#333',
-        marginBottom: 8,
+        marginBottom: 4,
     },
     input: {
         borderWidth: 1,
         borderColor: '#E0E0E0',
         borderRadius: 8,
         paddingHorizontal: 16,
-        paddingVertical: 14,
+        paddingVertical: 8,
         fontSize: 16,
         color: '#000',
         backgroundColor: '#fff',
     },
     inputError: {
         borderColor: '#FF0000',
-        borderWidth: 1.5,
+        borderWidth: 1,
     },
     priceInputContainer: {
         flexDirection: 'row',
@@ -283,15 +343,16 @@ const styles = StyleSheet.create({
     },
     priceInput: {
         flex: 1,
-        paddingVertical: 14,
+        paddingVertical: 8,
         fontSize: 16,
         color: '#000',
     },
     currency: {
-        fontSize: 16,
+        fontSize: 15,
         color: '#00A79D',
-        fontWeight: '500',
-        marginLeft: 8,
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
+        marginLeft: 4,
     },
     checkboxContainer: {
         flexDirection: 'row',
@@ -326,14 +387,15 @@ const styles = StyleSheet.create({
     },
     saveButton: {
         backgroundColor: '#00A79D',
-        paddingVertical: 16,
+        paddingVertical: 12,
         borderRadius: 12,
         alignItems: 'center',
         justifyContent: 'center',
     },
     saveButtonText: {
         fontSize: 18,
-        fontWeight: '600',
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#fff',
     },
 })

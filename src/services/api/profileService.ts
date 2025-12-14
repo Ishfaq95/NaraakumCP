@@ -470,6 +470,26 @@ export const updateServiceProviderBio = async (credentials: any) => {
     }
 }
 
+export const addServiceProviderDurationAndPrice = async (credentials: any) => {
+    try {
+        const response = await axiosInstance.post('user/AddServiceProviderSlotDurationandPrice', credentials);
+        return response.data;
+    } catch (error: any) {
+        console.error('Error adding service provider duration and price:', error);
+        throw error;    
+    }
+}
+
+export const getServiceProviderDurationAndPrice = async (credentials: any) => {
+    try {
+        const response = await axiosInstance.post('user/GetServiceProviderSlotDurationandPrice', credentials);
+        return response.data;
+    } catch (error: any) {
+        console.error('Error getting service provider duration and price:', error);
+        throw error;    
+    }
+}
+
 // Export all profile related functions
 export const profileService = {
     getServiceProviderByUserId,
@@ -500,4 +520,6 @@ export const profileService = {
     getServiceProviderBioHeads,
     getServiceProviderBio,
     updateServiceProviderBio,
+    addServiceProviderDurationAndPrice,
+    getServiceProviderDurationAndPrice,
 }; 

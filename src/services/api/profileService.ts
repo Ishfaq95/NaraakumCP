@@ -248,13 +248,11 @@ export const uploadFile = async (file: any, user: any) => {
 
       return responseData;
     } catch (error: any) {
-      
       throw new Error(error instanceof Error ? error.message : 'Upload failed');
     }
   };
 
 export const addServiceProviderContract = async (credentials: any) => {
-
     try {
         const response: any = await axiosInstance.post(
             `user/AddServiceProviderContract`,
@@ -365,7 +363,6 @@ export const getServiceProviderAvailability = async (credentials: any) => {
         return response.data;
     }
     catch (error: any) {
-        
         throw {
             message: error?.response?.data?.message || 'Get service provider availability failed',
             status: error?.response?.status,
@@ -392,23 +389,19 @@ export const updateServiceProviderPersonalProfile = async (credentials: any) => 
 }
 
 export const userUpdatedPhone = async (payload: any): Promise<any> => {
-
     try {
         const response = await axiosInstance.post('patients/PhoneVerification', payload);
         return response.data;
     } catch (error: any) {
-        
         throw error;    
     }
 };
 
 export const verifyUserUpdatedData = async (payload: any): Promise<any> => {
-
     try {
         const response = await axiosInstance.post('patients/VerifyRegisteredUser', payload);
         return response.data;
     } catch (error: any) {
-        
         throw error;    
     }
 };
@@ -419,7 +412,6 @@ export const resendOtp = async (payload: any): Promise<any> => {
         const response = await axiosInstance.post('patients/ResendRegistrationCode', payload);
         return response.data;
     } catch (error: any) {
-        
         throw error;    
     }
 };
@@ -430,7 +422,6 @@ export const userUpdatedEmail = async (payload: any): Promise<any> => {
         const response = await axiosInstance.post('patients/EmailVerification', payload);
         return response.data;
     } catch (error: any) {
-        
         throw error;    
     }
 };
@@ -441,7 +432,6 @@ export const getServiceProviderBioHeads = async () => {
         return response.data;
     }
     catch (error: any) {
-        
         throw {
             message: error?.response?.data?.message || 'Get service provider bio heads failed',
             status: error?.response?.status
@@ -454,7 +444,6 @@ export const getServiceProviderBio = async (credentials: any) => {
         const response = await axiosInstance.post('user/GetServiceProviderBio', credentials);
         return response.data;
     } catch (error: any) {
-        
         throw error;    
     }
 }
@@ -464,7 +453,6 @@ export const updateServiceProviderBio = async (credentials: any) => {
         const response = await axiosInstance.post('user/AddEditServiceProviderBio', credentials);
         return response.data;
     } catch (error: any) {
-        
         throw error;    
     }
 }

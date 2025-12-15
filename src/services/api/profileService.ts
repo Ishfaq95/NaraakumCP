@@ -497,6 +497,42 @@ export const getOrganizationInfo = async (credentials: any) => {
     }
 }
 
+export const addUpdateServiceProviderAvailability = async (credentials: any) => {
+    try {
+        const response = await axiosInstance.post('organization/AddServiceProviderAvailability', credentials);
+        return response.data;
+    } catch (error: any) {
+        throw error;    
+    }
+}
+
+export const deleteServiceProviderAvailability = async (credentials: any) => {
+    try {
+        const response = await axiosInstance.post('organization/DeleteServiceProviderAvailabilityByIds', credentials);
+        return response.data;
+    } catch (error: any) {
+        throw error;    
+    }
+}
+
+export const updateServiceProviderAvailability = async (credentials: any) => {
+    try {
+        const response = await axiosInstance.post('organization/UpdateServiceProviderAvailabilityByIds', credentials);
+        return response.data;
+    } catch (error: any) {
+        throw error;    
+    }
+}
+
+export const copyServiceProviderAvailabilityToNextMonth = async (credentials: any) => {
+    try {
+        const response = await axiosInstance.post('organization/ServiceProviderAvailabilityCopytoNextMonth', credentials);
+        return response.data;
+    } catch (error: any) {
+        throw error;    
+    }
+}
+
 // Export all profile related functions
 export const profileService = {
     getServiceProviderByUserId,
@@ -531,4 +567,8 @@ export const profileService = {
     getServiceProviderDurationAndPrice,
     addUpdateOrganizationAddress,
     getOrganizationInfo,
+    addUpdateServiceProviderAvailability,
+    deleteServiceProviderAvailability,
+    updateServiceProviderAvailability,
+    copyServiceProviderAvailabilityToNextMonth,
 }; 

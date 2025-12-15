@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Switch, TextInput, Alert, ActivityIndicator, Image } from 'react-native'
 import React, { useEffect, useState } from 'react'
-import { globalTextStyles } from '../../styles/globalStyles';
+import { CAIRO_FONT_FAMILY, globalTextStyles } from '../../styles/globalStyles';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation } from '@react-navigation/native';
@@ -9,6 +9,7 @@ import { useSelector } from 'react-redux';
 import moment from 'moment';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Platform } from 'react-native';
+import { useAlert } from '../../contexts/AlertContext';
 
 type ViewMode = 'Month' | 'Week' | 'Day' | 'Custom';
 
@@ -43,6 +44,7 @@ const BusinessHours = ({route}: {route: any}) => {
     const [viewMode, setViewMode] = useState<ViewMode>('Month');
     const [selectedDate, setSelectedDate] = useState(moment());
     const [selectedDates, setSelectedDates] = useState<moment.Moment[]>([]);
+    const { showAlert } = useAlert();
     
     // Business days state - Will be updated based on API response
     const [businessDays, setBusinessDays] = useState<{ [key: number]: boolean }>({
@@ -63,19 +65,33 @@ const BusinessHours = ({route}: {route: any}) => {
     const [tempStartTime, setTempStartTime] = useState(new Date());
     const [tempEndTime, setTempEndTime] = useState(new Date());
     const [isSaving, setIsSaving] = useState(false);
-
+    const [timeErrors, setTimeErrors] = useState({ start: false, end: false, date: false });
+    const [customStartDate, setCustomStartDate] = useState<moment.Moment | null>(null);
+    const [customEndDate, setCustomEndDate] = useState<moment.Moment | null>(null);
+    const [showCustomStartPicker, setShowCustomStartPicker] = useState(false);
+    const [showCustomEndPicker, setShowCustomEndPicker] = useState(false);
+    const [editSlots, setEditSlots] = useState<any>(null);
     const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+    const getWeekAnchorForMonth = (month: moment.Moment) => {
+        const today = moment();
+        if (month.isSame(today, 'month')) {
+            return today.clone().startOf('week');
+        }
+        return month.clone().startOf('month').startOf('week');
+    };
+
+    const getDayAnchorForMonth = (month: moment.Moment) => {
+        const today = moment();
+        if (month.isSame(today, 'month')) {
+            return today.clone();
+        }
+        return month.clone().startOf('month');
+    };
 
     useEffect(() => {
         getServiceProviderHolidays();
-        getServiceProviderAvailability();
     }, []);
-
-    useEffect(() => {
-        if (Data) {
-            getServiceProviderAvailability();
-        }
-    }, [Data]);
 
     useEffect(() => {
         // Update business days based on holidays from API
@@ -111,13 +127,14 @@ const BusinessHours = ({route}: {route: any}) => {
         }
     };
 
-    const getServiceProviderAvailability = async () => {
+    const getServiceProviderAvailability = async (monthDate: moment.Moment) => {
         try {
+            const startOfTargetMonth = monthDate.clone().startOf('month').format('YYYY-MM-DD');
             const payload = {
                 CatAvailabilityTypeId: 0,
                 CatServiceServeTypeId: Data?.CatServiceServeTypeId,
                 ServiceProviderId: user?.Id,
-                StartDate: moment().format('YYYY-MM-DD'),
+                StartDate: startOfTargetMonth,
             };
             const response = await profileService.getServiceProviderAvailability(payload);
             if (response?.ResponseStatus?.STATUSCODE == 200) {
@@ -126,6 +143,11 @@ const BusinessHours = ({route}: {route: any}) => {
         } catch (error: any) {
         }
     };
+
+    useEffect(() => {
+        // Fetch availability whenever selected month or service type changes
+        getServiceProviderAvailability(selectedMonth);
+    }, [selectedMonth, Data?.CatServiceServeTypeId]);
 
     const backButtonPress = () => {
         navigation.goBack();
@@ -159,6 +181,7 @@ const BusinessHours = ({route}: {route: any}) => {
         });
     };
 
+    console.log("availability", availability);
     const getAvailabilitySlotsForDate = (date: moment.Moment) => {
         // Don't return slots for holidays
         if (isHoliday(date)) {
@@ -172,6 +195,88 @@ const BusinessHours = ({route}: {route: any}) => {
         });
     };
 
+    const formatDisplayDate = (date: moment.Moment | null) => date ? date.format('DD-MMM-YYYY') : '';
+
+    const handleCustomStartChange = (_event: any, date?: Date) => {
+        setShowCustomStartPicker(Platform.OS === 'ios');
+        if (date) {
+            const mDate = moment(date);
+            setCustomStartDate(mDate);
+            if (!customEndDate || mDate.isAfter(customEndDate)) {
+                setCustomEndDate(mDate);
+            }
+            setSelectedDate(mDate);
+            setSelectedMonth(mDate.clone().startOf('month'));
+        }
+    };
+
+    const handleCustomEndChange = (_event: any, date?: Date) => {
+        setShowCustomEndPicker(Platform.OS === 'ios');
+        if (date) {
+            const mDate = moment(date);
+            if (customStartDate && mDate.isBefore(customStartDate)) {
+                return;
+            }
+            setCustomEndDate(mDate);
+            setSelectedDate(mDate);
+            setSelectedMonth(mDate.clone().startOf('month'));
+        }
+    };
+
+    const renderSelectionInfo = () => {
+        if (viewMode === 'Custom') {
+            return (
+                <View style={styles.dateRangeRow}>
+                    <View style={styles.dateInputGroup}>
+                        <Text style={styles.dateLabel}>Start Date</Text>
+                        <TouchableOpacity style={[styles.dateInput, timeErrors.date && styles.inputError]} onPress={() => setShowCustomStartPicker(true)}>
+                            <Text style={styles.dateInputText}>{formatDisplayDate(customStartDate) || 'Select start date'}</Text>
+                        </TouchableOpacity>
+                    </View>
+                    <View style={styles.dateInputGroup}>
+                        <Text style={styles.dateLabel}>End Date</Text>
+                        <TouchableOpacity style={[styles.dateInput, timeErrors.date && styles.inputError]} onPress={() => setShowCustomEndPicker(true)}>
+                            <Text style={styles.dateInputText}>{formatDisplayDate(customEndDate) || 'Select end date'}</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            );
+        }
+
+        if (viewMode === 'Month') {
+            return (
+                <View style={styles.selectedMonthRow}>
+                    <MaterialIcons name="calendar-today" size={20} color="#00A896" />
+                    <Text style={styles.selectedMonthText}>
+                        Selected Month is: <Text style={styles.selectedMonthTextValue}>{selectedMonth.format('MMMM YYYY')}</Text>
+                    </Text>
+                </View>
+            );
+        }
+
+        if (viewMode === 'Week') {
+            const start = selectedDate.clone().startOf('week');
+            const end = selectedDate.clone().endOf('week');
+            return (
+                <View style={styles.selectedMonthRow}>
+                    <MaterialIcons name="calendar-today" size={20} color="#00A896" />
+                    <Text style={styles.selectedMonthText}>
+                        Selected Week is: <Text style={styles.selectedMonthTextValue}>{start.format('DD-MMM-YYYY')} - {end.format('DD-MMM-YYYY')}</Text>
+                    </Text>
+                </View>
+            );
+        }
+
+        return (
+            <View style={styles.selectedMonthRow}>
+                <MaterialIcons name="calendar-today" size={20} color="#00A896" />
+                <Text style={styles.selectedMonthText}>
+                    Selected Date is: <Text style={styles.selectedMonthTextValue}>{selectedDate.format('DD-MMM-YYYY')}</Text>
+                </Text>
+            </View>
+        );
+    };
+
     const handleDatePress = (date: moment.Moment) => {
         setSelectedDate(date);
         const existingIndex = selectedDates.findIndex(d => d.isSame(date, 'day'));
@@ -182,24 +287,204 @@ const BusinessHours = ({route}: {route: any}) => {
         }
     };
 
-    const handleSave = async () => {
-        if (!startTime || !endTime) {
-            Alert.alert('Error', 'Please select start and end time');
+    const handleDelete = async (slot: any) => {
+        const payload = {
+            "ServiceProviderAvailabilityIds":slot.IDs,
+            "filter":"fullslot",
+            "StartDate": moment(slot.StartDate).format("YYYY-MM-DD"),
+            "EndDate": moment(slot.EndDate).format("YYYY-MM-DD"),
+            "CatServiceServeTypeId":Data?.CatServiceServeTypeId
+        };
+        const response = await profileService.deleteServiceProviderAvailability(payload);
+        if (response?.ResponseStatus?.STATUSCODE == 200) {
+            showAlert({
+                title: response?.ResponseStatus?.MESSAGE,
+                message: '',
+                type: 'success',
+            });
+            getServiceProviderAvailability(selectedMonth);
+        }
+    };
+
+    const handleEditButton = (slot: any) => {
+        setStartTime(moment(slot.StartTime, 'HH:mm').format('h:mm A'));
+        setEndTime(moment(slot.EndTime, 'HH:mm').format('h:mm A'));
+        setEditSlots(slot);
+        if(slot.CatAvailabilityTypeId == 4) {
+            setViewMode('Custom');
+            setCustomStartDate(moment(slot.StartDate));
+            setCustomEndDate(moment(slot.EndDate));
+        }
+        if(slot.CatAvailabilityTypeId == 3) {
+            setViewMode('Month');
+            setSelectedMonth(moment(slot.StartDate));
+        }
+        if(slot.CatAvailabilityTypeId == 2) {
+            setViewMode('Week');
+            setSelectedDate(moment(slot.StartDate));
+        }
+        if(slot.CatAvailabilityTypeId == 1) {
+            setViewMode('Day');
+            setSelectedDate(moment(slot.StartDate));
+        }
+    };
+
+    const handleCopyToNextMonth = async () => {
+        const payload = {
+            "ServiceProviderId": user?.Id,
+            "Date": selectedMonth.clone().startOf('month').format('YYYY-MM-DD'),
+        };
+        const response = await profileService.copyServiceProviderAvailabilityToNextMonth(payload);
+        if (response?.ResponseStatus?.STATUSCODE == 200) {
+            showAlert({
+                title: response?.ResponseStatus?.MESSAGE,
+                message: '',
+                type: 'success',
+            });
+            getServiceProviderAvailability(selectedMonth);
+        }
+    };
+
+    const handleUpdate = async () => {
+        let payloadStartDate: moment.Moment | null = null;
+        let payloadEndDate: moment.Moment | null = null;
+        let catAvailabilityTypeId = 1;
+
+        if (viewMode === 'Month') {
+            const today = moment().startOf('day');
+            const monthStart = selectedMonth.clone().startOf('month');
+            payloadStartDate = selectedMonth.isSame(today, 'month') ? moment.max(monthStart, today) : monthStart;
+            payloadEndDate = selectedMonth.clone().endOf('month');
+            catAvailabilityTypeId = 3;
+        } else if (viewMode === 'Week') {
+            payloadStartDate = selectedDate.clone().startOf('week');
+            payloadEndDate = selectedDate.clone().endOf('week');
+            catAvailabilityTypeId = 2;
+        } else if (viewMode === 'Day') {
+            payloadStartDate = selectedDate.clone().startOf('day');
+            payloadEndDate = selectedDate.clone().startOf('day');
+            catAvailabilityTypeId = 1;
+        } else if (viewMode === 'Custom') {
+            payloadStartDate = customStartDate;
+            payloadEndDate = customEndDate;
+            catAvailabilityTypeId = 4;
+        }
+
+        if (!payloadStartDate || !payloadEndDate) {
             return;
         }
 
-        if (selectedDates.length === 0) {
-            Alert.alert('Error', 'Please select at least one date');
+        const startTime24 = moment(startTime, 'h:mm A').format('HH:mm');
+        const endTime24 = moment(endTime, 'h:mm A').format('HH:mm');
+
+        const payload = {
+            "Ids":editSlots.IDs,
+            "OrganizationId":user?.OrganizationId || Data?.OrganizationId,
+            "ServiceProviderId":user?.Id,
+            "StartTime":startTime24,
+            "EndTime":endTime24,
+            "CatAvailabilityTypeId":catAvailabilityTypeId,
+            "StartDate":payloadStartDate.format('YYYY-MM-DD'),
+            "EndDate":payloadEndDate.format('YYYY-MM-DD'),
+            "CatServiceServeTypeId":Data?.CatServiceServeTypeId
+        }
+        
+        const response = await profileService.updateServiceProviderAvailability(payload);
+        if (response?.ResponseStatus?.STATUSCODE == 200) {
+            setEditSlots(null);
+            setStartTime('');
+            setEndTime('');
+            setViewMode('Month');
+            setSelectedMonth(moment());
+            setCustomStartDate(null);
+            setCustomEndDate(null);
+            showAlert({
+                title: response?.ResponseStatus?.MESSAGE,
+                message: '',
+                type: 'success',
+            });
+            getServiceProviderAvailability(selectedMonth);
+        }
+        
+    };
+
+    const handleSave = async () => {
+        const hasStart = !!startTime;
+        const hasEnd = !!endTime;
+        let hasDate = true;
+
+        let payloadStartDate: moment.Moment | null = null;
+        let payloadEndDate: moment.Moment | null = null;
+        let catAvailabilityTypeId = 1;
+
+        if (viewMode === 'Month') {
+            const today = moment().startOf('day');
+            const monthStart = selectedMonth.clone().startOf('month');
+            payloadStartDate = selectedMonth.isSame(today, 'month') ? moment.max(monthStart, today) : monthStart;
+            payloadEndDate = selectedMonth.clone().endOf('month');
+            catAvailabilityTypeId = 3;
+        } else if (viewMode === 'Week') {
+            payloadStartDate = selectedDate.clone().startOf('week');
+            payloadEndDate = selectedDate.clone().endOf('week');
+            catAvailabilityTypeId = 2;
+        } else if (viewMode === 'Day') {
+            payloadStartDate = selectedDate.clone().startOf('day');
+            payloadEndDate = selectedDate.clone().startOf('day');
+            catAvailabilityTypeId = 1;
+        } else if (viewMode === 'Custom') {
+            payloadStartDate = customStartDate;
+            payloadEndDate = customEndDate;
+            catAvailabilityTypeId = 4;
+        }
+
+        if (!payloadStartDate || !payloadEndDate) {
+            hasDate = false;
+        }
+
+        setTimeErrors({
+            start: !hasStart,
+            end: !hasEnd,
+            date: !hasDate,
+        });
+
+        if (!hasStart || !hasEnd || !hasDate || !payloadStartDate || !payloadEndDate) {
+            return;
+        }
+
+        const startTime24 = moment(startTime, 'h:mm A').format('HH:mm');
+        const endTime24 = moment(endTime, 'h:mm A').format('HH:mm');
+
+        const today = moment().startOf('day');
+        if (payloadStartDate.isBefore(today)) {
+            setTimeErrors(prev => ({ ...prev, date: true }));
+            showAlert({
+                title: 'Previous date scheduling not allowed',
+                message: '',
+                type: 'warning',
+            });
             return;
         }
 
         setIsSaving(true);
-        // TODO: Implement save API call
-        setTimeout(() => {
-            setIsSaving(false);
-            Alert.alert('Success', 'Business hours saved successfully');
-            handleClear();
-        }, 1000);
+        const payload = {
+            OrganizationId: user?.OrganizationId || Data?.OrganizationId,
+            ServiceProviderId: user?.Id,
+            StartDate: payloadStartDate.format('YYYY-MM-DD'),
+            EndDate: payloadEndDate.format('YYYY-MM-DD'),
+            StartTime: startTime24,
+            EndTime: endTime24,
+            CatAvailabilityTypeId: catAvailabilityTypeId,
+            CatServiceServeTypeId: Data?.CatServiceServeTypeId,
+        };
+        const response = await profileService.addUpdateServiceProviderAvailability(payload);
+        if (response?.ResponseStatus?.STATUSCODE == 200) {
+            showAlert({
+                title: response?.ResponseStatus?.MESSAGE,
+                message: '',
+                type: 'success',
+            });
+        }
+        setIsSaving(false);
     };
 
     const handleClear = () => {
@@ -216,7 +501,7 @@ const BusinessHours = ({route}: {route: any}) => {
     const renderHeader = () => (
         <View style={styles.header}>
             <TouchableOpacity onPress={backButtonPress} style={styles.backButton}>
-                <Ionicons name="chevron-back" size={24} color="#333" />
+                <Ionicons name="arrow-back-outline" size={24} color="#333" />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Business Hours</Text>
         </View>
@@ -238,47 +523,121 @@ const BusinessHours = ({route}: {route: any}) => {
                     </View>
                 ))}
             </View>
+            <View  style={{height:1,backgroundColor: '#eee',marginTop: 20}} />
         </View>
     );
+
+    const handleViewModeChange = (mode: ViewMode) => {
+        setViewMode(mode);
+        if (mode === 'Month') {
+            setSelectedDate(selectedMonth.clone().startOf('month'));
+        } else if (mode === 'Week') {
+            const anchor = getWeekAnchorForMonth(selectedMonth);
+            setSelectedDate(anchor);
+        } else if (mode === 'Day' || mode === 'Custom') {
+            const anchor = getDayAnchorForMonth(selectedMonth);
+            setSelectedDate(anchor);
+            if (mode === 'Custom') {
+                setCustomStartDate(prev => prev || anchor);
+                setCustomEndDate(prev => prev || anchor);
+            }
+        }
+    };
 
     const renderViewModeButtons = () => (
         <View style={styles.viewModeContainer}>
             <TouchableOpacity
                 style={[styles.viewModeButton, viewMode === 'Month' && styles.viewModeButtonActive]}
-                onPress={() => setViewMode('Month')}
+                onPress={() => handleViewModeChange('Month')}
             >
                 <Text style={[styles.viewModeText, viewMode === 'Month' && styles.viewModeTextActive]}>Month</Text>
             </TouchableOpacity>
             <TouchableOpacity
                 style={[styles.viewModeButton, viewMode === 'Week' && styles.viewModeButtonActive]}
-                onPress={() => setViewMode('Week')}
+                onPress={() => handleViewModeChange('Week')}
             >
                 <Text style={[styles.viewModeText, viewMode === 'Week' && styles.viewModeTextActive]}>Week</Text>
             </TouchableOpacity>
             <TouchableOpacity
                 style={[styles.viewModeButton, viewMode === 'Day' && styles.viewModeButtonActive]}
-                onPress={() => setViewMode('Day')}
+                onPress={() => handleViewModeChange('Day')}
             >
                 <Text style={[styles.viewModeText, viewMode === 'Day' && styles.viewModeTextActive]}>Day</Text>
             </TouchableOpacity>
             <TouchableOpacity
                 style={[styles.viewModeButton, viewMode === 'Custom' && styles.viewModeButtonActive]}
-                onPress={() => setViewMode('Custom')}
+                onPress={() => handleViewModeChange('Custom')}
             >
                 <Text style={[styles.viewModeText, viewMode === 'Custom' && styles.viewModeTextActive]}>Custom</Text>
             </TouchableOpacity>
         </View>
     );
 
+    const handlePrevNavigation = () => {
+        if (viewMode === 'Month') {
+            setSelectedMonth(prev => {
+                const nextMonth = prev.clone().subtract(1, 'month');
+                setSelectedDate(nextMonth.clone().startOf('month'));
+                return nextMonth;
+            });
+        } else if (viewMode === 'Week') {
+            setSelectedDate(prev => {
+                const nextDate = prev.clone().subtract(1, 'week').startOf('week');
+                setSelectedMonth(nextDate.clone().startOf('month'));
+                return nextDate;
+            });
+        } else {
+            setSelectedDate(prev => {
+                const nextDate = prev.clone().subtract(1, 'day');
+                setSelectedMonth(nextDate.clone().startOf('month'));
+                return nextDate;
+            });
+        }
+    };
+
+    const handleNextNavigation = () => {
+        if (viewMode === 'Month') {
+            setSelectedMonth(prev => {
+                const nextMonth = prev.clone().add(1, 'month');
+                setSelectedDate(nextMonth.clone().startOf('month'));
+                return nextMonth;
+            });
+        } else if (viewMode === 'Week') {
+            setSelectedDate(prev => {
+                const nextDate = prev.clone().add(1, 'week').startOf('week');
+                setSelectedMonth(nextDate.clone().startOf('month'));
+                return nextDate;
+            });
+        } else {
+            setSelectedDate(prev => {
+                const nextDate = prev.clone().add(1, 'day');
+                setSelectedMonth(nextDate.clone().startOf('month'));
+                return nextDate;
+            });
+        }
+    };
+
+    const getCenterLabel = () => {
+        if (viewMode === 'Month') {
+            return selectedMonth.format('MMMM YYYY').toUpperCase();
+        }
+        if (viewMode === 'Week') {
+            const start = selectedDate.clone().startOf('week');
+            const end = selectedDate.clone().endOf('week');
+            return `${start.format('MM/DD/YYYY')} - ${end.format('MM/DD/YYYY')}`;
+        }
+        return selectedDate.format('MMMM DD, YYYY');
+    };
+
     const renderMonthNavigation = () => (
         <View style={styles.monthNavigation}>
-            <TouchableOpacity onPress={() => setSelectedMonth(selectedMonth.clone().subtract(1, 'month'))}>
+            <TouchableOpacity onPress={handlePrevNavigation}>
                 <Ionicons name="chevron-back" size={24} color="#333" />
             </TouchableOpacity>
             <Text style={styles.monthYearText}>
-                {selectedMonth.format('MMMM YYYY').toUpperCase()}
+                {getCenterLabel()}
             </Text>
-            <TouchableOpacity onPress={() => setSelectedMonth(selectedMonth.clone().add(1, 'month'))}>
+            <TouchableOpacity onPress={handleNextNavigation}>
                 <Ionicons name="chevron-forward" size={24} color="#333" />
             </TouchableOpacity>
         </View>
@@ -400,8 +759,20 @@ const BusinessHours = ({route}: {route: any}) => {
                                                 const startMinute = parseInt(slot.StartTime.split(':')[1]);
                                                 const endMinute = parseInt(slot.EndTime.split(':')[1]);
                                                 // Use 50px per hour instead of 60px
-                                                const top = startHour * 50 + (startMinute * 50 / 60);
-                                                const height = ((endHour * 60 + endMinute) - (startHour * 60 + startMinute)) * 50 / 60;
+                                                const top = startHour * 30 + (startMinute * 30 / 40);
+                                                const height = ((endHour * 40 + endMinute) - (startHour * 40 + startMinute)) * 30 / 40;
+
+                                                const startHourAMPM = startHour % 12 === 0 ? 12 : startHour % 12;
+                                                const endHourAMPM = endHour % 12 === 0 ? 12 : endHour % 12;
+
+                                                const startHourAMPMText = startHourAMPM < 10 ? `0${startHourAMPM}` : startHourAMPM;
+                                                const endHourAMPMText = endHourAMPM < 10 ? `0${endHourAMPM}` : endHourAMPM;
+
+                                                const startMinuteText = startMinute < 10 ? `0${startMinute}` : startMinute;
+                                                const endMinuteText = endMinute < 10 ? `0${endMinute}` : endMinute;
+
+                                                const period = startHour < 12 ? 'AM' : 'PM';
+                                                const endPeriod = endHour < 12 ? 'AM' : 'PM';
 
                                                 return (
                                                     <View
@@ -411,12 +782,12 @@ const BusinessHours = ({route}: {route: any}) => {
                                                             { top, height }
                                                         ]}
                                                     >
-                                                        <Text style={styles.availabilityBlockText}>{slot.title}</Text>
+                                                        <Text style={styles.availabilityBlockText}>{`${startHourAMPMText}:${startMinuteText} ${period} - ${endHourAMPMText}:${endMinuteText} ${endPeriod}`}</Text>
                                                     </View>
                                                 );
                                             })}
                                             {Array.from({ length: 24 }, (_, i) => (
-                                                <View key={i} style={[styles.hourLine, { top: i * 50 }]} />
+                                                <View key={i} style={[styles.hourLine, { top: i * 30 }]} />
                                             ))}
                                         </View>
                                     </View>
@@ -459,15 +830,27 @@ const BusinessHours = ({route}: {route: any}) => {
                         </View>
                         <View style={styles.dayMainColumn}>
                             {Array.from({ length: 24 }, (_, i) => (
-                                <View key={i} style={[styles.hourLine, { top: i * 50 }]} />
+                                <View key={i} style={[styles.hourLine, { top: i * 30 }]} />
                             ))}
                             {!isDayHoliday && slots.map((slot, slotIndex) => {
                                 const startHour = parseInt(slot.StartTime.split(':')[0]);
                                 const endHour = parseInt(slot.EndTime.split(':')[0]);
                                 const startMinute = parseInt(slot.StartTime.split(':')[1]);
                                 const endMinute = parseInt(slot.EndTime.split(':')[1]);
-                                const top = startHour * 50 + (startMinute * 50 / 60);
-                                const height = ((endHour * 60 + endMinute) - (startHour * 60 + startMinute)) * 50 / 60;
+                                const top = startHour * 30 + (startMinute * 30 / 40);
+                                const height = ((endHour * 40 + endMinute) - (startHour * 40 + startMinute)) * 30 / 40;
+
+                                const startHourAMPM = startHour % 12 === 0 ? 12 : startHour % 12;
+                                const endHourAMPM = endHour % 12 === 0 ? 12 : endHour % 12;
+
+                                const startHourAMPMText = startHourAMPM < 10 ? `0${startHourAMPM}` : startHourAMPM;
+                                const endHourAMPMText = endHourAMPM < 10 ? `0${endHourAMPM}` : endHourAMPM;
+
+                                const startMinuteText = startMinute < 10 ? `0${startMinute}` : startMinute;
+                                const endMinuteText = endMinute < 10 ? `0${endMinute}` : endMinute;
+
+                                const period = startHour < 12 ? 'AM' : 'PM';
+                                const endPeriod = endHour < 12 ? 'AM' : 'PM';
 
                                 return (
                                     <View
@@ -477,7 +860,7 @@ const BusinessHours = ({route}: {route: any}) => {
                                             { top, height }
                                         ]}
                                     >
-                                        <Text style={styles.dayAvailabilityText}>{slot.title}</Text>
+                                        <Text style={styles.dayAvailabilityText}>{`${startHourAMPMText}:${startMinuteText} ${period} - ${endHourAMPMText}:${endMinuteText} ${endPeriod}`}</Text>
                                     </View>
                                 );
                             })}
@@ -493,20 +876,31 @@ const BusinessHours = ({route}: {route: any}) => {
             <View style={styles.scheduleSection}>
                 <View style={styles.scheduleTitleRow}>
                     <Text style={styles.scheduleTitle}>Schedule</Text>
-                    <TouchableOpacity>
+                    <TouchableOpacity onPress={handleCopyToNextMonth}>
                         <Text style={styles.copyToNextMonth}>Copy to Next Month</Text>
                     </TouchableOpacity>
                 </View>
 
-                <View style={styles.selectedMonthRow}>
-                    <MaterialIcons name="calendar-today" size={20} color="#00A896" />
-                    <Text style={styles.selectedMonthText}>
-                        Selected Month is: {selectedMonth.format('MMMM YYYY')}
-                    </Text>
-                </View>
+                {renderSelectionInfo()}
+                {showCustomStartPicker && (
+                    <DateTimePicker
+                        value={(customStartDate || moment()).toDate()}
+                        mode="date"
+                        display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                        onChange={handleCustomStartChange}
+                    />
+                )}
+                {showCustomEndPicker && (
+                    <DateTimePicker
+                        value={(customEndDate || moment()).toDate()}
+                        mode="date"
+                        display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                        onChange={handleCustomEndChange}
+                    />
+                )}
 
                 <TextInput
-                    style={styles.timeInput}
+                    style={[styles.timeInput, timeErrors.start && styles.inputError]}
                     placeholder="Start Time"
                     value={startTime}
                     onFocus={() => setShowStartTimePicker(true)}
@@ -514,7 +908,7 @@ const BusinessHours = ({route}: {route: any}) => {
                 />
 
                 <TextInput
-                    style={styles.timeInput}
+                    style={[styles.timeInput, timeErrors.end && styles.inputError]}
                     placeholder="End Time"
                     value={endTime}
                     onFocus={() => setShowEndTimePicker(true)}
@@ -554,7 +948,7 @@ const BusinessHours = ({route}: {route: any}) => {
                 <View style={styles.scheduleButtons}>
                     <TouchableOpacity
                         style={styles.saveButton}
-                        onPress={handleSave}
+                        onPress={editSlots ? handleUpdate : handleSave}
                         disabled={isSaving}
                     >
                         {isSaving ? (
@@ -573,22 +967,41 @@ const BusinessHours = ({route}: {route: any}) => {
 
                 <View style={styles.markedSlotsSection}>
                     <Text style={styles.markedSlotsTitle}>Already marked slots</Text>
-                    {availability.map((slot, index) => (
+                    {availability.map((slot, index) => {
+                        const startHour = parseInt(slot.StartTime.split(':')[0]);
+                        const endHour = parseInt(slot.EndTime.split(':')[0]);
+                        const startMinute = parseInt(slot.StartTime.split(':')[1]);
+                        const endMinute = parseInt(slot.EndTime.split(':')[1]);
+
+                        const startHourAMPM = startHour % 12 === 0 ? 12 : startHour % 12;
+                        const endHourAMPM = endHour % 12 === 0 ? 12 : endHour % 12;
+
+                        const startHourAMPMText = startHourAMPM < 10 ? `0${startHourAMPM}` : startHourAMPM;
+                        const endHourAMPMText = endHourAMPM < 10 ? `0${endHourAMPM}` : endHourAMPM;
+
+                        const startMinuteText = startMinute < 10 ? `0${startMinute}` : startMinute;
+                        const endMinuteText = endMinute < 10 ? `0${endMinute}` : endMinute;
+
+                        const period = startHour < 12 ? 'AM' : 'PM';
+                        const endPeriod = endHour < 12 ? 'AM' : 'PM';
+
+                        return (
                         <View key={index} style={styles.markedSlot}>
-                            <Text style={styles.markedSlotTime}>{slot.title}</Text>
+                            <Text style={styles.markedSlotTime}>{`${startHourAMPMText}:${startMinuteText} ${period} - ${endHourAMPMText}:${endMinuteText} ${endPeriod}`}</Text>
                             <Text style={styles.markedSlotDate}>
                                 {moment(slot.start).format('YYYY-MM-DD')} - {moment(slot.end).format('YYYY-MM-DD')}
                             </Text>
                             <View style={styles.markedSlotActions}>
-                                <TouchableOpacity>
+                                <TouchableOpacity onPress={() => handleEditButton(slot)}>
                                     <MaterialIcons name="edit" size={20} color="#666" />
                                 </TouchableOpacity>
-                                <TouchableOpacity>
+                                <TouchableOpacity onPress={() => handleDelete(slot)}>
                                     <MaterialIcons name="delete" size={20} color="#FF3B30" />
                                 </TouchableOpacity>
                             </View>
                         </View>
-                    ))}
+                    );
+                    })}
                 </View>
             </View>
         );
@@ -600,10 +1013,12 @@ const BusinessHours = ({route}: {route: any}) => {
             <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
                 <View style={styles.mainContent}>
                     <View style={{padding: 16,alignItems: 'center',justifyContent: 'center'}}>
-                        <Image source={Data?.CatServiceServeTypeId == 1 ? require('../../assets/icons/RemoteConsultant.png') : require('../../assets/icons/HomeVisit.png')} style={{width: 50,height: 50}} />
-                        <Text style={{fontSize: 16,fontWeight: '600',color: '#666'}}>{Data?.CatServiceServeTypeId == 1 ? `Online Consultation Business Hours` : `Home Visit Business Hours`}</Text>
+                        <Image resizeMode='contain' source={Data?.CatServiceServeTypeId == 1 ? require('../../assets/icons/RemoteConsultant.png') : require('../../assets/icons/HomeVisit.png')} style={{width: 50,height: 50}} />
+                        <Text style={{fontSize: 16,fontFamily: CAIRO_FONT_FAMILY.semiBold,lineHeight: Platform.OS === 'ios' ? 0 : 20,color: '#666'}}>{Data?.CatServiceServeTypeId == 1 ? `Online Consultation Business Hours` : `Home Visit Business Hours`}</Text>
                     </View>
                     {renderBusinessDays()}
+
+                    
 
                     <View style={styles.section}>
                         <Text style={styles.sectionTitle}>Business Hours</Text>
@@ -653,30 +1068,36 @@ const styles = StyleSheet.create({
         padding: 5,
     },
     headerTitle: {
-        ...globalTextStyles.h6,
-        marginLeft: 8,
+        fontSize: 16,
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
+        color: '#000',
+        marginLeft: 4,
         flex: 1,
     },
     section: {
         backgroundColor: '#fff',
-        padding: 16,
+        paddingVertical: 16,
+        paddingHorizontal: 12,
     },
     sectionTitle: {
         fontSize: 14,
-        fontWeight: '600',
-        color: '#333',
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
+        color: '#0f0f0f',
         marginBottom: 12,
     },
     daysGrid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        gap: 12,
+        rowGap: 15,
+        columnGap: 8,
     },
     dayCard: {
-        width: '22%',
-        backgroundColor: '#fff',
+        backgroundColor: '#e4f1ef',
         borderRadius: 12,
-        padding: 12,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
         alignItems: 'center',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 1 },
@@ -686,14 +1107,15 @@ const styles = StyleSheet.create({
     },
     dayText: {
         fontSize: 13,
-        fontWeight: '500',
-        color: '#333',
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
+        color: '#0f0f0f',
         marginBottom: 8,
     },
     businessHoursCard: {
         backgroundColor: '#fff',
         borderRadius: 12,
-        padding: 16,
+        paddingVertical: 16,
     },
     monthNavigation: {
         flexDirection: 'row',
@@ -703,7 +1125,8 @@ const styles = StyleSheet.create({
     },
     monthYearText: {
         fontSize: 14,
-        fontWeight: '600',
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#333',
     },
     viewModeContainer: {
@@ -724,7 +1147,8 @@ const styles = StyleSheet.create({
     viewModeText: {
         fontSize: 13,
         color: '#00A896',
-        fontWeight: '500',
+        fontFamily: CAIRO_FONT_FAMILY.medium,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
     },
     viewModeTextActive: {
         color: '#fff',
@@ -740,7 +1164,8 @@ const styles = StyleSheet.create({
         flex: 1,
         textAlign: 'center',
         fontSize: 12,
-        fontWeight: '600',
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#00A896',
     },
     weekRow: {
@@ -756,6 +1181,8 @@ const styles = StyleSheet.create({
     },
     dayCellText: {
         fontSize: 14,
+        fontFamily: CAIRO_FONT_FAMILY.medium,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#333',
     },
     dayCellTextInactive: {
@@ -766,7 +1193,8 @@ const styles = StyleSheet.create({
         textDecorationLine: 'line-through',
     },
     dayCellTextSelected: {
-        fontWeight: 'bold',
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#00A896',
     },
     availabilityDot: {
@@ -779,7 +1207,7 @@ const styles = StyleSheet.create({
     },
     weekViewContainer: {
         marginBottom: 16,
-        height: 450,
+        height: 400,
     },
     weekScrollView: {
         height: 400,
@@ -794,6 +1222,8 @@ const styles = StyleSheet.create({
     },
     weekDateRangeText: {
         fontSize: 13,
+        fontFamily: CAIRO_FONT_FAMILY.medium,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#666',
     },
     timelineContainer: {
@@ -801,27 +1231,29 @@ const styles = StyleSheet.create({
         paddingBottom: 20,
     },
     timeColumn: {
-        width: 65,
+        width: 40,
     },
     dayHeaderSpacer: {
-        height: 60,
+        height: 40,
     },
     timeSlot: {
-        height: 50,
+        height: 30,
         justifyContent: 'flex-start',
         paddingTop: 4,
     },
     timeLabel: {
         fontSize: 10,
+        fontFamily: CAIRO_FONT_FAMILY.medium,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#666',
         textAlign: 'right',
         paddingRight: 4,
     },
     dayColumn: {
-        width: 80,
+        width: 40,
     },
     dayHeader: {
-        height: 60,
+        height: 40,
         alignItems: 'center',
         justifyContent: 'center',
         borderBottomWidth: 1,
@@ -832,20 +1264,25 @@ const styles = StyleSheet.create({
     },
     dayHeaderDayName: {
         fontSize: 12,
-        fontWeight: '600',
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#00A896',
     },
     dayHeaderDate: {
         fontSize: 11,
+        fontFamily: CAIRO_FONT_FAMILY.medium,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#666',
     },
     dayHeaderTextHoliday: {
+        fontFamily: CAIRO_FONT_FAMILY.medium,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#999',
         textDecorationLine: 'line-through',
     },
     daySlots: {
         position: 'relative',
-        height: 24 * 50, // Reduced from 60 to 50 per hour
+        height: 24 * 30, // Reduced from 60 to 50 per hour
     },
     hourLine: {
         position: 'absolute',
@@ -867,7 +1304,8 @@ const styles = StyleSheet.create({
     availabilityBlockText: {
         fontSize: 9,
         color: '#fff',
-        fontWeight: '600',
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
     },
     dayViewContainer: {
         marginBottom: 16,
@@ -875,12 +1313,15 @@ const styles = StyleSheet.create({
     },
     dayViewTitle: {
         fontSize: 16,
-        fontWeight: '600',
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#00A896',
         textAlign: 'center',
         marginBottom: 12,
     },
     dayViewTitleHoliday: {
+        fontFamily: CAIRO_FONT_FAMILY.medium,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#999',
     },
     dayTimelineScroll: {
@@ -894,7 +1335,7 @@ const styles = StyleSheet.create({
     dayMainColumn: {
         flex: 1,
         position: 'relative',
-        height: 24 * 50,
+        height: 24 * 30,
     },
     dayTimeline: {
         flexDirection: 'column',
@@ -902,13 +1343,15 @@ const styles = StyleSheet.create({
     },
     dayTimeSlot: {
         flexDirection: 'row',
-        height: 50,
+        height: 30,
         borderTopWidth: 1,
         borderTopColor: '#F0F0F0',
     },
     dayTimeLabel: {
-        width: 65,
+        width: 40,
         fontSize: 10,
+        fontFamily: CAIRO_FONT_FAMILY.medium,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#666',
         paddingTop: 4,
         textAlign: 'right',
@@ -939,7 +1382,8 @@ const styles = StyleSheet.create({
     dayAvailabilityText: {
         fontSize: 12,
         color: '#fff',
-        fontWeight: '600',
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
     },
     scheduleSection: {
         marginTop: 16,
@@ -955,13 +1399,15 @@ const styles = StyleSheet.create({
     },
     scheduleTitle: {
         fontSize: 16,
-        fontWeight: '600',
-        color: '#333',
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
+        color: '#0f0f0f',
     },
     copyToNextMonth: {
-        fontSize: 13,
-        color: '#00A896',
-        fontWeight: '500',
+        fontSize: 16,
+        color: '#0f0f0f',
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
     },
     selectedMonthRow: {
         flexDirection: 'row',
@@ -969,9 +1415,49 @@ const styles = StyleSheet.create({
         gap: 8,
         marginBottom: 16,
     },
-    selectedMonthText: {
+    dateRangeRow: {
+        flexDirection: 'row',
+        gap: 12,
+        marginBottom: 16,
+    },
+    dateInputGroup: {
+        flex: 1,
+    },
+    dateLabel: {
+        fontSize: 13,
+        fontFamily: CAIRO_FONT_FAMILY.medium,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
+        color: '#0f0f0f',
+        marginBottom: 6,
+    },
+    dateInput: {
+        borderWidth: 1,
+        borderColor: '#E0E0E0',
+        borderRadius: 8,
+        paddingVertical: 10,
+        paddingHorizontal: 12,
+        backgroundColor: '#fff',
+    },
+    dateInputText: {
         fontSize: 14,
+        fontFamily: CAIRO_FONT_FAMILY.medium,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#333',
+    },
+    inputError: {
+        borderColor: '#FF3B30',
+    },
+    selectedMonthText: {
+        fontSize: 15,
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
+        color: '#333',
+    },
+    selectedMonthTextValue: {
+        fontSize: 14,
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
+        color: '#0f0f0f',
     },
     timeInput: {
         borderWidth: 1,
@@ -980,6 +1466,8 @@ const styles = StyleSheet.create({
         padding: 12,
         marginBottom: 12,
         fontSize: 14,
+        fontFamily: CAIRO_FONT_FAMILY.medium,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#333',
     },
     scheduleButtons: {
@@ -997,7 +1485,8 @@ const styles = StyleSheet.create({
     saveButtonText: {
         color: '#fff',
         fontSize: 14,
-        fontWeight: '600',
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
     },
     clearButton: {
         flex: 1,
@@ -1009,14 +1498,16 @@ const styles = StyleSheet.create({
     clearButtonText: {
         color: '#fff',
         fontSize: 14,
-        fontWeight: '600',
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
     },
     markedSlotsSection: {
         marginTop: 20,
     },
     markedSlotsTitle: {
         fontSize: 14,
-        fontWeight: '600',
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#333',
         marginBottom: 12,
     },
@@ -1029,14 +1520,16 @@ const styles = StyleSheet.create({
     },
     markedSlotTime: {
         fontSize: 14,
-        fontWeight: '600',
-        color: '#333',
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
+        color: '#0f0f0f',
         flex: 1,
     },
     markedSlotDate: {
         fontSize: 12,
+        fontFamily: CAIRO_FONT_FAMILY.medium,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#666',
-        marginRight: 12,
     },
     markedSlotActions: {
         flexDirection: 'row',

@@ -1,7 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import CheckIcon from '../assets/icons/CheckIcon';
-import { globalTextStyles } from '../styles/globalStyles';
+import { CAIRO_FONT_FAMILY, globalTextStyles } from '../styles/globalStyles';
 
 const Stepper = ({ currentStep,steps, onStepPress }: { currentStep: number,steps: any, onStepPress: (step: number) => void }) => {
   return (
@@ -41,18 +41,18 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 14,
+    marginVertical: 8,
     justifyContent: 'center'
   },
   circle: {
     width: 30,
     height: 30,
     borderRadius: 18,
-    backgroundColor: '#f2f2f2',
+    backgroundColor: '#eff5f5',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: '#e0e0e0'
+    borderColor: '#eff5f5'
   },
   completed: {
     backgroundColor: '#179c8e',
@@ -63,12 +63,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff'
   },
   stepText: {
-    ...globalTextStyles.bodyMedium,
-    color: '#888',
-    fontFamily: globalTextStyles.h5.fontFamily
+    fontSize: 16,
+    fontFamily: CAIRO_FONT_FAMILY.semiBold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
+    color: '#666',
   },
   line: {
-    width: 60,
+    width: '30%',
     height: 2,
     backgroundColor: '#e0e0e0'
   }

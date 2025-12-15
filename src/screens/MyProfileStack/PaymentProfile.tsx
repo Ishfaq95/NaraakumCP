@@ -98,10 +98,10 @@ const PaymentProfileScreen = () => {
     const renderHeader = () => (
         <View style={{ flexDirection: 'row', alignItems: 'center', height: 50, backgroundColor: '#fff', padding: 10 }}>
             <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                <Ionicons name="chevron-back" size={24} color="#333" />
+                <Ionicons name="arrow-back-outline" size={24} color="#333" />
 
             </TouchableOpacity>
-            <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#333' }}>Payment Profile</Text>
+            <Text style={{ fontSize: 16, fontFamily: CAIRO_FONT_FAMILY.bold, lineHeight: Platform.OS === 'ios' ? 0 : 20, color: '#333' }}>Payment Profile</Text>
         </View>
     );
     

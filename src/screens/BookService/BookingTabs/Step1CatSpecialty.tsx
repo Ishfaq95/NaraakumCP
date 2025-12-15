@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   FlatList,
   Image,
+  Platform,
   SafeAreaView,
   StyleSheet,
   Text,
@@ -18,6 +19,7 @@ import { addCardItem, setSelectedUniqueId, setCategory as setCategoryRedux, setS
 import { generateUniqueId } from '../../../shared/services/service';
 import CustomBottomSheet from '../../../components/common/CustomBottomSheet';
 import LocationService from '../components/LocationService';
+import { CAIRO_FONT_FAMILY } from '../../../styles/globalStyles';
 
 type OfferedServiceCategory = {
   Id: string;
@@ -37,6 +39,7 @@ type Specialty = {
 
 const Step1 = ({ handleNext, Patient }: { handleNext: () => void, Patient: any }) => {
   const [isLocationBottomSheetVisible, setIsLocationBottomSheetVisible] = useState(false);
+  const [cardBottomSheetVisible, setCardBottomSheetVisible] = useState(false);
   const [offeredServicesCategories, setOfferedServicesCategories] = useState<
     OfferedServiceCategory[]
   >([]);
@@ -61,6 +64,8 @@ const Step1 = ({ handleNext, Patient }: { handleNext: () => void, Patient: any }
   const services = useSelector((state: any) => state.root.booking.services);
   // const SelectedCardItem = existingCardItems.length > 0 ? existingCardItems.filter((item: any) => item.ItemUniqueId === category.Id) : [];
   const dispatch = useDispatch();
+
+  console.log('existingCardItems', existingCardItems);
 
   useEffect(() => {
     getOfferedServicesCategories();
@@ -420,7 +425,7 @@ const Step1 = ({ handleNext, Patient }: { handleNext: () => void, Patient: any }
                 onPress={() => handleIncreaseQuantity(item)}
                 activeOpacity={0.7}
               >
-                <Ionicons name="add" size={20} color="#FFFFFF" />
+                <Ionicons name="add" size={18} color="#FFFFFF" />
               </TouchableOpacity>
               <Text style={styles.quantityText}>{quantity}</Text>
               <TouchableOpacity
@@ -433,7 +438,7 @@ const Step1 = ({ handleNext, Patient }: { handleNext: () => void, Patient: any }
                 disabled={quantity === 1}
                 activeOpacity={0.7}
               >
-                <Ionicons name="remove" size={20} color="#FFFFFF" />
+                <Ionicons name="remove" size={18} color="#FFFFFF" />
               </TouchableOpacity>
             </View>
             <TouchableOpacity
@@ -490,10 +495,6 @@ const Step1 = ({ handleNext, Patient }: { handleNext: () => void, Patient: any }
 
   const renderListHeader = () => (
     <View style={styles.listHeader}>
-      <View style={styles.categoryHeaderRow}>
-        <Text style={styles.categoryHeaderTitle}>Category</Text>
-        <View style={styles.categoryHeaderLine} />
-      </View>
       <View style={{ paddingHorizontal: 16 }}>
         <FlatList
           horizontal
@@ -522,12 +523,12 @@ const Step1 = ({ handleNext, Patient }: { handleNext: () => void, Patient: any }
 
   const renderBottomBar = () => (
     <View style={styles.bottomBar}>
-      <TouchableOpacity style={styles.secondaryButton} activeOpacity={0.85}>
+      <TouchableOpacity onPress={() => setCardBottomSheetVisible(true)} style={styles.secondaryButton} activeOpacity={0.85}>
         <Text
           style={styles.secondaryButtonText}
         >{`Cart (${existingCardItems.length})`}</Text>
       </TouchableOpacity>
-      <TouchableOpacity onPress={onNextPress} disabled={existingCardItems.length === 0} style={styles.primaryButton} activeOpacity={0.85}>
+      <TouchableOpacity onPress={onNextPress} disabled={existingCardItems.length === 0} style={[styles.primaryButton, existingCardItems.length === 0 && styles.primaryButtonDisabled]} activeOpacity={0.85}>
         <Text style={[styles.primaryButtonText, existingCardItems.length === 0 && styles.primaryButtonTextDisabled]}>Next</Text>
       </TouchableOpacity>
     </View>
@@ -572,6 +573,17 @@ const Step1 = ({ handleNext, Patient }: { handleNext: () => void, Patient: any }
       </View>
       {renderBottomBar()}
 
+      <CustomBottomSheet
+        visible={cardBottomSheetVisible}
+        onClose={() => setCardBottomSheetVisible(false)}
+        maxHeight="90%"
+        backdropClickable={true}
+        showHandle={false}
+      >
+        <View style={{ flex: 1, backgroundColor: '#fff', borderTopLeftRadius: 10, borderTopRightRadius: 10 }}>
+          <Text style={{ fontSize: 16, fontFamily: CAIRO_FONT_FAMILY.bold, lineHeight: Platform.OS === 'ios' ? 0 : 20, color: '#333' }}>Cart</Text>
+        </View>
+      </CustomBottomSheet>
 
       <CustomBottomSheet
         visible={isLocationBottomSheetVisible}
@@ -604,11 +616,12 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingHorizontal: 16,
-    paddingTop: 8,
+    // paddingTop: 8,
     paddingBottom: 40,
   },
   listHeader: {
-    marginBottom: 12,
+    paddingTop: 20,
+    paddingBottom: 10,
   },
   categoryHeaderRow: {
     flexDirection: 'row',
@@ -618,7 +631,8 @@ const styles = StyleSheet.create({
   },
   categoryHeaderTitle: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: CAIRO_FONT_FAMILY.semiBold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
     color: '#6D7A80',
   },
   categoryHeaderLine: {
@@ -671,11 +685,14 @@ const styles = StyleSheet.create({
   },
   categoryLabel: {
     fontSize: 12,
+    fontFamily: CAIRO_FONT_FAMILY.regular,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
     color: '#6D7A80',
   },
   categoryTitle: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: CAIRO_FONT_FAMILY.bold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
     color: '#6D7A80',
   },
   categoryTitleActive: {
@@ -696,21 +713,21 @@ const styles = StyleSheet.create({
     borderColor: '#00A79D',
   },
   categoryBadgeText: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: 14,
+    fontFamily: CAIRO_FONT_FAMILY.bold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
     color: '#6D7A80',
   },
   categoryBadgeTextActive: {
     color: '#fff',
   },
   specialtyHeader: {
-    marginTop: 20,
-    marginBottom: 12,
     paddingHorizontal: 16,
   },
   specialtyHeaderTitle: {
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: 15,
+    fontFamily: CAIRO_FONT_FAMILY.bold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
     color: '#0E3C47',
     marginBottom: 6,
   },
@@ -723,14 +740,14 @@ const styles = StyleSheet.create({
   specialtyCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
+    paddingVertical: 4,
+    paddingHorizontal: 6,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     borderWidth: 1,
     borderColor: '#ECF2F1',
-    marginBottom: 12,
+    marginBottom: 8,
   },
   specialtyCardActive: {
     borderColor: '#00A79D',
@@ -746,13 +763,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   specialtyIconWrapper: {
-    width: 42,
-    height: 42,
+    width: 36,
+    height: 36,
     borderRadius: 12,
     backgroundColor: '#F0F7F6',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: 8,
   },
   specialtyIconWrapperActive: {
     backgroundColor: '#E0F5F2',
@@ -763,12 +780,12 @@ const styles = StyleSheet.create({
   },
   specialtyTitle: {
     fontSize: 15,
-    fontWeight: '500',
+    fontFamily: CAIRO_FONT_FAMILY.semiBold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
     color: '#384B56',
   },
   specialtyTitleActive: {
     color: '#00A79D',
-    fontWeight: '600',
   },
   specialtyCheckmark: {
     width: 30,
@@ -783,14 +800,16 @@ const styles = StyleSheet.create({
     color: '#90A5A4',
     marginTop: 24,
     fontSize: 14,
+    fontFamily: CAIRO_FONT_FAMILY.semiBold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
   },
   bottomBar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 24,
+    paddingVertical: 8,
+    width: '100%',
     backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
@@ -801,31 +820,32 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   secondaryButton: {
-    flex: 1,
-    marginRight: 12,
+    width:'36%',
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#CFE4E2',
     backgroundColor: '#EAF6F4',
-    paddingVertical: 16,
+    paddingVertical: 12,
     alignItems: 'center',
   },
   secondaryButtonText: {
     color: '#00A79D',
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: CAIRO_FONT_FAMILY.semiBold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
   },
   primaryButton: {
-    flex: 1,
+    width:'62%',
     borderRadius: 12,
     backgroundColor: '#00A79D',
-    paddingVertical: 16,
+    paddingVertical: 12,
     alignItems: 'center',
   },
   primaryButtonText: {
     color: '#fff',
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: CAIRO_FONT_FAMILY.bold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
   },
   image: {
     width: 50,
@@ -851,10 +871,10 @@ const styles = StyleSheet.create({
   },
   serviceTitle: {
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: CAIRO_FONT_FAMILY.bold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
     color: '#0E3C47',
     marginBottom: 12,
-    lineHeight: 22,
   },
   serviceSelectedContent: {
     flexDirection: 'row',
@@ -864,11 +884,11 @@ const styles = StyleSheet.create({
   quantityControls: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 4,
   },
   quantityButton: {
-    width: 32,
-    height: 32,
+    width: 26,
+    height: 26,
     borderRadius: 16,
     backgroundColor: '#00A79D',
     justifyContent: 'center',
@@ -882,7 +902,8 @@ const styles = StyleSheet.create({
   },
   quantityText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: CAIRO_FONT_FAMILY.bold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
     color: '#0E3C47',
     minWidth: 24,
     textAlign: 'center',
@@ -901,11 +922,15 @@ const styles = StyleSheet.create({
   },
   selectButtonText: {
     fontSize: 15,
-    fontWeight: '600',
+    fontFamily: CAIRO_FONT_FAMILY.bold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
     color: '#00A79D',
   },
   primaryButtonTextDisabled: {
     color: '#fff',
+    opacity: 0.9,
+  },
+  primaryButtonDisabled: {
     opacity: 0.5,
   },
 });

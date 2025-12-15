@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Button, StyleSheet, TouchableOpacity, Text, Modal, Image, SafeAreaView } from 'react-native';
+import { View, Button, StyleSheet, TouchableOpacity, Text, Modal, Image, SafeAreaView, Platform } from 'react-native';
 import Header from '../../components/common/Header';
 import { useTranslation } from 'react-i18next';
 import ArrowRightIcon from '../../assets/icons/RightArrow';
@@ -7,7 +7,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import { useDispatch, useSelector } from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import CheckIcon from '../../assets/icons/CheckIcon';
-import { globalTextStyles } from '../../styles/globalStyles';
+import { CAIRO_FONT_FAMILY, globalTextStyles } from '../../styles/globalStyles';
 import { ROUTES } from '../../shared/utils/routes';
 import Stepper from '../../components/Stapper';
 import Step1CatSpecialty from './BookingTabs/Step1CatSpecialty';
@@ -48,10 +48,15 @@ const BookingScreen = ({ navigation, route }: any) => {
 
     const renderHeader = () => (
         <View style={styles.header}>
+            <View style={{flexDirection:'row',alignItems:'center'}}>
             <TouchableOpacity onPress={backButtonPress} style={styles.backButton}>
-                <Ionicons name="chevron-back" size={24} color="#333" />
+                <Ionicons name="arrow-back-outline" size={24} color="#333" />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>Prescription List</Text>
+            <Text style={styles.headerTitle}>Choose Service</Text>
+            </View>
+            <TouchableOpacity onPress={backButtonPress} style={styles.cancelButton}>
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
         </View>
     );
 
@@ -106,6 +111,7 @@ const styles = StyleSheet.create({
     header: {
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent:'space-between',
         height: 56,
         backgroundColor: '#fff',
         elevation: 2,
@@ -119,8 +125,10 @@ const styles = StyleSheet.create({
         padding: 5,
     },
     headerTitle: {
-        ...globalTextStyles.h5,
-        marginLeft: 8,
+        fontSize: 16,
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
+        marginLeft: 4,
     },
     headerContainer: {
         backgroundColor: '#fff',
@@ -130,7 +138,20 @@ const styles = StyleSheet.create({
         shadowRadius: 3.84,
         elevation: 5,
     },
-    
+    cancelButton: {
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        backgroundColor: '#fff',
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#e82424',
+    },
+    cancelButtonText: {
+        fontSize: 14,
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
+        color: '#e82424',
+    },
 });
 
 export default BookingScreen; 

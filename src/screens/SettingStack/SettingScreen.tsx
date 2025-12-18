@@ -13,6 +13,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import Dropdown from '../../components/common/Dropdown';
 import { settingService } from '../../services/api/settingService';
 import FullScreenLoader from '../../components/FullScreenLoader';
+import { tokenRefreshService } from '../../services/axios/tokenRefreshService';
 
 const ReminderTimeUnit = [
   { label: 'Minutes', value: '6' },
@@ -159,6 +160,8 @@ const SettingScreen = () => {
   
   const handleLogout = () => {
     dispatch(setUser(null));
+    // Reset token refresh service on logout to clear any queued requests
+    tokenRefreshService.reset();
     // Implement logout functionality
     // Clear user session and navigate to login screen
   };

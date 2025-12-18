@@ -15,14 +15,19 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Platform } from 'react-native';
-import { useSelector } from 'react-redux';
-import { bookingService, categoriesList } from '../../../services/api/bookingService';
+import { useDispatch, useSelector } from 'react-redux';
+import { bookingService, categoriesList, } from '../../../services/api/bookingService';
 import moment, { Moment } from 'moment';
 import { generateSlotsForDate } from '../../../shared/utils/bookService';
-import { globalTextStyles } from '../../../styles/globalStyles';
+import { CAIRO_FONT_FAMILY, globalTextStyles } from '../../../styles/globalStyles';
 import LinearGradient from 'react-native-linear-gradient';
 import ServiceProviderCard from '../components/ServiceProviderCard';
 import HospitalCard from '../components/HospitalCard';
+import Dropdown from '../../../components/common/Dropdown';
+import { addCardItem, setCategory as setCategoryRedux, setSelectedLocation, setSelectedUniqueId, setServices } from '../../../shared/redux/reducers/bookingReducer';
+import { commonAPIService } from '../../../services/api/commonAPIService';
+import CustomBottomSheet from '../../../components/common/CustomBottomSheet';
+import LocationService from '../components/LocationService';
 
 type Doctor = {
   id: string;
@@ -139,16 +144,16 @@ const ListShimmerLoader = ({ cardType = 'default' }: { cardType?: 'default' | 'h
   );
 };
 
-const Step2DoctorListing = ({ handleNext }: { handleNext: () => void }) => {
+const Step2DoctorListing = ({ handleNext, Patient }: { handleNext: () => void, Patient: any }) => {
   const [selectedDate, setSelectedDate] = useState<Moment>(moment());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [dateList, setDateList] = useState<DateItem[]>([]);
   const [dateListStartDate, setDateListStartDate] = useState(new Date()); // Track the start date for the date list
-  const [selectedCity, setSelectedCity] = useState('All Cities');
+  const [selectedCity, setSelectedCity] = useState<any>(null);
   const [selectedDistrict, setSelectedDistrict] = useState('All Districts');
   const [searchNearMe, setSearchNearMe] = useState(true);
   const [selectedType, setSelectedType] = useState<'All' | 'Consultant' | 'Specialist'>('All');
-  const [selectedAffiliation, setSelectedAffiliation] = useState<'All' | 'Affiliated' | 'Individual'>('All');
+  const [selectedAffiliation, setSelectedAffiliation] = useState<'0' | '1' | '2'>('0');
   const [selectedFilter, setSelectedFilter] = useState<'all' | 'unavailable' | 'booked' | 'available'>('all');
   const [loading, setLoading] = useState(false);
   const [selectedSlots, setSelectedSlots] = useState<Record<string, string>>({});
@@ -157,6 +162,8 @@ const Step2DoctorListing = ({ handleNext }: { handleNext: () => void }) => {
   const selectedLocation = useSelector((state: any) => state.root.booking.selectedLocation);
   const services = useSelector((state: any) => state.root.booking.services);
   const [refreshing, setRefreshing] = useState(false);
+
+  console.log(Patient);
 
   // Memoize selectedCardItem to prevent re-filtering on every render
   const selectedCardItem = useMemo(() =>
@@ -176,6 +183,151 @@ const Step2DoctorListing = ({ handleNext }: { handleNext: () => void }) => {
   const [selectedSlotInfo, setSelectedSlotInfo] = useState<any>(null);
   const [selectedService, setSelectedService] = useState(null);
   const [showServiceModal, setShowServiceModal] = useState(false);
+  const [cities, setCities] = useState<any[]>([]);
+  const [squares, setSquares] = useState<any[]>([]);
+  const [selectedCityId, setSelectedCityId] = useState<string | number>('');
+  const [selectedSquareId, setSelectedSquareId] = useState<string | number>('');
+  const [showSortFilterBottomSheet, setShowSortFilterBottomSheet] = useState(false);
+  const [sortBy, setSortBy] = useState<('Asc' | 'Desc' | 'All')>('All');
+  const [isLocationBottomSheetVisible, setIsLocationBottomSheetVisible] = useState(false);
+  const [offeredServicesCategories, setOfferedServicesCategories] = useState<any[]>([]);
+  const [servicesLocalStore, setServicesLocalStore] = useState<any[]>([]);
+  const [cardBottomSheetVisible, setCardBottomSheetVisible] = useState(false);
+  const dispatch = useDispatch();
+  useEffect(() => {
+    getAllCities();
+  }, []);
+
+  const onReviewCartPress = () => {
+    setCardBottomSheetVisible(true);
+  }
+
+  const onNextPress = () => {
+    const withoutServiceProvidersList = existingCardItems.filter((item: any) => !item.ServiceProviderUserloginInfoId && !item.OrganizationId);
+    if (withoutServiceProvidersList.length == 0) {
+      onPressContinue();
+    } else {
+      const selectedItem = withoutServiceProvidersList[withoutServiceProvidersList.length - 1];
+      if (selectedItem.CatCategoryId != '42') {
+        setIsLocationBottomSheetVisible(true);
+      } else {
+        onPressContinue();
+      }
+    }
+
+  };
+
+  useEffect(() => {
+    getOfferedServicesCategories();
+  }, []);
+
+  useEffect(() => {
+    if (selectedCardItem) {
+      if (selectedCardItem.catCategoryId == '42' || selectedCardItem.catCategoryId == '32') {
+        fetchServicesAndSpecialtiesData();
+      }
+    }
+  }, [selectedCardItem]);
+
+  const fetchServicesAndSpecialtiesData = async () => {
+    try {
+      setLoading(true);
+      const offered = await bookingService.getOfferedServicesListByCategory({
+        abc: selectedCardItem.catCategoryId,
+        Search: '',
+      });
+      
+      setServicesLocalStore(offered.OfferedServices);
+    } catch (error) {
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getOfferedServicesCategories = async () => {
+    try {
+      const response = await bookingService.getOfferedServicesCategories();
+      setOfferedServicesCategories(response?.OfferedCategories || []);
+    } catch (error) {
+    } finally {
+    }
+  };
+
+  const onPressContinue = () => {
+    setIsLocationBottomSheetVisible(false);
+
+    const withoutServiceProvidersList = existingCardItems.filter((item: any) => !item.ServiceProviderUserloginInfoId && !item.OrganizationId);
+
+    if (withoutServiceProvidersList.length == 0) {
+      handleNext();
+    } else {
+      const selectedItem = withoutServiceProvidersList[withoutServiceProvidersList.length - 1];
+      const selectedCategory = offeredServicesCategories.find((category: any) => category.Id == selectedItem.CatCategoryId);
+      dispatch(setCategoryRedux(selectedCategory));
+      if (selectedItem.CatCategoryId == '42' || selectedItem.CatCategoryId == '32') {
+        if (selectedItem.CatServiceId) {
+          dispatch(setServices(null))
+        }else{
+          dispatch(setServices(servicesLocalStore))
+        }
+      } else {
+        dispatch(setServices(null))
+      }
+
+      const selectedUniqueId = withoutServiceProvidersList[withoutServiceProvidersList.length - 1].ItemUniqueId
+      dispatch(setSelectedUniqueId(selectedUniqueId))
+
+    }
+
+
+  }
+
+  const getAllCities = async () => {
+    const response = await commonAPIService.getAllCities();
+    if (response.ResponseStatus.STATUSCODE) {
+      const makeList = [
+        {
+          label: 'All Cities',
+          value: '',
+        },
+        ...response.list.map((city: any) => ({
+          label: city.TitlePlang || '',
+          value: city.CatAreaId,
+        })),
+      ]
+      setCities(makeList);
+    }
+  }
+
+  useEffect(() => {
+    if (selectedCityId) {
+      getSquareByCityId();
+    } else {
+      setSquares([]);
+      setSelectedSquareId('');
+    }
+  }, [selectedCityId]);
+
+  const getSquareByCityId = async () => {
+    try {
+      const response = await commonAPIService.getSquareByCityId({ CatCityId: selectedCityId });
+      if (response.ResponseStatus.STATUSCODE == 200) {
+        const makeList = [
+          {
+            label: 'All Districts',
+            value: '',
+          },
+          ...response.list.map((square: any) => ({
+            label: square.Title || '',
+            value: square.ID,
+          })),
+        ]
+        setSquares(makeList);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
 
   // Use ref to track if initial fetch has been done
   const initialFetchDone = useRef(false);
@@ -201,6 +353,29 @@ const Step2DoctorListing = ({ handleNext }: { handleNext: () => void }) => {
       fetchOrganizationSchedulingAvailability();
     }
   }, [selectedCardItem, selectedLocation]);
+
+  useEffect(() => {
+    ApplyFilters();
+  }, [selectedCityId, selectedSquareId, selectedType, searchQuery, selectedFilter, searchNearMe]);
+
+  const ApplyFilters = () => {
+    try {
+      const displayCategory = categoriesList.find((item: any) => item.Id == selectedCardItem[0]?.CatCategoryId);
+      setDisplayCategory(displayCategory);
+      if (displayCategory?.Display == "CP") {
+       if(selectedType != "All") {
+          const serviceId = services?.find((service: any) => service.TitlePlang == selectedType)?.Id;
+          fetchServiceProviders(serviceId, selectedCityId, selectedSquareId, selectedCardItem[0]?.CatCategoryId != "42" ? searchNearMe ? `${selectedLocation?.latitude},${selectedLocation?.longitude}` : null : null);
+        } else {
+          fetchServiceProviders(undefined, selectedCityId, selectedSquareId, selectedCardItem[0]?.CatCategoryId != "42" ? searchNearMe ? `${selectedLocation?.latitude},${selectedLocation?.longitude}` : null : null);
+        }
+      } else {
+        fetchHospitalListByServices(selectedCityId, selectedSquareId, searchNearMe ? `${selectedLocation?.latitude},${selectedLocation?.longitude}` : null);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
 
   useEffect(() => {
     if (selectedCardItem[0]?.CatCategoryId == "42") {
@@ -556,22 +731,26 @@ const Step2DoctorListing = ({ handleNext }: { handleNext: () => void }) => {
     });
 
     // // Apply sorting if sortByValue is not 'All'
-    // if (sortByValue !== 'All') {
-    //   return filtered.sort((a: any, b: any) => {
-    //     const priceA = parseFloat(a.ServiceServe?.[0]?.Price) || 0;
-    //     const priceB = parseFloat(b.ServiceServe?.[0]?.Price) || 0;
+    if (sortBy != 'All') {
+      return filtered.sort((a: any, b: any) => {
+        const priceA = parseFloat(a.ServiceServe?.[0]?.Price) || 0;
+        const priceB = parseFloat(b.ServiceServe?.[0]?.Price) || 0;
 
-    //     if (sortByValue === 'Asc') {
-    //       return priceA - priceB; // Ascending order
-    //     } else if (sortByValue === 'Desc') {
-    //       return priceB - priceA; // Descending order
-    //     }
-    //     return 0;
-    //   });
-    // }
+        if (sortBy === 'Asc') {
+          return priceA - priceB; // Ascending order
+        } else if (sortBy === 'Desc') {
+          return priceB - priceA; // Descending order
+        }
+        return 0;
+      });
+    }
+
+    if(selectedAffiliation != "0"){
+      return filtered.filter((item: any) => item.CatOrganizationModeId == selectedAffiliation);
+    }
 
     return filtered;
-  }, [ProviderWithSlots, availability, selectedDate]);
+  }, [ProviderWithSlots, availability, selectedDate, sortBy,selectedAffiliation]);
   // }, [ProviderWithSlots, availability, selectedDate, selectSpecialtyFilter, sortByValue]);
 
   // Memoize filtered providers to prevent unnecessary re-renders
@@ -593,30 +772,19 @@ const Step2DoctorListing = ({ handleNext }: { handleNext: () => void }) => {
     });
   }, [HospitalWithSlots, availability, selectedDate]);
 
-
-  // Mock data - replace with actual API call
-  const [doctors, setDoctors] = useState<Doctor[]>([
-    {
-      id: '1',
-      name: 'Dr Jamal',
-      type: 'Consultant',
-      price: 1500,
-      availableSlots: ['07:00 PM', '07:05 PM', '07:10 PM'],
-      status: 'available',
-    },
-    {
-      id: '2',
-      name: 'Alam Dr & Physio',
-      type: 'Consultant',
-      price: 449,
-      availableSlots: ['06:30 PM', '07:00 PM', '07:30 PM'],
-      status: 'available',
-    },
-  ]);
-
   useEffect(() => {
     generateDateList(dateListStartDate);
   }, [dateListStartDate]);
+
+  const getCartBottomSheetHeight = () => {
+    if (existingCardItems.length == 1) {
+      return "60%"
+    } else if (existingCardItems.length == 2) {
+      return "80%"
+    } else {
+      return "90%"
+    }
+  }
 
   const generateDateList = useCallback((startDate: Date) => {
     const dates: DateItem[] = [];
@@ -624,7 +792,7 @@ const Step2DoctorListing = ({ handleNext }: { handleNext: () => void }) => {
       const date = new Date(startDate);
       date.setDate(startDate.getDate() + i);
 
-      const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
       const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
       dates.push({
@@ -672,7 +840,7 @@ const Step2DoctorListing = ({ handleNext }: { handleNext: () => void }) => {
         onPress={() => handleDateSelect(item.date)}
         activeOpacity={0.7}
       >
-        <Text style={[styles.dateDay, isSelected && styles.dateDayActive]}>
+        <Text numberOfLines={1} style={[styles.dateDay, isSelected && styles.dateDayActive]}>
           {today ? 'Today' : item.day}
         </Text>
         <Text style={[styles.dateNumber, isSelected && styles.dateNumberActive]}>
@@ -811,6 +979,104 @@ const Step2DoctorListing = ({ handleNext }: { handleNext: () => void }) => {
     });
   }, []);
 
+  const formatCartDateTime = (date?: string, time?: string) => {
+    if (!date || !time) return '';
+    try {
+      const formattedDate = moment(date).format('DD/MM/YYYY');
+      const formattedTime = moment(time, 'HH:mm').format('hh:mm A');
+      return `${formattedDate} ${formattedTime}`;
+    } catch (error) {
+      return '';
+    }
+  };
+
+  const handleCartItemIncrease = (itemUniqueId: string) => {
+    const updatedCardArray = existingCardItems.map((cardItem: any) => {
+      if (cardItem.ItemUniqueId === itemUniqueId) {
+        return {
+          ...cardItem,
+          Quantity: (parseInt(cardItem.Quantity) || 0) + 1
+        };
+      }
+      return cardItem;
+    });
+    dispatch(addCardItem(updatedCardArray));
+  };
+
+  const handleCartItemDecrease = (itemUniqueId: string) => {
+    const updatedCardArray = existingCardItems.map((cardItem: any) => {
+      if (cardItem.ItemUniqueId === itemUniqueId) {
+        const newQuantity = Math.max(1, (parseInt(cardItem.Quantity) || 1) - 1);
+        return {
+          ...cardItem,
+          Quantity: newQuantity
+        };
+      }
+      return cardItem;
+    });
+    dispatch(addCardItem(updatedCardArray));
+  };
+
+  const handleCartItemRemove = (itemUniqueId: string) => {
+    const updatedCardArray = existingCardItems.filter((cardItem: any) => cardItem.ItemUniqueId !== itemUniqueId);
+    dispatch(addCardItem(updatedCardArray));
+  };
+
+  const renderCartItem = ({ item }: { item: any }) => {
+    const dateTime = formatCartDateTime(item.SchedulingDate, item.SchedulingTime);
+
+    return (
+      <View style={styles.cartItemContainer}>
+        {/* Header Banner */}
+        {(item?.ServiceProviderUserloginInfoId || item?.OrganizationId) && <View style={styles.cartItemHeader}>
+          <Text style={styles.cartItemHeaderName}>{item.ServiceProviderFullnamePlang || item.orgTitlePlang}</Text>
+          <Text style={styles.cartItemHeaderDateTime}>{dateTime}</Text>
+        </View>}
+
+        {/* Card Content */}
+        <View style={styles.cartItemCard}>
+          {/* Remove Button */}
+          <TouchableOpacity
+            style={styles.cartItemRemoveButton}
+            onPress={() => handleCartItemRemove(item.ItemUniqueId)}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="remove" size={16} color="#FFFFFF" />
+          </TouchableOpacity>
+
+          {/* Service Info */}
+          <View style={styles.cartItemServiceInfo}>
+            <Text style={styles.cartItemServiceName} numberOfLines={2}>
+              {(item.CatCategoryId == "42" || item.CatCategoryId == "32") ? `Remote Consultation / ${item.TitlePlang}` : item.TitlePlang || item.ServiceTitlePlang}
+            </Text>
+            {item.ServicePrice && <Text style={styles.cartItemPrice}>{item.ServicePrice} SAR</Text>}
+          </View>
+
+          {/* Quantity Selector */}
+          <View style={styles.cartItemQuantityContainer}>
+            <TouchableOpacity
+              style={[styles.cartItemQuantityButton, (item.Quantity == 1 || item.CatCategoryId == "42" || item.CatCategoryId == "32") && styles.cartItemQuantityButtonDisabled]}
+              onPress={() => handleCartItemDecrease(item.ItemUniqueId)}
+              disabled={item.Quantity == 1 || item.CatCategoryId == "42" || item.CatCategoryId == "32"}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="remove" size={16} color={"#fff"} />
+            </TouchableOpacity>
+            <Text style={styles.cartItemQuantityText}>{item.Quantity}</Text>
+            <TouchableOpacity
+              style={[styles.cartItemQuantityButton, (item.CatCategoryId == "42" || item.CatCategoryId == "32") && styles.cartItemQuantityButtonDisabled]}
+              onPress={() => handleCartItemIncrease(item.ItemUniqueId)}
+              activeOpacity={0.7}
+              disabled={item.CatCategoryId == "42" || item.CatCategoryId == "32"}
+            >
+              <Ionicons name="add" size={16} color="#fff" />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    );
+  }
+
   const handleSelectService = (providerId: string, service: string) => {
     const obj: any = {
       selectedService: service,
@@ -864,9 +1130,21 @@ const Step2DoctorListing = ({ handleNext }: { handleNext: () => void }) => {
     }
   }
 
-  const getNextButtonEnabled = useCallback(() => {
-   
+  const calculateTotalPrice = (items: any[]) => {
+    console.log(items);
+    
+    return  items.reduce((total, item) => total + (parseFloat(item.ServicePrice)*(item.Quantity || 1) || 0), 0);
+  }
 
+  const calculateTax = (items: any[]) => {
+    return items.reduce((total, item) => total + (parseFloat(item.ServicePrice)*(item.Quantity || 1) || 0) * 0.15, 0);
+  }
+
+  const calculateTotal = (items: any[]) => {
+    return items.reduce((total, item) => total + (parseFloat(item.ServicePrice)*(item.Quantity || 1) || 0) + (parseFloat(item.ServicePrice)*(item.Quantity || 1) || 0) * 0.15, 0);
+  }
+
+  const getNextButtonEnabled = useCallback(() => {
     if (displayCategory?.Display == "CP") {
       return selectedCardItem[0]?.CatServiceId == 0 || selectedCardItem[0]?.CatServiceId == null || selectedCardItem[0]?.CatServiceId == "" || selectedCardItem[0]?.CatServiceId == undefined || selectedCardItem[0]?.ServiceProviderUserloginInfoId == 0 || selectedCardItem[0]?.ServiceProviderUserloginInfoId == null || selectedCardItem[0]?.ServiceProviderUserloginInfoId == "" || selectedCardItem[0]?.ServiceProviderUserloginInfoId == undefined
     } else {
@@ -883,7 +1161,7 @@ const Step2DoctorListing = ({ handleNext }: { handleNext: () => void }) => {
           onPress={() => setShowDatePicker(true)}
           activeOpacity={0.8}
         >
-          <Ionicons name="calendar-outline" size={24} color="#00A79D" />
+          <Ionicons name="calendar-clear-outline" size={20} color="#000" />
           <Text style={styles.calendarButtonText}>
             {selectedDate.locale('en').format('MMMM YYYY')}
           </Text>
@@ -911,42 +1189,61 @@ const Step2DoctorListing = ({ handleNext }: { handleNext: () => void }) => {
         />
 
         {/* City and District Dropdowns */}
-        <View style={styles.filtersRow}>
+        {selectedCardItem[0]?.CatCategoryId != "42" && <View style={styles.filtersRow}>
+
           <View style={styles.dropdownWrapper}>
             <Text style={styles.dropdownLabel}>City</Text>
-            <TouchableOpacity style={styles.dropdown} activeOpacity={0.8}>
-              <Text style={styles.dropdownText}>{selectedCity}</Text>
-              <Ionicons name="chevron-down" size={18} color="#6D7A80" />
-            </TouchableOpacity>
+            <Dropdown
+              data={cities}
+              value={selectedCityId}
+              onChange={(value) => {
+                setSelectedCityId(value)
+              }}
+              placeholder="All Cities"
+              containerStyle={styles.dropdownWrapper}
+              dropdownStyle={styles.dropdown}
+            />
           </View>
 
           <View style={styles.dropdownWrapper}>
             <Text style={styles.dropdownLabel}>District</Text>
-            <TouchableOpacity style={styles.dropdown} activeOpacity={0.8}>
-              <Text style={styles.dropdownText}>{selectedDistrict}</Text>
-              <Ionicons name="chevron-down" size={18} color="#6D7A80" />
-            </TouchableOpacity>
+            <Dropdown
+              data={squares}
+              value={selectedSquareId}
+              onChange={(value) => {
+                setSelectedSquareId(value)
+              }}
+              placeholder="All Districts"
+              containerStyle={styles.dropdownContainer}
+              dropdownStyle={styles.dropdown}
+              disabled={!selectedCityId}
+            />
           </View>
-        </View>
+        </View>}
 
         {/* Search Near Me Checkbox */}
-        <TouchableOpacity
+        {selectedCardItem[0]?.CatCategoryId != "42" && <TouchableOpacity
           style={styles.checkboxContainer}
-          onPress={() => setSearchNearMe(!searchNearMe)}
+          onPress={() => {
+            setSearchNearMe(!searchNearMe)
+          }}
           activeOpacity={0.7}
         >
           <View style={[styles.checkbox, searchNearMe && styles.checkboxActive]}>
             {searchNearMe && <Ionicons name="checkmark" size={16} color="#fff" />}
           </View>
           <Text style={styles.checkboxLabel}>Search Doctors near me</Text>
-        </TouchableOpacity>
+        </TouchableOpacity>}
 
         {/* Doctor Type Selection */}
-        <View style={styles.radioGroup}>
+        {(selectedCardItem[0]?.CatCategoryId == "42" || selectedCardItem[0]?.CatCategoryId == "32") && <View style={styles.radioGroup}>
           <TouchableOpacity
-            style={styles.radioItem}
-            onPress={() => setSelectedType('All')}
+            style={[styles.radioItem, { width: '20%' } , services ? false : true ? { opacity: 0.5 } : {}]}
+            onPress={() => {
+              setSelectedType('All')
+            }}
             activeOpacity={0.7}
+            disabled={services ? false : true}
           >
             <View style={styles.radioOuter}>
               {selectedType === 'All' && <View style={styles.radioInner} />}
@@ -955,8 +1252,11 @@ const Step2DoctorListing = ({ handleNext }: { handleNext: () => void }) => {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.radioItem}
-            onPress={() => setSelectedType('Consultant')}
+            style={[styles.radioItem, { width: '40%' } , services ? false : true ? { opacity: 0.5 } : {}]}
+            onPress={() => {
+              setSelectedType('Consultant')
+            }}
+            disabled={services ?  false : true}
             activeOpacity={0.7}
           >
             <View style={styles.radioOuter}>
@@ -966,8 +1266,11 @@ const Step2DoctorListing = ({ handleNext }: { handleNext: () => void }) => {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.radioItem}
-            onPress={() => setSelectedType('Specialist')}
+            style={[styles.radioItem, { width: '30%' } , services ? false : true ? { opacity: 0.5 } : {}]}
+            onPress={() => {
+              setSelectedType('Specialist')
+            }}
+            disabled={services ? false : true}
             activeOpacity={0.7}
           >
             <View style={styles.radioOuter}>
@@ -975,90 +1278,86 @@ const Step2DoctorListing = ({ handleNext }: { handleNext: () => void }) => {
             </View>
             <Text style={styles.radioLabel}>Specialist</Text>
           </TouchableOpacity>
-        </View>
+        </View>}
 
         {/* Affiliation Selection */}
-        <View style={styles.radioGroup}>
+        {(selectedCardItem[0]?.CatCategoryId == "42" || selectedCardItem[0]?.CatCategoryId == "32") && <View style={styles.radioGroup}>
           <TouchableOpacity
-            style={styles.radioItem}
-            onPress={() => setSelectedAffiliation('All')}
+            style={[styles.radioItem, { width: '20%' }]}
+            onPress={() => setSelectedAffiliation('0')}
             activeOpacity={0.7}
           >
             <View style={styles.radioOuter}>
-              {selectedAffiliation === 'All' && <View style={styles.radioInner} />}
+              {selectedAffiliation === '0' && <View style={styles.radioInner} />}
             </View>
             <Text style={styles.radioLabel}>All</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.radioItem}
-            onPress={() => setSelectedAffiliation('Affiliated')}
+            style={[styles.radioItem, { width: '40%' }]}
+            onPress={() => setSelectedAffiliation('1')}
             activeOpacity={0.7}
           >
             <View style={styles.radioOuter}>
-              {selectedAffiliation === 'Affiliated' && <View style={styles.radioInner} />}
+              {selectedAffiliation === '1' && <View style={styles.radioInner} />}
             </View>
             <Text style={styles.radioLabel}>Affiliated with Organization</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.radioItem}
-            onPress={() => setSelectedAffiliation('Individual')}
+            style={[styles.radioItem, { width: '30%' }]}
+            onPress={() => setSelectedAffiliation('2')}
             activeOpacity={0.7}
           >
             <View style={styles.radioOuter}>
-              {selectedAffiliation === 'Individual' && <View style={styles.radioInner} />}
+              {selectedAffiliation === '2' && <View style={styles.radioInner} />}
             </View>
             <Text style={styles.radioLabel}>Individual</Text>
           </TouchableOpacity>
-        </View>
+        </View>}
 
         {/* Search and Filter Buttons */}
-        <View style={styles.actionButtons}>
-          <TouchableOpacity style={styles.iconButton} activeOpacity={0.7}>
-            <Ionicons name="options-outline" size={24} color="#6D7A80" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.iconButton} activeOpacity={0.7}>
-            <Ionicons name="search-outline" size={24} color="#6D7A80" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.iconButton} activeOpacity={0.7}>
-            <Ionicons name="refresh-outline" size={24} color="#6D7A80" />
-          </TouchableOpacity>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%', paddingHorizontal: 8, marginBottom: 8 }}>
+          <View style={styles.actionButtons}>
+            <TouchableOpacity onPress={() => setShowSortFilterBottomSheet(true)} style={styles.iconButton} activeOpacity={0.7}>
+              <Ionicons name="options-outline" size={20} color="#6D7A80" />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.iconButton} activeOpacity={0.7}>
+              <Ionicons name="search-outline" size={20} color="#6D7A80" />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => ApplyFilters()} style={styles.iconButton} activeOpacity={0.7}>
+              <Ionicons name="refresh-outline" size={20} color="#6D7A80" />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.statusFilters}>
+
+            <TouchableOpacity
+              style={[styles.statusFilter, selectedFilter === 'booked' && styles.statusFilterActive]}
+              onPress={() => setSelectedFilter('booked')}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.statusDot, styles.statusDotBooked]} />
+              <Text style={styles.statusFilterText}>Booked</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.statusFilter, selectedFilter === 'available' && styles.statusFilterActive]}
+              onPress={() => setSelectedFilter('available')}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.statusDot, styles.statusDotAvailable]} />
+              <Text style={styles.statusFilterText}>Available</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Results Count and Status Filter */}
         <View style={styles.resultsHeader}>
-          <Text style={styles.resultsText}>(4) results found for Doctor Visit</Text>
+          <Text style={styles.resultsText}>{`(${filteredProviders.length}) results found for Doctor Visit`}</Text>
         </View>
 
-        <View style={styles.statusFilters}>
-          <TouchableOpacity
-            style={[styles.statusFilter, selectedFilter === 'unavailable' && styles.statusFilterActive]}
-            onPress={() => setSelectedFilter('unavailable')}
-            activeOpacity={0.7}
-          >
-            <View style={[styles.statusDot, styles.statusDotUnavailable]} />
-            <Text style={styles.statusFilterText}>Unavailable</Text>
-          </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.statusFilter, selectedFilter === 'booked' && styles.statusFilterActive]}
-            onPress={() => setSelectedFilter('booked')}
-            activeOpacity={0.7}
-          >
-            <View style={[styles.statusDot, styles.statusDotBooked]} />
-            <Text style={styles.statusFilterText}>Booked</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.statusFilter, selectedFilter === 'available' && styles.statusFilterActive]}
-            onPress={() => setSelectedFilter('available')}
-            activeOpacity={0.7}
-          >
-            <View style={[styles.statusDot, styles.statusDotAvailable]} />
-            <Text style={styles.statusFilterText}>Available</Text>
-          </TouchableOpacity>
-        </View>
 
         {/* Doctor List */}
         {loading ? (
@@ -1164,10 +1463,138 @@ const Step2DoctorListing = ({ handleNext }: { handleNext: () => void }) => {
 
       {/* Bottom Button */}
       <View style={styles.bottomBar}>
-        <TouchableOpacity disabled={getNextButtonEnabled()} onPress={() => handleNext()} style={[styles.nextButton, getNextButtonEnabled() ? styles.disabledNextButton : {}]} activeOpacity={0.85}>
+        <TouchableOpacity disabled={getNextButtonEnabled()} onPress={() => onReviewCartPress()} style={[styles.nextButton, getNextButtonEnabled() ? styles.disabledNextButton : {}]} activeOpacity={0.85}>
           <Text style={styles.nextButtonText}>Next</Text>
         </TouchableOpacity>
       </View>
+
+      <CustomBottomSheet
+        visible={showSortFilterBottomSheet}
+        onClose={() => setShowSortFilterBottomSheet(false)}
+        maxHeight={'25%'}
+        showHandle={false}
+      >
+       <View style={styles.reportsBottomSheetContainer}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, width: '100%', height: 50, backgroundColor: '#fff', borderTopLeftRadius: 12, borderTopRightRadius: 12 }} >
+            <Text style={styles.reportsBottomSheetTitle}>Sort by price</Text>
+            <TouchableOpacity onPress={() => setShowSortFilterBottomSheet(false)}>
+              <Ionicons name="close-outline" size={24} color="#000" />
+            </TouchableOpacity>
+          </View>
+          <View style={{ flex: 1, marginTop: 12,paddingHorizontal: 16, backgroundColor: '#fff' }}>
+          <TouchableOpacity
+            style={[styles.radioItem,{width:"100%", marginBottom: 12}]}
+            onPress={() => {
+              setSortBy('Asc')
+            }}
+            activeOpacity={0.7}
+          >
+            <View style={styles.radioOuter}>
+              {sortBy === 'Asc' && <View style={styles.radioInner} />}
+            </View>
+            <Text style={styles.radioLabel}>Lowest price</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.radioItem,{width:"100%", marginBottom: 12}]}
+            onPress={() => {
+              setSortBy('Desc')
+            }}
+            activeOpacity={0.7}
+          >
+            <View style={styles.radioOuter}>
+              {sortBy === 'Desc' && <View style={styles.radioInner} />}
+            </View>
+            <Text style={styles.radioLabel}>The highest price</Text>
+          </TouchableOpacity>
+          </View>
+          <View style={{ paddingHorizontal: 16, paddingVertical: 8 }}>
+            <TouchableOpacity onPress={() => setShowSortFilterBottomSheet(false)} style={{ backgroundColor: '#00A79D', paddingVertical: 12, borderRadius: 12, alignItems: 'center' }}>
+              <Text style={{ color: '#fff', fontSize: 16, fontFamily: CAIRO_FONT_FAMILY.bold, lineHeight: Platform.OS === 'ios' ? 0 : 20 }}>Show</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </CustomBottomSheet>
+
+      <CustomBottomSheet
+        visible={isLocationBottomSheetVisible}
+        onClose={() => setIsLocationBottomSheetVisible(false)}
+        maxHeight={!selectedLocation ? "90%" : "45%"}
+        backdropClickable={true}
+        showHandle={false}
+      >
+        {!selectedLocation ? <LocationService onPressLocation={() => onPressContinue()} /> :
+          <View style={styles.reportsBottomSheetContainer}>
+            <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#ccc', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, width: '100%', height: 50, backgroundColor: '#fff', borderTopLeftRadius: 12, borderTopRightRadius: 12 }} >
+              <Text style={styles.reportsBottomSheetTitle}>Current Visit Information</Text>
+              <TouchableOpacity onPress={() => setIsLocationBottomSheetVisible(false)}>
+                <Ionicons name="close-outline" size={24} color="#000" />
+              </TouchableOpacity>
+            </View>
+            <View style={{ flex: 1, marginTop: 12, backgroundColor: '#fff' }}>
+              <View style={{ marginHorizontal: 16, backgroundColor: "#e4f1ef", marginVertical: 2, borderRadius: 12 }}>
+                <Text style={{ fontSize: 14, fontFamily: CAIRO_FONT_FAMILY.regular, lineHeight: Platform.OS === 'ios' ? 0 : 20, color: '#000', paddingHorizontal: 16, paddingVertical: 12 }}>continue while maintaining all current visit information</Text>
+
+              </View>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12 }}>
+                <Ionicons name="location" size={24} color="#23A3A4" />
+                <Text style={{ fontSize: 14, fontFamily: CAIRO_FONT_FAMILY.regular, lineHeight: Platform.OS === 'ios' ? 0 : 20, color: '#000' }}>{selectedLocation.address}</Text>
+              </View>
+
+              <TouchableOpacity onPress={() => onPressContinue()} style={{ backgroundColor: '#00A79D', paddingVertical: 12, borderRadius: 12, alignItems: 'center', marginHorizontal: 16 }}>
+                <Text style={{ color: '#fff', fontSize: 16, fontFamily: CAIRO_FONT_FAMILY.bold, lineHeight: Platform.OS === 'ios' ? 0 : 20 }}>Continue</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => dispatch(setSelectedLocation(null))} style={{ backgroundColor: '#00A79D', paddingVertical: 12, borderRadius: 12, alignItems: 'center', marginHorizontal: 16,marginTop: 12 }}>
+                <Text style={{ color: '#fff', fontSize: 16, fontFamily: CAIRO_FONT_FAMILY.bold, lineHeight: Platform.OS === 'ios' ? 0 : 20 }}>Change Address</Text>
+              </TouchableOpacity>
+            </View>
+          </View>}
+      </CustomBottomSheet>
+
+      <CustomBottomSheet
+        visible={cardBottomSheetVisible}
+        onClose={() => setCardBottomSheetVisible(false)}
+        maxHeight={getCartBottomSheetHeight()}
+        backdropClickable={true}
+        showHandle={false}
+      >
+        <View style={styles.reportsBottomSheetContainer}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, width: '100%', height: 50, backgroundColor: '#fff', borderTopLeftRadius: 12, borderTopRightRadius: 12 }} >
+            <Text style={styles.reportsBottomSheetTitle}>Cart</Text>
+            <TouchableOpacity onPress={() => setCardBottomSheetVisible(false)}>
+              <Ionicons name="close-outline" size={24} color="#000" />
+            </TouchableOpacity>
+          </View>
+          <View style={{ flex: 1, marginTop: 12, backgroundColor: '#fff' }}>
+            <View style={{ flex: 1, marginTop: 12, backgroundColor: '#fff' }}>
+              <FlatList
+                data={existingCardItems}
+                keyExtractor={item => item.ItemUniqueId}
+                renderItem={renderCartItem}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }}
+              />
+            </View>
+
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12 }}>
+              <Text style={{ fontSize: 14, fontFamily: CAIRO_FONT_FAMILY.regular, lineHeight: Platform.OS === 'ios' ? 0 : 20, color: '#000' }}>Services</Text>
+              <Text style={{ fontSize: 14, fontFamily: CAIRO_FONT_FAMILY.regular, lineHeight: Platform.OS === 'ios' ? 0 : 20, color: '#000' }}>{calculateTotalPrice(existingCardItems).toFixed(2)} SAR</Text>
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12 }}>
+              <Text style={{ fontSize: 14, fontFamily: CAIRO_FONT_FAMILY.regular, lineHeight: Platform.OS === 'ios' ? 0 : 20, color: '#000' }}>Tax (15%)</Text>
+              <Text style={{ fontSize: 14, fontFamily: CAIRO_FONT_FAMILY.regular, lineHeight: Platform.OS === 'ios' ? 0 : 20, color: '#000' }}>{Patient.CatNationalityId != "213" ? calculateTax(existingCardItems).toFixed(2) : '0'} SAR</Text>
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12 }}>
+              <Text style={{ fontSize: 14, fontFamily: CAIRO_FONT_FAMILY.regular, lineHeight: Platform.OS === 'ios' ? 0 : 20, color: '#000' }}>Total</Text>
+              <Text style={{ fontSize: 14, fontFamily: CAIRO_FONT_FAMILY.regular, lineHeight: Platform.OS === 'ios' ? 0 : 20, color: '#000' }}>{Patient.CatNationalityId != "213" ? calculateTotal(existingCardItems).toFixed(2) : calculateTotalPrice(existingCardItems).toFixed(2)} SAR</Text>
+            </View>
+          </View>
+          <View style={{ paddingHorizontal: 16, paddingVertical: 8 }}>
+            <TouchableOpacity onPress={onNextPress} style={{ backgroundColor: '#00A79D', paddingVertical: 12, borderRadius: 12, alignItems: 'center' }}>
+              <Text style={{ color: '#fff', fontSize: 16, fontFamily: CAIRO_FONT_FAMILY.bold, lineHeight: Platform.OS === 'ios' ? 0 : 20 }}>Continue</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </CustomBottomSheet>
     </SafeAreaView>
   );
 };
@@ -1195,12 +1622,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: '#FFFFFF',
-    marginHorizontal: 16,
-    marginTop: 16,
+    marginHorizontal: 12,
+    marginTop: 8,
     marginBottom: 12,
     paddingHorizontal: 16,
-    paddingVertical: 14,
-    borderRadius: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: '#D2E7E4',
     shadowColor: '#000',
@@ -1213,21 +1640,24 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: 12,
     fontSize: 16,
-    fontWeight: '600',
     color: '#0E3C47',
+    textAlign: 'center',
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
+    fontFamily: CAIRO_FONT_FAMILY.bold,
   },
   // Date List
   dateList: {
     paddingHorizontal: 16,
-    paddingBottom: 16,
+    paddingBottom: 10,
   },
   dateCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    marginRight: 10,
-    minWidth: 70,
+    paddingVertical: 4,
+    paddingHorizontal: 4,
+    marginRight: 3,
+    minWidth: 50,
+    maxWidth: 60,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#E0EAEA',
@@ -1243,7 +1673,8 @@ const styles = StyleSheet.create({
   },
   dateDay: {
     fontSize: 12,
-    fontWeight: '500',
+    fontFamily: CAIRO_FONT_FAMILY.medium,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
     color: '#6D7A80',
     marginBottom: 4,
   },
@@ -1252,7 +1683,8 @@ const styles = StyleSheet.create({
   },
   dateNumber: {
     fontSize: 20,
-    fontWeight: '700',
+    fontFamily: CAIRO_FONT_FAMILY.bold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
     color: '#0E3C47',
     marginBottom: 2,
   },
@@ -1261,7 +1693,8 @@ const styles = StyleSheet.create({
   },
   dateMonth: {
     fontSize: 12,
-    fontWeight: '500',
+    fontFamily: CAIRO_FONT_FAMILY.medium,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
     color: '#6D7A80',
   },
   dateMonthActive: {
@@ -1271,17 +1704,17 @@ const styles = StyleSheet.create({
   filtersRow: {
     flexDirection: 'row',
     paddingHorizontal: 16,
-    marginBottom: 16,
-    gap: 12,
+    marginBottom: 10,
+    gap: 8,
   },
   dropdownWrapper: {
     flex: 1,
   },
   dropdownLabel: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: CAIRO_FONT_FAMILY.bold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
     color: '#0E3C47',
-    marginBottom: 8,
   },
   dropdown: {
     flexDirection: 'row',
@@ -1289,14 +1722,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     backgroundColor: '#FFFFFF',
     paddingHorizontal: 14,
-    paddingVertical: 12,
+    paddingVertical: 8,
     borderRadius: 10,
     borderWidth: 1,
     borderColor: '#D2E7E4',
   },
   dropdownText: {
     fontSize: 14,
-    fontWeight: '500',
+    fontFamily: CAIRO_FONT_FAMILY.medium,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
     color: '#384B56',
   },
   // Checkbox
@@ -1304,7 +1738,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    marginBottom: 20,
+    marginBottom: 10,
   },
   checkbox: {
     width: 20,
@@ -1322,20 +1756,22 @@ const styles = StyleSheet.create({
   },
   checkboxLabel: {
     fontSize: 15,
-    fontWeight: '500',
+    fontFamily: CAIRO_FONT_FAMILY.bold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
     color: '#384B56',
   },
   // Radio Groups
   radioGroup: {
     flexDirection: 'row',
     alignItems: 'center',
+    width: '100%',
     paddingHorizontal: 16,
-    marginBottom: 16,
-    flexWrap: 'wrap',
+    marginBottom: 8,
   },
   radioItem: {
     flexDirection: 'row',
     alignItems: 'center',
+    width: '30%',
     marginRight: 20,
     marginBottom: 8,
   },
@@ -1357,20 +1793,19 @@ const styles = StyleSheet.create({
   },
   radioLabel: {
     fontSize: 14,
-    fontWeight: '500',
+    fontFamily: CAIRO_FONT_FAMILY.semiBold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
     color: '#384B56',
   },
   // Action Buttons
   actionButtons: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    marginBottom: 16,
-    gap: 12,
+    gap: 6,
   },
   iconButton: {
-    width: 44,
-    height: 44,
+    width: 36,
+    height: 36,
     borderRadius: 10,
     backgroundColor: '#FFFFFF',
     justifyContent: 'center',
@@ -1381,20 +1816,19 @@ const styles = StyleSheet.create({
   // Results Header
   resultsHeader: {
     paddingHorizontal: 16,
-    marginBottom: 12,
+    marginBottom: 4,
   },
   resultsText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: CAIRO_FONT_FAMILY.semiBold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
     color: '#384B56',
   },
   // Status Filters
   statusFilters: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    marginBottom: 16,
-    gap: 12,
+    gap: 8,
   },
   statusFilter: {
     flexDirection: 'row',
@@ -1411,23 +1845,26 @@ const styles = StyleSheet.create({
     backgroundColor: '#E0F5F2',
   },
   statusDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
     marginRight: 6,
+    borderWidth: 1,
+    borderColor: '#191919',
   },
   statusDotUnavailable: {
     backgroundColor: '#D1D5DB',
   },
   statusDotBooked: {
-    backgroundColor: '#FFA500',
+    backgroundColor: '#23A3A4',
   },
   statusDotAvailable: {
-    backgroundColor: '#00A79D',
+    backgroundColor: '#fff',
   },
   statusFilterText: {
     fontSize: 13,
-    fontWeight: '500',
+    fontFamily: CAIRO_FONT_FAMILY.semiBold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
     color: '#384B56',
   },
   // Doctor List
@@ -1569,8 +2006,7 @@ const styles = StyleSheet.create({
   // Bottom Bar
   bottomBar: {
     paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 24,
+    paddingVertical: 8,
     backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
@@ -1583,21 +2019,139 @@ const styles = StyleSheet.create({
   nextButton: {
     borderRadius: 12,
     backgroundColor: '#00A79D',
-    paddingVertical: 16,
+    paddingVertical: 10,
     alignItems: 'center',
   },
   nextButtonText: {
     color: '#fff',
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: CAIRO_FONT_FAMILY.bold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
   },
   emptyText: {
     textAlign: 'center',
     color: '#90A5A4',
     marginTop: 24,
     fontSize: 14,
+    fontFamily: CAIRO_FONT_FAMILY.semiBold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
   },
   disabledNextButton: {
     backgroundColor: '#ccc',
+  },
+  dropdownContainer: {
+    marginBottom: 0,
+  },
+  reportsBottomSheetContainer: {
+    flex: 1,
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+  },
+  complainBottomSheetContainer: {
+    flex: 1,
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+  },
+  reportsBottomSheetTitle: {
+    fontSize: 16,
+    fontFamily: CAIRO_FONT_FAMILY.bold,
+    color: '#000',
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
+  },
+  // Cart Item Styles
+  cartItemContainer: {
+    marginBottom: 12,
+    borderRadius: 12,
+    overflow: 'hidden',
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  cartItemHeader: {
+    backgroundColor: '#E0F5F2',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+  },
+  cartItemHeaderName: {
+    fontSize: 14,
+    fontFamily: CAIRO_FONT_FAMILY.bold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
+    color: '#0E3C47',
+  },
+  cartItemHeaderDateTime: {
+    fontSize: 14,
+    fontFamily: CAIRO_FONT_FAMILY.bold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
+    color: '#0E3C47',
+  },
+  cartItemCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: 1,
+    borderTopColor: '#E0EAEA',
+  },
+  cartItemRemoveButton: {
+    width: 24,
+    height: 24,
+    borderRadius: 14,
+    backgroundColor: '#FF3B30',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
+  },
+  cartItemServiceInfo: {
+    flex: 1,
+    marginRight: 12,
+  },
+  cartItemServiceName: {
+    fontSize: 15,
+    fontFamily: CAIRO_FONT_FAMILY.semiBold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
+    color: '#00A79D',
+    marginBottom: 4,
+  },
+  cartItemPrice: {
+    fontSize: 14,
+    fontFamily: CAIRO_FONT_FAMILY.bold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
+    color: '#0E3C47',
+  },
+  cartItemQuantityContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  cartItemQuantityButton: {
+    width: 24,
+    height: 24,
+    borderRadius: 14,
+    backgroundColor: '#23a2a4',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cartItemQuantityButtonDisabled: {
+    backgroundColor: '#cccccc',
+    opacity: 0.6,
+  },
+  cartItemQuantityText: {
+    fontSize: 14,
+    fontFamily: CAIRO_FONT_FAMILY.bold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
+    color: '#191919',
+    minWidth: 24,
+    textAlign: 'center',
   },
 });

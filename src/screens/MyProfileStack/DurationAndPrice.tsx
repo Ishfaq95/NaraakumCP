@@ -1,4 +1,4 @@
-import { View, Text, SafeAreaView, StyleSheet, ScrollView, Image, TouchableOpacity, TextInput, Platform } from 'react-native'
+import { View, Text, SafeAreaView, StyleSheet, ScrollView, Image, TouchableOpacity, TextInput, Platform, KeyboardAvoidingView } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { CAIRO_FONT_FAMILY, globalTextStyles } from '../../styles/globalStyles'
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -56,6 +56,39 @@ const DurationAndPrice = ({ route }: { route: any }) => {
             setDurationAndPriceData(response.Data[0]);
         }
     };
+
+    const clampNumberInput = (text: string, min: number, max: number) => {
+        // Keep only digits
+        const cleaned = text.replace(/[^\d]/g, '');
+        if (cleaned === '') {
+            return '';
+        }
+        let num = parseInt(cleaned, 10);
+        if (isNaN(num)) {
+            return '';
+        }
+        if (num < min) num = min;
+        if (num > max) num = max;
+        return num.toString();
+    };
+
+    const handleDurationChange = (text: string) => {
+        const value = clampNumberInput(text, 1, 60);
+        setVisitDuration(value);
+        setErrors(prev => ({ ...prev, visitDuration: false }));
+    };
+
+    const handleVisitPriceChange = (text: string) => {
+        const value = clampNumberInput(text, 1, 100000);
+        setVisitPrice(value);
+        setErrors(prev => ({ ...prev, visitPrice: false }));
+    };
+
+    const handleNursePriceChange = (text: string) => {
+        const value = clampNumberInput(text, 1, 100000);
+        setNursePrice(value);
+        setErrors(prev => ({ ...prev, nursePrice: false }));
+    };
     const validateForm = () => {
         const newErrors = {
             visitDuration: false,
@@ -69,16 +102,16 @@ const DurationAndPrice = ({ route }: { route: any }) => {
             newErrors.visitDuration = true;
         }
 
-        // Validate visit price
+        // Validate visit price (1-100000)
         const price = parseFloat(visitPrice);
-        if (!visitPrice || isNaN(price) || price <= 0) {
+        if (!visitPrice || isNaN(price) || price < 1 || price > 100000) {
             newErrors.visitPrice = true;
         }
 
         // Validate nurse price if checkbox is checked
         if (allowWithNurse) {
             const nPrice = parseFloat(nursePrice);
-            if (!nursePrice || isNaN(nPrice) || nPrice < 0) {
+            if (!nursePrice || isNaN(nPrice) || nPrice < 1 || nPrice > 100000) {
                 newErrors.nursePrice = true;
             }
         }
@@ -127,87 +160,57 @@ const DurationAndPrice = ({ route }: { route: any }) => {
     return (
         <SafeAreaView style={styles.container}>
             {renderHeader()}
-            <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-                <View style={styles.mainContent}>
-                    <View style={styles.headerSection}>
-                        <Image
-                            source={Data?.CatServiceServeTypeId == 1 ? require('../../assets/icons/RemoteConsultant.png') : require('../../assets/icons/HomeVisit.png')}
-                            style={styles.headerIcon}
-                            resizeMode='contain'
-                        />
-                        <Text style={styles.headerText}>
-                            {Data?.CatServiceServeTypeId == 1 ? `Online Consultation Duration & Price` : `Home Visit Duration & Price`}
-                        </Text>
-                    </View>
-
-                    <View style={styles.formContainer}>
-                        <View style={styles.sectionHeader}>
-                            <Text style={styles.sectionTitle}>
-                                {Data?.CatServiceServeTypeId == 1 ? 'Online Consultation' : 'Home Visit'}
+            <KeyboardAvoidingView
+                style={{ flex: 1 }}
+                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+            >
+                <ScrollView
+                    style={styles.scrollView}
+                    showsVerticalScrollIndicator={false}
+                    keyboardShouldPersistTaps="handled"
+                    contentContainerStyle={{ paddingBottom: 24 }}
+                >
+                    <View style={styles.mainContent}>
+                        <View style={styles.headerSection}>
+                            <Image
+                                source={Data?.CatServiceServeTypeId == 1 ? require('../../assets/icons/RemoteConsultant.png') : require('../../assets/icons/HomeVisit.png')}
+                                style={styles.headerIcon}
+                                resizeMode='contain'
+                            />
+                            <Text style={styles.headerText}>
+                                {Data?.CatServiceServeTypeId == 1 ? `Online Consultation Duration & Price` : `Home Visit Duration & Price`}
                             </Text>
                         </View>
 
-                        {/* Visit Duration */}
-                        <View style={styles.inputGroup}>
-                            <Text style={styles.label}>{Data?.CatServiceServeTypeId == 1 ? 'Session Duration' : 'Visit Duration'} (Min 1-60)</Text>
-                            <TextInput
-                                style={[styles.input, errors.visitDuration && styles.inputError]}
-                                value={visitDuration}
-                                onChangeText={(text) => {
-                                    setVisitDuration(text);
-                                    setErrors({ ...errors, visitDuration: false });
-                                }}
-                                keyboardType="numeric"
-                                placeholder="0"
-                                placeholderTextColor="#999"
-                            />
-                        </View>
+                        <View style={styles.formContainer}>
+                            <View style={styles.sectionHeader}>
+                                <Text style={styles.sectionTitle}>
+                                    {Data?.CatServiceServeTypeId == 1 ? 'Session' : 'Home Visit'}
+                                </Text>
+                            </View>
 
-                        {/* Visit Price */}
-                        <View style={styles.inputGroup}>
-                            <Text style={styles.label}>{Data?.CatServiceServeTypeId == 1 ? 'Session Price' : 'Visit Price'}</Text>
-                            <View style={[styles.priceInputContainer, errors.visitPrice && styles.inputError]}>
+                            {/* Visit Duration */}
+                            <View style={styles.inputGroup}>
+                                <Text style={styles.label}>{Data?.CatServiceServeTypeId == 1 ? 'Session Duration' : 'Visit Duration'} (Min 1-60)</Text>
                                 <TextInput
-                                    style={styles.priceInput}
-                                    value={visitPrice}
-                                    onChangeText={(text) => {
-                                        setVisitPrice(text);
-                                        setErrors({ ...errors, visitPrice: false });
-                                    }}
+                                    style={[styles.input, errors.visitDuration && styles.inputError]}
+                                    value={visitDuration}
+                                    onChangeText={handleDurationChange}
                                     keyboardType="numeric"
                                     placeholder="0"
                                     placeholderTextColor="#999"
                                 />
-                                <Text style={styles.currency}>/ SAR</Text>
                             </View>
-                        </View>
 
-                        {/* Allow with nurse checkbox */}
-                        {Data?.CatServiceServeTypeId == 2 && <TouchableOpacity
-                            style={styles.checkboxContainer}
-                            onPress={() => setAllowWithNurse(!allowWithNurse)}
-                            activeOpacity={0.7}
-                        >
-                            <View style={[styles.checkbox, allowWithNurse && styles.checkboxChecked]}>
-                                {allowWithNurse && (
-                                    <Ionicons name="checkmark" size={16} color="#fff" />
-                                )}
-                            </View>
-                            <Text style={styles.checkboxLabel}>Allow with nurse</Text>
-                        </TouchableOpacity>}
-
-                        {/* Nurse Price (conditional) */}
-                        {Data?.CatServiceServeTypeId == 2 && allowWithNurse && (
+                            {/* Visit Price */}
                             <View style={styles.inputGroup}>
-                                <Text style={styles.label}>Price Of A Visit With A Nurse</Text>
-                                <View style={[styles.priceInputContainer, errors.nursePrice && styles.inputError]}>
+                                <Text style={styles.label}>{Data?.CatServiceServeTypeId == 1 ? 'Session Price' : 'Visit Price'}</Text>
+                                <View style={[styles.priceInputContainer, errors.visitPrice && styles.inputError]}>
                                     <TextInput
                                         style={styles.priceInput}
-                                        value={nursePrice}
-                                        onChangeText={(text) => {
-                                            setNursePrice(text);
-                                            setErrors({ ...errors, nursePrice: false });
-                                        }}
+                                        value={visitPrice}
+                                        onChangeText={handleVisitPriceChange}
                                         keyboardType="numeric"
                                         placeholder="0"
                                         placeholderTextColor="#999"
@@ -215,21 +218,53 @@ const DurationAndPrice = ({ route }: { route: any }) => {
                                     <Text style={styles.currency}>/ SAR</Text>
                                 </View>
                             </View>
-                        )}
-                    </View>
-                </View>
-            </ScrollView>
 
-            {/* Save Button */}
-            <View style={styles.buttonContainer}>
-                <TouchableOpacity
-                    style={styles.saveButton}
-                    onPress={handleSave}
-                    activeOpacity={0.8}
-                >
-                    <Text style={styles.saveButtonText}>Save</Text>
-                </TouchableOpacity>
-            </View>
+                            {/* Allow with nurse checkbox */}
+                            {Data?.CatServiceServeTypeId == 2 && <TouchableOpacity
+                                style={styles.checkboxContainer}
+                                onPress={() => setAllowWithNurse(!allowWithNurse)}
+                                activeOpacity={0.7}
+                            >
+                                <View style={[styles.checkbox, allowWithNurse && styles.checkboxChecked]}>
+                                    {allowWithNurse && (
+                                        <Ionicons name="checkmark" size={16} color="#fff" />
+                                    )}
+                                </View>
+                                <Text style={styles.checkboxLabel}>Allow with nurse</Text>
+                            </TouchableOpacity>}
+
+                            {/* Nurse Price (conditional) */}
+                            {Data?.CatServiceServeTypeId == 2 && allowWithNurse && (
+                                <View style={styles.inputGroup}>
+                                    <Text style={styles.label}>Price Of A Visit With A Nurse</Text>
+                                    <View style={[styles.priceInputContainer, errors.nursePrice && styles.inputError]}>
+                                        <TextInput
+                                            style={styles.priceInput}
+                                            value={nursePrice}
+                                            onChangeText={handleNursePriceChange}
+                                            keyboardType="numeric"
+                                            placeholder="0"
+                                            placeholderTextColor="#999"
+                                        />
+                                        <Text style={styles.currency}>/ SAR</Text>
+                                    </View>
+                                </View>
+                            )}
+                        </View>
+                    </View>
+                </ScrollView>
+
+                {/* Save Button */}
+                <View style={styles.buttonContainer}>
+                    <TouchableOpacity
+                        style={styles.saveButton}
+                        onPress={handleSave}
+                        activeOpacity={0.8}
+                    >
+                        <Text style={styles.saveButtonText}>Save</Text>
+                    </TouchableOpacity>
+                </View>
+            </KeyboardAvoidingView>
         </SafeAreaView>
     )
 }
@@ -301,20 +336,20 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
     },
     sectionTitle: {
-        fontSize: 16,
+        fontSize: 17,
         fontFamily: CAIRO_FONT_FAMILY.bold,
         lineHeight: Platform.OS === 'ios' ? 0 : 20,
-        color: '#000',
+        color: '#0F0F0F',
     },
     inputGroup: {
         paddingHorizontal: 8,
         paddingTop: 16,
     },
     label: {
-        fontSize: 14,
+        fontSize: 15,
         fontFamily: CAIRO_FONT_FAMILY.semiBold,
         lineHeight: Platform.OS === 'ios' ? 0 : 20,
-        color: '#333',
+        color: '#0F0F0F',
         marginBottom: 4,
     },
     input: {

@@ -1,5 +1,5 @@
-import React from 'react';
-import { SafeAreaView, View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import React, { useEffect } from 'react';
+import { SafeAreaView, View, Text, StyleSheet, TouchableOpacity, Platform, BackHandler } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { CAIRO_FONT_FAMILY } from '../../styles/globalStyles';
@@ -17,6 +17,28 @@ const AfterContractSign: React.FC = () => {
     const handleBackToProfile = () => {
         navigation.navigate(ROUTES.PaymentProfileScreen as never);
     };
+
+    // Handle Android hardware back button same as "Back To Profile"
+    useEffect(() => {
+        const onBackPress = () => {
+            handleBackToProfile();
+            return true; // prevent default behavior
+        };
+
+        const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+
+        return () => {
+            subscription.remove();
+        };
+    }, []);
+
+    // Disable iOS swipe-back gesture on this screen
+    useEffect(() => {
+        navigation.setOptions({
+            // @ts-ignore - gestureEnabled exists on native stack / stack navigators
+            gestureEnabled: false,
+        } as any);
+    }, [navigation]);
 
     return (
         <SafeAreaView style={styles.container}>
@@ -62,17 +84,17 @@ const styles = StyleSheet.create({
     },
     title: {
         fontSize: 16,
-        color: '#1E1E1E',
+        color: '#191919',
         fontFamily: CAIRO_FONT_FAMILY.bold,
         lineHeight: Platform.OS === 'ios' ? 0 : 22,
         textAlign: 'center',
         marginBottom: 10,
     },
     subtitle: {
-        fontSize: 14,
-        color: '#6B6B6B',
+        fontSize: 16,
+        color: '#666',
         fontFamily: CAIRO_FONT_FAMILY.regular,
-        lineHeight: 20,
+        lineHeight: Platform.OS === 'ios' ? 0 : 22,
         textAlign: 'center',
         marginBottom: 14,
     },

@@ -153,7 +153,7 @@ const AccountInformationScreen = () => {
             setSelectedCountryUpdated(getCountry);
             setUpdatedPhoneNumber(phoneInfo.phoneNumber);
             setMobileNumber(phoneInfo.phoneNumber);
-            setDateOfBirth(userInfo.DateofBirth ? moment(userInfo.DateofBirth).format('DD/MM/YYYY') : '');
+            setDateOfBirth(userInfo.DateofBirth ? moment(userInfo.DateofBirth).format('YYYY-MM-DD') : '');
             setGender(userInfo.Gender == true ? 'male' : 'female');
             setEmail(userInfo.Email);
         }
@@ -224,7 +224,7 @@ const AccountInformationScreen = () => {
             "Email": updatedEmail,
             "CatNationalityId": nationality.toString(),
             "IDNumber": user.IDNumber,
-            "Gender": gender === 'male' ? 1 : 0,
+            "Gender": gender === 'male' ? '1' : '0',
             "DateofBirth": dateOfBirth,
             "ImagePath": profileImage,
             "Password": password,
@@ -236,6 +236,7 @@ const AccountInformationScreen = () => {
 
         try {
             const response = await profileService.updateServiceProviderPersonalProfile(payload);
+            console.log("response",response)
             if (response.ResponseStatus.STATUSCODE === 200) {
                 getUserInfoByUserId()
                 showAlert({
@@ -246,6 +247,7 @@ const AccountInformationScreen = () => {
             }
         }
         catch (error: any) {
+            console.log("error",error)
         }
     }
 
@@ -673,7 +675,7 @@ const AccountInformationScreen = () => {
                         </ScrollView>
                     </KeyboardAvoidingView>
                     <View style={{ paddingVertical: 10 }}>
-                        <TouchableOpacity onPress={handleSave} style={{ backgroundColor: '#23a2a4', padding: 10, borderRadius: 10, alignItems: 'center', justifyContent: 'center' }}>
+                        <TouchableOpacity onPress={updateUserProfileHandler} style={{ backgroundColor: '#23a2a4', padding: 10, borderRadius: 10, alignItems: 'center', justifyContent: 'center' }}>
                             <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>Save</Text>
                         </TouchableOpacity>
                     </View>

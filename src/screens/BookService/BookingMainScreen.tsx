@@ -40,7 +40,7 @@ const BookingScreen = ({ navigation, route }: any) => {
     const renderStep = () => {
         switch (currentStep) {
             case 1: return <Step1CatSpecialty handleNext={handleNext} Patient={Patient} />;
-            case 2: return <Step2DoctorListing handleNext={handleNext} />;
+            case 2: return <Step2DoctorListing handleNext={handleNext} Patient={Patient} />;
             case 3: return <Step3ReviewOrder handleNext={handleNext} Patient={Patient} />;
             default: return null;
         }
@@ -129,6 +129,7 @@ const styles = StyleSheet.create({
         fontFamily: CAIRO_FONT_FAMILY.bold,
         lineHeight: Platform.OS === 'ios' ? 0 : 20,
         marginLeft: 4,
+        color: '#191919',
     },
     headerContainer: {
         backgroundColor: '#fff',

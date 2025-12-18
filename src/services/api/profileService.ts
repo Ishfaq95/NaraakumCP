@@ -380,6 +380,7 @@ export const updateServiceProviderPersonalProfile = async (credentials: any) => 
         return response.data;
     }
     catch (error: any) {
+        console.log("error",error)
         throw {
             message: error?.response?.data?.message || 'Update service provider personal profile failed',
             status: error?.response?.status,
@@ -533,6 +534,15 @@ export const copyServiceProviderAvailabilityToNextMonth = async (credentials: an
     }
 }
 
+export const addServiceProviderHolidays = async (credentials: any) => {
+    try {
+        const response = await axiosInstance.post('organization/AddServiceProviderHolidays', credentials);
+        return response.data;
+    } catch (error: any) {
+        throw error;    
+    }
+}
+
 // Export all profile related functions
 export const profileService = {
     getServiceProviderByUserId,
@@ -571,4 +581,5 @@ export const profileService = {
     deleteServiceProviderAvailability,
     updateServiceProviderAvailability,
     copyServiceProviderAvailabilityToNextMonth,
+    addServiceProviderHolidays,
 }; 

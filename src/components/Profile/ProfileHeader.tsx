@@ -46,14 +46,16 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           {profileImage ? <Image
             source={profileImage ? { uri: `${MediaBaseURL}${profileImage}` } : require('../../assets/icons/doctor-vector.svg')}
             style={styles.profileImage}
-          /> : 
-          <View style={{ width: 50, height: 50, borderRadius: 25,alignItems: 'center', justifyContent: 'center', backgroundColor: '#DDDDDD' }} >
-            <Ionicons name="person" size={28} color="#AFAFAF" />
-          </View>}
+          /> :
+            <View style={{ width: 50, height: 50, borderRadius: 25, alignItems: 'center', justifyContent: 'center', backgroundColor: '#DDDDDD' }} >
+              <Ionicons name="person" size={28} color="#AFAFAF" />
+            </View>}
           <View style={styles.userInfo}>
-            <Text style={styles.name}>{name}</Text>
+              <Text numberOfLines={2} ellipsizeMode="tail" style={styles.name}>{name}</Text>
+
             <View style={styles.ratingContainer}>
               <Text style={styles.gender}>{gender}</Text>
+
               <FontAwesome name={'star'} size={14} color="#FFC107" style={{ marginRight: 2, marginLeft: 4 }} />
               <Text style={styles.reviewCount}><Text style={{ fontSize: 14, fontFamily: CAIRO_FONT_FAMILY.bold, color: '#191919' }}>{rating.toFixed(1)}</Text> ({reviewCount} Person)</Text>
             </View>
@@ -90,11 +92,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
+    width: '100%',
     marginBottom: 16,
   },
   profileSection: {
     flexDirection: 'row',
     alignItems: 'center',
+    width:'80%',
   },
   profileImage: {
     width: 50,
@@ -104,11 +108,13 @@ const styles = StyleSheet.create({
   },
   userInfo: {
     marginLeft: 12,
+    flex:1,
   },
   name: {
-    fontSize: 18,
+    fontSize: 15,
     fontFamily: CAIRO_FONT_FAMILY.bold,
     color: '#191919',
+    lineHeight: Platform.OS === 'ios' ? 24 : 20,
     marginBottom: 2,
   },
   gender: {
@@ -117,6 +123,9 @@ const styles = StyleSheet.create({
     color: '#666',
     lineHeight: Platform.OS === 'ios' ? 0 : 20,
     marginBottom: 2,
+    borderRightWidth: 1,
+    borderRightColor: '#e0e0e0',
+    paddingRight: 6,
   },
   ratingContainer: {
     flexDirection: 'row',
@@ -135,6 +144,7 @@ const styles = StyleSheet.create({
   statusContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    width:'20%',
   },
   statusDot: {
     width: 8,

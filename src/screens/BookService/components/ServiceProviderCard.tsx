@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect, useMemo, useCallback } from 'react';
-import { View, StyleSheet, TouchableOpacity, Text, Image, ScrollView, ActivityIndicator, Alert, Modal, FlatList } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Text, Image, ScrollView, ActivityIndicator, Alert, Modal, FlatList, Platform } from 'react-native';
 import UserPlaceholder from '../../../assets/icons/UserPlaceholder';
 import { MediaBaseURL } from '../../../shared/utils/constants';
 import LeftArrow from '../../../assets/icons/LeftArrow';
@@ -333,7 +333,7 @@ const ServiceProviderCard: React.FC<ServiceProviderCardProps> = React.memo(({
         <>
           <View style={{ width: '100%', paddingVertical: 10, backgroundColor: '#f7f7f7', borderRadius: 10, paddingHorizontal: 10, marginVertical: 10 }}>
             <Text style={[styles.priceText, { textAlign: 'right' }]}>
-              {isRTL ? `السعر ${calculateTotalPrice(provider?.ServiceServe).toFixed(0)}` : `Price ${calculateTotalPrice(provider?.ServiceServe).toFixed(0)}`}
+              { `Price ${calculateTotalPrice(provider?.ServiceServe).toFixed(0)}`}
             </Text>
           </View>
         </>
@@ -372,11 +372,11 @@ const ServiceProviderCard: React.FC<ServiceProviderCardProps> = React.memo(({
                       </View>
                     ) : (
                       <View style={{ width: '100%', alignItems: 'flex-end' }}>
-                        <Text style={[{ fontSize: 14, paddingRight: 4, color: '#000' }, { textAlign: 'right' }]}>
+                        <Text style={[{ fontSize: 14, paddingRight: 4, color: '#000', fontFamily: CAIRO_FONT_FAMILY.regular, lineHeight: Platform.OS === 'ios' ? 0 : 20 }, { textAlign: 'right' }]}>
                           {`${item.ServiceTitlePlang} Price`}
                         </Text>
                         <View style={{ flexDirection: 'row' }}>
-                          <Text style={[{ fontSize: 14, paddingRight: 4, color: '#666' }, { textAlign: 'right' }]}>
+                          <Text style={[{ fontSize: 14, paddingRight: 4, color: '#666', fontFamily: CAIRO_FONT_FAMILY.regular, lineHeight: Platform.OS === 'ios' ? 0 : 20 }, { textAlign: 'right' }]}>
                             {`SAR`}
                           </Text>
                           <Text style={[styles.priceText, { textAlign: 'right' }]}>
@@ -392,7 +392,7 @@ const ServiceProviderCard: React.FC<ServiceProviderCardProps> = React.memo(({
 
           </View>}
     </>
-  ), [provider, isProviderSelected, selectedSlotInfo, selectedService, userFavorites]);
+  ), [provider, isProviderSelected, selectedSlotInfo, selectedService, userFavorites,selectedUniqueId]);
 
 
 
@@ -463,6 +463,7 @@ const ServiceProviderCard: React.FC<ServiceProviderCardProps> = React.memo(({
             "AvailabilityId": availability.Id,
             "CatSchedulingAvailabilityTypeId": availability.CatAvailabilityTypeId,
             "ServiceProviderFullnameSlang": provider.FullnameSlang,
+            "ServiceProviderFullnamePlang": provider.FullnamePlang,
             "SlotDuration": provider.SlotDuration,
           };
         } else {
@@ -475,6 +476,7 @@ const ServiceProviderCard: React.FC<ServiceProviderCardProps> = React.memo(({
             "AvailabilityId": availability.Id,
             "CatSchedulingAvailabilityTypeId": availability.CatAvailabilityTypeId,
             "ServiceProviderFullnameSlang": provider.FullnameSlang,
+            "ServiceProviderFullnamePlang": provider.FullnamePlang,
             "SlotDuration": provider.SlotDuration,
           };
 
@@ -550,7 +552,9 @@ const ServiceProviderCard: React.FC<ServiceProviderCardProps> = React.memo(({
             "AvailabilityId": availability.Id,
             "CatSchedulingAvailabilityTypeId": availability.CatAvailabilityTypeId,
             "ServiceProviderFullnameSlang": provider?.FullnameSlang,
+            "ServiceProviderFullnamePlang": provider?.FullnamePlang,
             "orgTitleSlang": provider?.FullnameSlang,
+            "orgTitlePlang": provider?.FullnamePlang,
             "SlotDuration": provider.SlotDuration,
           };
         }
@@ -744,12 +748,14 @@ const styles = StyleSheet.create({
   },
   ratingText: {
     color: '#222',
-    fontWeight: 'bold',
+    fontFamily: CAIRO_FONT_FAMILY.bold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
     fontSize: 14,
   },
   priceText: {
     color: '#179c8e',
-    fontWeight: 'bold',
+    fontFamily: CAIRO_FONT_FAMILY.bold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
     fontSize: 16,
     // marginVertical: 4,
   },
@@ -841,6 +847,8 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     color: '#179c8e',
     fontSize: 14,
+    fontFamily: CAIRO_FONT_FAMILY.regular,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
   },
   errorContainer: {
     alignItems: 'center',
@@ -850,6 +858,7 @@ const styles = StyleSheet.create({
   errorText: {
     color: '#ff6b6b',
     fontSize: 14,
+    fontFamily: CAIRO_FONT_FAMILY.regular,
     textAlign: 'center',
     marginBottom: 8,
   },
@@ -862,7 +871,8 @@ const styles = StyleSheet.create({
   retryButtonText: {
     color: '#fff',
     fontSize: 14,
-    fontWeight: 'bold',
+    fontFamily: CAIRO_FONT_FAMILY.bold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
   },
   noSlotsContainer: {
     alignItems: 'center',
@@ -872,6 +882,8 @@ const styles = StyleSheet.create({
   noSlotsText: {
     color: '#888',
     fontSize: 14,
+    fontFamily: CAIRO_FONT_FAMILY.semiBold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
     textAlign: 'center',
   },
   checkbox: {
@@ -902,7 +914,8 @@ const styles = StyleSheet.create({
   selectedIndicatorText: {
     color: '#fff',
     fontSize: 14,
-    fontWeight: 'bold',
+    fontFamily: CAIRO_FONT_FAMILY.bold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
     marginLeft: 8,
   },
   selectedTimeButton: {
@@ -925,7 +938,8 @@ const styles = StyleSheet.create({
   },
   reservedTimeButtonText: {
     color: '#FF6B6B',
-    fontWeight: 'bold',
+    fontFamily: CAIRO_FONT_FAMILY.bold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
   },
 });
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, FlatList, TouchableOpacity, Alert, Image, TextInput, ScrollView, KeyboardAvoidingView, Platform, Keyboard } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, FlatList, TouchableOpacity, Alert, Image, TextInput, ScrollView, KeyboardAvoidingView, Platform, Keyboard, useColorScheme } from 'react-native';
 import CustomScreensHeader from '../../components/common/CustomScreensHeader';
 import PromotionItem from '../../components/PromotionItem';
 import { CAIRO_FONT_FAMILY, globalTextStyles } from '../../styles/globalStyles';
@@ -11,6 +11,8 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
+import { useAlert } from '../../contexts/AlertContext';
+import LoaderKit from 'react-native-loader-kit';
 
 const PromotionAndDiscount: React.FC = () => {
     const navigation = useNavigation();
@@ -18,6 +20,7 @@ const PromotionAndDiscount: React.FC = () => {
     const user = useSelector((state: any) => state.root.user.user);
     const [addPromoCodeBottomSheetVisible, setAddPromoCodeBottomSheetVisible] = useState(false);
     const [addPromoCodeBottomSheetMaxHeight, setAddPromoCodeBottomSheetMaxHeight] = useState(Platform.OS === 'ios' ? 450 : 400);
+    const { showAlert } = useAlert();
     // Form state
     const [promoCode, setPromoCode] = useState('');
     const [discountPercentage, setDiscountPercentage] = useState('');
@@ -29,16 +32,19 @@ const PromotionAndDiscount: React.FC = () => {
     const [singleClientMultipleUse, setSingleClientMultipleUse] = useState(false);
     const [numberOfUsesPerClient, setNumberOfUsesPerClient] = useState('');
     const [editingPromoId, setEditingPromoId] = useState<number | null>(null);
+    const colorScheme = useColorScheme();
+    const isDarkMode = colorScheme === 'dark';
 
     // Validation error states
     const [promoCodeError, setPromoCodeError] = useState(false);
     const [discountError, setDiscountError] = useState(false);
     const [numberOfClientsError, setNumberOfClientsError] = useState(false);
     const [numberOfUsesError, setNumberOfUsesError] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
         Keyboard.addListener('keyboardDidShow', (e) => {
-            if(Platform.OS === 'ios') {
+            if (Platform.OS === 'ios') {
                 setAddPromoCodeBottomSheetMaxHeight(450 + e.endCoordinates.height);
             }
         });
@@ -105,9 +111,10 @@ const PromotionAndDiscount: React.FC = () => {
         } else {
             setExpiryDate(new Date());
         }
+        console.log("promotion.IsSingleUserMultipleUsage", promotion)
         setMultipleClientsCanUse(promotion.NumberOfUsageAllowed > 0);
         setNumberOfClients(promotion.NumberOfUsageAllowed > 0 ? promotion.NumberOfUsageAllowed.toString() : '');
-        setSingleClientMultipleUse(promotion.IsSingleUserMultipleUsage === 1);
+        setSingleClientMultipleUse(promotion.IsSingleUserMultipleUsage == true);
         setNumberOfUsesPerClient(promotion.ForSingleUserUsageAllowed > 0 ? promotion.ForSingleUserUsageAllowed.toString() : '');
         setEditingPromoId(promotion.Id);
 
@@ -161,6 +168,8 @@ const PromotionAndDiscount: React.FC = () => {
         setNumberOfClientsError(false);
         setNumberOfUsesError(false);
 
+        
+
         let hasError = false;
 
         // Validate promo code (minimum 3, maximum 20 characters)
@@ -190,8 +199,13 @@ const PromotionAndDiscount: React.FC = () => {
         }
 
         if (hasError) {
+            setIsLoading(false);
             return;
         }
+
+        setAddPromoCodeBottomSheetVisible(false);
+
+        setIsLoading(true);
 
         const payload = {
             UserLoginInfoId: user.Id,
@@ -216,11 +230,27 @@ const PromotionAndDiscount: React.FC = () => {
         };
 
         const response = await settingService.addPromoCode(payload);
+        if (response.StatusCode.STATUSCODE == 11022) {
+            
+            setTimeout(() => {
+                showAlert({
+                    title: response.StatusCode.MESSAGE,
+                    message: '',
+                    type: 'error',
+                    onConfirm: () => {
+                        setAddPromoCodeBottomSheetVisible(true);
+                    }
+                });
+            }, 1000);
+            setIsLoading(false);
+            return;
+        }
         if (response.ResponseStatus.STATUSCODE == 200) {
             getPromoCodeListFN();
             resetForm();
             setAddPromoCodeBottomSheetVisible(false);
         }
+        setIsLoading(false);
     };
 
     const formatDate = (date: Date) => {
@@ -368,7 +398,7 @@ const PromotionAndDiscount: React.FC = () => {
                                     onChangeText={(text) => {
                                         // Remove all non-numeric characters
                                         const numericText = text.replace(/[^0-9]/g, '');
-                                        
+
                                         // If empty, allow it (for better UX when clearing)
                                         if (numericText === '') {
                                             setDiscountPercentage('');
@@ -377,14 +407,14 @@ const PromotionAndDiscount: React.FC = () => {
                                             }
                                             return;
                                         }
-                                        
+
                                         // Convert to number and enforce max value of 100
                                         const numValue = parseInt(numericText, 10);
                                         if (!isNaN(numValue)) {
                                             // Limit to maximum 100
                                             const finalValue = numValue > 100 ? '100' : numericText;
                                             setDiscountPercentage(finalValue);
-                                            
+
                                             // Clear error if valid (between 1-100)
                                             const finalNumValue = parseInt(finalValue, 10);
                                             if (discountError && finalNumValue >= 1 && finalNumValue <= 100) {
@@ -398,7 +428,7 @@ const PromotionAndDiscount: React.FC = () => {
                             {/* Has Expiry Checkbox */}
                             <View
                                 style={bottomSheetStyles.checkboxContainer}
-                                
+
                             >
                                 <TouchableOpacity onPress={() => setHasExpiry(!hasExpiry)} style={[bottomSheetStyles.checkbox, hasExpiry && bottomSheetStyles.checkboxChecked]}>
                                     {hasExpiry && <MaterialIcons name="check" size={18} color="#fff" />}
@@ -411,20 +441,24 @@ const PromotionAndDiscount: React.FC = () => {
                                 <View style={bottomSheetStyles.conditionalInputContainer}>
                                     <TouchableOpacity
                                         style={bottomSheetStyles.input}
-                                        onPress={() => setShowDatePicker(true)}
+                                        onPress={() => setShowDatePicker(!showDatePicker)}
                                     >
                                         <Text style={bottomSheetStyles.dateText}>
                                             {formatDate(expiryDate)}
                                         </Text>
                                     </TouchableOpacity>
                                     {showDatePicker && (
-                                        <DateTimePicker
-                                            value={expiryDate}
-                                            mode="date"
-                                            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                                            onChange={handleDateChange}
-                                            minimumDate={new Date()}
-                                        />
+                                        <View style={Platform.OS === 'ios' ? [styles.datePickerContainer, { backgroundColor: isDarkMode ? '#1C1C1E' : '#fff' }] : null}>
+                                            <DateTimePicker
+                                                value={expiryDate}
+                                                mode="date"
+                                                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                                                onChange={handleDateChange}
+                                                minimumDate={new Date()}
+                                                textColor={isDarkMode ? '#FFFFFF' : '#000000'}
+                                                themeVariant={isDarkMode ? 'dark' : 'light'}
+                                            />
+                                        </View>
                                     )}
                                 </View>
                             )}
@@ -432,7 +466,7 @@ const PromotionAndDiscount: React.FC = () => {
                             {/* Multiple Clients Can Use Checkbox */}
                             <View
                                 style={bottomSheetStyles.checkboxContainer}
-                                
+
                             >
                                 <TouchableOpacity onPress={() => setMultipleClientsCanUse(!multipleClientsCanUse)} style={[bottomSheetStyles.checkbox, multipleClientsCanUse && bottomSheetStyles.checkboxChecked]}>
                                     {multipleClientsCanUse && <MaterialIcons name="check" size={18} color="#fff" />}
@@ -509,6 +543,26 @@ const PromotionAndDiscount: React.FC = () => {
                     </View>
                 </KeyboardAvoidingView>
             </CustomBottomSheet>
+
+            {isLoading && <View
+                pointerEvents="auto"
+                style={[
+                    StyleSheet.absoluteFillObject,
+                    {
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        backgroundColor: 'rgba(0,0,0,0.2)', // optional dim overlay
+                        zIndex: 9999,
+                        elevation: 9999,
+                    },
+                ]}
+            >
+                <LoaderKit
+                    style={{ width: 100, height: 100 }}
+                    name="BallSpinFadeLoader"
+                    color="green"
+                />
+            </View>}
         </SafeAreaView>
     );
 };
@@ -576,7 +630,7 @@ const styles = StyleSheet.create({
     addButtonText: {
         fontSize: 16,
         fontFamily: CAIRO_FONT_FAMILY.bold,
-        lineHeight:Platform.OS === 'ios' ? 0 : 20,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#FFFFFF',
     },
     header: {
@@ -595,6 +649,11 @@ const styles = StyleSheet.create({
         fontFamily: CAIRO_FONT_FAMILY.bold,
         lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#000'
+    },
+    datePickerContainer: {
+        borderRadius: 8,
+        overflow: 'hidden',
+        marginVertical: 8,
     },
 });
 
@@ -703,7 +762,12 @@ const bottomSheetStyles = StyleSheet.create({
         fontSize: 16,
         fontFamily: CAIRO_FONT_FAMILY.bold,
         color: '#fff',
-        lineHeight:Platform.OS === 'ios' ? 0 : 20,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
+    },
+    datePickerContainer: {
+        borderRadius: 8,
+        overflow: 'hidden',
+        marginVertical: 8,
     },
 
 });

@@ -1,6 +1,7 @@
 import React, { memo, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   Image,
   Platform,
@@ -15,11 +16,12 @@ import { bookingService } from '../../../services/api/bookingService';
 import { MediaBaseURL } from '../../../shared/utils/constants';
 import { SvgUri } from 'react-native-svg';
 import { useDispatch, useSelector } from 'react-redux';
-import { addCardItem, setSelectedUniqueId, setCategory as setCategoryRedux, setServices } from '../../../shared/redux/reducers/bookingReducer';
+import { addCardItem, setSelectedUniqueId, setCategory as setCategoryRedux, setServices, setSelectedLocation } from '../../../shared/redux/reducers/bookingReducer';
 import { generateUniqueId } from '../../../shared/services/service';
 import CustomBottomSheet from '../../../components/common/CustomBottomSheet';
 import LocationService from '../components/LocationService';
 import { CAIRO_FONT_FAMILY } from '../../../styles/globalStyles';
+import moment from 'moment';
 
 type OfferedServiceCategory = {
   Id: string;
@@ -43,6 +45,7 @@ const Step1 = ({ handleNext, Patient }: { handleNext: () => void, Patient: any }
   const [offeredServicesCategories, setOfferedServicesCategories] = useState<
     OfferedServiceCategory[]
   >([]);
+  const selectedLocation = useSelector((state: any) => state.root.booking.selectedLocation);
   const [specialties, setSpecialties] = useState<Specialty[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
     null,
@@ -292,6 +295,7 @@ const Step1 = ({ handleNext, Patient }: { handleNext: () => void, Patient: any }
       "CatServiceId": service.Id,
       "CatCategoryTypeId": category.CatCategoryTypeId,
       "ServiceTitleSlang": service.TitleSlang,
+      "ServiceTitlePlang": service.TitlePlang,
       "Quantity": 1,
     }
     const tempCardItems = [...existingCardItems, cardItem];
@@ -464,21 +468,28 @@ const Step1 = ({ handleNext, Patient }: { handleNext: () => void, Patient: any }
   };
 
   const onNextPress = () => {
-    const selectedItem = existingCardItems[existingCardItems.length - 1];
-    if (selectedItem.CatCategoryId != '42') {
-      setIsLocationBottomSheetVisible(true);
-
-    } else {
-
+    const withoutServiceProvidersList = existingCardItems.filter((item: any) => !item.ServiceProviderUserloginInfoId && !item.OrganizationId);
+    if (withoutServiceProvidersList.length == 0) {
       onPressContinue();
-      
+    } else {
+      const selectedItem = withoutServiceProvidersList[withoutServiceProvidersList.length - 1];
+      if (selectedItem.CatCategoryId != '42') {
+        setIsLocationBottomSheetVisible(true);
+      } else {
+        onPressContinue();
+      }
     }
+
   };
 
   const onPressContinue = () => {
     setIsLocationBottomSheetVisible(false);
-    const selectedItem = existingCardItems[existingCardItems.length - 1];
-    const selectedCategory = offeredServicesCategories.find((category: any) => category.Id == selectedItem.CatCategoryId);
+
+    const withoutServiceProvidersList = existingCardItems.filter((item: any) => !item.ServiceProviderUserloginInfoId && !item.OrganizationId);
+
+    if (withoutServiceProvidersList.length == 0) {
+      const selectedItem = existingCardItems[existingCardItems.length - 1];
+      const selectedCategory = offeredServicesCategories.find((category: any) => category.Id == selectedItem.CatCategoryId);
       dispatch(setCategoryRedux(selectedCategory));
       if (selectedItem.CatCategoryId == '42' || selectedItem.CatCategoryId == '32') {
         if (selectedItem.CatServiceId) {
@@ -491,6 +502,24 @@ const Step1 = ({ handleNext, Patient }: { handleNext: () => void, Patient: any }
       const selectedUniqueId = existingCardItems[existingCardItems.length - 1].ItemUniqueId
       dispatch(setSelectedUniqueId(selectedUniqueId))
       handleNext();
+    } else {
+      const selectedItem = withoutServiceProvidersList[withoutServiceProvidersList.length - 1];
+      const selectedCategory = offeredServicesCategories.find((category: any) => category.Id == selectedItem.CatCategoryId);
+      dispatch(setCategoryRedux(selectedCategory));
+      if (selectedItem.CatCategoryId == '42' || selectedItem.CatCategoryId == '32') {
+        if (selectedItem.CatServiceId) {
+          dispatch(setServices(null))
+        }
+      } else {
+        dispatch(setServices(null))
+      }
+
+      const selectedUniqueId = withoutServiceProvidersList[withoutServiceProvidersList.length - 1].ItemUniqueId
+      dispatch(setSelectedUniqueId(selectedUniqueId))
+      handleNext();
+    }
+
+
   }
 
   const renderListHeader = () => (
@@ -534,6 +563,120 @@ const Step1 = ({ handleNext, Patient }: { handleNext: () => void, Patient: any }
     </View>
   );
 
+  const handleCartItemIncrease = (itemUniqueId: string) => {
+    const updatedCardArray = existingCardItems.map((cardItem: any) => {
+      if (cardItem.ItemUniqueId === itemUniqueId) {
+        return {
+          ...cardItem,
+          Quantity: (parseInt(cardItem.Quantity) || 0) + 1
+        };
+      }
+      return cardItem;
+    });
+    dispatch(addCardItem(updatedCardArray));
+  };
+
+  const handleCartItemDecrease = (itemUniqueId: string) => {
+    const updatedCardArray = existingCardItems.map((cardItem: any) => {
+      if (cardItem.ItemUniqueId === itemUniqueId) {
+        const newQuantity = Math.max(1, (parseInt(cardItem.Quantity) || 1) - 1);
+        return {
+          ...cardItem,
+          Quantity: newQuantity
+        };
+      }
+      return cardItem;
+    });
+    dispatch(addCardItem(updatedCardArray));
+  };
+
+  const handleCartItemRemove = (itemUniqueId: string) => {
+    const updatedCardArray = existingCardItems.filter((cardItem: any) => cardItem.ItemUniqueId !== itemUniqueId);
+    dispatch(addCardItem(updatedCardArray));
+  };
+
+  const formatCartDateTime = (date?: string, time?: string) => {
+    if (!date || !time) return '';
+    try {
+      const formattedDate = moment(date).format('DD/MM/YYYY');
+      const formattedTime = moment(time, 'HH:mm').format('hh:mm A');
+      return `${formattedDate} ${formattedTime}`;
+    } catch (error) {
+      return '';
+    }
+  };
+
+  const renderCartItem = ({ item }: { item: any }) => {
+    const dateTime = formatCartDateTime(item.SchedulingDate, item.SchedulingTime);
+
+    return (
+      <View style={styles.cartItemContainer}>
+        {/* Header Banner */}
+        {(item?.ServiceProviderUserloginInfoId || item?.OrganizationId) && <View style={styles.cartItemHeader}>
+          <Text style={styles.cartItemHeaderName}>{item.ServiceProviderFullnamePlang || item.orgTitlePlang}</Text>
+          <Text style={styles.cartItemHeaderDateTime}>{dateTime}</Text>
+        </View>}
+
+        {/* Card Content */}
+        <View style={styles.cartItemCard}>
+          {/* Remove Button */}
+          <TouchableOpacity
+            style={styles.cartItemRemoveButton}
+            onPress={() => handleCartItemRemove(item.ItemUniqueId)}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="remove" size={16} color="#FFFFFF" />
+          </TouchableOpacity>
+
+          {/* Service Info */}
+          <View style={styles.cartItemServiceInfo}>
+            <Text style={styles.cartItemServiceName} numberOfLines={2}>
+              {(item.CatCategoryId == "42" || item.CatCategoryId == "32") ? `Remote Consultation / ${item.TitlePlang}` : item.TitlePlang || item.ServiceTitlePlang}
+            </Text>
+            {item.ServicePrice && <Text style={styles.cartItemPrice}>{item.ServicePrice} SAR</Text>}
+          </View>
+
+          {/* Quantity Selector */}
+          <View style={styles.cartItemQuantityContainer}>
+            <TouchableOpacity
+              style={[styles.cartItemQuantityButton, (item.Quantity == 1 || item.CatCategoryId == "42" || item.CatCategoryId == "32") && styles.cartItemQuantityButtonDisabled]}
+              onPress={() => handleCartItemDecrease(item.ItemUniqueId)}
+              disabled={item.Quantity == 1 || item.CatCategoryId == "42" || item.CatCategoryId == "32"}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="remove" size={16} color={"#fff"} />
+            </TouchableOpacity>
+            <Text style={styles.cartItemQuantityText}>{item.Quantity}</Text>
+            <TouchableOpacity
+              style={[styles.cartItemQuantityButton, (item.CatCategoryId == "42" || item.CatCategoryId == "32") && styles.cartItemQuantityButtonDisabled]}
+              onPress={() => handleCartItemIncrease(item.ItemUniqueId)}
+              activeOpacity={0.7}
+              disabled={item.CatCategoryId == "42" || item.CatCategoryId == "32"}
+            >
+              <Ionicons name="add" size={16} color="#fff" />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    );
+  }
+
+  const getCartBottomSheetHeight = () => {
+    if (existingCardItems.length == 1) {
+      return "35%"
+    } else if (existingCardItems.length == 2) {
+      return "45%"
+    } else if (existingCardItems.length == 3) {
+      return "60%"
+    } else if (existingCardItems.length == 4) {
+      return "70%"
+    } else if (existingCardItems.length == 5) {
+      return "80%"
+    } else {
+      return "90%"
+    }
+  }
+
   const isLoading = loadingCategories || loadingSpecialties;
 
   return (
@@ -576,23 +719,67 @@ const Step1 = ({ handleNext, Patient }: { handleNext: () => void, Patient: any }
       <CustomBottomSheet
         visible={cardBottomSheetVisible}
         onClose={() => setCardBottomSheetVisible(false)}
-        maxHeight="90%"
+        maxHeight={getCartBottomSheetHeight()}
         backdropClickable={true}
         showHandle={false}
       >
-        <View style={{ flex: 1, backgroundColor: '#fff', borderTopLeftRadius: 10, borderTopRightRadius: 10 }}>
-          <Text style={{ fontSize: 16, fontFamily: CAIRO_FONT_FAMILY.bold, lineHeight: Platform.OS === 'ios' ? 0 : 20, color: '#333' }}>Cart</Text>
+        <View style={styles.reportsBottomSheetContainer}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, width: '100%', height: 50, backgroundColor: '#fff', borderTopLeftRadius: 12, borderTopRightRadius: 12 }} >
+            <Text style={styles.reportsBottomSheetTitle}>Cart</Text>
+            <TouchableOpacity onPress={() => setCardBottomSheetVisible(false)}>
+              <Ionicons name="close-outline" size={24} color="#000" />
+            </TouchableOpacity>
+          </View>
+          <View style={{ flex: 1, marginTop: 12, backgroundColor: '#fff' }}>
+            <FlatList
+              data={existingCardItems}
+              keyExtractor={item => item.ItemUniqueId}
+              renderItem={renderCartItem}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }}
+            />
+          </View>
+          <View style={{ paddingHorizontal: 16, paddingVertical: 8 }}>
+            <TouchableOpacity onPress={onNextPress} style={{ backgroundColor: '#00A79D', paddingVertical: 12, borderRadius: 12, alignItems: 'center' }}>
+              <Text style={{ color: '#fff', fontSize: 16, fontFamily: CAIRO_FONT_FAMILY.bold, lineHeight: Platform.OS === 'ios' ? 0 : 20 }}>Continue</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </CustomBottomSheet>
 
       <CustomBottomSheet
         visible={isLocationBottomSheetVisible}
         onClose={() => setIsLocationBottomSheetVisible(false)}
-        maxHeight="90%"
+        maxHeight={!selectedLocation ? "90%" : "45%"}
         backdropClickable={true}
         showHandle={false}
       >
-       <LocationService onPressLocation={() => onPressContinue()} />
+        {!selectedLocation ? <LocationService onPressLocation={() => onPressContinue()} /> :
+          <View style={styles.reportsBottomSheetContainer}>
+            <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#ccc', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, width: '100%', height: 50, backgroundColor: '#fff', borderTopLeftRadius: 12, borderTopRightRadius: 12 }} >
+              <Text style={styles.reportsBottomSheetTitle}>Current Visit Information</Text>
+              <TouchableOpacity onPress={() => setIsLocationBottomSheetVisible(false)}>
+                <Ionicons name="close-outline" size={24} color="#000" />
+              </TouchableOpacity>
+            </View>
+            <View style={{ flex: 1, marginTop: 12, backgroundColor: '#fff' }}>
+              <View style={{ marginHorizontal: 16, backgroundColor: "#e4f1ef", marginVertical: 2, borderRadius: 12 }}>
+                <Text style={{ fontSize: 14, fontFamily: CAIRO_FONT_FAMILY.regular, lineHeight: Platform.OS === 'ios' ? 0 : 20, color: '#000', paddingHorizontal: 16, paddingVertical: 12 }}>continue while maintaining all current visit information</Text>
+
+              </View>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12 }}>
+                <Ionicons name="location" size={24} color="#23A3A4" />
+                <Text style={{ fontSize: 14, fontFamily: CAIRO_FONT_FAMILY.regular, lineHeight: Platform.OS === 'ios' ? 0 : 20, color: '#000' }}>{selectedLocation.address}</Text>
+              </View>
+
+              <TouchableOpacity onPress={() => onPressContinue()} style={{ backgroundColor: '#00A79D', paddingVertical: 12, borderRadius: 12, alignItems: 'center', marginHorizontal: 16 }}>
+                <Text style={{ color: '#fff', fontSize: 16, fontFamily: CAIRO_FONT_FAMILY.bold, lineHeight: Platform.OS === 'ios' ? 0 : 20 }}>Continue</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => dispatch(setSelectedLocation(null))} style={{ backgroundColor: '#00A79D', paddingVertical: 12, borderRadius: 12, alignItems: 'center', marginHorizontal: 16,marginTop: 12 }}>
+                <Text style={{ color: '#fff', fontSize: 16, fontFamily: CAIRO_FONT_FAMILY.bold, lineHeight: Platform.OS === 'ios' ? 0 : 20 }}>Change Address</Text>
+              </TouchableOpacity>
+            </View>
+          </View>}
       </CustomBottomSheet>
     </SafeAreaView>
   );
@@ -820,7 +1007,7 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   secondaryButton: {
-    width:'36%',
+    width: '36%',
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#CFE4E2',
@@ -835,7 +1022,7 @@ const styles = StyleSheet.create({
     lineHeight: Platform.OS === 'ios' ? 0 : 20,
   },
   primaryButton: {
-    width:'62%',
+    width: '62%',
     borderRadius: 12,
     backgroundColor: '#00A79D',
     paddingVertical: 12,
@@ -932,5 +1119,117 @@ const styles = StyleSheet.create({
   },
   primaryButtonDisabled: {
     opacity: 0.5,
+  },
+  reportsBottomSheetContainer: {
+    flex: 1,
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+  },
+  complainBottomSheetContainer: {
+    flex: 1,
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+  },
+  reportsBottomSheetTitle: {
+    fontSize: 16,
+    fontFamily: CAIRO_FONT_FAMILY.bold,
+    color: '#000',
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
+  },
+  // Cart Item Styles
+  cartItemContainer: {
+    marginBottom: 12,
+    borderRadius: 12,
+    overflow: 'hidden',
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  cartItemHeader: {
+    backgroundColor: '#E0F5F2',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+  },
+  cartItemHeaderName: {
+    fontSize: 14,
+    fontFamily: CAIRO_FONT_FAMILY.bold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
+    color: '#0E3C47',
+  },
+  cartItemHeaderDateTime: {
+    fontSize: 14,
+    fontFamily: CAIRO_FONT_FAMILY.bold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
+    color: '#0E3C47',
+  },
+  cartItemCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: 1,
+    borderTopColor: '#E0EAEA',
+  },
+  cartItemRemoveButton: {
+    width: 24,
+    height: 24,
+    borderRadius: 14,
+    backgroundColor: '#FF3B30',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
+  },
+  cartItemServiceInfo: {
+    flex: 1,
+    marginRight: 12,
+  },
+  cartItemServiceName: {
+    fontSize: 15,
+    fontFamily: CAIRO_FONT_FAMILY.semiBold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
+    color: '#00A79D',
+    marginBottom: 4,
+  },
+  cartItemPrice: {
+    fontSize: 14,
+    fontFamily: CAIRO_FONT_FAMILY.bold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
+    color: '#0E3C47',
+  },
+  cartItemQuantityContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  cartItemQuantityButton: {
+    width: 24,
+    height: 24,
+    borderRadius: 14,
+    backgroundColor: '#23a2a4',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cartItemQuantityButtonDisabled: {
+    backgroundColor: '#cccccc',
+    opacity: 0.6,
+  },
+  cartItemQuantityText: {
+    fontSize: 14,
+    fontFamily: CAIRO_FONT_FAMILY.bold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
+    color: '#191919',
+    minWidth: 24,
+    textAlign: 'center',
   },
 });

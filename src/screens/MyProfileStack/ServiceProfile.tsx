@@ -628,8 +628,8 @@ const styles = StyleSheet.create({
     },
     serviceTitle: {
         flex: 1,
-        fontSize: 16,
-        color: '#000',
+        fontSize: 17,
+        color: '#0F0F0F',
         fontFamily: CAIRO_FONT_FAMILY.bold,
         lineHeight: Platform.OS === 'ios' ? 0 : 20,
     },

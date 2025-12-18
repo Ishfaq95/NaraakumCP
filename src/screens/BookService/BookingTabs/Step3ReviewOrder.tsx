@@ -15,6 +15,7 @@ const Step3ReviewOrder = ({ Patient, handleNext }: { Patient: any, handleNext: (
   const selectedDoctor: any = showGroupedArray[selectedIndex];
   const [isProcessing, setIsProcessing] = useState(false);
   const user = useSelector((state: any) => state.root.user.user);
+  const selectedLocation = useSelector((state: any) => state.root.booking.selectedLocation);
 
   const createOrderMainBeforePayment = async () => {
     if (isProcessing) return; // Prevent multiple calls
@@ -26,15 +27,15 @@ const Step3ReviewOrder = ({ Patient, handleNext }: { Patient: any, handleNext: (
         "UserLoginInfoId": Patient.UserLoginInfoId,
         "CatPlatformId": Platform.OS == 'ios' ? 2 : 3,
         "OrderByCareProviderId": user.Id,
-        "OrderDetail": generatePayloadforOrderMainBeforePayment(existingCardItems,Patient)
+        "OrderDetail": generatePayloadforOrderMainBeforePayment(existingCardItems, Patient)
       }
 
       const response = await bookingService.createOrderMainBeforePayment(payload);
 
       if (response.ResponseStatus.STATUSCODE == 200) {
-        
+
         handleNext();
-      } 
+      }
     } finally {
       setIsProcessing(false);
     }
@@ -78,9 +79,10 @@ const Step3ReviewOrder = ({ Patient, handleNext }: { Patient: any, handleNext: (
 
   const renderDoctorTag = useCallback(({ item, index }: { item: any; index: number }) => {
     const selectedItem = item.items[0];
+    console.log(selectedItem);
 
     const imagePath = selectedItem.ServiceProviderImagePath ? `${MediaBaseURL}${selectedItem.ServiceProviderImagePath}` : selectedItem.LogoImagePath ? `${MediaBaseURL}${selectedItem.LogoImagePath}` : null;
-    const name = selectedItem.ServiceProviderFullnameSlang ? selectedItem.ServiceProviderFullnameSlang : selectedItem.orgTitleSlang;
+    const name = selectedItem.ServiceProviderFullnamePlang ? selectedItem.ServiceProviderFullnamePlang : selectedItem.orgTitlePlang;
 
     return (
       <View style={styles.doctorTagContainer}>
@@ -146,154 +148,154 @@ const Step3ReviewOrder = ({ Patient, handleNext }: { Patient: any, handleNext: (
 
   return (
     <>
-    <View style={styles.container}>
-      <View style={{ height: 110, width: "100%", borderRadius: 10, marginBottom: 10, alignItems: "flex-start", backgroundColor: "#e4f1ef" }}>
-        <FlatList
-          data={showGroupedArray}
-          renderItem={renderDoctorTag}
-          keyExtractor={(item, index) => `doctor-${index}`}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.tagsContainer}
-          ItemSeparatorComponent={() => <View style={styles.separator} />}
-        />
-      </View>
+      <View style={styles.container}>
+        <View style={{ height: 110, width: "100%", borderRadius: 10, marginBottom: 10, alignItems: "flex-start", backgroundColor: "#e4f1ef" }}>
+          <FlatList
+            data={showGroupedArray}
+            renderItem={renderDoctorTag}
+            keyExtractor={(item, index) => `doctor-${index}`}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.tagsContainer}
+            ItemSeparatorComponent={() => <View style={styles.separator} />}
+          />
+        </View>
 
-      {selectedDoctor?.uniqueId && <ScrollView style={{ flex: 1 }}>
-        {
-          [...new Set(selectedDoctor?.items?.map((item: any) => item.ItemUniqueId))].map((itemUniqueId: any, index: number) => {
-            const filteredItems = selectedDoctor?.items?.filter((item: any) => item.ItemUniqueId == itemUniqueId);
-            const item = filteredItems[0];
-            let displayDate = '';
-            let displayTime = '';
+        {selectedDoctor?.uniqueId && <ScrollView style={{ flex: 1 }}>
+          {
+            [...new Set(selectedDoctor?.items?.map((item: any) => item.ItemUniqueId))].map((itemUniqueId: any, index: number) => {
+              const filteredItems = selectedDoctor?.items?.filter((item: any) => item.ItemUniqueId == itemUniqueId);
+              const item = filteredItems[0];
+              let displayDate = '';
+              let displayTime = '';
 
-            if (item.SchedulingDate && item.SchedulingTime) {
-              displayDate = moment(item.SchedulingDate).locale('en').format('DD/MM/YYYY');
-              displayTime = convert24HourToEnglishTime(item.SchedulingTime);
-            }
+              if (item.SchedulingDate && item.SchedulingTime) {
+                displayDate = moment(item.SchedulingDate).locale('en').format('DD/MM/YYYY');
+                displayTime = convert24HourToEnglishTime(item.SchedulingTime);
+              }
 
-            return (
-              <View style={styles.detailsCard}>
-                <View style={styles.detailsHeader}>
-                  <Text style={styles.detailsHeaderText}>Selected Services ({filteredItems.length})</Text>
+              return (
+                <View style={styles.detailsCard}>
+                  <View style={styles.detailsHeader}>
+                    <Text style={styles.detailsHeaderText}>Selected Services ({filteredItems.length})</Text>
 
-                </View>
-                {filteredItems.map((item: any, index: number) => {
-                  const cleanText = (text: string) => text.replace(/[\r\n]+/g, ' ').trim();
-                  return (
-                    <View style={styles.selectedServiceRow}>
-                      <View style={{ width: '85%' }}>
-                        {item?.CatCategoryId == "42"
-                          ? <Text style={styles.selectedServiceText}>{`Remote Consultation / ${cleanText(String(item?.TitlePlang || ''))}`}</Text>
-                          : <Text style={styles.selectedServiceText}>{cleanText(String(item?.ServiceTitleSlang || item?.TitleSlang || ''))}</Text>
-                        }
-                      </View>
-                      <View style={{ width: '15%' }}>
-                        <View style={styles.selectedServiceCircle}>
-                          <Text style={styles.selectedServiceCircleText}>{item.Quantity}</Text>
+                  </View>
+                  {filteredItems.map((item: any, index: number) => {
+                    const cleanText = (text: string) => text.replace(/[\r\n]+/g, ' ').trim();
+                    return (
+                      <View style={styles.selectedServiceRow}>
+                        <View style={{ width: '85%' }}>
+                          {item?.CatCategoryId == "42"
+                            ? <Text style={styles.selectedServiceText}>{`Remote Consultation / ${cleanText(String(item?.TitlePlang || ''))}`}</Text>
+                            : <Text style={styles.selectedServiceText}>{cleanText(String(item?.ServiceTitlePlang || item?.TitlePlang || ''))}</Text>
+                          }
+                        </View>
+                        <View style={{ width: '15%' }}>
+                          <View style={styles.selectedServiceCircle}>
+                            <Text style={styles.selectedServiceCircleText}>{item.Quantity}</Text>
+                          </View>
                         </View>
                       </View>
-                    </View>
-                  )
-                })}
-                <View style={styles.sessionInfoDetailsContainer}>
-                  <View style={styles.sessionInfoDetailItem}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                      {/* <CalendarIcon width={18} height={18} /> */}
-                      <Text style={styles.sessionInfoLabel}>{(item?.CatServiceServeTypeId == "1") ? 'Online Session Date' : 'تاريخ الزيارة'}</Text>
-                    </View>
-                    <Text style={styles.sessionInfoValue}>{displayDate}</Text>
-                  </View>
-                  <View style={styles.sessionInfoDetailItem}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                      {/* <ClockIcon width={18} height={18} /> */}
-                      <Text style={styles.sessionInfoLabel}>{(item?.CatServiceServeTypeId == "1") ? 'Online Session Time' : 'توقيت الزيارة'}</Text>
-                    </View>
-                    <Text style={styles.sessionInfoValue}>{displayTime}</Text>
-                  </View>
-                  {item?.CatServiceServeTypeId == "1" ? <View style={styles.sessionInfoDetailItem}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                      {/* <SettingIconSelected width={18} height={18} /> */}
-                      <Text style={styles.sessionInfoLabel}>Session Duration</Text>
-                    </View>
-                    <Text style={styles.sessionInfoValue}>{getSessionDuration(item.SlotDuration)}</Text>
-                  </View> :
-                    <View style={{}}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <Ionicons name="location-sharp" size={18} color="#23a2a4" />
-                        <Text style={styles.sessionInfoLabel}> موقع الزيارة</Text>
+                    )
+                  })}
+                  <View style={styles.sessionInfoDetailsContainer}>
+                    <View style={styles.sessionInfoDetailItem}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                        {/* <CalendarIcon width={18} height={18} /> */}
+                        <Text style={styles.sessionInfoLabel}>{(item?.CatServiceServeTypeId == "1") ? 'Online Session Date' : 'Visit Date'}</Text>
                       </View>
-                      <Text style={{ ...globalTextStyles.bodyMedium, color: '#333', textAlign: 'right' }}>{item?.Address}</Text>
+                      <Text style={styles.sessionInfoValue}>{displayDate}</Text>
                     </View>
-                  }
+                    <View style={styles.sessionInfoDetailItem}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                        {/* <ClockIcon width={18} height={18} /> */}
+                        <Text style={styles.sessionInfoLabel}>{(item?.CatServiceServeTypeId == "1") ? 'Online Session Time' : 'Visit Time'}</Text>
+                      </View>
+                      <Text style={styles.sessionInfoValue}>{displayTime}</Text>
+                    </View>
+                    {item?.CatServiceServeTypeId == "1" ? <View style={styles.sessionInfoDetailItem}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                        {/* <SettingIconSelected width={18} height={18} /> */}
+                        <Text style={styles.sessionInfoLabel}>Session Duration</Text>
+                      </View>
+                      <Text style={styles.sessionInfoValue}>{getSessionDuration(item.SlotDuration)}</Text>
+                    </View> :
+                      <View style={{}}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                          <Ionicons name="location-sharp" size={18} color="#23a2a4" />
+                          <Text style={styles.sessionInfoLabel}> Visit Location</Text>
+                        </View>
+                        <Text style={{ ...globalTextStyles.bodyMedium, color: '#333', textAlign: 'left' }}>{selectedLocation?.address}</Text>
+                      </View>
+                    }
+                  </View>
+                </View>
+              )
+            })
+          }
+          {Patient && (
+            <View style={styles.patientInfoCard}>
+              <View style={styles.patientInfoHeader}>
+                <Text style={styles.patientInfoHeaderText}>Patient Information</Text>
+              </View>
+              <View style={styles.patientInfoContent}>
+                <View style={styles.patientInfoRow}>
+                  <Text style={styles.patientInfoLabel}>Name</Text>
+                  <Text style={styles.patientInfoValue}>{Patient.FullnamePlang || Patient.PatientPlang || 'NA'}</Text>
+                </View>
+                <View style={styles.patientInfoRow}>
+                  <Text style={styles.patientInfoLabel}>Phone No.</Text>
+                  <Text style={styles.patientInfoValue}>{Patient.CellNumber || 'NA'}</Text>
+                </View>
+                <View style={styles.patientInfoRow}>
+                  <Text style={styles.patientInfoLabel}>Patient Rating</Text>
+                  <View style={styles.ratingContainer}>
+                    <Ionicons name="star" size={16} color="#fbbf24" />
+                    <Text style={styles.ratingText}>
+                      {Patient.AccumulativeRatingAvg ? Patient.AccumulativeRatingAvg.toFixed(1) : '0.0'}
+                    </Text>
+                    {Patient.AccumulativeRatingNum && (
+                      <Text style={styles.ratingCount}> ({Patient.AccumulativeRatingNum} Ratings)</Text>
+                    )}
+                  </View>
+                </View>
+                <View style={styles.patientInfoRow}>
+                  <Text style={styles.patientInfoLabel}>Gender</Text>
+                  <Text style={styles.patientInfoValue}>{Patient.Gender ? 'Male' : 'Female'}</Text>
+                </View>
+                <View style={styles.patientInfoRow}>
+                  <Text style={styles.patientInfoLabel}>Age</Text>
+                  <Text style={styles.patientInfoValue}>{Patient.Age || 'NA'}</Text>
+                </View>
+                <View style={styles.patientInfoRow}>
+                  <Text style={styles.patientInfoLabel}>ID Number</Text>
+                  <Text style={styles.patientInfoValue}>{Patient.IDNumber || 'NA'}</Text>
+                </View>
+                <View style={styles.patientInfoRow}>
+                  <Text style={styles.patientInfoLabel}>Relative Relation</Text>
+                  <Text style={styles.patientInfoValue}>{Patient.RelationShipPlang || (Patient.isSelf ? 'Self' : 'NA')}</Text>
+                </View>
+                <View style={styles.patientInfoRow}>
+                  <Text style={styles.patientInfoLabel}>Nationality</Text>
+                  <Text style={styles.patientInfoValue}>{Patient.CatNationalityId ? 'Resident' : 'Citizen'}</Text>
+                </View>
+                <View style={styles.patientInfoRow}>
+                  <Text style={styles.patientInfoLabel}>Insurance Company</Text>
+                  <Text style={styles.patientInfoValue}>{Patient.InsuranceCompanyPlang || 'NA'}</Text>
                 </View>
               </View>
-            )
-          })
-        }
-        {Patient && (
-          <View style={styles.patientInfoCard}>
-            <View style={styles.patientInfoHeader}>
-              <Text style={styles.patientInfoHeaderText}>Patient Information</Text>
             </View>
-            <View style={styles.patientInfoContent}>
-              <View style={styles.patientInfoRow}>
-                <Text style={styles.patientInfoLabel}>Name</Text>
-                <Text style={styles.patientInfoValue}>{Patient.FullnamePlang || Patient.PatientPlang || 'NA'}</Text>
-              </View>
-              <View style={styles.patientInfoRow}>
-                <Text style={styles.patientInfoLabel}>Phone No.</Text>
-                <Text style={styles.patientInfoValue}>{Patient.CellNumber || 'NA'}</Text>
-              </View>
-              <View style={styles.patientInfoRow}>
-                <Text style={styles.patientInfoLabel}>Patient Rating</Text>
-                <View style={styles.ratingContainer}>
-                  <Ionicons name="star" size={16} color="#fbbf24" />
-                  <Text style={styles.ratingText}>
-                    {Patient.AccumulativeRatingAvg ? Patient.AccumulativeRatingAvg.toFixed(1) : '0.0'}
-                  </Text>
-                  {Patient.AccumulativeRatingNum && (
-                    <Text style={styles.ratingCount}> ({Patient.AccumulativeRatingNum} Ratings)</Text>
-                  )}
-                </View>
-              </View>
-              <View style={styles.patientInfoRow}>
-                <Text style={styles.patientInfoLabel}>Gender</Text>
-                <Text style={styles.patientInfoValue}>{Patient.Gender ? 'Male' : 'Female'}</Text>
-              </View>
-              <View style={styles.patientInfoRow}>
-                <Text style={styles.patientInfoLabel}>Age</Text>
-                <Text style={styles.patientInfoValue}>{Patient.Age || 'NA'}</Text>
-              </View>
-              <View style={styles.patientInfoRow}>
-                <Text style={styles.patientInfoLabel}>ID Number</Text>
-                <Text style={styles.patientInfoValue}>{Patient.IDNumber || 'NA'}</Text>
-              </View>
-              <View style={styles.patientInfoRow}>
-                <Text style={styles.patientInfoLabel}>Relative Relation</Text>
-                <Text style={styles.patientInfoValue}>{Patient.RelationShipPlang || (Patient.isSelf ? 'Self' : 'NA')}</Text>
-              </View>
-              <View style={styles.patientInfoRow}>
-                <Text style={styles.patientInfoLabel}>Nationality</Text>
-                <Text style={styles.patientInfoValue}>{Patient.CatNationalityId ? 'Resident' : 'Citizen'}</Text>
-              </View>
-              <View style={styles.patientInfoRow}>
-                <Text style={styles.patientInfoLabel}>Insurance Company</Text>
-                <Text style={styles.patientInfoValue}>{Patient.InsuranceCompanyPlang || 'NA'}</Text>
-              </View>
-            </View>
-          </View>
-        )}
-      </ScrollView>}
+          )}
+        </ScrollView>}
 
-      
-    </View>
-    {/* Bottom Button */}
-    <View style={styles.bottomBar}>
-    <TouchableOpacity onPress={() => createOrderMainBeforePayment()} style={styles.nextButton} activeOpacity={0.85}>
-      <Text style={styles.nextButtonText}>Confirm Order</Text>
-    </TouchableOpacity>
-  </View>
+
+      </View>
+      {/* Bottom Button */}
+      <View style={styles.bottomBar}>
+        <TouchableOpacity onPress={() => createOrderMainBeforePayment()} style={styles.nextButton} activeOpacity={0.85}>
+          <Text style={styles.nextButtonText}>Confirm Order</Text>
+        </TouchableOpacity>
+      </View>
     </>
   )
 }
@@ -508,8 +510,8 @@ const styles = StyleSheet.create({
     color: '#999',
   },
   bottomBar: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     backgroundColor: '#FFFFFF',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -4 },
@@ -520,7 +522,7 @@ const styles = StyleSheet.create({
   nextButton: {
     borderRadius: 12,
     backgroundColor: '#00A79D',
-    paddingVertical: 16,
+    paddingVertical: 10,
     alignItems: 'center',
   },
   nextButtonText: {

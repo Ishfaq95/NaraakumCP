@@ -177,8 +177,8 @@ const WorkAreas = ({ route }: { route: any }) => {
         if (selectedCityId) {
             // Handle both string and number ID comparison
             const city = cities.find(c => 
-                c.Id.toString() === selectedCityId.toString() || 
-                c.Id === parseInt(selectedCityId.toString())
+                c.Id?.toString() === selectedCityId?.toString() || 
+                c.Id?.toString() === parseInt(selectedCityId?.toString())
             );
             setSelectedCity(city);
             getSquareByCityId();
@@ -198,8 +198,8 @@ const WorkAreas = ({ route }: { route: any }) => {
         if (selectedSquareId) {
             // Handle both string and number ID comparison
             const square = squares.find(s => 
-                s.Id.toString() === selectedSquareId.toString() || 
-                s.Id === parseInt(selectedSquareId.toString())
+                s.Id?.toString() === selectedSquareId?.toString() || 
+                s.Id?.toString() === parseInt(selectedSquareId?.toString())
             );
             setSelectedSquare(square);
         } else {
@@ -213,11 +213,11 @@ const WorkAreas = ({ route }: { route: any }) => {
             
             // Set city - check if city exists in cities array
             if (organizationInfo.CatCityId) {
-                const apiCityId = organizationInfo.CatCityId.toString();
+                const apiCityId = organizationInfo.CatCityId?.toString();
                 
                 // Find city by matching Id (handle both string and number comparison)
                 const city = cities.find(c => {
-                    const cityIdStr = c.Id.toString();
+                    const cityIdStr = c.Id?.toString();
                     const cityIdNum = typeof c.Id === 'number' ? c.Id : parseInt(cityIdStr);
                     return cityIdStr === apiCityId || cityIdNum === parseInt(apiCityId);
                 });
@@ -254,11 +254,11 @@ const WorkAreas = ({ route }: { route: any }) => {
         if (organizationInfo && squares.length > 0 && selectedCityId) {
             
             if (organizationInfo.CatSquareId && organizationInfo.CatSquareId !== '0' && organizationInfo.CatSquareId !== 0) {
-                const apiSquareId = organizationInfo.CatSquareId.toString();
+                const apiSquareId = organizationInfo.CatSquareId?.toString();
                 
                 // Find square by matching Id (handle both string and number comparison)
                 const square = squares.find(s => {
-                    const squareIdStr = s.Id.toString();
+                    const squareIdStr = s.Id?.toString();
                     const squareIdNum = typeof s.Id === 'number' ? s.Id : parseInt(squareIdStr);
                     return squareIdStr === apiSquareId || squareIdNum === parseInt(apiSquareId);
                 });
@@ -480,7 +480,7 @@ const WorkAreas = ({ route }: { route: any }) => {
                                 <MapView
                                     ref={mapRef}
                                     style={styles.map}
-                                    provider={PROVIDER_GOOGLE}
+                                    provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined}
                                     initialRegion={mapRegion}
                                     onPress={handleMapPress}
                                     onMapReady={() => {

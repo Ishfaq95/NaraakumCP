@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
+  Platform,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { globalTextStyles, CAIRO_FONT_FAMILY } from '../../styles/globalStyles';
@@ -95,7 +96,7 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   mainMessage: {
-    fontSize: 18,
+    fontSize: 16,
     fontFamily: CAIRO_FONT_FAMILY.bold,
     color: '#000000',
     textAlign: 'center',
@@ -109,21 +110,21 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   buttonContainer: {
-    paddingHorizontal: 24,
-    paddingBottom: 24,
-    paddingTop: 16,
+    paddingHorizontal: 14,
+    paddingBottom: 12,
   },
   agreeButton: {
     width: '100%',
     backgroundColor: '#23a2a4',
     borderRadius: 12,
-    paddingVertical: 16,
+    paddingVertical: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },
   agreeButtonText: {
     fontSize: 16,
     fontFamily: CAIRO_FONT_FAMILY.bold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
     color: '#FFFFFF',
   },
 });

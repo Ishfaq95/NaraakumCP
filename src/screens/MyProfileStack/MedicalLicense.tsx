@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, FlatList, TextInput, ScrollView, KeyboardAvoidingView, Platform, Alert, ActivityIndicator, Image, Keyboard } from 'react-native'
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, FlatList, TextInput, ScrollView, KeyboardAvoidingView, Platform, Alert, ActivityIndicator, Image, Keyboard, useColorScheme } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -13,6 +13,7 @@ import { launchImageLibrary } from 'react-native-image-picker';
 import RNFetchBlob from 'react-native-blob-util';
 import { MediaBaseURL } from '../../shared/utils/constants';
 import { CAIRO_FONT_FAMILY } from '../../styles/globalStyles';
+import { useAlert } from '../../contexts/AlertContext';
 
 interface MedicalLicense {
     Id: number;
@@ -46,12 +47,15 @@ const MedicalLicenseScreen = () => {
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [speciality, setSpeciality] = useState<string | number>('');
     const [editingLicenseId, setEditingLicenseId] = useState<number | null>(null);
-
+    const colorScheme = useColorScheme();
+    const isDarkMode = colorScheme === 'dark';
     // Validation error states
     const [fileError, setFileError] = useState(false);
     const [licenseNoError, setLicenseNoError] = useState(false);
     const [placeOfIssueError, setPlaceOfIssueError] = useState(false);
     const [specialityError, setSpecialityError] = useState(false);
+    const [expiryDateError, setExpiryDateError] = useState(false);
+    const { showAlert } = useAlert();
     // Mock data - replace with actual API call
     useEffect(() => {
         getServiceProviderMedicalLicense();
@@ -215,6 +219,7 @@ const MedicalLicenseScreen = () => {
         setExpiryDate(null);
         setSpeciality('');
         setEditingLicenseId(null);
+        setExpiryDateError(false);
         // Reset errors
         setFileError(false);
         setLicenseNoError(false);
@@ -306,6 +311,12 @@ const MedicalLicenseScreen = () => {
             hasError = true;
         }
 
+        // Validate expiry date
+        if (!expiryDate || expiryDate === '') {
+            setExpiryDateError(true);
+            hasError = true;
+        }
+
         // Validate speciality
         // if (!speciality || speciality === '') {
         //     setSpecialityError(true);
@@ -327,14 +338,28 @@ const MedicalLicenseScreen = () => {
                     const payload = {
                         UserloginInfoId: user.Id,
                         LicenseNo: licenseNo,
-                        ExpiryDate: expiryDate.toISOString().split('T')[0],
+                        ExpiryDate: expiryDate ? expiryDate.toISOString().split('T')[0] : null,
                         PlaceOfIssue: placeOfIssue.toString(),
-                        SpecialityId: speciality,
+                        SpecialityId: speciality ? speciality : null,
                         ImageName: "mylicense",
                         ImagePath: uploadResponse?.Data?.Path,
                     };
 
                     const response = await profileService.addUpdateServiceProviderMedicalLicense(payload);
+                    if(response.StatusCode.STATUSCODE == 11020){
+                        setIsAddLicenseBottomSheetVisible(false);
+                        setTimeout(() => {
+                            showAlert({
+                                title: response.StatusCode.MESSAGE,
+                                message: '',
+                                type: 'error',
+                                onConfirm: () => {
+                                    setIsAddLicenseBottomSheetVisible(true);
+                                }
+                            });
+                        }, 1000);
+                        return;
+                    }
                     if (response.ResponseStatus.STATUSCODE === 200) {
                         getServiceProviderMedicalLicense();
                         resetForm();
@@ -542,7 +567,7 @@ const MedicalLicenseScreen = () => {
                             <View style={bottomSheetStyles.inputGroup}>
                                 <Text style={bottomSheetStyles.label}>Expiry Date</Text>
                                 <TouchableOpacity
-                                    style={bottomSheetStyles.dateInputContainer}
+                                    style={[bottomSheetStyles.dateInputContainer, expiryDateError && bottomSheetStyles.dateInputContainerError]}
                                     onPress={() => showDatePicker ? setShowDatePicker(false) : setShowDatePicker(true)}
                                 >
                                     <Text style={bottomSheetStyles.dateText}>
@@ -551,13 +576,17 @@ const MedicalLicenseScreen = () => {
                                     <MaterialIcons name="calendar-today" size={20} color="#666" />
                                 </TouchableOpacity>
                                 {showDatePicker && (
+                                    <View style={Platform.OS === 'ios' ? [styles.datePickerContainer, { backgroundColor: isDarkMode ? '#1C1C1E' : '#fff' }] : null}>
                                     <DateTimePicker
                                         value={expiryDate ? new Date(expiryDate) : new Date()}
                                         mode="date"
                                         display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                                         onChange={handleDateChange}
                                         minimumDate={new Date()}
+                                        textColor={isDarkMode ? '#FFFFFF' : '#000000'}
+                                                themeVariant={isDarkMode ? 'dark' : 'light'}
                                     />
+                                    </View>
                                 )}
                             </View>
 
@@ -757,6 +786,11 @@ const styles = StyleSheet.create({
         fontFamily: CAIRO_FONT_FAMILY.semiBold,
         lineHeight: Platform.OS === 'ios' ? 0 : 20,
     },
+    datePickerContainer: {
+        borderRadius: 8,
+        overflow: 'hidden',
+        marginVertical: 8,
+    },
 });
 
 const bottomSheetStyles = StyleSheet.create({
@@ -858,6 +892,10 @@ const bottomSheetStyles = StyleSheet.create({
         color: '#000',
     },
     inputError: {
+        borderColor: '#FF3B30',
+        borderWidth: 1,
+    },
+    dateInputContainerError: {
         borderColor: '#FF3B30',
         borderWidth: 1,
     },

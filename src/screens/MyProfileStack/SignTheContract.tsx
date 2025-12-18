@@ -12,7 +12,8 @@ import RNHTMLtoPDF from 'react-native-html-to-pdf';
 import RNFS from 'react-native-fs';
 import Share from 'react-native-share';
 import { ROUTES } from '../../shared/utils/routes';
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import AntDesign from 'react-native-vector-icons/AntDesign';
+import { useAlert } from '../../contexts/AlertContext';
 
 const SignTheContractScreen = () => {
     const navigation = useNavigation();
@@ -27,7 +28,9 @@ const SignTheContractScreen = () => {
     const [signatureFilePath, setSignatureFilePath] = useState<string>('');
     const [contractFilePath, setContractFilePath] = useState<string>('');
     const [pdfFilePath, setPdfFilePath] = useState<string>('');
-
+    const [isSignatureEmpty, setIsSignatureEmpty] = useState(false);
+    const [pendingSignatureAction, setPendingSignatureAction] = useState<'save' | 'download' | null>(null);
+    const { showAlert } = useAlert();
     useEffect(() => {
         if (signatureFilePath && contractFilePath) {
             addServiceProviderContract()
@@ -139,9 +142,58 @@ const SignTheContractScreen = () => {
         setShowSignature(true);
     };
 
-    // Handle signature confirmation
+    // Handle signature confirmation (called after readSignature())
     const handleSignature = async (signature: string) => {
         setSignatureBase64(signature);
+        setIsSignatureEmpty(false);
+
+        // If user pressed Download, just save image locally and return
+        if (pendingSignatureAction === 'download') {
+            try {
+                // Strip data URL prefix if present
+                const base64Data = signature.replace(/^data:image\/\w+;base64,/, '');
+                const fileName = `Signature_${moment().format('YYYY-MM-DD_HHmmss')}.png`;
+                const directory =
+                    Platform.OS === 'android'
+                        ? (RNFS.DownloadDirectoryPath || RNFS.ExternalDirectoryPath)
+                        : RNFS.DocumentDirectoryPath;
+                const filePath = `${directory}/${fileName}`;
+
+                await RNFS.writeFile(filePath, base64Data, 'base64');
+
+                if (Platform.OS === 'ios') {
+                    // On iOS, immediately open share sheet so user can save/share the image
+                    try {
+                        await Share.open({
+                            title: 'Share Signature',
+                            url: filePath,
+                            type: 'image/png',
+                        });
+                    } catch (shareError) {
+                        // User may cancel share; no need to show error
+                    }
+                } else {
+                    // On Android, just show success message with path
+                    showAlert({
+                        title: 'Success',
+                        message: `Signature image downloaded:\n${filePath}`,
+                        type: 'success',
+                    });
+                }
+            } catch (error) {
+                showAlert({
+                    title: 'Error',
+                    message: 'Failed to download signature image. Please try again.',
+                    type: 'error',
+                });
+            } finally {
+                setPendingSignatureAction(null);
+            }
+            return;
+        }
+
+        // Default / save flow: upload signature and generate PDF
+        setPendingSignatureAction(null);
 
         // Upload signature image
         await saveAndUploadSignature(signature);
@@ -159,7 +211,7 @@ const SignTheContractScreen = () => {
 
     // Handle empty signature
     const handleEmpty = () => {
-        Alert.alert('Warning', 'Please provide a signature before continuing.');
+        setIsSignatureEmpty(true);
     };
 
     // Generate PDF with signature
@@ -371,6 +423,12 @@ const SignTheContractScreen = () => {
         `;
     };
 
+    const handleDownloadSignature = () => {
+        // Trigger readSignature and let handleSignature handle the download logic
+        setPendingSignatureAction('download');
+        signatureRef.current?.readSignature();
+    }
+
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.mainContainer}>
@@ -384,9 +442,11 @@ const SignTheContractScreen = () => {
                 ) : showSignature ? (
                     // Signature Canvas View
                     <View style={styles.signatureContainer}>
-                        <Image source={require('../../assets/images/signaturePancil.png')} style={styles.signaturePancilImage} />
-                        <Text style={styles.signatureTitle}>Please sign in the box below</Text>
-                        <Text style={styles.signatureSubtitle}>Make sure the signature looks like the one in your id</Text>
+                        <View style={{ paddingHorizontal: 12 }}>
+                            <Image source={require('../../assets/images/signaturePancil.png')} style={styles.signaturePancilImage} />
+                            <Text style={styles.signatureTitle}>Please sign in the box below</Text>
+                            <Text style={styles.signatureSubtitle}>Make sure the signature looks like the one in your id</Text>
+                        </View>
                         <View style={styles.signatureCanvasWrapper}>
                             <SignatureScreen
                                 key={signatureKey}
@@ -396,6 +456,8 @@ const SignTheContractScreen = () => {
                                 descriptionText=""
                                 clearText="Clear"
                                 confirmText="Save Signature"
+                                penColor="#000000"
+                                backgroundColor="#FFFFFF"
                                 webStyle={`
                                     .m-signature-pad {
                                         box-shadow: none;
@@ -403,6 +465,10 @@ const SignTheContractScreen = () => {
                                     }
                                     .m-signature-pad--body {
                                         border: none;
+                                        background-color: #ffffff;
+                                    }
+                                    .m-signature-pad--body canvas {
+                                        background-color: #ffffff;
                                     }
                                     .m-signature-pad--footer {
                                         display: none;
@@ -414,12 +480,25 @@ const SignTheContractScreen = () => {
                                 `}
                             />
                         </View>
-                        <TouchableOpacity
-                            style={styles.signatureClearButton}
-                            onPress={handleClear}
-                        >
-                            <Text style={styles.signatureClearText}>Repeat</Text>
-                        </TouchableOpacity>
+                        {isSignatureEmpty && (
+                            <View style={{ paddingHorizontal: 12, paddingBottom: 10, alignItems: 'center' }}>
+                                <Text style={{ fontSize: 14, fontFamily: CAIRO_FONT_FAMILY.regular, color: '#FF0000', lineHeight: Platform.OS === 'ios' ? 0 : 20 }}>Please draw a signature before continuing.</Text>
+                            </View>
+                        )}
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 12 }}>
+                            <TouchableOpacity
+                                style={styles.signatureClearButton}
+                                onPress={handleClear}
+                            >
+                                <Text style={styles.signatureClearText}>Repeat</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.signatureDownloadButton}
+                                onPress={handleDownloadSignature}
+                            >
+                                <AntDesign name="download" size={24} color="#239ea0" />
+                            </TouchableOpacity>
+                        </View>
 
                         <TouchableOpacity
                             style={styles.signatureSaveButton}
@@ -491,7 +570,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         height: 50,
         backgroundColor: '#fff',
-        padding: 10,
+        paddingHorizontal: 10,
         borderBottomWidth: 1,
         borderBottomColor: '#e0e0e0',
     },
@@ -582,15 +661,14 @@ const styles = StyleSheet.create({
     signatureContainer: {
         flex: 1,
         backgroundColor: '#e4f1ef',
-        padding: 20,
+        paddingHorizontal: 16,
+        paddingTop: 20,
     },
     signatureTitle: {
         fontSize: 20,
-        color: '#333',
-        lineHeight: Platform.OS === 'ios' ? 0 : 20,
+        color: '#191919',
+        lineHeight: Platform.OS === 'ios' ? 0 : 24,
         fontFamily: CAIRO_FONT_FAMILY.bold,
-        marginTop: Platform.OS === 'ios' ? 0 : 6,
-        marginBottom: Platform.OS === 'ios' ? 0 : 6,
     },
     signatureSubtitle: {
         fontSize: 16,
@@ -615,7 +693,17 @@ const styles = StyleSheet.create({
     signatureClearButton: {
         height: 40,
         width: 100,
-        backgroundColor: 'transparent',
+        backgroundColor: '#fff',
+        borderWidth: 1,
+        borderColor: '#239ea0',
+        borderRadius: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    signatureDownloadButton: {
+        height: 40,
+        width: 50,
+        backgroundColor: '#fff',
         borderWidth: 1,
         borderColor: '#239ea0',
         borderRadius: 10,

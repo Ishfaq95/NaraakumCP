@@ -1,4 +1,4 @@
-import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet } from 'react-native'
+import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, BackHandler } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import AppHeader from '../../components/common/AppHeader'
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -46,6 +46,8 @@ const MyProfileScreen = () => {
     },
   ]);
 
+ 
+
   const [serviceProvider, setServiceProvider] = useState<any>(null);
   const user = useSelector((state: any) => state.root.user.user);
   const [profileSummary, setProfileSummary] = useState<any>({});
@@ -55,6 +57,26 @@ const MyProfileScreen = () => {
     getServiceProviderByUserId();
     getServiceProviderMainSummary();
   }, []);
+
+  // Handle Android hardware back button same as "Back To Profile"
+  useEffect(() => {
+
+    const subscription = BackHandler.addEventListener('hardwareBackPress',() => {
+      return true; // prevent default behavior
+    });
+
+    return () => {
+        subscription.remove();
+    };
+}, []);
+
+   // Disable iOS swipe-back gesture on this screen
+   useEffect(() => {
+    navigation.setOptions({
+        // @ts-ignore - gestureEnabled exists on native stack / stack navigators
+        gestureEnabled: false,
+    } as any);
+}, [navigation]);
 
   useEffect(() => {
     if (Object.keys(profileSummary).length > 0) {

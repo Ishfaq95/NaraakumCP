@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Switch, TextInput, Alert, ActivityIndicator, Image } from 'react-native'
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Switch, TextInput, Alert, ActivityIndicator, Image, useColorScheme, Dimensions } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { CAIRO_FONT_FAMILY, globalTextStyles } from '../../styles/globalStyles';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -34,10 +34,12 @@ interface AvailabilitySlot {
     IDs: string;
 }
 
-const BusinessHours = ({route}: {route: any}) => {
+const BusinessHours = ({ route }: { route: any }) => {
     const navigation = useNavigation();
     const Data = route.params?.Data;
     const user = useSelector((state: any) => state.root.user.user);
+    const colorScheme = useColorScheme();
+    const isDarkMode = colorScheme === 'dark';
     const [holidays, setHolidays] = useState<Holiday[]>([]);
     const [availability, setAvailability] = useState<AvailabilitySlot[]>([]);
     const [selectedMonth, setSelectedMonth] = useState(moment());
@@ -45,7 +47,7 @@ const BusinessHours = ({route}: {route: any}) => {
     const [selectedDate, setSelectedDate] = useState(moment());
     const [selectedDates, setSelectedDates] = useState<moment.Moment[]>([]);
     const { showAlert } = useAlert();
-    
+
     // Business days state - Will be updated based on API response
     const [businessDays, setBusinessDays] = useState<{ [key: number]: boolean }>({
         0: true,  // Sunday
@@ -73,6 +75,38 @@ const BusinessHours = ({route}: {route: any}) => {
     const [editSlots, setEditSlots] = useState<any>(null);
     const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
+    const addServiceProviderHolidays = async (daysState: { [key: number]: boolean }) => {
+        const dayText = daysOfWeek.map((day, index) => {
+            return {
+                Day: day,
+                IsActive: daysState[index]
+            }
+        });
+
+        const payload = {
+            ServiceProviderId: user?.Id,
+            Days: dayText.filter(d => !d.IsActive).map(d => d.Day).join(',')
+        };
+        
+        try {
+            
+            const response = await profileService.addServiceProviderHolidays(payload);
+            if (response?.ResponseStatus?.STATUSCODE == 200) {
+                showAlert({
+                    title: response?.ResponseStatus?.MESSAGE,
+                    message: '',
+                    type: 'success',
+                });
+            }
+        }
+        catch (error: any) {
+        }
+    };
+
+    // NOTE: We intentionally do NOT call addServiceProviderHolidays here on mount or when
+    // businessDays is updated from the holidays API. The API should only be called when
+    // the user changes the checkboxes (see toggleBusinessDay).
+
     const getWeekAnchorForMonth = (month: moment.Moment) => {
         const today = moment();
         if (month.isSame(today, 'month')) {
@@ -99,7 +133,7 @@ const BusinessHours = ({route}: {route: any}) => {
             const newBusinessDays: { [key: number]: boolean } = {
                 0: true, 1: true, 2: true, 3: true, 4: true, 5: true, 6: true
             };
-            
+
             // Mark holidays as OFF
             holidays.forEach(holiday => {
                 // API WeekDay: 1=Sunday, 2=Monday, 3=Tuesday, 4=Wednesday, 5=Thursday, 6=Friday, 7=Saturday
@@ -109,7 +143,7 @@ const BusinessHours = ({route}: {route: any}) => {
                     newBusinessDays[momentIndex] = false;
                 }
             });
-            
+
             setBusinessDays(newBusinessDays);
         }
     }, [holidays]);
@@ -154,10 +188,15 @@ const BusinessHours = ({route}: {route: any}) => {
     };
 
     const toggleBusinessDay = (dayIndex: number) => {
-        setBusinessDays(prev => ({
-            ...prev,
-            [dayIndex]: !prev[dayIndex]
-        }));
+        setBusinessDays(prev => {
+            const updated = {
+                ...prev,
+                [dayIndex]: !prev[dayIndex],
+            };
+            // Call API only when user toggles a checkbox
+            addServiceProviderHolidays(updated);
+            return updated;
+        });
     };
 
     const isHoliday = (date: moment.Moment) => {
@@ -173,7 +212,7 @@ const BusinessHours = ({route}: {route: any}) => {
         if (isHoliday(date)) {
             return false;
         }
-        
+
         return availability.some(slot => {
             const start = moment(slot.start);
             const end = moment(slot.end);
@@ -187,7 +226,7 @@ const BusinessHours = ({route}: {route: any}) => {
         if (isHoliday(date)) {
             return [];
         }
-        
+
         return availability.filter(slot => {
             const start = moment(slot.start);
             const end = moment(slot.end);
@@ -223,19 +262,26 @@ const BusinessHours = ({route}: {route: any}) => {
         }
     };
 
+
     const renderSelectionInfo = () => {
         if (viewMode === 'Custom') {
             return (
                 <View style={styles.dateRangeRow}>
                     <View style={styles.dateInputGroup}>
                         <Text style={styles.dateLabel}>Start Date</Text>
-                        <TouchableOpacity style={[styles.dateInput, timeErrors.date && styles.inputError]} onPress={() => setShowCustomStartPicker(true)}>
+                        <TouchableOpacity style={[styles.dateInput, timeErrors.date && styles.inputError]} onPress={() => {
+                            setShowCustomStartPicker(!showCustomStartPicker)
+                            setShowCustomEndPicker(false)
+                        }}>
                             <Text style={styles.dateInputText}>{formatDisplayDate(customStartDate) || 'Select start date'}</Text>
                         </TouchableOpacity>
                     </View>
                     <View style={styles.dateInputGroup}>
                         <Text style={styles.dateLabel}>End Date</Text>
-                        <TouchableOpacity style={[styles.dateInput, timeErrors.date && styles.inputError]} onPress={() => setShowCustomEndPicker(true)}>
+                        <TouchableOpacity style={[styles.dateInput, timeErrors.date && styles.inputError]} onPress={() => {
+                            setShowCustomEndPicker(!showCustomEndPicker)
+                            setShowCustomStartPicker(false)
+                        }}>
                             <Text style={styles.dateInputText}>{formatDisplayDate(customEndDate) || 'Select end date'}</Text>
                         </TouchableOpacity>
                     </View>
@@ -289,11 +335,11 @@ const BusinessHours = ({route}: {route: any}) => {
 
     const handleDelete = async (slot: any) => {
         const payload = {
-            "ServiceProviderAvailabilityIds":slot.IDs,
-            "filter":"fullslot",
+            "ServiceProviderAvailabilityIds": slot.IDs,
+            "filter": "fullslot",
             "StartDate": moment(slot.StartDate).format("YYYY-MM-DD"),
             "EndDate": moment(slot.EndDate).format("YYYY-MM-DD"),
-            "CatServiceServeTypeId":Data?.CatServiceServeTypeId
+            "CatServiceServeTypeId": Data?.CatServiceServeTypeId
         };
         const response = await profileService.deleteServiceProviderAvailability(payload);
         if (response?.ResponseStatus?.STATUSCODE == 200) {
@@ -310,20 +356,20 @@ const BusinessHours = ({route}: {route: any}) => {
         setStartTime(moment(slot.StartTime, 'HH:mm').format('h:mm A'));
         setEndTime(moment(slot.EndTime, 'HH:mm').format('h:mm A'));
         setEditSlots(slot);
-        if(slot.CatAvailabilityTypeId == 4) {
+        if (slot.CatAvailabilityTypeId == 4) {
             setViewMode('Custom');
             setCustomStartDate(moment(slot.StartDate));
             setCustomEndDate(moment(slot.EndDate));
         }
-        if(slot.CatAvailabilityTypeId == 3) {
+        if (slot.CatAvailabilityTypeId == 3) {
             setViewMode('Month');
             setSelectedMonth(moment(slot.StartDate));
         }
-        if(slot.CatAvailabilityTypeId == 2) {
+        if (slot.CatAvailabilityTypeId == 2) {
             setViewMode('Week');
             setSelectedDate(moment(slot.StartDate));
         }
-        if(slot.CatAvailabilityTypeId == 1) {
+        if (slot.CatAvailabilityTypeId == 1) {
             setViewMode('Day');
             setSelectedDate(moment(slot.StartDate));
         }
@@ -378,17 +424,17 @@ const BusinessHours = ({route}: {route: any}) => {
         const endTime24 = moment(endTime, 'h:mm A').format('HH:mm');
 
         const payload = {
-            "Ids":editSlots.IDs,
-            "OrganizationId":user?.OrganizationId || Data?.OrganizationId,
-            "ServiceProviderId":user?.Id,
-            "StartTime":startTime24,
-            "EndTime":endTime24,
-            "CatAvailabilityTypeId":catAvailabilityTypeId,
-            "StartDate":payloadStartDate.format('YYYY-MM-DD'),
-            "EndDate":payloadEndDate.format('YYYY-MM-DD'),
-            "CatServiceServeTypeId":Data?.CatServiceServeTypeId
+            "Ids": editSlots.IDs,
+            "OrganizationId": user?.OrganizationId || Data?.OrganizationId,
+            "ServiceProviderId": user?.Id,
+            "StartTime": startTime24,
+            "EndTime": endTime24,
+            "CatAvailabilityTypeId": catAvailabilityTypeId,
+            "StartDate": payloadStartDate.format('YYYY-MM-DD'),
+            "EndDate": payloadEndDate.format('YYYY-MM-DD'),
+            "CatServiceServeTypeId": Data?.CatServiceServeTypeId
         }
-        
+
         const response = await profileService.updateServiceProviderAvailability(payload);
         if (response?.ResponseStatus?.STATUSCODE == 200) {
             setEditSlots(null);
@@ -405,7 +451,7 @@ const BusinessHours = ({route}: {route: any}) => {
             });
             getServiceProviderAvailability(selectedMonth);
         }
-        
+
     };
 
     const handleSave = async () => {
@@ -519,11 +565,12 @@ const BusinessHours = ({route}: {route: any}) => {
                             onValueChange={() => toggleBusinessDay(index)}
                             trackColor={{ false: '#D1D5DB', true: '#6DD5C3' }}
                             thumbColor={businessDays[index] ? '#00A896' : '#f4f3f4'}
+                            style={Platform.OS === 'ios' ? { transform: [{ scaleX: 0.7}, { scaleY: 0.7 }] } : {}}
                         />
                     </View>
                 ))}
             </View>
-            <View  style={{height:1,backgroundColor: '#eee',marginTop: 20}} />
+            <View style={{ height: 1, backgroundColor: '#eee', marginTop: 20 }} />
         </View>
     );
 
@@ -653,7 +700,8 @@ const BusinessHours = ({route}: {route: any}) => {
         let week: moment.Moment[] = [];
 
         let day = startDate.clone();
-        while (day.isBefore(endDate, 'day')) {
+        // Include the last day of the computed range so the month renders fully
+        while (day.isSameOrBefore(endDate, 'day')) {
             week.push(day.clone());
             if (week.length === 7) {
                 calendar.push(week);
@@ -693,7 +741,9 @@ const BusinessHours = ({route}: {route: any}) => {
                                         {date.date()}
                                     </Text>
                                     {hasAvailability && isCurrentMonth && !isDateHoliday && (
-                                        <View style={styles.availabilityDot} />
+                                        <View style={styles.availabilityDot} >
+                                            <Text style={{ fontSize: 10, fontFamily: CAIRO_FONT_FAMILY.semiBold, lineHeight: Platform.OS === 'ios' ? 17 : 15, color: '#fff' }}>{'1'}</Text>
+                                        </View>
                                     )}
                                 </TouchableOpacity>
                             );
@@ -705,6 +755,9 @@ const BusinessHours = ({route}: {route: any}) => {
     };
 
     const renderWeekView = () => {
+        const { width: screenWidth } = Dimensions.get('window');
+        const timeColumnWidth = 50;
+        const dayColumnWidth = (screenWidth - timeColumnWidth) / 8;
         const startOfWeek = selectedDate.clone().startOf('week');
         const weekDays = Array.from({ length: 7 }, (_, i) => startOfWeek.clone().add(i, 'days'));
 
@@ -719,12 +772,12 @@ const BusinessHours = ({route}: {route: any}) => {
                         {startOfWeek.clone().add(6, 'days').format('MM/DD/YYYY')}
                     </Text>
                 </View>
-                <ScrollView 
-                    horizontal 
+                <ScrollView
+                    horizontal
                     showsHorizontalScrollIndicator={false}
                     style={styles.weekScrollView}
                 >
-                    <ScrollView 
+                    <ScrollView
                         style={styles.weekVerticalScroll}
                         contentContainerStyle={{ flexGrow: 1 }}
                         showsVerticalScrollIndicator={true}
@@ -732,22 +785,22 @@ const BusinessHours = ({route}: {route: any}) => {
                         scrollEnabled={true}
                     >
                         <View style={styles.timelineContainer}>
-                        <View style={styles.timeColumn}>
-                            <View style={styles.dayHeaderSpacer} />
-                            {Array.from({ length: 24 }, (_, i) => {
-                                const hour = i % 12 === 0 ? 12 : i % 12;
-                                const period = i < 12 ? 'AM' : 'PM';
-                                return (
-                                    <View key={i} style={styles.timeSlot}>
-                                        <Text style={styles.timeLabel}>{`${hour} ${period}`}</Text>
-                                    </View>
-                                );
-                            })}
-                        </View>
+                            <View style={[styles.timeColumn, { width: timeColumnWidth }]}>
+                                <View style={styles.dayHeaderSpacer} />
+                                {Array.from({ length: 24 }, (_, i) => {
+                                    const hour = i % 12 === 0 ? 12 : i % 12;
+                                    const period = i < 12 ? 'AM' : 'PM';
+                                    return (
+                                        <View key={i} style={styles.timeSlot}>
+                                            <Text style={styles.timeLabel}>{`${hour} ${period}`}</Text>
+                                        </View>
+                                    );
+                                })}
+                            </View>
                             {weekDays.map((day, index) => {
                                 const isDayHoliday = isHoliday(day);
                                 return (
-                                    <View key={index} style={styles.dayColumn}>
+                                    <View key={index} style={[styles.dayColumn, { width: dayColumnWidth }]}>
                                         <View style={[styles.dayHeader, isDayHoliday && styles.dayHeaderHoliday]}>
                                             <Text style={[styles.dayHeaderDayName, isDayHoliday && styles.dayHeaderTextHoliday]}>{day.format('ddd')}</Text>
                                             <Text style={[styles.dayHeaderDate, isDayHoliday && styles.dayHeaderTextHoliday]}>{day.format('MM/DD')}</Text>
@@ -810,7 +863,7 @@ const BusinessHours = ({route}: {route: any}) => {
                     {viewMode === 'Custom' ? selectedDate.format('MMMM DD, YYYY - dddd') : selectedDate.format('dddd')}
                     {isDayHoliday && ' (Holiday)'}
                 </Text>
-                <ScrollView 
+                <ScrollView
                     style={styles.dayTimelineScroll}
                     showsVerticalScrollIndicator={true}
                     scrollEnabled={true}
@@ -876,73 +929,103 @@ const BusinessHours = ({route}: {route: any}) => {
             <View style={styles.scheduleSection}>
                 <View style={styles.scheduleTitleRow}>
                     <Text style={styles.scheduleTitle}>Schedule</Text>
-                    <TouchableOpacity onPress={handleCopyToNextMonth}>
+                    {availability.length > 0 && <TouchableOpacity onPress={handleCopyToNextMonth}>
                         <Text style={styles.copyToNextMonth}>Copy to Next Month</Text>
-                    </TouchableOpacity>
+                    </TouchableOpacity>}
                 </View>
 
                 {renderSelectionInfo()}
                 {showCustomStartPicker && (
-                    <DateTimePicker
-                        value={(customStartDate || moment()).toDate()}
-                        mode="date"
-                        display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                        onChange={handleCustomStartChange}
-                    />
+                    <View style={Platform.OS === 'ios' ? [styles.datePickerContainer, { backgroundColor: isDarkMode ? '#1C1C1E' : '#fff' }] : null}>
+                        <DateTimePicker
+                            value={(customStartDate || moment()).toDate()}
+                            mode="date"
+                            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                            onChange={handleCustomStartChange}
+                            textColor={isDarkMode ? '#FFFFFF' : '#000000'}
+                            themeVariant={isDarkMode ? 'dark' : 'light'}
+                        />
+                    </View>
                 )}
                 {showCustomEndPicker && (
-                    <DateTimePicker
-                        value={(customEndDate || moment()).toDate()}
-                        mode="date"
-                        display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                        onChange={handleCustomEndChange}
-                    />
+                    <View style={Platform.OS === 'ios' ? [styles.datePickerContainer, { backgroundColor: isDarkMode ? '#1C1C1E' : '#fff' }] : null}>
+                        <DateTimePicker
+                            value={(customEndDate || moment()).toDate()}
+                            mode="date"
+                            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                            onChange={handleCustomEndChange}
+                            textColor={isDarkMode ? '#FFFFFF' : '#000000'}
+                            themeVariant={isDarkMode ? 'dark' : 'light'}
+                        />
+                    </View>
                 )}
 
-                <TextInput
-                    style={[styles.timeInput, timeErrors.start && styles.inputError]}
-                    placeholder="Start Time"
-                    value={startTime}
-                    onFocus={() => setShowStartTimePicker(true)}
-                    showSoftInputOnFocus={false}
-                />
+                <View style={[styles.timeInput, timeErrors.start && styles.inputError]}>
+                    <TouchableOpacity
+                        style={{ flex: 1, justifyContent: 'center' }}
+                        activeOpacity={0.7}
+                        onPress={() => {
+                            setShowStartTimePicker(!showStartTimePicker);
+                            setShowEndTimePicker(false);
+                        }}
+                    >
+                        <Text style={styles.dateInputText}>
+                            {startTime || 'Start Time'}
+                        </Text>
+                    </TouchableOpacity>
+                </View>
 
-                <TextInput
-                    style={[styles.timeInput, timeErrors.end && styles.inputError]}
-                    placeholder="End Time"
-                    value={endTime}
-                    onFocus={() => setShowEndTimePicker(true)}
-                    showSoftInputOnFocus={false}
-                />
+                <View style={[styles.timeInput, timeErrors.end && styles.inputError]}>
+                    <TouchableOpacity
+                        style={{ flex: 1, justifyContent: 'center' }}
+                        activeOpacity={0.7}
+                        onPress={() => {
+                            setShowEndTimePicker(!showEndTimePicker);
+                            setShowStartTimePicker(false);
+                        }}
+                    >
+                        <Text style={styles.dateInputText}>
+                            {endTime || 'End Time'}
+                        </Text>
+                    </TouchableOpacity>
+                </View>
 
                 {showStartTimePicker && (
-                    <DateTimePicker
-                        value={tempStartTime}
-                        mode="time"
-                        display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                        onChange={(event, date) => {
-                            setShowStartTimePicker(Platform.OS === 'ios');
-                            if (date) {
-                                setTempStartTime(date);
-                                setStartTime(moment(date).format('h:mm A'));
-                            }
-                        }}
-                    />
+                    <View style={Platform.OS === 'ios' ? [styles.datePickerContainer, { backgroundColor: isDarkMode ? '#1C1C1E' : '#fff' }] : null}>
+                        <DateTimePicker
+                            value={tempStartTime}
+                            mode="time"
+                            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                            onChange={(event, date) => {
+                                setShowStartTimePicker(Platform.OS === 'ios');
+                                if (date) {
+                                    setTempStartTime(date);
+                                    setStartTime(moment(date).format('h:mm A'));
+                                }
+                            }}
+                            textColor={isDarkMode ? '#FFFFFF' : '#000000'}
+                            themeVariant={isDarkMode ? 'dark' : 'light'}
+                        />
+                    </View>
                 )}
 
                 {showEndTimePicker && (
-                    <DateTimePicker
-                        value={tempEndTime}
-                        mode="time"
-                        display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                        onChange={(event, date) => {
-                            setShowEndTimePicker(Platform.OS === 'ios');
-                            if (date) {
-                                setTempEndTime(date);
-                                setEndTime(moment(date).format('h:mm A'));
-                            }
-                        }}
-                    />
+                    <View style={Platform.OS === 'ios' ? [styles.datePickerContainer, { backgroundColor: isDarkMode ? '#1C1C1E' : '#fff' }] : null}>
+                        <DateTimePicker
+                            value={tempEndTime}
+                            mode="time"
+                            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                            onChange={(event, date) => {
+                                setShowEndTimePicker(Platform.OS === 'ios');
+                                if (date) {
+                                    setTempEndTime(date);
+                                    setEndTime(moment(date).format('h:mm A'));
+                                }
+                            }}
+                            textColor={isDarkMode ? '#FFFFFF' : '#000000'}
+                            themeVariant={isDarkMode ? 'dark' : 'light'}
+                        />
+                    </View>
                 )}
 
                 <View style={styles.scheduleButtons}>
@@ -967,7 +1050,7 @@ const BusinessHours = ({route}: {route: any}) => {
 
                 <View style={styles.markedSlotsSection}>
                     <Text style={styles.markedSlotsTitle}>Already marked slots</Text>
-                    {availability.map((slot, index) => {
+                    {availability.length > 0 ? availability.map((slot, index) => {
                         const startHour = parseInt(slot.StartTime.split(':')[0]);
                         const endHour = parseInt(slot.EndTime.split(':')[0]);
                         const startMinute = parseInt(slot.StartTime.split(':')[1]);
@@ -986,22 +1069,24 @@ const BusinessHours = ({route}: {route: any}) => {
                         const endPeriod = endHour < 12 ? 'AM' : 'PM';
 
                         return (
-                        <View key={index} style={styles.markedSlot}>
-                            <Text style={styles.markedSlotTime}>{`${startHourAMPMText}:${startMinuteText} ${period} - ${endHourAMPMText}:${endMinuteText} ${endPeriod}`}</Text>
-                            <Text style={styles.markedSlotDate}>
-                                {moment(slot.start).format('YYYY-MM-DD')} - {moment(slot.end).format('YYYY-MM-DD')}
-                            </Text>
-                            <View style={styles.markedSlotActions}>
-                                <TouchableOpacity onPress={() => handleEditButton(slot)}>
-                                    <MaterialIcons name="edit" size={20} color="#666" />
-                                </TouchableOpacity>
-                                <TouchableOpacity onPress={() => handleDelete(slot)}>
-                                    <MaterialIcons name="delete" size={20} color="#FF3B30" />
-                                </TouchableOpacity>
+                            <View key={index} style={styles.markedSlot}>
+                                <Text style={styles.markedSlotTime}>{`${startHourAMPMText}:${startMinuteText} ${period} - ${endHourAMPMText}:${endMinuteText} ${endPeriod}`}</Text>
+                                <Text style={styles.markedSlotDate}>
+                                    {moment(slot.start).format('YYYY-MM-DD')} - {moment(slot.end).format('YYYY-MM-DD')}
+                                </Text>
+                                <View style={styles.markedSlotActions}>
+                                    <TouchableOpacity onPress={() => handleEditButton(slot)}>
+                                        <MaterialIcons name="edit" size={20} color="#666" />
+                                    </TouchableOpacity>
+                                    <TouchableOpacity onPress={() => handleDelete(slot)}>
+                                        <MaterialIcons name="delete" size={20} color="#FF3B30" />
+                                    </TouchableOpacity>
+                                </View>
                             </View>
-                        </View>
-                    );
-                    })}
+                        );
+                    }) : <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', marginTop: 10 }}>
+                        <Text style={{ fontSize: 16, fontFamily: CAIRO_FONT_FAMILY.semiBold, lineHeight: Platform.OS === 'ios' ? 0 : 20, color: '#666' }}>Data not found</Text>
+                    </View>}
                 </View>
             </View>
         );
@@ -1010,32 +1095,46 @@ const BusinessHours = ({route}: {route: any}) => {
     return (
         <SafeAreaView style={styles.container}>
             {renderHeader()}
-            <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-                <View style={styles.mainContent}>
-                    <View style={{padding: 16,alignItems: 'center',justifyContent: 'center'}}>
-                        <Image resizeMode='contain' source={Data?.CatServiceServeTypeId == 1 ? require('../../assets/icons/RemoteConsultant.png') : require('../../assets/icons/HomeVisit.png')} style={{width: 50,height: 50}} />
-                        <Text style={{fontSize: 16,fontFamily: CAIRO_FONT_FAMILY.semiBold,lineHeight: Platform.OS === 'ios' ? 0 : 20,color: '#666'}}>{Data?.CatServiceServeTypeId == 1 ? `Online Consultation Business Hours` : `Home Visit Business Hours`}</Text>
-                    </View>
-                    {renderBusinessDays()}
+            <View style={{ flex: 1 }}>
+                <ScrollView
+                    style={styles.scrollView}
+                    showsVerticalScrollIndicator={false}
+                    keyboardShouldPersistTaps="handled"
+                >
+                    <View style={styles.mainContent}>
+                        <View style={{ padding: 16, alignItems: 'center', justifyContent: 'center' }}>
+                            <Image
+                                resizeMode='contain'
+                                source={Data?.CatServiceServeTypeId == 1
+                                    ? require('../../assets/icons/RemoteConsultant.png')
+                                    : require('../../assets/icons/HomeVisit.png')}
+                                style={{ width: 50, height: 50 }}
+                            />
+                            <Text style={{ fontSize: 15, fontFamily: CAIRO_FONT_FAMILY.semiBold, lineHeight: Platform.OS === 'ios' ? 0 : 20, color: '#666' }}>
+                                {Data?.CatServiceServeTypeId == 1
+                                    ? `Online Consultation Business Hours`
+                                    : `Home Visit Business Hours`}
+                            </Text>
+                        </View>
+                        {renderBusinessDays()}
 
-                    
+                        <View style={styles.section}>
+                            <Text style={styles.sectionTitle}>Business Hours</Text>
+                            <View style={styles.businessHoursCard}>
+                                {renderMonthNavigation()}
+                                {renderViewModeButtons()}
 
-                    <View style={styles.section}>
-                        <Text style={styles.sectionTitle}>Business Hours</Text>
-                        <View style={styles.businessHoursCard}>
-                            {renderMonthNavigation()}
-                            {renderViewModeButtons()}
-                            
-                            {viewMode === 'Month' && renderMonthCalendar()}
-                            {viewMode === 'Week' && renderWeekView()}
-                            {viewMode === 'Day' && renderDayView()}
-                            {viewMode === 'Custom' && renderDayView()}
-                            
-                            {renderScheduleSection()}
+                                {viewMode === 'Month' && renderMonthCalendar()}
+                                {viewMode === 'Week' && renderWeekView()}
+                                {viewMode === 'Day' && renderDayView()}
+                                {viewMode === 'Custom' && renderDayView()}
+
+                                {renderScheduleSection()}
+                            </View>
                         </View>
                     </View>
-                </View>
-            </ScrollView>
+                </ScrollView>
+            </View>
         </SafeAreaView>
     )
 }
@@ -1131,6 +1230,9 @@ const styles = StyleSheet.create({
     },
     viewModeContainer: {
         flexDirection: 'row',
+        width: '100%',
+        alignItems: 'center',
+        justifyContent: 'center',
         gap: 8,
         marginBottom: 16,
     },
@@ -1200,10 +1302,12 @@ const styles = StyleSheet.create({
     availabilityDot: {
         position: 'absolute',
         bottom: 4,
-        width: 6,
-        height: 6,
-        borderRadius: 3,
+        width: 15,
+        height: 15,
+        borderRadius: 15,
         backgroundColor: '#00A896',
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     weekViewContainer: {
         marginBottom: 16,
@@ -1534,6 +1638,11 @@ const styles = StyleSheet.create({
     markedSlotActions: {
         flexDirection: 'row',
         gap: 12,
+    },
+    datePickerContainer: {
+        borderRadius: 8,
+        overflow: 'hidden',
+        marginVertical: 8,
     },
 });
 

@@ -4,6 +4,7 @@ import { profileService } from '../../services/api/profileService';
 import { CAIRO_FONT_FAMILY } from '../../styles/globalStyles';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useSelector } from 'react-redux';
+import CustomScreensHeader from '../../components/common/CustomScreensHeader';
 
 interface BioHead {
     Id: number;

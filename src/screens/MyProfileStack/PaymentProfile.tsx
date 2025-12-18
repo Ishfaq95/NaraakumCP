@@ -95,9 +95,13 @@ const PaymentProfileScreen = () => {
         );
       };
 
+    const onBackPress = () => {
+        navigation.navigate(ROUTES.AppNavigator as never, { screen: ROUTES.MyProfileStack } as never);
+    }
+
     const renderHeader = () => (
         <View style={{ flexDirection: 'row', alignItems: 'center', height: 50, backgroundColor: '#fff', padding: 10 }}>
-            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <TouchableOpacity onPress={() => onBackPress()} style={styles.backButton}>
                 <Ionicons name="arrow-back-outline" size={24} color="#333" />
 
             </TouchableOpacity>

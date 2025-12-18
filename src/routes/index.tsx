@@ -1,4 +1,5 @@
 import React from 'react';
+import { Platform } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useSelector } from 'react-redux';
 import HomeScreen from '../screens/Home';
@@ -71,7 +72,14 @@ const RootNavigator = () => {
 
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name={ROUTES.AppNavigator} component={BottomTabs} />
+      <Stack.Screen
+        name={ROUTES.AppNavigator}
+        component={BottomTabs}
+        options={{
+          // Disable iOS swipe-back gesture from the main bottom-tab navigator
+          gestureEnabled: Platform.OS === 'ios' ? false : true,
+        }}
+      />
       <Stack.Screen name={ROUTES.CalendarScreen} component={CalendarScreen} />
       <Stack.Screen name={ROUTES.PromotionAndDiscount} component={PromotionAndDiscount} />
       <Stack.Screen name={ROUTES.HelpScreen} component={HelpScreen} />

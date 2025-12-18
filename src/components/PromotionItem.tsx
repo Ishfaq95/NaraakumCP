@@ -112,7 +112,8 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: CAIRO_FONT_FAMILY.bold,
     color: '#239EA0',
-    lineHeight:20
+    lineHeight:20,
+    textAlign:'left'
   },
   detailsSection: {
     marginBottom: 16,

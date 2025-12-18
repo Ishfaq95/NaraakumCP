@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect, useMemo, useCallback } from 'react';
-import { View, StyleSheet, TouchableOpacity, Text, Image, ScrollView, ActivityIndicator, Alert, Modal } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Text, Image, ScrollView, ActivityIndicator, Alert, Modal, Platform } from 'react-native';
 import UserPlaceholder from '../../../assets/icons/UserPlaceholder';
 import { MediaBaseURL } from '../../../shared/utils/constants';
 import LeftArrow from '../../../assets/icons/LeftArrow';
@@ -8,7 +8,7 @@ import { generateSlotsForDate } from '../../../shared/utils/bookService';
 import CheckIcon from '../../../assets/icons/CheckIcon';
 import { useSelector, useDispatch } from 'react-redux';
 import { addCardItem, manageTempSlotDetail } from '../../../shared/redux/reducers/bookingReducer';
-import { globalTextStyles } from '../../../styles/globalStyles';
+import { CAIRO_FONT_FAMILY, globalTextStyles } from '../../../styles/globalStyles';
 import { convertArabicTimeTo24Hour } from '../../../shared/services/service';
 import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
 
@@ -172,10 +172,10 @@ const HospitalCard: React.FC<ServiceProviderCardProps> = React.memo(({
       </View>
 
       <View style={{ flexDirection: 'row', paddingVertical: 10, alignItems: 'center', width: '100%', justifyContent: 'flex-end' }}>
-        <Text style={[{ fontSize: 14, paddingRight: 4, color: '#666' }, { textAlign: 'right' }]}>
+        <Text style={[{ fontSize: 14, fontFamily: CAIRO_FONT_FAMILY.regular, lineHeight: Platform.OS === 'ios' ? 0 : 20, paddingRight: 4, color: '#666' }, { textAlign: 'right' }]}>
           {`SAR`}
         </Text>
-        <Text style={[styles.priceText, { textAlign: 'right' }]}>
+        <Text style={[styles.priceText, { fontFamily: CAIRO_FONT_FAMILY.bold, lineHeight: Platform.OS === 'ios' ? 0 : 20, textAlign: 'right' }]}>
           {`${calculateTotalPrice(hospital?.Prices).toFixed(2)}`}
         </Text>
       </View>
@@ -244,7 +244,9 @@ const HospitalCard: React.FC<ServiceProviderCardProps> = React.memo(({
           "AvailabilityId": availability.Id,
           "CatSchedulingAvailabilityTypeId": availability.CatAvailabilityTypeId,
           "ServiceProviderFullnameSlang": hospital?.FullnameSlang,
+          "ServiceProviderFullnamePlang": hospital?.TitlePlang,
           "orgTitleSlang": hospital?.TitleSlang,
+          "orgTitlePlang": hospital?.TitlePlang,
         };
       }
     });
@@ -370,21 +372,24 @@ const styles = StyleSheet.create({
   providerName: {
     // fontWeight: 'bold',
     fontSize: 16,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
     marginTop: 4,
     marginBottom: 2,
+    fontFamily: CAIRO_FONT_FAMILY.bold,
     color: '#222',
     flexWrap: 'wrap',
-    alignSelf: 'flex-start',
-    fontFamily: globalTextStyles.h5.fontFamily,
+      alignSelf: 'flex-start',
   },
   ratingText: {
     color: '#222',
-    fontFamily: globalTextStyles.h5.fontFamily,
+    fontFamily: CAIRO_FONT_FAMILY.bold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
     fontSize: 14,
   },
   priceText: {
     color: '#179c8e',
-    fontFamily: globalTextStyles.h5.fontFamily,
+    fontFamily: CAIRO_FONT_FAMILY.bold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
     fontSize: 16,
     marginVertical: 2,
   },
@@ -427,11 +432,14 @@ const styles = StyleSheet.create({
   specialtyText: {
     color: '#222',
     fontSize: 12,
-    fontFamily: globalTextStyles.bodySmall.fontFamily,
+    fontFamily: CAIRO_FONT_FAMILY.regular,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
   },
   videoInfo: {
     color: '#888',
     fontSize: 13,
+    fontFamily: CAIRO_FONT_FAMILY.regular,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
     marginVertical: 4,
   },
   divider: {
@@ -442,8 +450,9 @@ const styles = StyleSheet.create({
   selectTimeLabel: {
     color: '#888',
     fontSize: 13,
+    fontFamily: CAIRO_FONT_FAMILY.regular,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
     marginBottom: 4,
-    fontFamily: globalTextStyles.bodySmall.fontFamily,
   },
   timeButton: {
     borderWidth: 1,
@@ -461,7 +470,8 @@ const styles = StyleSheet.create({
   },
   timeButtonText: {
     color: '#179c8e',
-    fontFamily: globalTextStyles.h5.fontFamily,
+    fontFamily: CAIRO_FONT_FAMILY.bold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
     fontSize: 14,
     textAlign: 'center',
   },
@@ -481,7 +491,8 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     color: '#179c8e',
     fontSize: 14,
-    fontFamily: globalTextStyles.bodySmall.fontFamily,
+    fontFamily: CAIRO_FONT_FAMILY.regular,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
   },
   errorContainer: {
     alignItems: 'center',
@@ -493,7 +504,8 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: 'center',
     marginBottom: 8,
-    fontFamily: globalTextStyles.bodySmall.fontFamily,
+    fontFamily: CAIRO_FONT_FAMILY.regular,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
   },
   retryButton: {
     backgroundColor: '#179c8e',
@@ -504,7 +516,8 @@ const styles = StyleSheet.create({
   retryButtonText: {
     color: '#fff',
     fontSize: 14,
-    fontFamily: globalTextStyles.h5.fontFamily,
+    fontFamily: CAIRO_FONT_FAMILY.bold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
   },
   noSlotsContainer: {
     alignItems: 'center',
@@ -515,7 +528,8 @@ const styles = StyleSheet.create({
     color: '#888',
     fontSize: 14,
     textAlign: 'center',
-    fontFamily: globalTextStyles.bodySmall.fontFamily,
+    fontFamily: CAIRO_FONT_FAMILY.regular,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
   },
   checkbox: {
     width: 18,
@@ -544,7 +558,8 @@ const styles = StyleSheet.create({
   selectedIndicatorText: {
     color: '#fff',
     fontSize: 14,
-    fontFamily: globalTextStyles.h5.fontFamily,
+    fontFamily: CAIRO_FONT_FAMILY.bold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
     marginLeft: 8,
   },
   selectedTimeButton: {

@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, Image, FlatList, Dimensions, TouchableWithoutFeedback, Platform } from 'react-native'
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, Image, FlatList, Dimensions, TouchableWithoutFeedback, Platform, ActivityIndicator } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
@@ -8,6 +8,7 @@ import CustomBottomSheet from '../../components/common/CustomBottomSheet';
 import MultiSlider from '@ptomasroos/react-native-multi-slider';
 import FullScreenLoader from '../../components/FullScreenLoader';
 import { CAIRO_FONT_FAMILY } from '../../styles/globalStyles';
+import LoaderKit from 'react-native-loader-kit';
 
 const { width: screenWidth } = Dimensions.get('window');
 const SLIDER_WIDTH = screenWidth - 80; // Account for padding
@@ -200,7 +201,7 @@ const ClientSectionScreen = () => {
     };
 
     const renderHeader = () => (
-        <View style={{ flexDirection: 'row', alignItems: 'center', height: 50, backgroundColor: '#fff', padding: 10 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', height: 50, backgroundColor: '#fff', paddingHorizontal: 10 }}>
             <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
                 <Ionicons name="arrow-back-outline" size={24} color="#333" />
 
@@ -217,11 +218,17 @@ const ClientSectionScreen = () => {
                     <View style={{ flex: 1, padding: 12 }}>
                         <Text style={styles.title}>You can specify the gender and age group of clients who can book an appointment with you</Text>
                         <View style={{ flex: 1, marginTop: 10 }}>
-                            <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#333', paddingBottom: 10 }}>My Preferences</Text>
+                            <Text style={{ fontSize: 16, fontFamily: CAIRO_FONT_FAMILY.bold, color: '#191919', lineHeight: Platform.OS === 'ios' ? 0 : 20, paddingBottom: 10 }}>My Preferences</Text>
                         </View>
                     </View>
                 </View>
-                <FullScreenLoader visible={true} />
+                <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center' }}>
+                <LoaderKit
+                        style={{ width: 100, height: 100 }}
+                        name={'BallSpinFadeLoader'}
+                        color={'green'}
+                    />
+                </View>
             </SafeAreaView>
         )
     }
@@ -233,7 +240,7 @@ const ClientSectionScreen = () => {
                 <View style={{ flex: 1, padding: 12 }}>
                     <Text style={styles.title}>You can specify the gender and age group of clients who can book an appointment with you</Text>
                     <View style={{ flex: 1, marginTop: 10 }}>
-                        <Text style={{ fontSize: 20, fontFamily: CAIRO_FONT_FAMILY.bold, color: '#333', lineHeight: Platform.OS === 'ios' ? 0 : 20, paddingBottom: 10 }}>My Preferences</Text>
+                        <Text style={{ fontSize: 16, fontFamily: CAIRO_FONT_FAMILY.bold, color: '#191919', lineHeight: Platform.OS === 'ios' ? 0 : 20, paddingBottom: 10 }}>My Preferences</Text>
 
                         <FlatList
                             data={serviceProviderPreferences}
@@ -367,8 +374,8 @@ const styles = StyleSheet.create({
         borderRadius: 10,
     },
     title: {
-        fontSize: 16,
-        fontFamily: CAIRO_FONT_FAMILY.bold,
+        fontSize: 14,
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
         color: '#666',
         lineHeight: 20,
         paddingVertical: 6,
@@ -418,15 +425,15 @@ const styles = StyleSheet.create({
         marginVertical: 4,
     },
     label: {
-        fontSize: 16,
+        fontSize: 14,
         fontFamily: CAIRO_FONT_FAMILY.regular,
-        color: '#333',
+        color: '#444444',
         lineHeight: 20,
     },
     value: {
-        fontSize: 16,
+        fontSize: 14,
         fontFamily: CAIRO_FONT_FAMILY.bold,
-        color: '#333',
+        color: '#191919',
         lineHeight:  20,
     },
     separator: {
@@ -482,7 +489,7 @@ const styles = StyleSheet.create({
         marginTop: 10,
     },
     addButtonText: {
-        fontSize: 18,
+        fontSize: 16,
         fontFamily: CAIRO_FONT_FAMILY.bold,
         lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#fff',

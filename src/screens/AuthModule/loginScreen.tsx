@@ -32,7 +32,7 @@ import { signInWithGoogle } from '../../services/auth/googleAuthService';
 import AuthHeader from '../../components/AuthHeader';
 import { appleAuth } from '@invertase/react-native-apple-authentication';
 import { globalTextStyles } from '../../styles/globalStyles';
-import CustomPhoneInput from '../../components/common/CustomPhoneInput';
+import CustomPhoneInput, { COUNTRIES } from '../../components/common/CustomPhoneInput';
 import { ROUTES } from '../../shared/utils/routes';
 import { useNavigation } from '@react-navigation/native';
 import AntDesign from 'react-native-vector-icons/AntDesign';
@@ -92,9 +92,40 @@ const LoginScreen = () => {
     setSelectedCountry(country);
   };
 
+  console.log("rememberMeRedux", rememberMeRedux)
+  // Function to extract country code and phone number from full number
+  const extractPhoneInfo = (fullNumber: string) => {
+    if (!fullNumber) return { countryCode: 'SA', phoneNumber: '' };
+
+    // Remove any spaces or special characters
+    const cleanNumber = fullNumber.replace(/\s/g, '');
+
+    // Build country code map from COUNTRIES array
+    // Sort by dial code length (longest first) to handle cases like +1268 before +1
+    const sortedCountries = [...COUNTRIES].sort((a, b) => b.dialCode.length - a.dialCode.length);
+
+    // Try to match the phone number with country dial codes
+    for (const country of sortedCountries) {
+      if (cleanNumber.startsWith(country.dialCode)) {
+        const phoneNumber = cleanNumber.substring(country.dialCode.length);
+        return { countryCode: country.code, phoneNumber };
+      }
+    }
+
+    // Default to Saudi Arabia if no match found
+    return { countryCode: 'SA', phoneNumber: cleanNumber.replace(/^\+/, '') };
+  };
+
   useEffect(() => {
     if (rememberMeRedux) {
-      setEmailOrUsername(rememberMeRedux.Username);
+      if (rememberMeRedux.Filter === "mob") {
+        const phoneInfo = extractPhoneInfo(rememberMeRedux.Username || '');
+        const getCountry = COUNTRIES.find(c => c.code === phoneInfo.countryCode);
+        setSelectedCountry(getCountry);
+        setPhoneNumber(phoneInfo.phoneNumber);
+      } else {
+        setEmailOrUsername(rememberMeRedux.Username);
+      }
       setPassword(rememberMeRedux.Password);
       setActiveTab(rememberMeRedux.Filter === "mob" ? "mobile" : "email");
       setRememberMe(true);
@@ -146,7 +177,7 @@ const LoginScreen = () => {
       const response = await authService.login(data);
 
       if (response?.ResponseStatus?.STATUSCODE == 200) {
-        if(response?.Userinfo?.CatUserTypeId==2 && response?.Userinfo?.CatUserRoleCategoryId==2){
+        if (response?.Userinfo?.CatUserTypeId == 2 && response?.Userinfo?.CatUserRoleCategoryId == 2) {
           if (response.StatusCode.STATUSCODE == 200) {
             setIsLoading(false);
             dispatch(setUser(response.Userinfo));
@@ -163,10 +194,10 @@ const LoginScreen = () => {
           } else {
             setAPIError(true);
           }
-        }else{
+        } else {
           setAPIError(true);
         }
-       
+
 
       } else {
         Alert.alert(
@@ -362,12 +393,12 @@ const LoginScreen = () => {
     if (!pattern) return '';
     let digitCounter = 1;
     return pattern.replace(/#/g, '0');
-};
+  };
 
   const insets = useSafeAreaInsets();
 
   const handleBack = () => {
-    if(navigation.canGoBack()) {
+    if (navigation.canGoBack()) {
       navigation.goBack();
     } else {
       navigation.navigate(ROUTES.welcomeScreen as never);
@@ -397,7 +428,7 @@ const LoginScreen = () => {
                 </Text>
               </View>
               <View style={{ flex: 1, backgroundColor: '#fff', borderRadius: 20, paddingHorizontal: 16, paddingTop: 20 }}>
-                <Text style={[{ textAlign: 'left', ...globalTextStyles.buttonMedium,color: '#666' }]}>{t('login_with')}</Text>
+                <Text style={[{ textAlign: 'left', ...globalTextStyles.buttonMedium, color: '#666' }]}>{t('login_with')}</Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 10 }}>
                   <TouchableOpacity onPress={() => setActiveTab('mobile')} style={[styles.tab, activeTab === 'mobile' && styles.activeTab]}>
                     <Text style={[styles.tabText, activeTab === 'mobile' && styles.activeTabText]}>{t('phone_username')}</Text>

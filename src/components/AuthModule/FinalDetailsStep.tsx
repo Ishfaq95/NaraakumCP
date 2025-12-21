@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Platform, Modal, I18nManager, TouchableWithoutFeedback, Image } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Platform, Modal, I18nManager, TouchableWithoutFeedback, Image, useColorScheme } from 'react-native';
 import { CAIRO_FONT_FAMILY, globalTextStyles } from '../../styles/globalStyles';
 import Dropdown from '../common/Dropdown';
 import { authService } from '../../services/api/authService';
@@ -13,6 +13,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import CustomPhoneInput, { COUNTRIES } from '../common/CustomPhoneInput';
 import { setStep2PhoneNumber } from '../../shared/redux/reducers/userReducer';
 import { useDispatch } from 'react-redux';
+import { useAlert } from '../../contexts/AlertContext';
 
 interface FinalDetailsStepProps {
     phoneNumber: string;
@@ -66,6 +67,10 @@ const FinalDetailsStep: React.FC<FinalDetailsStepProps> = ({ phoneNumber, userIn
     const [confirmPassword, setConfirmPassword] = useState('');
     const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
     const [show, setShow] = useState(false);
+    // Custom Android date picker state
+    const [selectedYear, setSelectedYear] = useState(date.getFullYear());
+    const [selectedMonth, setSelectedMonth] = useState(date.getMonth());
+    const [selectedDay, setSelectedDay] = useState(date.getDate());
     const [languages, setLanguages] = useState<any[]>([]);
     const [countries, setCountries] = useState<any[]>([]);
     const [selectedCountry, setSelectedCountry] = useState<any>({
@@ -79,9 +84,14 @@ const FinalDetailsStep: React.FC<FinalDetailsStepProps> = ({ phoneNumber, userIn
     });
     const [phoneNumberInput, setPhoneNumberInput] = useState('');
     const [passwordMatchError, setPasswordMatchError] = useState(false);
+    // Store field positions for reliable scrolling on Android
+    const [fieldPositions, setFieldPositions] = useState<{ [key: string]: number }>({});
+    const { showAlert } = useAlert();
 
     const { t } = useTranslation();
     const isRTL = I18nManager.isRTL;
+    const colorScheme = useColorScheme();
+    const isDarkMode = colorScheme === 'dark';
 
     // Calculate maximum date (18 years ago from today)
     const getMaxDate = () => {
@@ -91,7 +101,19 @@ const FinalDetailsStep: React.FC<FinalDetailsStepProps> = ({ phoneNumber, userIn
         return maxDate;
     };
 
+    // Calculate minimum date (100 years ago from today)
+    // Note: Android DatePicker has a system limitation and cannot display dates before January 1, 1970
+    // If 100 years ago is before 1970, Android will automatically limit to 1970
+    const getMinDate = () => {
+        const today = new Date();
+        const minDate = new Date();
+        minDate.setFullYear(today.getFullYear() - 100);
+        minDate.setHours(0, 0, 0, 0);
+        return minDate;
+    };
+
     const maxDate = getMaxDate();
+    const minDate = getMinDate();
 
     // Refs for scrolling to error fields
     const scrollViewRef = React.useRef<ScrollView>(null);
@@ -166,16 +188,65 @@ const FinalDetailsStep: React.FC<FinalDetailsStepProps> = ({ phoneNumber, userIn
         }
     };
 
+    // Generate year, month, and day arrays for custom Android picker
+    const getYears = () => {
+        const years = [];
+        const currentYear = new Date().getFullYear();
+        const minYear = currentYear - 100;
+        const maxYear = currentYear - 18;
+        for (let year = maxYear; year >= minYear; year--) {
+            years.push(year);
+        }
+        return years;
+    };
+
+    const getMonths = () => {
+        return Array.from({ length: 12 }, (_, i) => i);
+    };
+
+    const getDays = (year: number, month: number) => {
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        return Array.from({ length: daysInMonth }, (_, i) => i + 1);
+    };
+
     const showDatePicker = () => {
         if (Platform.OS === 'ios') {
             setDatePickerVisibility(true);
         } else {
-            setShow(true);
+            // For Android, use custom modal picker
+            setSelectedYear(date.getFullYear());
+            setSelectedMonth(date.getMonth());
+            setSelectedDay(date.getDate());
+            setDatePickerVisibility(true);
         }
     };
 
     const hideDatePicker = () => {
         setDatePickerVisibility(false);
+        if (Platform.OS === 'android') {
+            setShow(false);
+        }
+    };
+
+    const handleAndroidDateConfirm = () => {
+        // Validate day based on selected month and year
+        const daysInMonth = getDays(selectedYear, selectedMonth).length;
+        const validDay = Math.min(selectedDay, daysInMonth);
+        
+        const selectedDate = new Date(selectedYear, selectedMonth, validDay);
+        
+        // Validate date is within range (18-100 years)
+        if (selectedDate > maxDate) {
+            // Date is too recent (less than 18 years ago)
+            const adjustedDate = new Date(maxDate);
+            handleConfirm(adjustedDate);
+        } else if (selectedDate < minDate) {
+            // Date is too old (more than 100 years ago)
+            const adjustedDate = new Date(minDate);
+            handleConfirm(adjustedDate);
+        } else {
+            handleConfirm(selectedDate);
+        }
     };
 
     const handleConfirm = (selectedDate: Date) => {
@@ -223,15 +294,51 @@ const FinalDetailsStep: React.FC<FinalDetailsStepProps> = ({ phoneNumber, userIn
         return regex.test(pwd);
     };
 
-    const scrollToField = (fieldRef: React.RefObject<View | null>) => {
-        if (fieldRef.current && scrollViewRef.current) {
-            fieldRef.current.measure((x, y, width, height, pageX, pageY) => {
-                // Calculate scroll position relative to ScrollView
-                scrollViewRef.current?.scrollTo({
-                    y: Math.max(0, pageY - 100),
-                    animated: true
-                });
+    // Helper to capture field position
+    const captureFieldPosition = (fieldKey: string) => (event: any) => {
+        const { y } = event.nativeEvent.layout;
+        setFieldPositions(prev => ({ ...prev, [fieldKey]: y }));
+    };
+
+    const scrollToField = (fieldRef: React.RefObject<View | null>, fieldKey?: string) => {
+        if (!scrollViewRef.current) return;
+
+        // First try using stored position if available (most reliable, especially on Android)
+        if (fieldKey && fieldPositions[fieldKey] !== undefined) {
+            scrollViewRef.current.scrollTo({
+                y: Math.max(0, fieldPositions[fieldKey] - 100),
+                animated: true
             });
+            return;
+        }
+
+        // Fallback to measure if position not stored yet
+        if (fieldRef.current) {
+            if (Platform.OS === 'android') {
+                // For Android, use measureInWindow on the field and calculate offset
+                fieldRef.current.measureInWindow((fieldX, fieldY, fieldWidth, fieldHeight) => {
+                    // Try to get the ScrollView's content container position
+                    // Since we can't measure ScrollView directly, use a workaround
+                    // The stored positions should handle most cases, this is just a fallback
+                    fieldRef.current?.measure((x, y, width, height, pageX, pageY) => {
+                        // On Android, pageY includes status bar, so we need to adjust
+                        // This is approximate and may need tuning
+                        const approximateOffset = pageY - 100;
+                        scrollViewRef.current?.scrollTo({
+                            y: Math.max(0, approximateOffset),
+                            animated: true
+                        });
+                    });
+                });
+            } else {
+                // For iOS, use measure (works reliably)
+                fieldRef.current.measure((x, y, width, height, pageX, pageY) => {
+                    scrollViewRef.current?.scrollTo({
+                        y: Math.max(0, pageY - 100),
+                        animated: true
+                    });
+                });
+            }
         }
     };
 
@@ -254,26 +361,58 @@ const FinalDetailsStep: React.FC<FinalDetailsStepProps> = ({ phoneNumber, userIn
         };
 
         let firstErrorRef: React.RefObject<View | null> | null = null;
+        let firstErrorKey: string | null = null;
+
+        // Map refs to field keys for position tracking
+        const refToKeyMap: { [key: string]: string } = {
+            'fullNameEn': 'fullNameEn',
+            'fullNameAr': 'fullNameAr',
+            'experience': 'experience',
+            'language': 'language',
+            'dob': 'dob',
+            'gender': 'gender',
+            'country': 'country',
+            'nationality': 'nationality',
+            'email': 'email',
+            'password': 'password',
+            'confirmPassword': 'confirmPassword',
+            'passwordMatchError': 'passwordMatchError',
+        };
 
         if (fullNameEn.trim() === '') {
             newErrors.fullNameEn = true;
-            if (!firstErrorRef) firstErrorRef = fullNameEnRef;
+            if (!firstErrorRef) {
+                firstErrorRef = fullNameEnRef;
+                firstErrorKey = 'fullNameEn';
+            }
         }
         if (fullNameAr.trim() === '') {
             newErrors.fullNameAr = true;
-            if (!firstErrorRef) firstErrorRef = fullNameArRef;
+            if (!firstErrorRef) {
+                firstErrorRef = fullNameArRef;
+                firstErrorKey = 'fullNameAr';
+            }
         }
         if (experience.trim() === '' || isNaN(Number(experience)) || Number(experience) < 0) {
             newErrors.experience = true;
-            if (!firstErrorRef) firstErrorRef = experienceRef;
+            if (!firstErrorRef) {
+                firstErrorRef = experienceRef;
+                firstErrorKey = 'experience';
+            }
         }
         if (language == "" || (Array.isArray(language) && language.length === 0)) {
             newErrors.language = true;
-            if (!firstErrorRef) firstErrorRef = languageRef;
+            if (!firstErrorRef) {
+                firstErrorRef = languageRef;
+                firstErrorKey = 'language';
+            }
         }
         if (!dob.trim()) {
             newErrors.dob = true;
-            if (!firstErrorRef) firstErrorRef = dobRef;
+            if (!firstErrorRef) {
+                firstErrorRef = dobRef;
+                firstErrorKey = 'dob';
+            }
         } else {
             // Validate age - must be at least 18 years old
             const dateParts = dob.split('/');
@@ -296,45 +435,73 @@ const FinalDetailsStep: React.FC<FinalDetailsStepProps> = ({ phoneNumber, userIn
                 if (exactAge < 18) {
                     newErrors.dob = true;
                     newErrors.dobAge = true;
-                    if (!firstErrorRef) firstErrorRef = dobRef;
+                    if (!firstErrorRef) {
+                        firstErrorRef = dobRef;
+                        firstErrorKey = 'dob';
+                    }
                 }
             }
         }
         if (!gender) {
             newErrors.gender = true;
-            if (!firstErrorRef) firstErrorRef = genderRef;
+            if (!firstErrorRef) {
+                firstErrorRef = genderRef;
+                firstErrorKey = 'gender';
+            }
         }
         if (country === '') {
             newErrors.country = true;
-            if (!firstErrorRef) firstErrorRef = countryRef;
+            if (!firstErrorRef) {
+                firstErrorRef = countryRef;
+                firstErrorKey = 'country';
+            }
         }
         if (nationality === '') {
             newErrors.nationality = true;
-            if (!firstErrorRef) firstErrorRef = nationalityRef;
+            if (!firstErrorRef) {
+                firstErrorRef = nationalityRef;
+                firstErrorKey = 'nationality';
+            }
         }
         if (password.trim() === '') {
             newErrors.password = true;
-            if (!firstErrorRef) firstErrorRef = passwordRef;
+            if (!firstErrorRef) {
+                firstErrorRef = passwordRef;
+                firstErrorKey = 'password';
+            }
         }
         if(password.trim() !== '' && !validatePassword(password)) {
             newErrors.passwordInvalid = true;
-            if (!firstErrorRef) firstErrorRef = passwordRef;
+            if (!firstErrorRef) {
+                firstErrorRef = passwordRef;
+                firstErrorKey = 'password';
+            }
         }
         if (confirmPassword.trim() === '') {
             newErrors.confirmPassword = true;
-            if (!firstErrorRef) firstErrorRef = confirmPasswordRef;
+            if (!firstErrorRef) {
+                firstErrorRef = confirmPasswordRef;
+                firstErrorKey = 'confirmPassword';
+            }
         }
 
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.[a-zA-Z]{2,3})+$/;
         if (email && !emailRegex.test(email)) {
             newErrors.email = true;
-            if (!firstErrorRef) firstErrorRef = emailRef;
+            if (!firstErrorRef) {
+                firstErrorRef = emailRef;
+                firstErrorKey = 'email';
+            }
         }
 
         if (confirmPassword !== password) {
             newErrors.passwordMatchError = true;
             setPasswordMatchError(true);
-            if (!firstErrorRef) firstErrorRef = passwordMatchErrorRef;
+            if (!firstErrorRef) {
+                // Use confirmPasswordRef since the error is shown right after it
+                firstErrorRef = confirmPasswordRef;
+                firstErrorKey = 'confirmPassword';
+            }
         } else {
             setPasswordMatchError(false);
         }
@@ -342,11 +509,14 @@ const FinalDetailsStep: React.FC<FinalDetailsStepProps> = ({ phoneNumber, userIn
         // Check if there are any errors
         if (Object.values(newErrors).some(value => value === true)) {
             setErrors(newErrors);
-            // Scroll to first error field after a short delay to ensure state is updated
+            // Scroll to first error field after a delay to ensure state is updated and layout is complete
             if (firstErrorRef) {
-                setTimeout(() => {
-                    scrollToField(firstErrorRef!);
-                }, 100);
+                // Use requestAnimationFrame for better timing, especially on Android
+                requestAnimationFrame(() => {
+                    setTimeout(() => {
+                        scrollToField(firstErrorRef!, firstErrorKey || undefined);
+                    }, Platform.OS === 'android' ? 300 : 100);
+                });
             }
             return;
         }
@@ -382,6 +552,13 @@ const FinalDetailsStep: React.FC<FinalDetailsStepProps> = ({ phoneNumber, userIn
             }
             const response = await authService.addIndividualServiceProviderStep3(payload);
             if (response.ResponseStatus.STATUSCODE) {
+                if(response.StatusCode.STATUSCODE == 3002) {
+                    showAlert({
+                        title: 'Error',
+                        message: response.StatusCode.MESSAGE,
+                        type: 'error'
+                    });
+                }
                 if (response.StatusCode.STATUSCODE == 11028) {
                     dispatch(setStep2PhoneNumber(null));    
                     onSubmit(response.Userinfo);
@@ -408,7 +585,7 @@ const FinalDetailsStep: React.FC<FinalDetailsStepProps> = ({ phoneNumber, userIn
             >
                 <TouchableWithoutFeedback>
                     <View>
-                        <View style={styles.row} ref={fullNameEnRef}>
+                        <View style={styles.row} ref={fullNameEnRef} onLayout={captureFieldPosition('fullNameEn')}>
                             <View style={styles.col}>
                                 <Text style={styles.label}>Full Name <Text style={{ fontFamily: CAIRO_FONT_FAMILY.semiBold, fontSize: 14, fontWeight: '600', color: '#666666' }}>(In English)</Text></Text>
                                 <TextInput
@@ -426,7 +603,7 @@ const FinalDetailsStep: React.FC<FinalDetailsStepProps> = ({ phoneNumber, userIn
                         </View>
 
                         <View style={styles.row}>
-                            <View style={{ width: '65%' }} ref={fullNameArRef}>
+                            <View style={{ width: '65%' }} ref={fullNameArRef} onLayout={captureFieldPosition('fullNameAr')}>
                                 <Text style={styles.label}>Full Name <Text style={{ fontFamily: CAIRO_FONT_FAMILY.semiBold, fontSize: 14, fontWeight: '600', color: '#666666' }}>(In Arabic)</Text></Text>
                                 <TextInput
                                     style={[styles.input, styles.arabicInput, errors.fullNameAr && styles.inputError]}
@@ -442,7 +619,7 @@ const FinalDetailsStep: React.FC<FinalDetailsStepProps> = ({ phoneNumber, userIn
                                 />
                                 {/* {errors.fullNameAr && <Text style={styles.errorText}>{errors.fullNameAr}</Text>} */}
                             </View>
-                            <View style={{ width: '33%' }} ref={experienceRef}>
+                            <View style={{ width: '33%' }} ref={experienceRef} onLayout={captureFieldPosition('experience')}>
                                 <Text style={styles.label}>Experience</Text>
                                 <View style={styles.experienceRow}>
                                     <TextInput
@@ -464,7 +641,7 @@ const FinalDetailsStep: React.FC<FinalDetailsStepProps> = ({ phoneNumber, userIn
                             </View>
                         </View>
 
-                        <View style={styles.row} ref={languageRef}>
+                        <View style={styles.row} ref={languageRef} onLayout={captureFieldPosition('language')}>
                             <View style={styles.col}>
                                 <Text style={styles.label}>I Speak The Following Languages:</Text>
                                 <DropDownWithCheckbox
@@ -484,7 +661,7 @@ const FinalDetailsStep: React.FC<FinalDetailsStepProps> = ({ phoneNumber, userIn
                         </View>
 
                         <View style={styles.row}>
-                            <View style={{ width: '49%' }} ref={dobRef}>
+                            <View style={{ width: '49%' }} ref={dobRef} onLayout={captureFieldPosition('dob')}>
                                 <Text style={styles.label}>Date Of Birth</Text>
                                 <TouchableOpacity
                                     onPress={showDatePicker}
@@ -497,15 +674,135 @@ const FinalDetailsStep: React.FC<FinalDetailsStepProps> = ({ phoneNumber, userIn
                                 </TouchableOpacity>
                                 {/* {errors.dobAge && <Text style={{ color: '#ff3b30', fontSize: 12, fontFamily: CAIRO_FONT_FAMILY.regular, fontWeight: '400', marginTop: 4 }}>You must be at least 18 years old</Text>} */}
 
-                                {/* Android date picker */}
-                                {Platform.OS === 'android' && show && (
-                                    <DateTimePicker
-                                        value={date}
-                                        mode="date"
-                                        display="default"
-                                        onChange={onChange}
-                                        maximumDate={maxDate}
-                                    />
+                                {/* Android custom date picker modal */}
+                                {Platform.OS === 'android' && (
+                                    <Modal
+                                        animationType="slide"
+                                        transparent={true}
+                                        visible={isDatePickerVisible}
+                                        onRequestClose={hideDatePicker}
+                                    >
+                                        <View style={styles.modalOverlay}>
+                                            <View style={[styles.modalContent, isDarkMode && styles.modalContentDark]}>
+                                                <View style={[styles.modalHeader, isDarkMode && styles.modalHeaderDark]}>
+                                                    <TouchableOpacity onPress={hideDatePicker}>
+                                                        <Text style={[styles.cancelButton, isDarkMode && styles.cancelButtonDark]}>Cancel</Text>
+                                                    </TouchableOpacity>
+                                                    <TouchableOpacity onPress={handleAndroidDateConfirm}>
+                                                        <Text style={[styles.doneButton, isDarkMode && styles.doneButtonDark]}>Done</Text>
+                                                    </TouchableOpacity>
+                                                </View>
+                                                <View style={[styles.customPickerContainer, isDarkMode && styles.datePickerContainerDark]}>
+                                                    {/* Year Picker */}
+                                                    <View style={styles.pickerColumn}>
+                                                        <Text style={[styles.pickerLabel, isDarkMode && styles.pickerLabelDark]}>Year</Text>
+                                                        <ScrollView
+                                                            style={styles.pickerScrollView}
+                                                            showsVerticalScrollIndicator={false}
+                                                        >
+                                                            {getYears().map((year) => (
+                                                                <TouchableOpacity
+                                                                    key={year}
+                                                                    style={[
+                                                                        styles.pickerItem,
+                                                                        selectedYear === year && styles.pickerItemSelected,
+                                                                        isDarkMode && styles.pickerItemDark,
+                                                                        selectedYear === year && isDarkMode && styles.pickerItemSelectedDark
+                                                                    ]}
+                                                                    onPress={() => {
+                                                                        setSelectedYear(year);
+                                                                        // Adjust day if needed
+                                                                        const daysInMonth = getDays(year, selectedMonth).length;
+                                                                        if (selectedDay > daysInMonth) {
+                                                                            setSelectedDay(daysInMonth);
+                                                                        }
+                                                                    }}
+                                                                >
+                                                                    <Text style={[
+                                                                        styles.pickerItemText,
+                                                                        selectedYear === year && styles.pickerItemTextSelected,
+                                                                        isDarkMode && styles.pickerItemTextDark,
+                                                                        selectedYear === year && isDarkMode && styles.pickerItemTextSelectedDark
+                                                                    ]}>
+                                                                        {year}
+                                                                    </Text>
+                                                                </TouchableOpacity>
+                                                            ))}
+                                                        </ScrollView>
+                                                    </View>
+
+                                                    {/* Month Picker */}
+                                                    <View style={styles.pickerColumn}>
+                                                        <Text style={[styles.pickerLabel, isDarkMode && styles.pickerLabelDark]}>Month</Text>
+                                                        <ScrollView
+                                                            style={styles.pickerScrollView}
+                                                            showsVerticalScrollIndicator={false}
+                                                        >
+                                                            {getMonths().map((month) => (
+                                                                <TouchableOpacity
+                                                                    key={month}
+                                                                    style={[
+                                                                        styles.pickerItem,
+                                                                        selectedMonth === month && styles.pickerItemSelected,
+                                                                        isDarkMode && styles.pickerItemDark,
+                                                                        selectedMonth === month && isDarkMode && styles.pickerItemSelectedDark
+                                                                    ]}
+                                                                    onPress={() => {
+                                                                        setSelectedMonth(month);
+                                                                        // Adjust day if needed
+                                                                        const daysInMonth = getDays(selectedYear, month).length;
+                                                                        if (selectedDay > daysInMonth) {
+                                                                            setSelectedDay(daysInMonth);
+                                                                        }
+                                                                    }}
+                                                                >
+                                                                    <Text style={[
+                                                                        styles.pickerItemText,
+                                                                        selectedMonth === month && styles.pickerItemTextSelected,
+                                                                        isDarkMode && styles.pickerItemTextDark,
+                                                                        selectedMonth === month && isDarkMode && styles.pickerItemTextSelectedDark
+                                                                    ]}>
+                                                                        {moment().month(month).format('MMM')}
+                                                                    </Text>
+                                                                </TouchableOpacity>
+                                                            ))}
+                                                        </ScrollView>
+                                                    </View>
+
+                                                    {/* Day Picker */}
+                                                    <View style={styles.pickerColumn}>
+                                                        <Text style={[styles.pickerLabel, isDarkMode && styles.pickerLabelDark]}>Day</Text>
+                                                        <ScrollView
+                                                            style={styles.pickerScrollView}
+                                                            showsVerticalScrollIndicator={false}
+                                                        >
+                                                            {getDays(selectedYear, selectedMonth).map((day) => (
+                                                                <TouchableOpacity
+                                                                    key={day}
+                                                                    style={[
+                                                                        styles.pickerItem,
+                                                                        selectedDay === day && styles.pickerItemSelected,
+                                                                        isDarkMode && styles.pickerItemDark,
+                                                                        selectedDay === day && isDarkMode && styles.pickerItemSelectedDark
+                                                                    ]}
+                                                                    onPress={() => setSelectedDay(day)}
+                                                                >
+                                                                    <Text style={[
+                                                                        styles.pickerItemText,
+                                                                        selectedDay === day && styles.pickerItemTextSelected,
+                                                                        isDarkMode && styles.pickerItemTextDark,
+                                                                        selectedDay === day && isDarkMode && styles.pickerItemTextSelectedDark
+                                                                    ]}>
+                                                                        {day}
+                                                                    </Text>
+                                                                </TouchableOpacity>
+                                                            ))}
+                                                        </ScrollView>
+                                                    </View>
+                                                </View>
+                                            </View>
+                                        </View>
+                                    </Modal>
                                 )}
 
                                 {/* iOS date picker modal */}
@@ -517,38 +814,43 @@ const FinalDetailsStep: React.FC<FinalDetailsStepProps> = ({ phoneNumber, userIn
                                         onRequestClose={hideDatePicker}
                                     >
                                         <View style={styles.modalOverlay}>
-                                            <View style={styles.modalContent}>
-                                                <View style={styles.modalHeader}>
+                                            <View style={[styles.modalContent, isDarkMode && styles.modalContentDark]}>
+                                                <View style={[styles.modalHeader, isDarkMode && styles.modalHeaderDark]}>
                                                     <TouchableOpacity onPress={hideDatePicker}>
-                                                        <Text style={styles.cancelButton}>Cancel</Text>
+                                                        <Text style={[styles.cancelButton, isDarkMode && styles.cancelButtonDark]}>Cancel</Text>
                                                     </TouchableOpacity>
                                                     <TouchableOpacity
                                                         onPress={() => {
                                                             handleConfirm(date);
                                                         }}
                                                     >
-                                                        <Text style={styles.doneButton}>Done</Text>
+                                                        <Text style={[styles.doneButton, isDarkMode && styles.doneButtonDark]}>Done</Text>
                                                     </TouchableOpacity>
                                                 </View>
-                                                <DateTimePicker
-                                                    value={date}
-                                                    mode="date"
-                                                    display="spinner"
-                                                    onChange={(event, selectedDate) => {
-                                                        if (selectedDate) {
-                                                            setDate(selectedDate);
-                                                        }
-                                                    }}
-                                                    maximumDate={maxDate}
-                                                    style={styles.datePicker}
-                                                />
+                                                <View style={[styles.datePickerContainer, isDarkMode && styles.datePickerContainerDark]}>
+                                                    <DateTimePicker
+                                                        value={date}
+                                                        mode="date"
+                                                        display="spinner"
+                                                        onChange={(event, selectedDate) => {
+                                                            if (selectedDate) {
+                                                                setDate(selectedDate);
+                                                            }
+                                                        }}
+                                                        maximumDate={maxDate}
+                                                        minimumDate={minDate}
+                                                        style={styles.datePicker}
+                                                        textColor={isDarkMode ? '#FFFFFF' : '#000000'}
+                                                        themeVariant={isDarkMode ? 'dark' : 'light'}
+                                                    />
+                                                </View>
                                             </View>
                                         </View>
                                     </Modal>
                                 )}
                                 {/* {errors.dob && <Text style={styles.errorText}>{errors.dob}</Text>} */}
                             </View>
-                            <View style={{ width: '49%' }} ref={genderRef}>
+                            <View style={{ width: '49%' }} ref={genderRef} onLayout={captureFieldPosition('gender')}>
                                 <Text style={styles.label}>Gender</Text>
                                 <Dropdown
                                     data={genderOptions}
@@ -566,7 +868,7 @@ const FinalDetailsStep: React.FC<FinalDetailsStepProps> = ({ phoneNumber, userIn
                         </View>
 
                         <View style={styles.row}>
-                            <View style={{ width: '49%' }} ref={countryRef}>
+                            <View style={{ width: '49%' }} ref={countryRef} onLayout={captureFieldPosition('country')}>
                                 <Text style={styles.label}>Country</Text>
                                 <Dropdown
                                     data={countries}
@@ -582,7 +884,7 @@ const FinalDetailsStep: React.FC<FinalDetailsStepProps> = ({ phoneNumber, userIn
                                 />
                                 {/* {errors.country && <Text style={styles.errorText}>{errors.country}</Text>} */}
                             </View>
-                            <View style={{ width: '49%' }} ref={nationalityRef}>
+                            <View style={{ width: '49%' }} ref={nationalityRef} onLayout={captureFieldPosition('nationality')}>
                                 <Text style={styles.label}>Nationality</Text>
                                 <Dropdown
                                     data={countries}
@@ -615,7 +917,7 @@ const FinalDetailsStep: React.FC<FinalDetailsStepProps> = ({ phoneNumber, userIn
                             </View>
                         </View>
 
-                        <View style={styles.row} ref={emailRef}>
+                        <View style={styles.row} ref={emailRef} onLayout={captureFieldPosition('email')}>
                             <View style={styles.col}>
                                 <Text style={styles.label}>Email</Text>
                                 <TextInput
@@ -641,7 +943,7 @@ const FinalDetailsStep: React.FC<FinalDetailsStepProps> = ({ phoneNumber, userIn
                             fontWeight: '600',
                             color: '#191919',
                         }}>Password</Text>
-                        <View style={styles.passwordContainer} ref={passwordRef}>
+                        <View style={styles.passwordContainer} ref={passwordRef} onLayout={captureFieldPosition('password')}>
                             <TextInput
                                 style={[
                                     styles.passwordInput,
@@ -652,7 +954,8 @@ const FinalDetailsStep: React.FC<FinalDetailsStepProps> = ({ phoneNumber, userIn
                                 value={password}
                                 onChangeText={(text) => {
                                     setPassword(text);
-                                    setErrors({ ...errors, password: false });
+                                    
+                                    setErrors({ ...errors, password: false, passwordInvalid: false });
                                 }}
                                 secureTextEntry={!showPassword}
                                 placeholderTextColor="#999"
@@ -680,7 +983,7 @@ const FinalDetailsStep: React.FC<FinalDetailsStepProps> = ({ phoneNumber, userIn
                             fontWeight: '600',
                             color: '#191919',
                         }}>Confirm Password</Text>
-                        <View style={styles.passwordContainer} ref={confirmPasswordRef}>
+                        <View style={styles.passwordContainer} ref={confirmPasswordRef} onLayout={captureFieldPosition('confirmPassword')}>
                             <TextInput
                                 style={[
                                     styles.passwordInput,
@@ -691,6 +994,7 @@ const FinalDetailsStep: React.FC<FinalDetailsStepProps> = ({ phoneNumber, userIn
                                 value={confirmPassword}
                                 onChangeText={(text) => {
                                     setConfirmPassword(text);
+                                    setPasswordMatchError(false);
                                     setErrors({ ...errors, confirmPassword: false });
                                 }}
                                 secureTextEntry={!showConfirmPassword}
@@ -856,6 +1160,9 @@ const styles = StyleSheet.create({
         borderTopRightRadius: 20,
         paddingBottom: 20,
     },
+    modalContentDark: {
+        backgroundColor: '#1C1C1E',
+    },
     modalHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -863,17 +1170,86 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1,
         borderBottomColor: '#e0e0e0',
     },
+    modalHeaderDark: {
+        borderBottomColor: '#38383A',
+    },
     cancelButton: {
         color: '#999',
         fontSize: 16,
+    },
+    cancelButtonDark: {
+        color: '#FFFFFF',
     },
     doneButton: {
         color: '#20B2AA',
         fontSize: 16,
         fontWeight: '600',
     },
+    doneButtonDark: {
+        color: '#20B2AA',
+    },
     datePicker: {
         height: 200,
+    },
+    datePickerContainer: {
+        backgroundColor: '#fff',
+    },
+    datePickerContainerDark: {
+        backgroundColor: '#1C1C1E',
+    },
+    customPickerContainer: {
+        flexDirection: 'row',
+        height: 200,
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        backgroundColor: '#fff',
+    },
+    pickerColumn: {
+        flex: 1,
+        alignItems: 'center',
+    },
+    pickerLabel: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#666',
+        marginBottom: 8,
+    },
+    pickerLabelDark: {
+        color: '#FFFFFF',
+    },
+    pickerScrollView: {
+        flex: 1,
+        width: '100%',
+    },
+    pickerItem: {
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+        alignItems: 'center',
+        borderRadius: 8,
+        marginVertical: 2,
+    },
+    pickerItemSelected: {
+        backgroundColor: '#E0F7F5',
+    },
+    pickerItemDark: {
+        backgroundColor: 'transparent',
+    },
+    pickerItemSelectedDark: {
+        backgroundColor: '#2C2C2E',
+    },
+    pickerItemText: {
+        fontSize: 16,
+        color: '#333',
+    },
+    pickerItemTextSelected: {
+        color: '#20B2AA',
+        fontWeight: '600',
+    },
+    pickerItemTextDark: {
+        color: '#FFFFFF',
+    },
+    pickerItemTextSelectedDark: {
+        color: '#20B2AA',
     },
     passwordContainer: {
         position: 'relative',

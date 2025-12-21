@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, TextInput, Linking, Platform } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -204,27 +204,27 @@ const TaskDetailTab: React.FC<TaskDetailTabProps> = ({ data }) => {
         );
     };
 
-    const checkTimeCondition = (appointment: any) => {
+    const checkTimeCondition = useCallback((appointment: any) => {
         const now = moment();
         const appointmentDate = moment.utc(appointment?.SchedulingDate).local();
-        const startTime = moment.utc(appointment?.SchedulingTime, 'HH:mm').local();
+        const startTime = moment.utc(appointment?.SchedulingTime.split('T')[1], 'HH:mm').local();
         const endTime = moment.utc(appointment?.SchedulingEndTime, 'HH:mm').local();
-
+    
         startTime.set({
-            year: appointmentDate.year(),
-            month: appointmentDate.month(),
-            date: appointmentDate.date()
+          year: appointmentDate.year(),
+          month: appointmentDate.month(),
+          date: appointmentDate.date()
         });
         endTime.set({
-            year: appointmentDate.year(),
-            month: appointmentDate.month(),
-            date: appointmentDate.date()
+          year: appointmentDate.year(),
+          month: appointmentDate.month(),
+          date: appointmentDate.date()
         });
-
+    
         return now.isSameOrAfter(startTime) &&
-            now.isBefore(endTime) &&
-            now.isSame(appointmentDate, 'day');
-    }
+          now.isBefore(endTime) &&
+          now.isSame(appointmentDate, 'day');
+      }, []);
 
     const handleJoinMeeting = (appointment: any) => {
         // Parse the date and time separately
@@ -441,7 +441,7 @@ const TaskDetailTab: React.FC<TaskDetailTabProps> = ({ data }) => {
                 <TouchableOpacity
                     onPress={() => handleJoinMeeting(data)}
                     disabled={!checkTimeCondition(data)}
-                    style={[{ marginHorizontal: 16, marginBottom: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',  padding: 10, borderRadius: 8 },{backgroundColor: checkTimeCondition(data) ? '#23a2a4' : '#0f0f0f', opacity: checkTimeCondition(data) ? 1 : 0.5}]}
+                    style={[{ marginHorizontal: 16, marginBottom: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',  padding: 10, borderRadius: 8 },checkTimeCondition(data) ? styles.callBtnEnabled : {backgroundColor: '#0F0F0F', opacity: 0.5}]}
                 >
                     <Image source={require('../../../assets/icons/cameramovie.png')} style={{ tintColor: checkTimeCondition(data) ? '#fff' : '#6c757d', width: 20, height: 20 }} />
                     <Text style={{ color: checkTimeCondition(data) ? '#fff' : '#6c757d', fontSize: 16, fontFamily: CAIRO_FONT_FAMILY.semiBold, lineHeight: Platform.OS === 'ios' ? 0 : 20, marginLeft: 5 }}>Start Video Call</Text>
@@ -897,6 +897,11 @@ const styles = StyleSheet.create({
         minHeight: 100,
         textAlignVertical: 'top',
     },
+    callBtnEnabled: {
+        backgroundColor: '#19b123',
+        borderWidth: 1,
+        borderColor: '#19b123',
+      },
 });
 
 export default TaskDetailTab;

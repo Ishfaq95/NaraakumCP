@@ -15,6 +15,7 @@ import appleAuth from '@invertase/react-native-apple-authentication';
 import { authService } from '../../services/api/authService'
 import WebSocketService from '../../components/WebSocketService'
 import { setTopic, setUser } from '../../shared/redux/reducers/userReducer'
+import { ROUTES } from '../../shared/utils/routes'
 
 const DeleteAccountScreen = () => {
     const navigation = useNavigation();
@@ -131,9 +132,11 @@ const DeleteAccountScreen = () => {
                     [{ text: "OK" }]
                 );
             } else {
-                dispatch(setUser(null));
+                
+                
                 dispatch(setTopic(null));
                 webSocketService.disconnect();
+                navigation.navigate(ROUTES.DeleteConfirmationScreen as never);
             }
         } catch (error: any) {
         }

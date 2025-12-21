@@ -29,6 +29,7 @@ const ForgotOTP = ({ route }: any) => {
   const [otpError, setOtpError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [APIError, setAPIError] = useState(false);
+  const [OPTMessage, setOPTMessage] = useState('');
   const handleBack = () => {
     navigation.goBack();
   }
@@ -63,6 +64,11 @@ const ForgotOTP = ({ route }: any) => {
       }
       const response = await authService.verifyOTP(payload);
       if (response.ResponseStatus.STATUSCODE == 200) {
+        if(response.StatusCode.STATUSCODE == 3005) {
+          setAPIError(true);
+          setOPTMessage(response.StatusCode.MESSAGE);
+          return;
+        }
         if (response.StatusCode.STATUSCODE == 3007) {
           navigation.navigate(ROUTES.ConfirmPassword, { UserId: UserId });
         }
@@ -124,6 +130,7 @@ const ForgotOTP = ({ route }: any) => {
                     if (otpError) setOtpError(false);
                   }}
                 />
+                {APIError && <Text style={styles.errorText}>{ OPTMessage ? OPTMessage : 'Error in verification'}</Text>}
               </View>
 
               <View style={styles.buttonContainer}>
@@ -135,7 +142,7 @@ const ForgotOTP = ({ route }: any) => {
                 </TouchableOpacity>
               </View>
             </View>
-            {APIError && <Text style={styles.errorText}>{'Error in verification'}</Text>}
+            
           </ScrollView>
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
@@ -276,7 +283,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: CAIRO_FONT_FAMILY.bold,
     textAlign: 'center',
-    marginTop: 10,
   },
 })
 

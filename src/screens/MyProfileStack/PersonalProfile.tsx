@@ -1,7 +1,7 @@
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, Image, Platform } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { useNavigation } from '@react-navigation/native';
+import { useIsFocused, useNavigation } from '@react-navigation/native';
 import CustomScreensHeader from '../../components/common/CustomScreensHeader';
 import { ROUTES } from '../../shared/utils/routes';
 import { profileService } from '../../services/api/profileService';
@@ -9,6 +9,7 @@ import { useSelector } from 'react-redux';
 import { CAIRO_FONT_FAMILY } from '../../styles/globalStyles';
 
 const PersonalProfileScreen = () => {
+    const isFocused = useIsFocused();
     const [personalMenuItems, setPersonalMenuItems] = useState([
         {
             id: 'careProviderBio',
@@ -43,7 +44,7 @@ const PersonalProfileScreen = () => {
     const user = useSelector((state: any) => state.root.user.user);
     useEffect(() => {
         getServiceProviderPersonalProfileSummary();
-    }, []);
+    }, [isFocused]);
 
     const getServiceProviderPersonalProfileSummary = async () => {
         try {

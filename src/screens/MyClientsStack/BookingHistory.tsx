@@ -30,7 +30,7 @@ const BookingHistory = ({ route }: { route: any }) => {
             if (response?.ResponseStatus?.STATUSCODE === 200) {
                 setBookingHistory(response);
             }
-        } catch (error) {   
+        } catch (error) {
         }
     };
 
@@ -227,11 +227,15 @@ const BookingHistory = ({ route }: { route: any }) => {
         };
 
         const handlePrescriptionPress = (item: any) => {
-            const params = {
-                CatCategoryId: item.CatCategoryIds,
-                Id: item.VisitID,
-            };
-            navigation.navigate(ROUTES.PrescriptionView, { prescriptionData: params });
+            if (item?.VisitID) {
+                const params = {
+                    CatCategoryId: item.CatCategoryIds,
+                    Id: item.VisitID,
+                };
+                navigation.navigate(ROUTES.PrescriptionView, { prescriptionData: params });
+            } else {
+                navigation.navigate(ROUTES.AddSessionRecord as never, { patientData: Patient });
+            }
         };
 
         return (
@@ -276,11 +280,11 @@ const BookingHistory = ({ route }: { route: any }) => {
                     })()}
                 </View>
 
-                
-                   {item?.VisitID &&  <TouchableOpacity onPress={() => handlePrescriptionPress(item)} style={styles.prescriptionButton}>
-                        <Text style={styles.prescriptionButtonText}>Show Prescription</Text>
-                    </TouchableOpacity>}
-                
+
+                <TouchableOpacity onPress={() => handlePrescriptionPress(item)} style={styles.prescriptionButton}>
+                    <Text style={styles.prescriptionButtonText}>Show Prescription</Text>
+                </TouchableOpacity>
+
             </View>
         );
     };

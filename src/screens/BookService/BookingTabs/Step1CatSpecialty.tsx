@@ -1016,7 +1016,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   secondaryButtonText: {
-    color: '#00A79D',
+    color: '#000',
     fontSize: 16,
     fontFamily: CAIRO_FONT_FAMILY.semiBold,
     lineHeight: Platform.OS === 'ios' ? 0 : 20,

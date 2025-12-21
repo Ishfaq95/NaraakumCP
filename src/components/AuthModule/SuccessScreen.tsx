@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'
+import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native'
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { CAIRO_FONT_FAMILY } from '../../styles/globalStyles';
 
@@ -40,7 +40,7 @@ const styles = StyleSheet.create({
     nextButton: {
         backgroundColor: '#20B2AA',
         borderRadius: 12,
-        paddingVertical: 16,
+        paddingVertical: 10,
         paddingHorizontal: 24,
         flexDirection: 'row',
         alignItems: 'center',
@@ -51,14 +51,14 @@ const styles = StyleSheet.create({
     nextButtonText: {
         color: '#fff',
         fontSize: 16,
-        fontWeight: '600',
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         marginRight: 8,
     },
     description: {
         marginTop: 15,
         fontSize: 16,
         fontFamily: CAIRO_FONT_FAMILY.semiBold,
-        fontWeight: '600',
         color: '#666',
     },
 });

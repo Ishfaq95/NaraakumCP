@@ -1,4 +1,4 @@
-import { View, Text, SafeAreaView, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, TextInput, ScrollView, KeyboardAvoidingView, Platform, Modal, RefreshControl, Image } from 'react-native'
+import { View, Text, SafeAreaView, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, TextInput, ScrollView, KeyboardAvoidingView, Platform, Modal, RefreshControl, Image, useColorScheme } from 'react-native'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import AppHeader from '../../components/common/AppHeader'
 import AppointmentStatistics from '../../components/Appointment/AppointmentStatistics'
@@ -18,9 +18,12 @@ import CustomBottomSheet from '../../components/common/CustomBottomSheet'
 import DateTimePicker from '@react-native-community/datetimepicker'
 import ConfirmationModal from '../../components/common/ConfirmationModal'
 import { CAIRO_FONT_FAMILY } from '../../styles/globalStyles'
+import { useAlert } from '../../contexts/AlertContext';
 
 const AppointmentListScreen = () => {
   const navigation = useNavigation();
+  const colorScheme = useColorScheme();
+  const isDarkMode = colorScheme === 'dark';
   const [isAvailable, setIsAvailable] = useState(false);
   const [activeTab, setActiveTab] = useState<'previous' | 'today' | 'upcoming'>('today');
   const [appointments, setAppointments] = useState<any[]>([]);
@@ -71,6 +74,8 @@ const AppointmentListScreen = () => {
   const [showStartTimeModal, setShowStartTimeModal] = useState(false);
   const [showEndDateModal, setShowEndDateModal] = useState(false);
   const [showEndTimeModal, setShowEndTimeModal] = useState(false);
+  const [unavailabilityAPIError, setUnavailabilityAPIError] = useState('');
+  const { showAlert } = useAlert();
 
   // Handle WebSocket connection
   useEffect(() => {
@@ -146,9 +151,9 @@ const AppointmentListScreen = () => {
       const cancelledCount = response.CountByHeadName.find((item: any) => item.TitlePlang === 'CanceledOrders')?.Count;
       const tempOrdersCount = {
         new: newCount,
-        inProgress: inProgressCount,
-        completed: completedCount,
-        cancelled: cancelledCount,
+        inProgress: inProgressCount || 0,
+        completed: completedCount || 0,
+        cancelled: cancelledCount || 0,
       };
       setOrdersCount(tempOrdersCount);
     }
@@ -518,20 +523,27 @@ const AppointmentListScreen = () => {
 
     const response = await appointmentService.addEditServiceProviderUnAvailability(payload);
     if (response?.ResponseStatus?.STATUSCODE === 200) {
-      setUnAvailableBottomSheetVisible(false);
-      // Refresh the unavailability list
-      await getServiceProviderUnAvailability();
-      // Reset form
-      setStartDate(null);
-      setStartTime(null);
-      setEndDate(null);
-      setEndTime(null);
-      setReason('');
-      setStartDateError(false);
-      setStartTimeError(false);
-      setEndDateError(false);
-      setEndTimeError(false);
-      setReasonError(false);
+      if(response?.StatusCode?.STATUSCODE === 11011) {
+        setUnavailabilityAPIError(response?.StatusCode?.MESSAGE);
+        return;
+      }else {
+        setUnAvailableBottomSheetVisible(false);
+        setUnavailabilityAPIError('');
+        // Refresh the unavailability list
+        await getServiceProviderUnAvailability();
+        // Reset form
+        setStartDate(null);
+        setStartTime(null);
+        setEndDate(null);
+        setEndTime(null);
+        setReason('');
+        setStartDateError(false);
+        setStartTimeError(false);
+        setEndDateError(false);
+        setEndTimeError(false);
+        setReasonError(false);
+      }
+      
     }
   };
 
@@ -583,6 +595,7 @@ const AppointmentListScreen = () => {
 
   const handleCancelUnavailability = () => {
     setUnAvailableBottomSheetVisible(false);
+    setUnavailabilityAPIError('');
     // Reset form
     setStartDate(null);
     setStartTime(null);
@@ -608,22 +621,26 @@ const AppointmentListScreen = () => {
           onRequestClose={() => setShowModal(false)}
         >
           <View style={unavailabilityStyles.modalOverlay}>
-            <View style={unavailabilityStyles.modalContent}>
-              <View style={unavailabilityStyles.modalHeader}>
+            <View style={[unavailabilityStyles.modalContent, isDarkMode && unavailabilityStyles.modalContentDark]}>
+              <View style={[unavailabilityStyles.modalHeader, isDarkMode && unavailabilityStyles.modalHeaderDark]}>
                 <TouchableOpacity onPress={() => setShowModal(false)}>
-                  <Text style={unavailabilityStyles.cancelButtonText}>Cancel</Text>
+                  <Text style={[unavailabilityStyles.cancelButtonText, isDarkMode && unavailabilityStyles.cancelButtonTextDark]}>Cancel</Text>
                 </TouchableOpacity>
-                <Text style={unavailabilityStyles.modalTitle}>{label}</Text>
+                <Text style={[unavailabilityStyles.modalTitle, isDarkMode && unavailabilityStyles.modalTitleDark]}>{label}</Text>
                 <TouchableOpacity onPress={() => setShowModal(false)}>
-                  <Text style={unavailabilityStyles.doneButtonText}>Done</Text>
+                  <Text style={[unavailabilityStyles.doneButtonText, isDarkMode && unavailabilityStyles.doneButtonTextDark]}>Done</Text>
                 </TouchableOpacity>
               </View>
-              <DateTimePicker
-                value={value}
-                mode={type}
-                display="spinner"
-                onChange={onChange}
-              />
+              <View style={[unavailabilityStyles.datePickerContainer, isDarkMode && unavailabilityStyles.datePickerContainerDark]}>
+                <DateTimePicker
+                  value={value}
+                  mode={type}
+                  display="spinner"
+                  onChange={onChange}
+                  textColor={isDarkMode ? '#FFFFFF' : '#000000'}
+                  themeVariant={isDarkMode ? 'dark' : 'light'}
+                />
+              </View>
             </View>
           </View>
         </Modal>
@@ -647,6 +664,7 @@ const AppointmentListScreen = () => {
       <View style={{ flex: 1, backgroundColor: '#e4f1ef' }}>
         <View style={{ height: 100, backgroundColor: '#23a2a4' }} />
         <View style={{ flex: 1, paddingHorizontal: 16, marginTop: -80 }}>
+          <View style={{ marginBottom: 10 }}>
           {isProfileComplete() ? (
             <AppointmentStatistics
               stats={[
@@ -662,71 +680,73 @@ const AppointmentListScreen = () => {
               onCompleteProfile={handleCompleteProfile}
             />
           )}
-
-          {/* Availability and Calendar */}
-          <AppointmentFilter
-            onAvailabilityChange={handleAvailabilityChange}
-            isAvailable={isAvailable}
-            unAvailabilityList={unAvailabilityList}
-            onEditUnavailability={handleEditUnavailability}
-          />
-
-          {/* Calendar Button */}
-          <TouchableOpacity style={styles.card} onPress={handleCalendarPress}>
-            <View style={styles.calendarRow}>
-              <View style={styles.calendarLabelContainer}>
-                <Ionicons name="calendar-outline" size={24} color="#00A19D" />
-                <Text style={styles.calendarLabel}>Appointment calendar</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color="#666" />
-            </View>
-          </TouchableOpacity>
-
-          <View style={{ height: 1, width: '100%', backgroundColor: '#000', opacity: 0.1 }} />
-
-          {/* Tab Filters */}
-          <AppointmentTabs onTabChange={handleTabChange} />
-
-          <View style={{ flex: 1 }}>
-            {/* Appointment list will be shown here */}
-            <Text style={{ color: '#666', fontSize: 14,fontFamily:CAIRO_FONT_FAMILY.semiBold,lineHeight:Platform.OS === 'ios' ? 0 : 20,marginTop:-10 }}>{`${activeTab === 'today' ? "Today's" : activeTab === 'upcoming' ? 'Upcoming' : 'Previous'} Appointments: (${totalRecords})`}</Text>
-            <FlatList
-              data={appointments}
-              keyExtractor={(item) => item.RowId}
-              contentContainerStyle={[
-                { paddingVertical: 8 },
-                appointments.length === 0 && { flexGrow: 1, minHeight: '100%' }
-              ]}
-              renderItem={({ item }) => renderItem({ item })}
-              onEndReached={loadMoreAppointments}
-              onEndReachedThreshold={0.3}
-              refreshControl={
-                <RefreshControl
-                  refreshing={refreshing}
-                  onRefresh={onRefresh}
-                  colors={['#23a2a4']}
-                  tintColor="#23a2a4"
-                />
-              }
-              ListEmptyComponent={() => (
-                !refreshing ? (
-                  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                    <Image source={require('../../assets/images/EmptyList.png')} style={{ width: 50, height: 50 }} />
-                    <Text style={{ color: '#666', fontSize: 16, paddingTop: 10 }}>There are no appointments available</Text>
-                  </View>
-                ) : null
-              )}
-              ListFooterComponent={() => (
-                isLoading && !refreshing ? (
-                  <View style={styles.loaderContainer}>
-                    <ActivityIndicator size="small" color="#23a2a4" />
-                  </View>
-                ) : null
-              )}
-              // bounces={appointments.length > 0}
-              scrollEnabled={true}
-            />
           </View>
+
+          <FlatList
+            data={appointments}
+            keyExtractor={(item) => item.RowId}
+            contentContainerStyle={[
+              {  },
+              appointments.length === 0 && { flexGrow: 1, minHeight: '100%' }
+            ]}
+            renderItem={({ item }) => renderItem({ item })}
+            onEndReached={loadMoreAppointments}
+            onEndReachedThreshold={0.3}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                colors={['#23a2a4']}
+                tintColor="#23a2a4"
+              />
+            }
+            ListHeaderComponent={() => (
+              <>
+                {/* Availability and Calendar */}
+                <AppointmentFilter
+                  onAvailabilityChange={handleAvailabilityChange}
+                  isAvailable={isAvailable}
+                  unAvailabilityList={unAvailabilityList}
+                  onEditUnavailability={handleEditUnavailability}
+                />
+
+                {/* Calendar Button */}
+                <TouchableOpacity style={styles.card} onPress={handleCalendarPress}>
+                  <View style={styles.calendarRow}>
+                    <View style={styles.calendarLabelContainer}>
+                      <Ionicons name="calendar-outline" size={24} color="#00A19D" />
+                      <Text style={styles.calendarLabel}>Appointment calendar</Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={20} color="#666" />
+                  </View>
+                </TouchableOpacity>
+
+                <View style={{ height: 1, width: '100%', backgroundColor: '#000', opacity: 0.1 }} />
+
+                {/* Tab Filters */}
+                <AppointmentTabs onTabChange={handleTabChange} activeTab={activeTab} />
+
+                {/* Appointment list header text */}
+                <Text style={{ color: '#666', fontSize: 14, fontFamily: CAIRO_FONT_FAMILY.semiBold, lineHeight: Platform.OS === 'ios' ? 0 : 20, marginTop: -10, marginBottom: 8 }}>{`${activeTab === 'today' ? "Today's" : activeTab === 'upcoming' ? 'Upcoming' : 'Previous'} Appointments: (${totalRecords})`}</Text>
+              </>
+            )}
+            ListEmptyComponent={() => (
+              !refreshing ? (
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                  <Image source={require('../../assets/images/EmptyList.png')} style={{ width: 50, height: 50 }} />
+                  <Text style={{ color: '#666', fontSize: 16, paddingTop: 10 }}>There are no appointments available</Text>
+                </View>
+              ) : null
+            )}
+            ListFooterComponent={() => (
+              isLoading && !refreshing ? (
+                <View style={styles.loaderContainer}>
+                  <ActivityIndicator size="small" color="#23a2a4" />
+                </View>
+              ) : null
+            )}
+            scrollEnabled={true}
+          />
         </View>
 
       </View>
@@ -854,7 +874,12 @@ const AppointmentListScreen = () => {
               onChangeText={(text)=>{setReason(text); if(reasonError && text.trim()) setReasonError(false);}}
               textAlignVertical="top"
             />
+             {unavailabilityAPIError && (
+            <Text style={{ color: '#FF3B30', fontSize: 14, fontFamily: CAIRO_FONT_FAMILY.regular, lineHeight: Platform.OS === 'ios' ? 0 : 20, marginBottom: 10 }}>{unavailabilityAPIError}</Text>
+          )}
           </View>
+
+         
 
           {/* Save Button */}
           <TouchableOpacity
@@ -1091,6 +1116,9 @@ const unavailabilityStyles = StyleSheet.create({
     borderTopRightRadius: 20,
     paddingBottom: 20,
   },
+  modalContentDark: {
+    backgroundColor: '#1C1C1E',
+  },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -1099,11 +1127,17 @@ const unavailabilityStyles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#E0E0E0',
   },
+  modalHeaderDark: {
+    borderBottomColor: '#38383A',
+  },
   modalTitle: {
     fontSize: 16,
     lineHeight: Platform.OS === 'ios' ? 0 : 20,
     color: '#000',
     fontFamily: CAIRO_FONT_FAMILY.bold,
+  },
+  modalTitleDark: {
+    color: '#FFFFFF',
   },
   cancelButtonText: {
     fontSize: 16,
@@ -1111,10 +1145,22 @@ const unavailabilityStyles = StyleSheet.create({
     fontFamily: CAIRO_FONT_FAMILY.regular,
     lineHeight: Platform.OS === 'ios' ? 0 : 20,
   },
+  cancelButtonTextDark: {
+    color: '#FFFFFF',
+  },
   doneButtonText: {
     fontSize: 16,
     fontFamily: CAIRO_FONT_FAMILY.bold,
     lineHeight: Platform.OS === 'ios' ? 0 : 20,
     color: '#00A19D',
+  },
+  doneButtonTextDark: {
+    color: '#00A19D',
+  },
+  datePickerContainer: {
+    backgroundColor: '#fff',
+  },
+  datePickerContainerDark: {
+    backgroundColor: '#1C1C1E',
   },
 });

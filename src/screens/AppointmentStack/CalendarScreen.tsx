@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -11,8 +11,7 @@ import {
   FlatList,
   ActivityIndicator,
   TouchableWithoutFeedback,
-  Keyboard,
-  StatusBar
+  Keyboard
 } from 'react-native';
 import { Calendar, DateData } from 'react-native-calendars';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -23,7 +22,8 @@ import CustomBottomSheet from '../../components/common/CustomBottomSheet';
 import AppointmentCard from '../../components/Appointment/AppointmentCard';
 import { CAIRO_FONT_FAMILY, globalTextStyles } from '../../styles/globalStyles';
 import Header from '../../components/common/Header';
-import { useNavigation } from '@react-navigation/native';
+import { useIsFocused, useNavigation } from '@react-navigation/native';
+import { ROUTES } from '../../shared/utils/routes';
 
 interface MarkedDates {
   [date: string]: {
@@ -47,7 +47,10 @@ const CalendarScreen: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [bottomSheetHeight, setBottomSheetHeight] = useState<string | number>("50%");
   const { user } = useSelector((state: any) => state.root.user);
+  const enabledAppointmentsRef = useRef<Set<string>>(new Set());
   const navigation = useNavigation();
+  const isScreenFocused = useIsFocused();
+  const timerRef = useRef<any>(null);
   useEffect(() => {
     getTaskbyServiceProviderId();
   }, [currentMonth]);
@@ -171,11 +174,11 @@ const CalendarScreen: React.FC = () => {
     if (formattedTasks.length === 0) {
       setBottomSheetHeight("25%"); // Minimal height for no items
     } else if (formattedTasks.length < 2) {
-      setBottomSheetHeight("40%"); // Small height for few items
-    } else if (formattedTasks.length <= 4) {
-      setBottomSheetHeight("60%"); // Medium height
+      setBottomSheetHeight("50%"); // Small height for few items
+    } else if (formattedTasks.length < 3) {
+      setBottomSheetHeight("80%"); // Medium height
     } else {
-      setBottomSheetHeight("85%"); // Maximum height for many items
+      setBottomSheetHeight("90%"); // Maximum height for many items
     }
 
     setSelectedDateSchedules(formattedTasks);
@@ -233,6 +236,137 @@ const CalendarScreen: React.FC = () => {
       <Text style={{fontSize:16,fontFamily:CAIRO_FONT_FAMILY.bold,lineHeight:20,color:'#191919'}}>Appointment Calendar</Text>
     </View>
   );
+
+  const checkTimeCondition = useCallback((appointment: any) => {
+    const now = moment();
+    const appointmentDate = moment.utc(appointment?.SchedulingDate).local();
+    const startTime = moment.utc(appointment?.SchedulingTime, 'HH:mm').local();
+    const endTime = moment.utc(appointment?.SchedulingEndTime, 'HH:mm').local();
+
+    startTime.set({
+      year: appointmentDate.year(),
+      month: appointmentDate.month(),
+      date: appointmentDate.date()
+    });
+    endTime.set({
+      year: appointmentDate.year(),
+      month: appointmentDate.month(),
+      date: appointmentDate.date()
+    });
+
+    return now.isSameOrAfter(startTime) &&
+      now.isBefore(endTime) &&
+      now.isSame(appointmentDate, 'day');
+  }, []);
+
+  useEffect(() => {
+    // Initialize the ref
+    enabledAppointmentsRef.current = new Set<string>();
+  }, []);
+
+  // Main effect for timer and WebSocket
+  useEffect(() => {
+    if (isScreenFocused) {
+
+      // Set up interval for appointment status only
+      timerRef.current = setInterval(() => {
+        // Only process appointments if they exist
+        if (selectedDateSchedules?.length > 0) {
+          const enabled = new Set<string>();
+          let hasChanges = false;
+
+          selectedDateSchedules.forEach(appointment => {
+            const isEnabled = checkTimeCondition(appointment);
+            const appointmentId = `${appointment.OrderId}-${appointment.TaskId}`;
+
+            if (isEnabled) {
+              enabled.add(appointmentId);
+            }
+
+            // Check if the enabled state has changed
+            if (isEnabled !== enabledAppointmentsRef.current.has(appointmentId)) {
+              hasChanges = true;
+            }
+          });
+
+          // Only update if there are actual changes
+          if (hasChanges) {
+            enabledAppointmentsRef.current = enabled;
+            // Force a re-render of the FlatList
+            setSelectedDateSchedules(prev => [...prev]);
+          }
+        }
+      }, 1000);
+    }
+
+    return () => {
+      // Clean up appointment timer
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+
+      // We don't stop the WebSocketService periodic check here
+      // because we want it to continue across screens
+    };
+  }, [isScreenFocused, user, selectedDateSchedules]);
+
+  const handleSessionDetails = (item: any) => {
+    setShowScheduleModal(false)
+    // Navigate to appointment details screen
+    navigation.navigate(ROUTES.VisitDetailScreen as never, { taskId: item?.TaskId });
+  };
+
+  const handleJoinMeeting = (appointment: any) => {
+    // Parse the date and time separately
+    const date = moment.utc(appointment.SchedulingDate);
+    const [startHours, startMinutes] = appointment.SchedulingTime.split(':');
+    const [endHours, endMinutes] = appointment.SchedulingEndTime.split(':');
+
+    // Create UTC moments with the correct time
+    let startTimeUTC = moment.utc(date).set({
+      hours: parseInt(startHours),
+      minutes: parseInt(startMinutes)
+    });
+
+    let endDateTimeUTC = moment.utc(date).set({
+      hours: parseInt(endHours),
+      minutes: parseInt(endMinutes)
+    });
+
+    // Convert to local time
+    let startTimeLocal = startTimeUTC.local();
+    let endTimeLocal = endDateTimeUTC.local();
+
+    let meetingInfo = {
+      toUserId: appointment.PatientUserProfileInfoId,
+      sessionStartTime: startTimeLocal.toISOString(),
+      bookingId: appointment.TaskId,
+      patientProfileId: appointment.PatientUserProfileInfoId,
+      meetingId: appointment.VideoSDKMeetingId,
+      Name: appointment.PatientPName,
+      displayName: user?.FullnamePlang,
+      sessionEndTime: endTimeLocal.toISOString(),
+      patientId: appointment.PatientUserProfileInfoId,
+      serviceProviderId: appointment.UserloginInfoId
+    };
+
+    setShowScheduleModal(false)
+    navigation.navigate(ROUTES.preViewCall, { Data: meetingInfo });
+  }
+
+  const isAppointmentEnabled = useCallback((appointment: any) => {
+    return enabledAppointmentsRef.current.has(`${appointment.OrderId}-${appointment.TaskId}`);
+  }, []);
+
+  const renderItem = useCallback(({ item }: { item: any }) => (
+    <AppointmentCard
+      item={item}
+      onSessionDetails={(item: any) => handleSessionDetails(item)}
+      onJoinMeeting={handleJoinMeeting}
+      isCallEnabled={isAppointmentEnabled(item)}
+    />
+  ), [handleJoinMeeting, isAppointmentEnabled]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -377,7 +511,7 @@ const CalendarScreen: React.FC = () => {
         <CustomBottomSheet
           visible={showScheduleModal}
           onClose={() => setShowScheduleModal(false)}
-          height={bottomSheetHeight}
+          maxHeight={bottomSheetHeight}
           backdropClickable={true}
           showHandle={false}
         >
@@ -394,12 +528,7 @@ const CalendarScreen: React.FC = () => {
                 data={selectedDateSchedules}
                 keyExtractor={(item) => item.RowId}
                 contentContainerStyle={{ paddingVertical: 8 }}
-                renderItem={({ item }) => (
-                  <AppointmentCard
-                    item={item}
-                    onSessionDetails={() => { }}
-                  />
-                )}
+                renderItem={({ item }) => renderItem({ item })}
 
                 ListFooterComponent={() => (
                   isLoading ? (
@@ -447,11 +576,11 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    margin: 16,
+    marginHorizontal: 16,
   },
   dayContainer: {
     width: '100%',
-    height: 70,
+    height: 60,
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',

@@ -8,7 +8,7 @@ import { profileService } from '../../services/api/profileService';
 import { useSelector } from 'react-redux';
 import { appointmentService } from '../../services/api/appointmentService';
 import { ROUTES } from '../../shared/utils/routes';
-import { useNavigation } from '@react-navigation/native';
+import { useIsFocused, useNavigation } from '@react-navigation/native';
 
 const MyProfileScreen = () => {
   const [profileOptions, setProfileOptions] = useState([
@@ -52,11 +52,11 @@ const MyProfileScreen = () => {
   const user = useSelector((state: any) => state.root.user.user);
   const [profileSummary, setProfileSummary] = useState<any>({});
   const navigation = useNavigation();
-
+  const isFocused = useIsFocused();
   useEffect(() => {
     getServiceProviderByUserId();
     getServiceProviderMainSummary();
-  }, []);
+  }, [isFocused]);
 
   // Handle Android hardware back button same as "Back To Profile"
   useEffect(() => {

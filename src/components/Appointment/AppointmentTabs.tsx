@@ -6,13 +6,20 @@ type TabType = 'previous' | 'today' | 'upcoming';
 
 interface AppointmentTabsProps {
   onTabChange: (tab: TabType) => void;
+  activeTab?: TabType;
 }
 
-const AppointmentTabs: React.FC<AppointmentTabsProps> = ({ onTabChange }) => {
-  const [activeTab, setActiveTab] = useState<TabType>('today');
+const AppointmentTabs: React.FC<AppointmentTabsProps> = ({ onTabChange, activeTab: propActiveTab }) => {
+  const [internalActiveTab, setInternalActiveTab] = useState<TabType>('today');
+  
+  // Use prop if provided, otherwise use internal state
+  const activeTab = propActiveTab !== undefined ? propActiveTab : internalActiveTab;
 
   const handleTabPress = (tab: TabType) => {
-    setActiveTab(tab);
+    if (propActiveTab === undefined) {
+      // Only update internal state if prop is not provided
+      setInternalActiveTab(tab);
+    }
     onTabChange(tab);
   };
 

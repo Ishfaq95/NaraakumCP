@@ -16,7 +16,7 @@ import Config from 'react-native-config';
 import { CrashlyticsErrorBoundary } from './components/CrashlyticsErrorBoundary';
 import { CrashlyticsProvider } from './components/CrashlyticsProvider';
 import crashlytics from '@react-native-firebase/crashlytics';
-import { Text, TouchableOpacity, View } from 'react-native';
+import { Text, TouchableOpacity, View, StatusBar, Platform } from 'react-native';
 import { initializeI18Next } from './utils/language/i18nextConfig';
 import PushNotificationIOS from '@react-native-community/push-notification-ios';
 import "react-native-get-random-values"
@@ -24,7 +24,6 @@ import AppInitializer from './components/AppInitializer';
 import { AlertProvider } from './contexts/AlertContext';
 
 const App = () => {
-
   useEffect(() => {
     const type = 'notification';
     PushNotificationIOS.addEventListener(type, onRemoteNotification);
@@ -62,6 +61,16 @@ const App = () => {
     requestUserPermission();
   }, []);
 
+  // Ensure StatusBar is always dark-content with white background (since app uses white backgrounds)
+  useEffect(() => {
+    if (Platform.OS === 'ios') {
+      StatusBar.setBarStyle('dark-content', true);
+    } else if (Platform.OS === 'android') {
+      StatusBar.setBarStyle('dark-content', true);
+      StatusBar.setBackgroundColor('#FFFFFF', true);
+    }
+  }, []);
+
   const requestUserPermission = async () => {
     const authStatus = await messaging().requestPermission();
     const enabled =
@@ -76,6 +85,11 @@ const App = () => {
     <Provider store={store}>
       <PersistGate persistor={persistor}>
         <SafeAreaProvider>
+          <StatusBar
+            barStyle="dark-content"
+            backgroundColor={Platform.OS === 'android' ? '#FFFFFF' : undefined}
+            translucent={false}
+          />
           <QueryClientProvider client={queryClient}>
             <CrashlyticsErrorBoundary>
               <CrashlyticsProvider
@@ -85,7 +99,27 @@ const App = () => {
                   environment: 'development',
                 }}>
                   <AlertProvider>
-                <NavigationContainer ref={navigationRef}>
+                <NavigationContainer 
+                  ref={navigationRef}
+                  onReady={() => {
+                    // Ensure StatusBar is set when navigation is ready
+                    if (Platform.OS === 'ios') {
+                      StatusBar.setBarStyle('dark-content', true);
+                    } else if (Platform.OS === 'android') {
+                      StatusBar.setBarStyle('dark-content', true);
+                      StatusBar.setBackgroundColor('#FFFFFF', true);
+                    }
+                  }}
+                  onStateChange={() => {
+                    // Ensure StatusBar stays dark-content on every navigation
+                    if (Platform.OS === 'ios') {
+                      StatusBar.setBarStyle('dark-content', true);
+                    } else if (Platform.OS === 'android') {
+                      StatusBar.setBarStyle('dark-content', true);
+                      StatusBar.setBackgroundColor('#FFFFFF', true);
+                    }
+                  }}
+                >
                   <AppInitializer />
                   <Routes />
                   <NotificationsCenter />

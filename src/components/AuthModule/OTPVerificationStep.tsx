@@ -143,6 +143,7 @@ const OTPVerificationStep: React.FC<OTPVerificationStepProps> = ({
 
     const handleResendCode = async () => {
         setOtpError(false);
+        setOTPCodeExpired(false);
         // setIsResendDisabled(true);
         // setCountdown(60);
         setOtp(['', '', '', '']);

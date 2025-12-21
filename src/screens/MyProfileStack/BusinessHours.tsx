@@ -529,6 +529,8 @@ const BusinessHours = ({ route }: { route: any }) => {
                 message: '',
                 type: 'success',
             });
+
+            getServiceProviderAvailability(selectedMonth);
         }
         setIsSaving(false);
     };
@@ -563,8 +565,8 @@ const BusinessHours = ({ route }: { route: any }) => {
                         <Switch
                             value={businessDays[index]}
                             onValueChange={() => toggleBusinessDay(index)}
-                            trackColor={{ false: '#D1D5DB', true: '#6DD5C3' }}
-                            thumbColor={businessDays[index] ? '#00A896' : '#f4f3f4'}
+                            trackColor={{ false: '#DBDBDB', true: '#239ea0' }}
+                            thumbColor={ '#fff'}
                             style={Platform.OS === 'ios' ? { transform: [{ scaleX: 0.7}, { scaleY: 0.7 }] } : {}}
                         />
                     </View>
@@ -724,11 +726,17 @@ const BusinessHours = ({ route }: { route: any }) => {
                             const hasAvailability = isDateInAvailability(date);
                             const isSelected = selectedDates.some(d => d.isSame(date, 'day'));
                             const isDateHoliday = isHoliday(date);
+                            const isToday = date.isSame(moment(), 'day');
+                            const isSelectedMonthCurrent = selectedMonth.isSame(moment(), 'month');
+                            const isTodayInCurrentMonth = isToday && isSelectedMonthCurrent && isCurrentMonth;
 
                             return (
                                 <TouchableOpacity
                                     key={dayIndex}
-                                    style={styles.dayCell}
+                                    style={[
+                                        styles.dayCell,
+                                        isTodayInCurrentMonth && styles.dayCellToday
+                                    ]}
                                     onPress={() => isCurrentMonth && !isDateHoliday && handleDatePress(date)}
                                     disabled={!isCurrentMonth || isDateHoliday}
                                 >
@@ -736,7 +744,8 @@ const BusinessHours = ({ route }: { route: any }) => {
                                         styles.dayCellText,
                                         !isCurrentMonth && styles.dayCellTextInactive,
                                         isDateHoliday && isCurrentMonth && styles.dayCellTextHoliday,
-                                        isSelected && styles.dayCellTextSelected
+                                        isSelected && styles.dayCellTextSelected,
+                                        isTodayInCurrentMonth && styles.dayCellTextToday
                                     ]}>
                                         {date.date()}
                                     </Text>
@@ -1281,6 +1290,10 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         position: 'relative',
     },
+    dayCellToday: {
+        backgroundColor: '#E0E0E0',
+        borderRadius: 4,
+    },
     dayCellText: {
         fontSize: 14,
         fontFamily: CAIRO_FONT_FAMILY.medium,
@@ -1298,6 +1311,10 @@ const styles = StyleSheet.create({
         fontFamily: CAIRO_FONT_FAMILY.bold,
         lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#00A896',
+    },
+    dayCellTextToday: {
+        color: '#00A896',
+        fontFamily: CAIRO_FONT_FAMILY.bold,
     },
     availabilityDot: {
         position: 'absolute',

@@ -5,6 +5,7 @@ import { CAIRO_FONT_FAMILY } from '../../styles/globalStyles';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useSelector } from 'react-redux';
 import CustomScreensHeader from '../../components/common/CustomScreensHeader';
+import { useAlert } from '../../contexts/AlertContext';
 
 interface BioHead {
     Id: number;
@@ -30,7 +31,7 @@ const ArabicBioScreen = () => {
     const [serviceProviderBio, setServiceProviderBio] = useState<any>(null);
     const [originalApiData, setOriginalApiData] = useState<SectionData>({}); // Store original API data
     const user = useSelector((state: any) => state.root.user.user);
-
+    const { showAlert } = useAlert();
     useEffect(() => {
         getServiceProviderBioHeads();
         getServiceProviderBio();
@@ -201,6 +202,11 @@ const ArabicBioScreen = () => {
         };
         const response = await profileService.updateServiceProviderBio(payload);
         if (response?.StatusCode?.STATUSCODE == 11018) {
+            showAlert({
+                title: response.StatusCode.MESSAGE,
+                message: '',
+                type: 'success',
+            });
         }
     };
 

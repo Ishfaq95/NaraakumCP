@@ -144,7 +144,7 @@ const ListShimmerLoader = ({ cardType = 'default' }: { cardType?: 'default' | 'h
   );
 };
 
-const Step2DoctorListing = ({ handleNext, Patient }: { handleNext: () => void, Patient: any }) => {
+const Step2DoctorListing = ({ handleNext, handleReloadNext, Patient }: { handleNext: () => void, handleReloadNext: () => void, Patient: any }) => {
   const [selectedDate, setSelectedDate] = useState<Moment>(moment());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [dateList, setDateList] = useState<DateItem[]>([]);
@@ -162,8 +162,6 @@ const Step2DoctorListing = ({ handleNext, Patient }: { handleNext: () => void, P
   const selectedLocation = useSelector((state: any) => state.root.booking.selectedLocation);
   const services = useSelector((state: any) => state.root.booking.services);
   const [refreshing, setRefreshing] = useState(false);
-
-  console.log(Patient);
 
   // Memoize selectedCardItem to prevent re-filtering on every render
   const selectedCardItem = useMemo(() =>
@@ -191,7 +189,6 @@ const Step2DoctorListing = ({ handleNext, Patient }: { handleNext: () => void, P
   const [sortBy, setSortBy] = useState<('Asc' | 'Desc' | 'All')>('All');
   const [isLocationBottomSheetVisible, setIsLocationBottomSheetVisible] = useState(false);
   const [offeredServicesCategories, setOfferedServicesCategories] = useState<any[]>([]);
-  const [servicesLocalStore, setServicesLocalStore] = useState<any[]>([]);
   const [cardBottomSheetVisible, setCardBottomSheetVisible] = useState(false);
   const dispatch = useDispatch();
   useEffect(() => {
@@ -203,12 +200,14 @@ const Step2DoctorListing = ({ handleNext, Patient }: { handleNext: () => void, P
   }
 
   const onNextPress = () => {
+    setCardBottomSheetVisible(false)
     const withoutServiceProvidersList = existingCardItems.filter((item: any) => !item.ServiceProviderUserloginInfoId && !item.OrganizationId);
     if (withoutServiceProvidersList.length == 0) {
       onPressContinue();
     } else {
       const selectedItem = withoutServiceProvidersList[withoutServiceProvidersList.length - 1];
       if (selectedItem.CatCategoryId != '42') {
+        
         setIsLocationBottomSheetVisible(true);
       } else {
         onPressContinue();
@@ -229,15 +228,15 @@ const Step2DoctorListing = ({ handleNext, Patient }: { handleNext: () => void, P
     }
   }, [selectedCardItem]);
 
-  const fetchServicesAndSpecialtiesData = async () => {
+  const fetchServicesAndSpecialtiesData = async (categoryId?: string) => {
     try {
       setLoading(true);
       const offered = await bookingService.getOfferedServicesListByCategory({
-        abc: selectedCardItem.catCategoryId,
+        abc: categoryId || selectedCardItem.catCategoryId,
         Search: '',
       });
       
-      setServicesLocalStore(offered.OfferedServices);
+      dispatch(setServices(offered.OfferedServices))
     } catch (error) {
     } finally {
       setLoading(false);
@@ -253,7 +252,7 @@ const Step2DoctorListing = ({ handleNext, Patient }: { handleNext: () => void, P
     }
   };
 
-  const onPressContinue = () => {
+  const onPressContinue = async () => {
     setIsLocationBottomSheetVisible(false);
 
     const withoutServiceProvidersList = existingCardItems.filter((item: any) => !item.ServiceProviderUserloginInfoId && !item.OrganizationId);
@@ -265,10 +264,9 @@ const Step2DoctorListing = ({ handleNext, Patient }: { handleNext: () => void, P
       const selectedCategory = offeredServicesCategories.find((category: any) => category.Id == selectedItem.CatCategoryId);
       dispatch(setCategoryRedux(selectedCategory));
       if (selectedItem.CatCategoryId == '42' || selectedItem.CatCategoryId == '32') {
+        await fetchServicesAndSpecialtiesData(selectedItem.CatCategoryId)
         if (selectedItem.CatServiceId) {
           dispatch(setServices(null))
-        }else{
-          dispatch(setServices(servicesLocalStore))
         }
       } else {
         dispatch(setServices(null))
@@ -277,6 +275,7 @@ const Step2DoctorListing = ({ handleNext, Patient }: { handleNext: () => void, P
       const selectedUniqueId = withoutServiceProvidersList[withoutServiceProvidersList.length - 1].ItemUniqueId
       dispatch(setSelectedUniqueId(selectedUniqueId))
 
+      handleReloadNext();
     }
 
 
@@ -591,11 +590,8 @@ const Step2DoctorListing = ({ handleNext, Patient }: { handleNext: () => void, P
           // First occurrence of this time slot
           mergedMap.set(key, { ...item });
         } else if (item.available === true && existingItem.available === false) {
-          // Replace if new item is available and existing is not
           mergedMap.set(key, { ...item });
         }
-        // If existing item is already available=true, keep it
-        // If both are false or both are true, keep the existing one
       });
     });
 
@@ -630,13 +626,6 @@ const Step2DoctorListing = ({ handleNext, Patient }: { handleNext: () => void, P
         })
 
         const DoctorAvailable: any = DoctorAvailableArray.length > 1 ? mergeAvailabilityArrays(...DoctorAvailableArray) : DoctorAvailableArray[0]
-
-
-        // const DoctorAvailable: any = generateSlotsForDate(
-        //   providerAvailability[0],
-        //   formattedDate,
-        //   slotDuration,
-        // );
 
         const tempDoctorObj = {
           ...provider,

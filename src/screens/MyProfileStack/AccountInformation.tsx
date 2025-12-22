@@ -285,17 +285,21 @@ const AccountInformationScreen = () => {
     const handlePickFromCamera = async () => {
         setOpenImagePickerBottomSheet(false)
         try {
-            // Request camera permission on iOS
+            // Request camera permission for both Android and iOS
+            let cameraPermission;
             if (Platform.OS === 'ios') {
-                const cameraPermission = await request(PERMISSIONS.IOS.CAMERA);
-                if (cameraPermission !== RESULTS.GRANTED) {
-                    showAlert({
-                        title: 'Permission Denied',
-                        message: 'Camera permission is required to take photos',
-                        type: 'error',
-                    });
-                    return;
-                }
+                cameraPermission = await request(PERMISSIONS.IOS.CAMERA);
+            } else if (Platform.OS === 'android') {
+                cameraPermission = await request(PERMISSIONS.ANDROID.CAMERA);
+            }
+
+            if (cameraPermission !== RESULTS.GRANTED) {
+                showAlert({
+                    title: 'Permission Denied',
+                    message: 'Camera permission is required to take photos',
+                    type: 'error',
+                });
+                return;
             }
 
             const result: ImagePickerResponse = await launchCamera({
@@ -339,17 +343,26 @@ const AccountInformationScreen = () => {
     const handlePickFromLibrary = async () => {
         setOpenImagePickerBottomSheet(false)
         try {
-            // Request photo library permission on iOS
+            // Request photo library permission for both Android and iOS
+            let photoPermission;
             if (Platform.OS === 'ios') {
-                const photoPermission = await request(PERMISSIONS.IOS.PHOTO_LIBRARY);
-                if (photoPermission !== RESULTS.GRANTED) {
-                    showAlert({
-                        title: 'Permission Denied',
-                        message: 'Photo library permission is required to select images',
-                        type: 'error',
-                    });
-                    return;
+                photoPermission = await request(PERMISSIONS.IOS.PHOTO_LIBRARY);
+            } else if (Platform.OS === 'android') {
+                // For Android 13+ use READ_MEDIA_IMAGES, for older versions use READ_EXTERNAL_STORAGE
+                if (Platform.Version >= 33) {
+                    photoPermission = await request(PERMISSIONS.ANDROID.READ_MEDIA_IMAGES);
+                } else {
+                    photoPermission = await request(PERMISSIONS.ANDROID.READ_EXTERNAL_STORAGE);
                 }
+            }
+
+            if (photoPermission !== RESULTS.GRANTED) {
+                showAlert({
+                    title: 'Permission Denied',
+                    message: 'Photo library permission is required to select images',
+                    type: 'error',
+                });
+                return;
             }
 
             const result: ImagePickerResponse = await launchImageLibrary({

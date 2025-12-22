@@ -181,9 +181,10 @@ const ServiceProfile = () => {
                 <Switch
                     value={enabled}
                     onValueChange={onToggle}
-                    trackColor={{ false: '#dbdbdb', true: '#239ea0' }}
+                    trackColor={{ false: '#DBDBDB', true: '#239ea0' }}
                     thumbColor="#fff"
-                    ios_backgroundColor="#dbdbdb"
+                    ios_backgroundColor="#DBDBDB"
+                    style={Platform.OS === 'ios' ? { transform: [{ scaleX: 0.7}, { scaleY: 0.7 }] } : {}}
                 />
             </View>
             {enabled && (
@@ -388,9 +389,9 @@ const ServiceProfile = () => {
             <View style={styles.mainContent}>
                 {renderHeader()}
                 <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
-                    {renderSpecialtyLevel()}
+                    {user?.CatUserRoleId == 3 && renderSpecialtyLevel()}
 
-                    <View style={styles.divider} />
+                    {user?.CatUserRoleId == 3 && <View style={styles.divider} />}
                     
                     <Text style={styles.activateServicesTitle}>Activate Your Services</Text>
                     

@@ -55,7 +55,7 @@
       android:launchMode="singleTask">
       <meta-data
      android:name="com.google.android.geo.API_KEY"
-     android:value="AIzaSyDrIDwxB952Xv0ogIH6ytLJ_iKfxfadfEM"/>
+     android:value="AIzaSyDXb5djCy2217thBLl785mPmds2_qudYC8"/>
       <!-- Change the value to true to enable pop-up for in foreground on receiving remote notifications (for prevent duplicating while showing local notifications set this to false) -->
         <meta-data  android:name="com.dieam.reactnativepushnotification.notification_foreground"
                     android:value="false"/>

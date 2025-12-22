@@ -33,11 +33,11 @@ const DurationAndPrice = ({ route }: { route: any }) => {
 
     useEffect(() => {
         if (durationAndPriceData) {
-            setVisitDuration(durationAndPriceData.SlotDuration.toString());
-            setVisitPrice(durationAndPriceData.Price.toString());
-            if (durationAndPriceData.PriceWithNurse) {
+            setVisitDuration(durationAndPriceData?.SlotDuration?.toString());
+            setVisitPrice(durationAndPriceData?.Price?.toString());
+            if (durationAndPriceData?.PriceWithNurse) {
                 setAllowWithNurse(true);
-                setNursePrice(durationAndPriceData.PriceWithNurse.toString());
+                setNursePrice(durationAndPriceData?.PriceWithNurse?.toString());
             } else {
                 setAllowWithNurse(false);
                 setNursePrice('');

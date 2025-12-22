@@ -1,17 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { AppState, AppStateStatus, Platform, Alert, BackHandler, Linking } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
-import { setToken, setMediaToken } from '../shared/redux/reducers/userReducer';
+import { setToken, setMediaToken, setUser, setTopic } from '../shared/redux/reducers/userReducer';
 import { isTokenExpired } from '../shared/services/service';
 import { crashlyticsService } from '../shared/services/crashlytics/crashlytics.service';
 import useMutationHook from '../Network/useMutationHook';
 import { MediaBaseURL } from '../shared/utils/constants';
+import { profileService } from '../services/api/profileService';
 
 const AppInitializer = () => {
   const dispatch = useDispatch();
   const [appState, setAppState] = useState(AppState.currentState);
   const { expiresAt, appVersionCode } = useSelector((state: any) => state.root.user);
-
+  const { user } = useSelector((state: any) => state.root.user);
   // API hooks
   const { mutate, isSuccess, isError, data } = useMutationHook(
     '/authValidator/token',
@@ -35,6 +36,34 @@ const AppInitializer = () => {
       subscription.remove();
     };
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      getUserInfoByUserId();
+    }
+  }, [user])
+
+  console.log("user ID", user?.Id)
+
+  const getUserInfoByUserId = async () => {
+    try {
+        const payload = {
+            UserlogiInfoId: user.Id,
+        };
+        const response = await profileService.getUserInfoByUserId(payload);
+        if (response?.ResponseStatus?.STATUSCODE === 200) {
+          const userInfo = response.UserDetail[0];
+          console.log("userInfo", userInfo)
+          if (userInfo?.isDeleted) {
+            dispatch(setUser(null));
+            dispatch(setTopic(null));
+          }
+            console.log("response", response.UserDetail[0])
+        }
+    }
+    catch (error: any) {
+    }
+}
 
   useEffect(() => {
     if (appState === 'active') {

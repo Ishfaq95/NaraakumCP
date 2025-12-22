@@ -104,7 +104,7 @@ const MedicalHistoryTab: React.FC<MedicalHistoryTabProps> = ({ data }) => {
     return (
         <View style={styles.container}>
             {/* Patient Info Section */}
-            <View style={{ backgroundColor: '#fff', marginHorizontal: 12, marginVertical: 15, borderRadius: 8 }}>
+            <View style={{ backgroundColor: '#fff', marginHorizontal: 12, marginTop: 16, borderRadius: 8 }}>
                 <View style={styles.patientInfoSection}>
                     <View >
                         <Text style={styles.patientLabel}>Patient Name</Text>
@@ -166,7 +166,7 @@ const MedicalHistoryTab: React.FC<MedicalHistoryTabProps> = ({ data }) => {
 
             {/* Add Session Record Button */}
             <View style={styles.addButtonContainer}>
-                <TouchableOpacity onPress={() => navigation.navigate(ROUTES.AddSessionRecord, { patientData: data })} disabled={currentRecords.length > 0} style={[styles.addButton, currentRecords.length > 0 && { backgroundColor: '#ccc' }]}>
+                <TouchableOpacity onPress={() => navigation.navigate(ROUTES.AddSessionRecord, { patientData: data })} disabled={currentRecords.length > 0} style={[styles.addButton, currentRecords.length > 0 && { opacity: 0.5 }]}>
                     <Ionicons name="add-circle-outline" size={20} color="#fff" />
                     <Text style={styles.addButtonText}>Add Session Record</Text>
                 </TouchableOpacity>
@@ -331,19 +331,20 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        padding: 16,
-        marginBottom: 16,
+        paddingHorizontal: 16,
+        paddingVertical: 10,
     },
     patientLabel: {
         fontSize: 13,
         color: '#666',
         marginBottom: 4,
         fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        lineHeight:  20,
     },
     patientName: {
         fontSize: 16,
         fontFamily: CAIRO_FONT_FAMILY.semiBold,
-        lineHeight: Platform.OS === 'ios' ? 0 : 20,
+        lineHeight: Platform.OS === 'ios' ? 20 : 20,
         color: '#000',
         textAlign: 'left',
     },
@@ -369,8 +370,8 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#23a2a4',
         borderRadius: 8,
-        paddingVertical: 16,
-        paddingHorizontal: 12,
+        paddingVertical: 10,
+        paddingHorizontal: 8,
         alignItems: 'center',
         justifyContent: 'center',
     },

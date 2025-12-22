@@ -82,6 +82,10 @@ const VisitDetailScreen = ({ route }: any) => {
         </View>
     );
 
+    const RefreshData = () => {
+        getTaskDetail();
+    }
+
     const renderTabContent = () => {
         if (!taskDetail) {
             return (
@@ -93,7 +97,7 @@ const VisitDetailScreen = ({ route }: any) => {
 
         switch (activeTab) {
             case 'taskDetail':
-                return <TaskDetailTab data={taskDetail} />;
+                return <TaskDetailTab data={taskDetail} RefreshData={RefreshData} />;
             case 'medicalHistory':
                 return <MedicalHistoryTab data={taskDetail} />;
             case 'patientRating':

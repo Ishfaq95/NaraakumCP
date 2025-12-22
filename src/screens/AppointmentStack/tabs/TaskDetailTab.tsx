@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, TextInput, Linking, Platform } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -16,16 +16,56 @@ import { useNavigation } from '@react-navigation/native';
 
 interface TaskDetailTabProps {
     data: any;
+    RefreshData: () => void;
 }
 
-const TaskDetailTab: React.FC<TaskDetailTabProps> = ({ data }) => {
+// Status ID mapping
+const STATUS_IDS = {
+    ACCEPTED: 17,
+    ON_THE_WAY: 7,
+    IN_PROGRESS: 8,
+    COMPLETE: 10,
+    INCOMPLETE: 23,
+};
+
+// Status name to ID mapping
+const STATUS_NAME_TO_ID: { [key: string]: number } = {
+    'Accepted': STATUS_IDS.ACCEPTED,
+    'On The Way To The Patient': STATUS_IDS.ON_THE_WAY,
+    'In Progress': STATUS_IDS.IN_PROGRESS,
+    'Complete': STATUS_IDS.COMPLETE,
+    'Incomplete': STATUS_IDS.INCOMPLETE,
+};
+
+// Status ID to name mapping
+const STATUS_ID_TO_NAME: { [key: number]: string } = {
+    [STATUS_IDS.ACCEPTED]: 'Accepted',
+    [STATUS_IDS.ON_THE_WAY]: 'On The Way To The Patient',
+    [STATUS_IDS.IN_PROGRESS]: 'In Progress',
+    [STATUS_IDS.COMPLETE]: 'Complete',
+    [STATUS_IDS.INCOMPLETE]: 'Incomplete',
+};
+
+const TaskDetailTab: React.FC<TaskDetailTabProps> = ({ data, RefreshData }) => {
     const [isBottomSheetVisible, setIsBottomSheetVisible] = useState(false);
-    const [selectedStatus, setSelectedStatus] = useState<string>('Accepted');
+    const [selectedStatusId, setSelectedStatusId] = useState<number | null>(null);
     const [incompleteReason, setIncompleteReason] = useState<string>('');
     const [openGoogleMapBottomSheet, setOpenGoogleMapBottomSheet] = useState(false);
     const [routeInfo, setRouteInfo] = useState<any>(null);
     const navigation = useNavigation();
     const user = useSelector((state: any) => state.root.user.user);
+    const [errorIncompleteReason, setErrorIncompleteReason] = useState(false);
+    // Get current status ID from data and convert to number (API returns as string)
+    const currentStatusId = data?.CatOrderStatusId ? Number(data.CatOrderStatusId) : null;
+ 
+    console.log("Current Status ID", selectedStatusId, currentStatusId);
+    
+    // Initialize selected status ID when bottom sheet opens
+    useEffect(() => {
+        if (isBottomSheetVisible && currentStatusId) {
+            setSelectedStatusId(currentStatusId);
+        }
+    }, [isBottomSheetVisible, currentStatusId]);
     const formatDate = (dateString: string) => {
         if (!dateString) return 'N/A';
         const date = new Date(dateString);
@@ -35,6 +75,8 @@ const TaskDetailTab: React.FC<TaskDetailTabProps> = ({ data }) => {
             year: 'numeric'
         }).replace(/\//g, '/');
     };
+
+    console.log("Data", data);
 
     const formatTime = (timeString: string) => {
         if (!timeString) return 'N/A';
@@ -60,25 +102,111 @@ const TaskDetailTab: React.FC<TaskDetailTabProps> = ({ data }) => {
         });
     };
 
-    const handleStatusChange = (status: string) => {
-        setSelectedStatus(status);
-        if (status !== 'Incomplete') {
+    // Determine which statuses are enabled based on current status ID
+    const getEnabledStatusIds = (currentId: number | null): number[] => {
+        if (!currentId) return [];
+        
+        switch (currentId) {
+            case STATUS_IDS.ACCEPTED: // 17
+                return [STATUS_IDS.ACCEPTED, STATUS_IDS.ON_THE_WAY]; // 17 and 7 enabled
+            case STATUS_IDS.ON_THE_WAY: // 7
+                return [STATUS_IDS.ON_THE_WAY, STATUS_IDS.IN_PROGRESS, STATUS_IDS.INCOMPLETE]; // 7, 8, 23 enabled
+            case STATUS_IDS.IN_PROGRESS: // 8
+                return [STATUS_IDS.IN_PROGRESS, STATUS_IDS.COMPLETE, STATUS_IDS.INCOMPLETE]; // 8, 10, 23 enabled
+            case STATUS_IDS.COMPLETE: // 10
+            case STATUS_IDS.INCOMPLETE: // 23
+                return []; // All disabled
+            default:
+                return [];
+        }
+    };
+
+    // Check if a status is enabled
+    const isStatusEnabled = (statusId: number): boolean => {
+        const enabledIds = getEnabledStatusIds(currentStatusId);
+        return enabledIds.includes(statusId);
+    };
+
+    // Status sequence: 17 → 7 → 8 → 10 → 23
+    const STATUS_SEQUENCE = [STATUS_IDS.ACCEPTED, STATUS_IDS.ON_THE_WAY, STATUS_IDS.IN_PROGRESS, STATUS_IDS.COMPLETE, STATUS_IDS.INCOMPLETE];
+
+    // Get all previous statuses in the sequence based on current status
+    const getPreviousStatusIds = (currentId: number | null): number[] => {
+        if (!currentId) return [];
+        
+        const currentIndex = STATUS_SEQUENCE.indexOf(currentId);
+        if (currentIndex === -1 || currentIndex === 0) return [];
+        
+        // Return all statuses before the current one in the sequence
+        return STATUS_SEQUENCE.slice(0, currentIndex);
+    };
+
+    // Check if a status is the current status from API
+    const isCurrentStatus = (statusId: number): boolean => {
+        return currentStatusId == statusId;
+    };
+
+    // Check if a status is selected
+    const isStatusSelected = (statusId: number): boolean => {
+        return selectedStatusId == statusId;
+    };
+
+    // Check if a status should show as "previous" (disabled previous styling)
+    // 1. If it's the API current status but user selected a different status
+    // 2. If it comes before the current status in the sequence
+    // Note: If current and selected are the same, it should show as selected, not previous
+    const isPreviousStatus = (statusId: number): boolean => {
+        if (!currentStatusId) return false;
+        
+        // Don't show as previous if it's currently selected
+        if (selectedStatusId != null && selectedStatusId == statusId) {
+            return false;
+        }
+        
+        // Case 1: API current status but user selected different status
+        if (currentStatusId == statusId && selectedStatusId != null && selectedStatusId != statusId) {
+            return true;
+        }
+        
+        // Case 2: Status comes before current status in sequence
+        const previousStatuses = getPreviousStatusIds(currentStatusId);
+        return previousStatuses.includes(statusId);
+    };
+
+    const handleStatusChange = (statusId: number) => {
+        if (!isStatusEnabled(statusId)) return; // Don't allow selection if disabled
+        setSelectedStatusId(statusId);
+        if (statusId !== STATUS_IDS.INCOMPLETE) {
             setIncompleteReason('');
         }
     };
 
     const updateOrderStatus = async () => {
+        if (!selectedStatusId) return;
+
+        if (selectedStatusId == STATUS_IDS.INCOMPLETE) {
+            if (incompleteReason.trim() == '') {
+                setErrorIncompleteReason(true);
+                return;
+            }
+        }
+        
         const payload = {
-            CatOrderStatusId: data.TaskId,
-            OrderDetailIds: data.CatOrderStatusId,
-            OrderStatusNote: selectedStatus === 'Incomplete' ? incompleteReason : "",
-            UpdatebyRoleId: user?.Id,
+            CatOrderStatusId: selectedStatusId,
+            OrderDetailIds: data.Detail[0].OrderDetailID,
+            OrderStatusNote: selectedStatusId == STATUS_IDS.INCOMPLETE ? incompleteReason : "",
+            UpdatebyRoleId: user?.CatUserRoleId,
             UpdatebyUserloginInfoId: user?.Id,
         };
         const response = await appointmentService.updateOrderStatus(payload);
         if (response?.StatusCode?.STATUSCODE === 3028) {
             setIsBottomSheetVisible(false);
             setIncompleteReason('');
+            setSelectedStatusId(null);
+            RefreshData();
+            if (selectedStatusId == STATUS_IDS.ON_THE_WAY) {
+                setOpenGoogleMapBottomSheet(true);
+            }
         }
     }
 
@@ -367,9 +495,13 @@ const TaskDetailTab: React.FC<TaskDetailTabProps> = ({ data }) => {
                         </Text>
                     </View> :
                         <>
+                            <View style={{paddingBottom: 10}}>
                             <View style={styles.sessionRow}>
                                 <Ionicons name="location-outline" size={20} color="#0d9488" />
                                 <Text style={{ fontSize: 14, color: '#000', fontFamily: CAIRO_FONT_FAMILY.bold, lineHeight: 20, textAlign: 'left', flex: 1, marginLeft: 10 }}>{data.Address}</Text>
+                                
+                            </View>
+                            <Text style={{ fontSize: 14, color: '#666', fontFamily: CAIRO_FONT_FAMILY.bold, lineHeight: 20, textAlign: 'left', flex: 1, marginLeft: 30 }}>{data?.AddressDescription}</Text>
                             </View>
                             <TouchableOpacity onPress={() => setOpenGoogleMapBottomSheet(true)} style={{ borderWidth: 1, borderColor: '#23a2a4', flexDirection: 'row', borderRadius: 20, alignItems: 'center', justifyContent: 'center', padding: 8 }}>
                                 <Image source={require('../../../assets/images/googleMap.png')} style={styles.socialIcon} />
@@ -443,8 +575,8 @@ const TaskDetailTab: React.FC<TaskDetailTabProps> = ({ data }) => {
                     disabled={!checkTimeCondition(data)}
                     style={[{ marginHorizontal: 16, marginBottom: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',  padding: 10, borderRadius: 8 },checkTimeCondition(data) ? styles.callBtnEnabled : {backgroundColor: '#0F0F0F', opacity: 0.5}]}
                 >
-                    <Image source={require('../../../assets/icons/cameramovie.png')} style={{ tintColor: checkTimeCondition(data) ? '#fff' : '#6c757d', width: 20, height: 20 }} />
-                    <Text style={{ color: checkTimeCondition(data) ? '#fff' : '#6c757d', fontSize: 16, fontFamily: CAIRO_FONT_FAMILY.semiBold, lineHeight: Platform.OS === 'ios' ? 0 : 20, marginLeft: 5 }}>Start Video Call</Text>
+                    <Image source={require('../../../assets/icons/cameramovie.png')} style={{ tintColor: checkTimeCondition(data) ? '#fff' : '#fff', width: 20, height: 20 }} />
+                    <Text style={{ color: checkTimeCondition(data) ? '#fff' : '#fff', fontSize: 16, fontFamily: CAIRO_FONT_FAMILY.semiBold, lineHeight: Platform.OS === 'ios' ? 0 : 20, marginLeft: 5 }}>Start Video Call</Text>
                 </TouchableOpacity> :
                 <TouchableOpacity
                     onPress={() => setIsBottomSheetVisible(true)}
@@ -481,101 +613,178 @@ const TaskDetailTab: React.FC<TaskDetailTabProps> = ({ data }) => {
                         showsVerticalScrollIndicator={true}
                     >
                         {/* Accepted */}
-                        <TouchableOpacity
-                            onPress={() => handleStatusChange('Accepted')}
-                            style={[
-                                styles.statusOption,
-                                selectedStatus === 'Accepted' && styles.statusOptionSelected
-                            ]}
-                        >
-                            <Text style={[
-                                styles.statusOptionText,
-                                selectedStatus === 'Accepted' && styles.statusOptionTextSelected
-                            ]}>
-                                Accepted
-                            </Text>
-                        </TouchableOpacity>
+                        {(() => {
+                            const statusId = STATUS_IDS.ACCEPTED;
+                            const enabled = isStatusEnabled(statusId);
+                            const current = isCurrentStatus(statusId);
+                            const selected = isStatusSelected(statusId);
+                            const previous = isPreviousStatus(statusId);
+                            
+                            return (
+                                <TouchableOpacity
+                                    onPress={() => handleStatusChange(statusId)}
+                                    disabled={!enabled}
+                                    style={[
+                                        styles.statusOption,
+                                        previous && !selected && styles.statusOptionDisabledPrevious,
+                                        selected && styles.statusOptionSelected,
+                                        !enabled && !previous && !selected && styles.statusOptionDisabled
+                                    ]}
+                                >
+                                    <Text style={[
+                                        styles.statusOptionText,
+                                        previous && !selected && styles.statusOptionTextDisabledPrevious,
+                                        selected && styles.statusOptionTextSelected,
+                                        !enabled && !previous && !selected && styles.statusOptionTextDisabled
+                                    ]}>
+                                        Accepted
+                                    </Text>
+                                </TouchableOpacity>
+                            );
+                        })()}
 
                         {/* On The Way To The Patient */}
-                        <TouchableOpacity
-                            onPress={() => handleStatusChange('On The Way To The Patient')}
-                            style={[
-                                styles.statusOption,
-                                selectedStatus === 'On The Way To The Patient' && styles.statusOptionSelected
-                            ]}
-                        >
-                            <Text style={[
-                                styles.statusOptionText,
-                                selectedStatus === 'On The Way To The Patient' && styles.statusOptionTextSelected
-                            ]}>
-                                On The Way To The Patient
-                            </Text>
-                        </TouchableOpacity>
+                        {(() => {
+                            const statusId = STATUS_IDS.ON_THE_WAY;
+                            const enabled = isStatusEnabled(statusId);
+                            const current = isCurrentStatus(statusId);
+                            const selected = isStatusSelected(statusId);
+                            const previous = isPreviousStatus(statusId);
+                            
+                            return (
+                                <TouchableOpacity
+                                    onPress={() => handleStatusChange(statusId)}
+                                    disabled={!enabled}
+                                    style={[
+                                        styles.statusOption,
+                                        previous && styles.statusOptionDisabledPrevious,
+                                        selected && enabled && styles.statusOptionSelected,
+                                        !enabled && !previous && styles.statusOptionDisabled
+                                    ]}
+                                >
+                                    <Text style={[
+                                        styles.statusOptionText,
+                                        previous && styles.statusOptionTextDisabledPrevious,
+                                        selected && enabled && styles.statusOptionTextSelected,
+                                        !enabled && !previous && styles.statusOptionTextDisabled
+                                    ]}>
+                                        On The Way To The Patient
+                                    </Text>
+                                </TouchableOpacity>
+                            );
+                        })()}
 
                         {/* In Progress */}
-                        <TouchableOpacity
-                            onPress={() => handleStatusChange('In Progress')}
-                            style={[
-                                styles.statusOption,
-                                selectedStatus === 'In Progress' && styles.statusOptionSelected
-                            ]}
-                        >
-                            <Text style={[
-                                styles.statusOptionText,
-                                selectedStatus === 'In Progress' && styles.statusOptionTextSelected
-                            ]}>
-                                In Progress
-                            </Text>
-                            <Text style={styles.statusSubtext}>Continuing Number Of Sessions</Text>
-                        </TouchableOpacity>
+                        {(() => {
+                            const statusId = STATUS_IDS.IN_PROGRESS;
+                            const enabled = isStatusEnabled(statusId);
+                            const current = isCurrentStatus(statusId);
+                            const selected = isStatusSelected(statusId);
+                            const previous = isPreviousStatus(statusId);
+                            
+                            return (
+                                <TouchableOpacity
+                                    onPress={() => handleStatusChange(statusId)}
+                                    disabled={!enabled}
+                                    style={[
+                                        styles.statusOption,
+                                        previous && styles.statusOptionDisabledPrevious,
+                                        selected && enabled && styles.statusOptionSelected,
+                                        !enabled && !previous && styles.statusOptionDisabled
+                                    ]}
+                                >
+                                    <Text style={[
+                                        styles.statusOptionText,
+                                        previous && styles.statusOptionTextDisabledPrevious,
+                                        selected && enabled && styles.statusOptionTextSelected,
+                                        !enabled && !previous && styles.statusOptionTextDisabled
+                                    ]}>
+                                        In Progress
+                                    </Text>
+                                    <Text style={styles.statusSubtext}>Continuing Number Of Sessions</Text>
+                                </TouchableOpacity>
+                            );
+                        })()}
 
                         {/* Complete */}
-                        <TouchableOpacity
-                            onPress={() => handleStatusChange('Complete')}
-                            style={[
-                                styles.statusOption,
-                                selectedStatus === 'Complete' && styles.statusOptionSelected
-                            ]}
-                        >
-                            <Text style={[
-                                styles.statusOptionText,
-                                selectedStatus === 'Complete' && styles.statusOptionTextSelected
-                            ]}>
-                                Complete
-                            </Text>
-                        </TouchableOpacity>
+                        {(() => {
+                            const statusId = STATUS_IDS.COMPLETE;
+                            const enabled = isStatusEnabled(statusId);
+                            const current = isCurrentStatus(statusId);
+                            const selected = isStatusSelected(statusId);
+                            const previous = isPreviousStatus(statusId);
+                            
+                            return (
+                                <TouchableOpacity
+                                    onPress={() => handleStatusChange(statusId)}
+                                    disabled={!enabled}
+                                    style={[
+                                        styles.statusOption,
+                                        previous && !selected && styles.statusOptionDisabledPrevious,
+                                        selected && styles.statusOptionSelected,
+                                        !enabled && !previous && !selected && styles.statusOptionDisabled
+                                    ]}
+                                >
+                                    <Text style={[
+                                        styles.statusOptionText,
+                                        previous && !selected && styles.statusOptionTextDisabledPrevious,
+                                        selected && styles.statusOptionTextSelected,
+                                        !enabled && !previous && !selected && styles.statusOptionTextDisabled
+                                    ]}>
+                                        Complete
+                                    </Text>
+                                </TouchableOpacity>
+                            );
+                        })()}
 
                         {/* Incomplete */}
-                        <TouchableOpacity
-                            onPress={() => handleStatusChange('Incomplete')}
-                            style={[
-                                styles.statusOption,
-                                selectedStatus === 'Incomplete' && styles.statusOptionSelected
-                            ]}
-                        >
-                            <Text style={[
-                                styles.statusOptionText,
-                                selectedStatus === 'Incomplete' && styles.statusOptionTextSelected
-                            ]}>
-                                Incomplete
-                            </Text>
-                        </TouchableOpacity>
-                        {/* Reason Field - Only shown when Incomplete is selected */}
-                        {selectedStatus === 'Incomplete' && (
-                            <View style={styles.reasonContainer}>
-                                <Text style={styles.reasonLabel}>Reason</Text>
-                                <TextInput
-                                    style={styles.reasonInput}
-                                    placeholder="Enter reason for incomplete status"
-                                    placeholderTextColor="#999"
-                                    value={incompleteReason}
-                                    onChangeText={setIncompleteReason}
-                                    multiline={true}
-                                    numberOfLines={4}
-                                    textAlignVertical="top"
-                                />
-                            </View>
-                        )}
+                        {(() => {
+                            const statusId = STATUS_IDS.INCOMPLETE;
+                            const enabled = isStatusEnabled(statusId);
+                            const current = isCurrentStatus(statusId);
+                            const selected = isStatusSelected(statusId);
+                            const previous = isPreviousStatus(statusId);
+                            
+                            return (
+                                <>
+                                    <TouchableOpacity
+                                        onPress={() => handleStatusChange(statusId)}
+                                        disabled={!enabled}
+                                        style={[
+                                            styles.statusOption,
+                                            previous && styles.statusOptionDisabledPrevious,
+                                            selected && enabled && styles.statusOptionSelected,
+                                            !enabled && !previous && styles.statusOptionDisabled
+                                        ]}
+                                    >
+                                        <Text style={[
+                                            styles.statusOptionText,
+                                            previous && styles.statusOptionTextDisabledPrevious,
+                                            selected && enabled && styles.statusOptionTextSelected,
+                                            !enabled && !previous && styles.statusOptionTextDisabled
+                                        ]}>
+                                            Incomplete
+                                        </Text>
+                                    </TouchableOpacity>
+                                    {/* Reason Field - Only shown when Incomplete is selected */}
+                                    {selected && enabled && (
+                                        <View style={styles.reasonContainer}>
+                                            <Text style={styles.reasonLabel}>Reason</Text>
+                                            <TextInput
+                                                style={[styles.reasonInput, errorIncompleteReason && { borderColor: '#ef4444' }]}
+                                                placeholder="Enter reason for incomplete status"
+                                                placeholderTextColor="#999"
+                                                value={incompleteReason}
+                                                onChangeText={setIncompleteReason}
+                                                multiline={true}
+                                                numberOfLines={4}
+                                                textAlignVertical="top"
+                                            />
+                                        </View>
+                                    )}
+                                </>
+                            );
+                        })()}
                     </ScrollView>
 
 
@@ -583,9 +792,12 @@ const TaskDetailTab: React.FC<TaskDetailTabProps> = ({ data }) => {
                     {/* Save Button */}
                     <TouchableOpacity
                         onPress={updateOrderStatus}
-                        style={styles.saveButton}
+                        style={[styles.saveButton, selectedStatusId == STATUS_IDS.ON_THE_WAY && { backgroundColor: '#f2af42' }]}
                     >
-                        <Text style={styles.saveButtonText}>Save</Text>
+                        {selectedStatusId == STATUS_IDS.ON_THE_WAY ? <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                            <Image source={require('../../../assets/images/googleMap.png')} style={styles.socialIcon} />
+                            <Text style={styles.saveButtonText}>Save & Get Directions & Show Routes</Text>
+                        </View> : <Text style={styles.saveButtonText}>Save</Text>}
                     </TouchableOpacity>
                 </View>
             </CustomBottomSheet>
@@ -835,26 +1047,45 @@ const styles = StyleSheet.create({
     statusOption: {
         backgroundColor: '#fff',
         borderWidth: 1,
-        borderColor: '#e0e0e0',
+        borderColor: '#ddd',
         borderRadius: 8,
         paddingVertical: 10,
         paddingHorizontal: 16,
-        // minHeight: 45,
         justifyContent: 'center',
     },
     statusOptionSelected: {
-        backgroundColor: '#e6f8eb',
-        borderColor: '#54b196',
+        backgroundColor: '#e4f1ef',
+        borderColor: '#e4f1ef',
         borderWidth: 1,
+    },
+    statusOptionDisabledPrevious: {
+        backgroundColor: '#b6eae2',
+        borderColor: '#b6eae2',
+        borderWidth: 1,
+    },
+    statusOptionDisabled: {
+        backgroundColor: '#fff',
+        borderColor: '#ddd',
+        borderWidth: 1,
+        opacity: 0.6,
     },
     statusOptionText: {
         fontSize: 16,
         fontFamily: CAIRO_FONT_FAMILY.medium,
-        color: '#000',
+        color: '#0f0f0f',
     },
     statusOptionTextSelected: {
-        color: '#008b62',
+        color: '#23a2a4',
         fontFamily: CAIRO_FONT_FAMILY.bold,
+    },
+    statusOptionTextDisabledPrevious: {
+        color: '#38a423',
+        fontFamily: CAIRO_FONT_FAMILY.medium,
+    },
+    statusOptionTextDisabled: {
+        color: '#0f0f0f',
+        fontFamily: CAIRO_FONT_FAMILY.medium,
+        opacity: 0.6,
     },
     statusSubtext: {
         fontSize: 12,
@@ -873,6 +1104,7 @@ const styles = StyleSheet.create({
     saveButtonText: {
         fontSize: 16,
         fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 24,
         color: '#fff',
     },
     reasonContainer: {

@@ -80,9 +80,9 @@ const DeleteAccountScreen = () => {
             } else if (response?.StatusCode?.STATUSCODE == 3032) {
                 setDeleteAccountError(true);
             } else {
-                dispatch(setUser(null));
                 dispatch(setTopic(null));
                 webSocketService.disconnect();
+                navigation.navigate(ROUTES.DeleteConfirmationScreen as never);
             }
             setIsLoading(false);
         } catch (error: any) {

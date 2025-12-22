@@ -121,6 +121,8 @@ const styles = StyleSheet.create({
     },
     detailLabel: {
         fontSize: 14,
+        fontFamily: CAIRO_FONT_FAMILY.regular,
+        lineHeight: Platform.OS === 'ios' ? 20 : 18,
         color: '#666',
         marginLeft: 8,
         flex: 1,
@@ -128,7 +130,7 @@ const styles = StyleSheet.create({
     detailValue: {
         fontSize: 14,
         fontFamily: CAIRO_FONT_FAMILY.semiBold,
-        lineHeight:Platform.OS === 'ios' ? 0 : 20,
+        lineHeight: Platform.OS === 'ios' ? 20 : 18,
         color: '#000',
     },
     infoButton: {

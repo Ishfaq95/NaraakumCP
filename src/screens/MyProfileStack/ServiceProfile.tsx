@@ -156,7 +156,7 @@ const ServiceProfile = () => {
             >
                 <Text style={styles.menuItemText}>Specialty level</Text>
                 <View style={styles.menuItemRight}>
-                    <View style={[styles.completeBadge, serviceProviderRoleAndSpecialty?.Specialty?.length > 0 ? {backgroundColor: '#198754',paddingVertical: 3,borderRadius: 10} : {backgroundColor: '#ffdcdc',paddingVertical: 3,borderRadius: 10}]}>
+                    <View style={[styles.completeBadge, serviceProviderRoleAndSpecialty?.Specialty?.length > 0 ? {backgroundColor: '#198754',paddingVertical: 0,borderRadius: 10} : {backgroundColor: '#ffdcdc',paddingVertical: 3,borderRadius: 10}]}>
                         <Text style={[styles.completeBadgeText,{color: serviceProviderRoleAndSpecialty?.Specialty?.length > 0 ? '#fff' : '#c50d0d'}]}>{serviceProviderRoleAndSpecialty?.Specialty?.length > 0 ? 'complete' : 'incomplete'}</Text>
                     </View>
                     <Ionicons name="chevron-forward" size={20} color="#666" />
@@ -384,6 +384,8 @@ const ServiceProfile = () => {
         }
     };
 
+    console.log("user?.CatUserRoleId",user?.CatUserRoleId)
+
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.mainContent}>
@@ -395,7 +397,7 @@ const ServiceProfile = () => {
                     
                     <Text style={styles.activateServicesTitle}>Activate Your Services</Text>
                     
-                    {renderServiceCard(
+                    {(user?.CatUserRoleId == 7 || user?.CatUserRoleId == 3) && renderServiceCard(
                         'Online Consultation',
                         <Image source={require('../../assets/icons/RemoteConsultant.png')} resizeMode='contain' style={{width: 50,height: 50}} />,
                         onlineConsultationEnabled,

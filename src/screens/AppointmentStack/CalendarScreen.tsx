@@ -352,6 +352,7 @@ const CalendarScreen: React.FC = () => {
     };
 
     setShowScheduleModal(false)
+    console.log("called 4")
     navigation.navigate(ROUTES.preViewCall, { Data: meetingInfo });
   }
 

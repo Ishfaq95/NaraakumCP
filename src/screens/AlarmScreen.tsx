@@ -25,6 +25,7 @@ const AlarmScreen = () => {
  
   const onPressButton = () => {
     if(data.Subject=="Session Started"){
+      console.log("called 3")
       navigation.navigate(ROUTES.preViewCall,{Data:callData});
     }else{
       navigation.navigate(ROUTES.Home);

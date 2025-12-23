@@ -44,6 +44,7 @@ export default function ({ navigation, route }) {
         <MeetingConsumer
           {...{
             onMeetingLeft: () => {
+              console.log("called 6")
               navigation.navigate(ROUTES.preViewCall);
             },
           }}

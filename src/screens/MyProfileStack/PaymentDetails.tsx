@@ -141,7 +141,7 @@ const PaymentDetailsScreen = () => {
                         }
                         ListEmptyComponent={renderEmptyComponent}
                         contentContainerStyle={styles.flatListContent}
-                        showsVerticalScrollIndicator={false}
+                        showsVerticalScrollIndicator={true}
                         removeClippedSubviews={false}
                         nestedScrollEnabled={true}
                         maxToRenderPerBatch={10}

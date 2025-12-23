@@ -1,4 +1,4 @@
-import {useFocusEffect} from '@react-navigation/native';
+import {useFocusEffect, useNavigation} from '@react-navigation/native';
 import {
   createCameraVideoTrack,
   createMicrophoneAudioTrack,
@@ -6,7 +6,7 @@ import {
   switchAudioDevice,
   useMediaDevice,
 } from '@videosdk.live/react-native-sdk';
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useState, useRef} from 'react';
 import {
   Text,
   TouchableOpacity,
@@ -51,6 +51,7 @@ const PreViewScreen = ({navigation, route}: any) => {
   const [videoSDKToken, setVideoSDKToken] = useState('');
   const [callData,setCallData]=useState('')
   const [isSessionExpired, setIsSessionExpired] = useState(false);
+  const sessionCheckIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const meetingTypes = [
     {key: 'ONE_TO_ONE', value: 'One to One Meeting'},
     {key: 'GROUP', value: 'Group Meeting'},
@@ -213,7 +214,7 @@ const PreViewScreen = ({navigation, route}: any) => {
 
   const disposeVideoTrack = () => {
     setTrack((stream: any) => {
-      stream.getTracks().forEach((track: any) => {
+      stream?.getTracks()?.forEach((track: any) => {
         track.enabled = false;
         return track;
       });
@@ -287,6 +288,10 @@ const PreViewScreen = ({navigation, route}: any) => {
   };
 
   const handleBackPress = async () => {
+    console.log('handleBackPress called - clearing interval');
+    // Clear session expiration check interval
+    clearSessionCheckInterval();
+    
     await disposeVideoTrack();
     navigation.navigate(ROUTES.AppNavigator, {
       screen: ROUTES.AppointmentsStack,
@@ -311,9 +316,19 @@ const PreViewScreen = ({navigation, route}: any) => {
     setMicon(!micOn);
   };
 
+  // Helper function to clear interval
+  const clearSessionCheckInterval = () => {
+    if (sessionCheckIntervalRef.current) {
+      console.log('Clearing session check interval:', sessionCheckIntervalRef.current);
+      clearInterval(sessionCheckIntervalRef.current);
+      sessionCheckIntervalRef.current = null;
+    }
+  };
+
   // Add effect to check session expiration
   useEffect(() => {
     const checkSessionExpiration = () => {
+      console.log("Session expiration check called");
       const now = new Date();
       const endTime = new Date(sessionEndTime);
       setIsSessionExpired(now > endTime);
@@ -324,10 +339,25 @@ const PreViewScreen = ({navigation, route}: any) => {
 
     // Set up interval to check every minute
     const interval = setInterval(checkSessionExpiration, 60000);
+    sessionCheckIntervalRef.current = interval;
+    console.log('Session check interval created:', interval);
 
     // Cleanup interval on unmount
-    return () => clearInterval(interval);
+    return () => {
+      console.log('useEffect cleanup - clearing interval');
+      clearSessionCheckInterval();
+    };
   }, [sessionEndTime]);
+
+  // Add navigation listener to cleanup when navigating away
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('beforeRemove', () => {
+      console.log('Navigation beforeRemove - clearing interval');
+      clearSessionCheckInterval();
+    });
+
+    return unsubscribe;
+  }, [navigation]);
 
   return (
     <SafeAreaView style={{flex: 1, backgroundColor: '#E6ECEC'}}>

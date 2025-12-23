@@ -5,6 +5,9 @@
         <!-- Customize your theme here. -->
         <item name="android:editTextBackground">@drawable/rn_edit_text_material</item>
         <item name="android:windowIsTranslucent">true</item>
+
+        <!-- Global scrollbar thumb color for vertical scrollbars -->
+        <item name="android:scrollbarThumbVertical">@drawable/scrollbar_thumb_vertical</item>
     </style>
 
 </resources>

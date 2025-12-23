@@ -415,6 +415,8 @@ const TaskDetailTab: React.FC<TaskDetailTabProps> = ({ data, RefreshData }) => {
             serviceProviderId: appointment.UserloginInfoId
         };
 
+        console.log("called 5")
+
         navigation.navigate(ROUTES.preViewCall, { Data: meetingInfo });
     }
 

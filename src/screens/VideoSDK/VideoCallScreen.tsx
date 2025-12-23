@@ -240,6 +240,9 @@ const VideoCallScreen = ({
 
   const openStatsBottomSheet = ({pId}) => {};
 
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const sessionEndedRef = useRef(false);
+
   const calculateRemainingTime = () => {
     const time = new Date(sessionStartTime);
     const endTime = new Date(sessionEndTime);
@@ -267,8 +270,16 @@ const VideoCallScreen = ({
         setModalVisible(true);
       }
     } else {
+      if (sessionEndedRef.current) {
+        return;
+      }
+      sessionEndedRef.current = true;
       setRemainingTime(0);
       // End the call when time is up
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
       onPressHangUp();
     }
   };
@@ -284,12 +295,22 @@ const VideoCallScreen = ({
       .padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  useEffect(() => {
-    const timer = setInterval(calculateRemainingTime, 1000);
+useEffect(() => {
+    sessionEndedRef.current = false;
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    timerRef.current = setInterval(calculateRemainingTime, 1000);
 
-    // Cleanup interval on component unmount
-    return () => clearInterval(timer);
-  }, [sessionStartTime]);
+    // Cleanup interval on component unmount or when deps change
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [sessionStartTime, sessionEndTime]);
 
   const dragPosition = useRef(new Animated.ValueXY()).current;
 

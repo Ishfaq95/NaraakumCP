@@ -74,7 +74,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
 
       <View style={styles.progressContainer}>
         <View style={styles.progressBar}>
-          <View style={[styles.progress, { width: `${completionPercentage}%` }]} />
+          <View style={[styles.progress,completionPercentage != 100 && {backgroundColor: '#F29F3F'}, { width: `${completionPercentage}%` }]} />
         </View>
         <Text style={styles.progressText}>{completionPercentage}%</Text>
       </View>
@@ -86,7 +86,8 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: '#FFFFFF',
     borderRadius: 10,
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -98,7 +99,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     width: '100%',
-    marginBottom: 16,
+    marginBottom: 6,
   },
   profileSection: {
     flexDirection: 'row',

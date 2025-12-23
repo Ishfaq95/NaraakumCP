@@ -199,7 +199,7 @@ const MyProfileScreen = () => {
       />
       <View style={{ flex: 1, backgroundColor: '#e4f1ef' }}>
         <View style={{ height: 100, backgroundColor: '#23a2a4' }} />
-        <View style={{ flex: 1, paddingHorizontal: 16, marginTop: -80 }}>
+        <View style={{ flex: 1, paddingHorizontal: 12, marginTop: -80 }}>
           {/* Profile Header */}
           <ProfileHeader
             name={serviceProvider?.FullNamePlang}

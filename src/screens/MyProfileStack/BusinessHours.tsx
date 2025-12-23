@@ -92,6 +92,8 @@ const BusinessHours = ({ route }: { route: any }) => {
             
             const response = await profileService.addServiceProviderHolidays(payload);
             if (response?.ResponseStatus?.STATUSCODE == 200) {
+                getServiceProviderHolidays();
+                getServiceProviderAvailability(selectedMonth);
                 showAlert({
                     title: response?.ResponseStatus?.MESSAGE,
                     message: '',

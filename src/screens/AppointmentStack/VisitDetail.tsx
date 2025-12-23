@@ -44,7 +44,7 @@ const VisitDetailScreen = ({ route }: any) => {
                 <Text style={styles.headerTitle}>{taskDetail?.LoginUserFullnamePlang || 'Visit Details'}</Text>
             </View>
             <View style={{}}>
-                <TouchableOpacity onPress={() => callPatient()} style={{ backgroundColor: '#2ab318', paddingHorizontal: 20, paddingVertical: 10, borderRadius: 15, marginRight: 10, alignItems: 'center', justifyContent: 'center' }}>
+                <TouchableOpacity onPress={() => callPatient()} style={{ backgroundColor: '#2ab318', paddingHorizontal: 20, paddingVertical: 10, borderRadius: 15,  alignItems: 'center', justifyContent: 'center' }}>
                     <FontAwesome6 name="phone-volume" size={12} color="#fff" />
                 </TouchableOpacity>
             </View>
@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         height: 56,
         backgroundColor: '#fff',
-        // paddingHorizontal: 16,
+        paddingHorizontal: 16,
         elevation: 2,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
@@ -143,14 +143,15 @@ const styles = StyleSheet.create({
         shadowRadius: 3,
     },
     backButton: {
-        padding: 5,
+        // padding: 5,
         // marginRight: 12,
     },
     headerTitle: {
         fontSize: 17,
         fontFamily: CAIRO_FONT_FAMILY.bold,
-        lineHeight: 20,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#333',
+        paddingLeft: 4,
     },
     tabContainer: {
         flexDirection: 'row',

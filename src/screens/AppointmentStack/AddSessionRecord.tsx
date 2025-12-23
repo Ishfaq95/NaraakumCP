@@ -234,6 +234,7 @@ const AddSessionRecord = ({ route }: { route: any }) => {
                 return (
                     <Step4Treatment
                         // onComplete={handleComplete}
+                        patientData={patientData}
                         onPrevious={handlePrevious}
                         data={formData.step4}
                         onDataChange={handleSaveAndComplete}

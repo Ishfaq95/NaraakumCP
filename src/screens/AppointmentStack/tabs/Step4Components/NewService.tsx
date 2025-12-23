@@ -7,8 +7,13 @@ import {
   ScrollView,
   FlatList,
   TouchableOpacity,
+  Platform,
 } from 'react-native';
-import { globalTextStyles } from '../../../../styles/globalStyles';
+import { CAIRO_FONT_FAMILY, globalTextStyles } from '../../../../styles/globalStyles';
+import { useNavigation } from '@react-navigation/native';
+import { ROUTES } from '../../../../shared/utils/routes';
+import { addVisitRecordService } from '../../../../services/api/addVisitRecord';
+import { useSelector } from 'react-redux';
 
 export interface NewServiceData {
   serviceName?: string;
@@ -17,33 +22,112 @@ export interface NewServiceData {
 
 interface NewServiceProps { 
   onDataChange?: (data: NewServiceData) => void;
+  patientData: any;
 }
 
-const NewService: React.FC<NewServiceProps> = ({ onDataChange }) => {
-  const [services, setServices] = useState<string[]>([]);
+const NewService: React.FC<NewServiceProps> = ({ patientData, onDataChange }) => {
+  const [services, setServices] = useState<any[]>([]);
+  const navigation = useNavigation();
+  const visitmainId: any = useSelector((state: any) => state.root.generalData.visitmainId);
+
+  useEffect(() => {
+    getOrderListAddedByServiceProvider();
+  }, []);
+
+  const getOrderListAddedByServiceProvider = async () => {
+    const payload = {
+      UserloginInfoId: patientData?.UserLoginInfoId,
+      CPUserloginInfoId:patientData?.ServiceProviderID,
+      VisitMainId:visitmainId,
+    };
+    const response = await addVisitRecordService.getOrderListAddedByServiceProvider(payload);
+    if (response?.ResponseStatus?.STATUSCODE == 200) {
+      setServices(response.UserOrders);
+    }
+  };
+
+  const onAddService = () => {
+    navigation.navigate(ROUTES.BookNewService as never, { Patient: patientData });
+  }
+
+  const renderServiceItem = (item: any) => {
+    const orderDate = item?.OrderDate
+      ? new Date(item.OrderDate)
+      : null;
+
+    const formattedDate = orderDate
+      ? `${orderDate.getDate().toString().padStart(2, '0')}/${(orderDate.getMonth() + 1)
+          .toString()
+          .padStart(2, '0')}/${orderDate.getFullYear()}`
+      : '-';
+
+    return (
+      <View style={styles.card}>
+        {/* Added By */}
+        <View style={styles.row}>
+          <Text style={styles.label}>Added By</Text>
+          <Text style={styles.value}>{item?.ORGTitlePlang || '-'}</Text>
+        </View>
+
+        {/* Order No. */}
+        <View style={styles.row}>
+          <Text style={styles.label}>Order No.</Text>
+          <Text style={styles.value}>{item?.OrderID || '-'}</Text>
+        </View>
+
+        {/* Order Date */}
+        <View style={styles.row}>
+          <Text style={styles.label}>Order Date</Text>
+          <Text style={styles.value}>{formattedDate}</Text>
+        </View>
+
+        {/* Services */}
+        <View style={styles.row}>
+          <Text style={styles.label}>Services</Text>
+          <Text style={styles.value}>{item?.Service ?? '-'}</Text>
+        </View>
+
+        {/* Total Invoice */}
+        <View style={styles.row}>
+          <Text style={styles.label}>Total Invoice</Text>
+          <Text style={styles.valueStrong}>{`${item?.TotalPrice ?? '0.00'} SAR`}</Text>
+        </View>
+
+        {/* Show Details Button */}
+        <TouchableOpacity
+          style={styles.detailsButton}
+          onPress={() => {
+            // TODO: Navigate to order details screen when available
+          }}
+        >
+          <Text style={styles.detailsButtonText}>Show Details</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  };
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}
-      keyboardShouldPersistTaps="handled"
+    <View
+      style={[styles.container,styles.content]}
+      // contentContainerStyle={styles.content}
+      // showsVerticalScrollIndicator={false}
+      // keyboardShouldPersistTaps="handled"
     >
        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
         <Text style={{ ...globalTextStyles.h5, color: '#1a3c40' }}>Orders List</Text>
-        <TouchableOpacity style={{ backgroundColor: '#179c8e', padding: 10, borderRadius: 10 }}>
+        <TouchableOpacity onPress={onAddService} style={{ backgroundColor: '#179c8e', padding: 10, borderRadius: 10 }}>
           <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>Add Services</Text>
         </TouchableOpacity>
       </View>
-      <View style={{flex:1}}>
+      <View style={{flex:1,marginTop: 12}}>
         <FlatList
           data={services}
-          renderItem={({ item }) => <Text>{item}</Text>}
-          keyExtractor={(item) => item.toString()}
+          renderItem={({ item }) => renderServiceItem(item)}
+          keyExtractor={(item) => item?.OrderID?.toString() ?? Math.random().toString()}
           ListEmptyComponent={<View style={{flex:1,marginTop: '30%', justifyContent: 'center', alignItems: 'center'}}><Text style={{...globalTextStyles.bodyMedium, color: '#1a3c40'}}>No services added</Text></View>}
         />
       </View>
-    </ScrollView>
+    </View>
   );
 };
 
@@ -56,7 +140,9 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
   },
   sectionTitle: {
-    ...globalTextStyles.h5,
+    fontSize: 18,
+    fontFamily: CAIRO_FONT_FAMILY.bold,
+    lineHeight: 20,
     color: '#1a3c40',
     marginBottom: 20,
   },
@@ -68,14 +154,49 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 16,
   },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
   label: {
-    ...globalTextStyles.bodySmall,
+    fontSize: 14,
+    fontFamily: CAIRO_FONT_FAMILY.medium,
+    lineHeight: 20,
     color: '#1a2c32',
-    fontWeight: '600',
-    marginBottom: 8,
+  },
+  value: {
+    fontSize: 14,
+    fontFamily: CAIRO_FONT_FAMILY.bold,
+    lineHeight: 20,
+    color: '#000',
+  },
+  valueStrong: {
+    fontSize: 14,
+    fontFamily: CAIRO_FONT_FAMILY.bold,
+    lineHeight: 20,
+    color: '#000',
+  },
+  detailsButton: {
+    marginTop: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#18a0a4',
+    paddingVertical: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  detailsButtonText: {
+    fontSize: 14,
+    fontFamily: CAIRO_FONT_FAMILY.bold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
+    color: '#18a0a4',
   },
   singleLine: {
-    ...globalTextStyles.bodyMedium,
+    fontSize: 14,
+    fontFamily: CAIRO_FONT_FAMILY.bold,
+    lineHeight: 20,
     color: '#1a2c32',
     borderWidth: 1,
     borderColor: '#dce5e4',
@@ -86,7 +207,9 @@ const styles = StyleSheet.create({
   },
   textArea: {
     minHeight: 120,
-    ...globalTextStyles.bodyMedium,
+    fontSize: 14,
+    fontFamily: CAIRO_FONT_FAMILY.bold,
+    lineHeight: 20,
     color: '#1a2c32',
   },
 });

@@ -4,6 +4,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import { MediaBaseURL } from '../../shared/utils/constants';
 import { CAIRO_FONT_FAMILY } from '../../styles/globalStyles';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import FastImage from 'react-native-fast-image';
 
 interface ProfileHeaderProps {
   name: string;
@@ -43,9 +44,13 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
     <View style={styles.container}>
       <View style={styles.header}>
         <View style={styles.profileSection}>
-          {profileImage ? <Image
-            source={profileImage ? { uri: `${MediaBaseURL}${profileImage}` } : require('../../assets/icons/doctor-vector.svg')}
+          {profileImage ? <FastImage
+            source={{ 
+              uri: `${MediaBaseURL}${profileImage}`,
+              priority: FastImage.priority.normal
+            }}
             style={styles.profileImage}
+            resizeMode={FastImage.resizeMode.cover}
           /> :
             <View style={{ width: 50, height: 50, borderRadius: 25, alignItems: 'center', justifyContent: 'center', backgroundColor: '#DDDDDD' }} >
               <Ionicons name="person" size={28} color="#AFAFAF" />

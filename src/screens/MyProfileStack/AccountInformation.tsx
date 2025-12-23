@@ -19,6 +19,7 @@ import EmailUpdateComponent, { VerificationCodeCompoent } from '../../components
 import { launchImageLibrary, launchCamera, ImagePickerResponse, Asset } from 'react-native-image-picker';
 import { PERMISSIONS, request, RESULTS } from 'react-native-permissions';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import FastImage from 'react-native-fast-image';
 
 const genders = [
     { label: 'Male', value: 'male' },
@@ -463,7 +464,11 @@ const AccountInformationScreen = () => {
     };
 
     const renderHeader = () => (
-        <View style={{ flexDirection: 'row', alignItems: 'center', height: 50, backgroundColor: '#fff', padding: 10 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', height: 50, backgroundColor: '#fff',paddingHorizontal: 10,elevation: 2,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.1,
+            shadowRadius: 3, }}>
             <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
                 <Ionicons name="arrow-back-outline" size={24} color="#333" />
 
@@ -824,9 +829,13 @@ const AccountInformationScreen = () => {
                 <View style={{ flex: 1, paddingHorizontal: 16, marginTop: -70 }}>
                     <View style={{ height: 80, marginTop: 50, backgroundColor: '#fff', borderRadius: 10, padding: 10, justifyContent: 'center', alignItems: 'center' }}>
                         <View style={{ position: 'absolute', height: 100, borderWidth: 2, borderColor: '#fff', width: 100, bottom: 50, backgroundColor: '#999', borderRadius: 50, }}>
-                            <Image
-                                source={{ uri: tempImageUri || (profileImage ? `${MediaBaseURL}${profileImage}` : '') }}
+                            <FastImage
+                                source={{ 
+                                    uri: tempImageUri || (profileImage ? `${MediaBaseURL}${profileImage}` : ''),
+                                    priority: FastImage.priority.normal
+                                }}
                                 style={{ width: '100%', height: '100%', borderRadius: 50 }}
+                                resizeMode={FastImage.resizeMode.cover}
                             />
                             {isUploading && (
                                 <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 50, justifyContent: 'center', alignItems: 'center' }}>

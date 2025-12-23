@@ -151,6 +151,25 @@ export const deleteVisitPatientLabXRay = async (credentials: any) => {
     }
 };
 
+export const getOrderListAddedByServiceProvider = async (credentials: any) => {
+    try {
+        const response = await axiosInstance.post(
+            `visitRecord/GetOrderListAddedByServiceProvider`,
+            credentials
+        );
+        return response.data;
+    }
+    catch (error: any) {
+        throw {
+            message: error?.response?.data?.message || 'Get order list added by service provider failed',
+            status: error?.response?.status,
+            code: error?.response?.data?.code
+        };
+    }
+};
+
+
+
 // Export all appointment related functions
 export const addVisitRecordService = {
     addVisitMain,
@@ -162,4 +181,5 @@ export const addVisitRecordService = {
     addEditVisitPatientLabXRay,
     getAllFileTypes,
     deleteVisitPatientLabXRay,
+    getOrderListAddedByServiceProvider,
 }; 

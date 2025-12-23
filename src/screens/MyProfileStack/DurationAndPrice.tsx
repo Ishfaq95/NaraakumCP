@@ -79,13 +79,13 @@ const DurationAndPrice = ({ route }: { route: any }) => {
     };
 
     const handleVisitPriceChange = (text: string) => {
-        const value = clampNumberInput(text, 1, 100000);
+        const value = clampNumberInput(text, 1, 99999);
         setVisitPrice(value);
         setErrors(prev => ({ ...prev, visitPrice: false }));
     };
 
     const handleNursePriceChange = (text: string) => {
-        const value = clampNumberInput(text, 1, 100000);
+        const value = clampNumberInput(text, 1, 99999);
         setNursePrice(value);
         setErrors(prev => ({ ...prev, nursePrice: false }));
     };

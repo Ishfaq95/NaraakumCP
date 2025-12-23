@@ -19,6 +19,7 @@ import SvgUri from 'react-native-svg-uri';
 interface Step4Props {
   // onComplete: () => void;
   onPrevious: () => void;
+  patientData: any;
   data?: {
     procedures?: ProceduresData;
     prescription?: PrescriptionData;
@@ -39,7 +40,7 @@ type TabType =
   | 'notes';
 
 const Step4Treatment: React.FC<Step4Props> = ({
-  // onComplete,
+  patientData,
   onPrevious,
   data,
   onDataChange,
@@ -115,7 +116,7 @@ const Step4Treatment: React.FC<Step4Props> = ({
         );
       case 'newService':
         return (
-          <NewService onDataChange={(data) => handleSubDataChange('newService', data)} />
+          <NewService patientData={patientData} onDataChange={(data) => handleSubDataChange('newService', data)} />
         );
       case 'referralConsultation':
         return (

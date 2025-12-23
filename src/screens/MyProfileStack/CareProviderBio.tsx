@@ -42,7 +42,11 @@ const CareProviderBioScreen = () => {
     };
 
     const renderHeader = () => (
-        <View style={{ flexDirection: 'row', alignItems: 'center', height: 50, backgroundColor: '#fff', padding: 10 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', height: 50, backgroundColor: '#fff', paddingHorizontal: 10,elevation: 2,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.1,
+            shadowRadius: 3, }}>
             <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
                 <Ionicons name="arrow-back-outline" size={24} color="#333" />
 

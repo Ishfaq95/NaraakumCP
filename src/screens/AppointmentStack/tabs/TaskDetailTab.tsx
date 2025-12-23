@@ -1,5 +1,5 @@
-import React, { useCallback, useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, TextInput, Linking, Platform } from 'react-native';
+import React, { useCallback, useState, useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, TextInput, Linking, Platform, Keyboard, KeyboardAvoidingView } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { CAIRO_FONT_FAMILY, globalTextStyles } from '../../../styles/globalStyles';
@@ -13,6 +13,7 @@ import { MediaBaseURL } from '../../../shared/utils/constants';
 import moment from 'moment';
 import { ROUTES } from '../../../shared/utils/routes';
 import { useNavigation } from '@react-navigation/native';
+import FastImage from 'react-native-fast-image';
 
 interface TaskDetailTabProps {
     data: any;
@@ -55,11 +56,37 @@ const TaskDetailTab: React.FC<TaskDetailTabProps> = ({ data, RefreshData }) => {
     const navigation = useNavigation();
     const user = useSelector((state: any) => state.root.user.user);
     const [errorIncompleteReason, setErrorIncompleteReason] = useState(false);
+    const [orderStatusBottomSheetHeight, setOrderStatusBottomSheetHeight] = useState('60%');
+    const [keyboardHeight, setKeyboardHeight] = useState(0);
+    const scrollViewRef = useRef<ScrollView>(null);
+    const reasonInputRef = useRef<TextInput>(null);
+    const reasonContainerRef = useRef<View>(null);
+    const reasonInputLayoutRef = useRef({ y: 0, height: 0 });
     // Get current status ID from data and convert to number (API returns as string)
     const currentStatusId = data?.CatOrderStatusId ? Number(data.CatOrderStatusId) : null;
- 
+
     console.log("Current Status ID", selectedStatusId, currentStatusId);
-    
+
+    useEffect(() => {
+        const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', (e) => {
+            if(Platform.OS === 'ios') {
+                setKeyboardHeight(e.endCoordinates.height);
+                setOrderStatusBottomSheetHeight('90%');
+            }
+        });
+        const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
+            if(Platform.OS === 'ios') {
+                setKeyboardHeight(0);
+                setOrderStatusBottomSheetHeight('60%');
+            }
+        });
+
+        return () => {
+            keyboardDidShowListener.remove();
+            keyboardDidHideListener.remove();
+        };
+    }, []);
+
     // Initialize selected status ID when bottom sheet opens
     useEffect(() => {
         if (isBottomSheetVisible && currentStatusId) {
@@ -105,7 +132,7 @@ const TaskDetailTab: React.FC<TaskDetailTabProps> = ({ data, RefreshData }) => {
     // Determine which statuses are enabled based on current status ID
     const getEnabledStatusIds = (currentId: number | null): number[] => {
         if (!currentId) return [];
-        
+
         switch (currentId) {
             case STATUS_IDS.ACCEPTED: // 17
                 return [STATUS_IDS.ACCEPTED, STATUS_IDS.ON_THE_WAY]; // 17 and 7 enabled
@@ -133,10 +160,10 @@ const TaskDetailTab: React.FC<TaskDetailTabProps> = ({ data, RefreshData }) => {
     // Get all previous statuses in the sequence based on current status
     const getPreviousStatusIds = (currentId: number | null): number[] => {
         if (!currentId) return [];
-        
+
         const currentIndex = STATUS_SEQUENCE.indexOf(currentId);
         if (currentIndex === -1 || currentIndex === 0) return [];
-        
+
         // Return all statuses before the current one in the sequence
         return STATUS_SEQUENCE.slice(0, currentIndex);
     };
@@ -157,17 +184,17 @@ const TaskDetailTab: React.FC<TaskDetailTabProps> = ({ data, RefreshData }) => {
     // Note: If current and selected are the same, it should show as selected, not previous
     const isPreviousStatus = (statusId: number): boolean => {
         if (!currentStatusId) return false;
-        
+
         // Don't show as previous if it's currently selected
         if (selectedStatusId != null && selectedStatusId == statusId) {
             return false;
         }
-        
+
         // Case 1: API current status but user selected different status
         if (currentStatusId == statusId && selectedStatusId != null && selectedStatusId != statusId) {
             return true;
         }
-        
+
         // Case 2: Status comes before current status in sequence
         const previousStatuses = getPreviousStatusIds(currentStatusId);
         return previousStatuses.includes(statusId);
@@ -190,7 +217,7 @@ const TaskDetailTab: React.FC<TaskDetailTabProps> = ({ data, RefreshData }) => {
                 return;
             }
         }
-        
+
         const payload = {
             CatOrderStatusId: selectedStatusId,
             OrderDetailIds: data.Detail[0].OrderDetailID,
@@ -337,59 +364,59 @@ const TaskDetailTab: React.FC<TaskDetailTabProps> = ({ data, RefreshData }) => {
         const appointmentDate = moment.utc(appointment?.SchedulingDate).local();
         const startTime = moment.utc(appointment?.SchedulingTime.split('T')[1], 'HH:mm').local();
         const endTime = moment.utc(appointment?.SchedulingEndTime, 'HH:mm').local();
-    
+
         startTime.set({
-          year: appointmentDate.year(),
-          month: appointmentDate.month(),
-          date: appointmentDate.date()
+            year: appointmentDate.year(),
+            month: appointmentDate.month(),
+            date: appointmentDate.date()
         });
         endTime.set({
-          year: appointmentDate.year(),
-          month: appointmentDate.month(),
-          date: appointmentDate.date()
+            year: appointmentDate.year(),
+            month: appointmentDate.month(),
+            date: appointmentDate.date()
         });
-    
+
         return now.isSameOrAfter(startTime) &&
-          now.isBefore(endTime) &&
-          now.isSame(appointmentDate, 'day');
-      }, []);
+            now.isBefore(endTime) &&
+            now.isSame(appointmentDate, 'day');
+    }, []);
 
     const handleJoinMeeting = (appointment: any) => {
         // Parse the date and time separately
         const date = moment.utc(appointment.SchedulingDate);
         const [startHours, startMinutes] = appointment.SchedulingTime.split(':');
         const [endHours, endMinutes] = appointment.SchedulingEndTime.split(':');
-    
+
         // Create UTC moments with the correct time
         let startTimeUTC = moment.utc(date).set({
-          hours: parseInt(startHours),
-          minutes: parseInt(startMinutes)
+            hours: parseInt(startHours),
+            minutes: parseInt(startMinutes)
         });
-    
+
         let endDateTimeUTC = moment.utc(date).set({
-          hours: parseInt(endHours),
-          minutes: parseInt(endMinutes)
+            hours: parseInt(endHours),
+            minutes: parseInt(endMinutes)
         });
-    
+
         // Convert to local time
         let startTimeLocal = startTimeUTC.local();
         let endTimeLocal = endDateTimeUTC.local();
-    
+
         let meetingInfo = {
-          toUserId: appointment.PatientUserProfileInfoId,
-          sessionStartTime: startTimeLocal.toISOString(),
-          bookingId: appointment.Detail[0].TaskMainId,
-          patientProfileId: appointment.PatientUserProfileInfoId,
-          meetingId: appointment.VideoSDKMeetingID,
-          Name: appointment.PatientPlang,
-          displayName: user?.OrgTitlePlang,
-          sessionEndTime: endTimeLocal.toISOString(),
-          patientId: appointment.PatientUserProfileInfoId,
-          serviceProviderId: appointment.UserloginInfoId
+            toUserId: appointment.PatientUserProfileInfoId,
+            sessionStartTime: startTimeLocal.toISOString(),
+            bookingId: appointment.Detail[0].TaskMainId,
+            patientProfileId: appointment.PatientUserProfileInfoId,
+            meetingId: appointment.VideoSDKMeetingID,
+            Name: appointment.PatientPlang,
+            displayName: user?.OrgTitlePlang,
+            sessionEndTime: endTimeLocal.toISOString(),
+            patientId: appointment.PatientUserProfileInfoId,
+            serviceProviderId: appointment.UserloginInfoId
         };
-    
+
         navigation.navigate(ROUTES.preViewCall, { Data: meetingInfo });
-      }
+    }
 
     return (
         <View style={{ flex: 1 }}>
@@ -495,13 +522,13 @@ const TaskDetailTab: React.FC<TaskDetailTabProps> = ({ data, RefreshData }) => {
                         </Text>
                     </View> :
                         <>
-                            <View style={{paddingBottom: 10}}>
-                            <View style={styles.sessionRow}>
-                                <Ionicons name="location-outline" size={20} color="#0d9488" />
-                                <Text style={{ fontSize: 14, color: '#000', fontFamily: CAIRO_FONT_FAMILY.bold, lineHeight: 20, textAlign: 'left', flex: 1, marginLeft: 10 }}>{data.Address}</Text>
-                                
-                            </View>
-                            <Text style={{ fontSize: 14, color: '#666', fontFamily: CAIRO_FONT_FAMILY.bold, lineHeight: 20, textAlign: 'left', flex: 1, marginLeft: 30 }}>{data?.AddressDescription}</Text>
+                            <View style={{ paddingBottom: 10 }}>
+                                <View style={styles.sessionRow}>
+                                    <Ionicons name="location-outline" size={20} color="#0d9488" />
+                                    <Text style={{ fontSize: 14, color: '#000', fontFamily: CAIRO_FONT_FAMILY.bold, lineHeight: 20, textAlign: 'left', flex: 1, marginLeft: 10 }}>{data.Address}</Text>
+
+                                </View>
+                                <Text style={{ fontSize: 14, color: '#666', fontFamily: CAIRO_FONT_FAMILY.bold, lineHeight: 20, textAlign: 'left', flex: 1, marginLeft: 30 }}>{data?.AddressDescription}</Text>
                             </View>
                             <TouchableOpacity onPress={() => setOpenGoogleMapBottomSheet(true)} style={{ borderWidth: 1, borderColor: '#23a2a4', flexDirection: 'row', borderRadius: 20, alignItems: 'center', justifyContent: 'center', padding: 8 }}>
                                 <Image source={require('../../../assets/images/googleMap.png')} style={styles.socialIcon} />
@@ -573,7 +600,7 @@ const TaskDetailTab: React.FC<TaskDetailTabProps> = ({ data, RefreshData }) => {
                 <TouchableOpacity
                     onPress={() => handleJoinMeeting(data)}
                     disabled={!checkTimeCondition(data)}
-                    style={[{ marginHorizontal: 16, marginBottom: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',  padding: 10, borderRadius: 8 },checkTimeCondition(data) ? styles.callBtnEnabled : {backgroundColor: '#0F0F0F', opacity: 0.5}]}
+                    style={[{ marginHorizontal: 16, marginBottom: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 10, borderRadius: 8 }, checkTimeCondition(data) ? styles.callBtnEnabled : { backgroundColor: '#0F0F0F', opacity: 0.5 }]}
                 >
                     <Image source={require('../../../assets/icons/cameramovie.png')} style={{ tintColor: checkTimeCondition(data) ? '#fff' : '#fff', width: 20, height: 20 }} />
                     <Text style={{ color: checkTimeCondition(data) ? '#fff' : '#fff', fontSize: 16, fontFamily: CAIRO_FONT_FAMILY.semiBold, lineHeight: Platform.OS === 'ios' ? 0 : 20, marginLeft: 5 }}>Start Video Call</Text>
@@ -591,7 +618,7 @@ const TaskDetailTab: React.FC<TaskDetailTabProps> = ({ data, RefreshData }) => {
                 visible={isBottomSheetVisible}
                 onClose={() => setIsBottomSheetVisible(false)}
                 showHandle={false}
-                maxHeight={'60%'}
+                maxHeight={orderStatusBottomSheetHeight}
             >
                 <View style={styles.bottomSheetContainer}>
                     {/* Header */}
@@ -608,9 +635,14 @@ const TaskDetailTab: React.FC<TaskDetailTabProps> = ({ data, RefreshData }) => {
 
                     {/* Status Options - Scrollable */}
                     <ScrollView
+                        ref={scrollViewRef}
                         style={styles.statusOptionsScrollView}
-                        contentContainerStyle={styles.statusOptionsContainer}
+                        contentContainerStyle={[
+                            styles.statusOptionsContainer,
+                            Platform.OS === 'ios' && keyboardHeight > 0 && { paddingBottom: keyboardHeight - 100 }
+                        ]}
                         showsVerticalScrollIndicator={true}
+                        keyboardShouldPersistTaps="handled"
                     >
                         {/* Accepted */}
                         {(() => {
@@ -619,7 +651,7 @@ const TaskDetailTab: React.FC<TaskDetailTabProps> = ({ data, RefreshData }) => {
                             const current = isCurrentStatus(statusId);
                             const selected = isStatusSelected(statusId);
                             const previous = isPreviousStatus(statusId);
-                            
+
                             return (
                                 <TouchableOpacity
                                     onPress={() => handleStatusChange(statusId)}
@@ -650,7 +682,7 @@ const TaskDetailTab: React.FC<TaskDetailTabProps> = ({ data, RefreshData }) => {
                             const current = isCurrentStatus(statusId);
                             const selected = isStatusSelected(statusId);
                             const previous = isPreviousStatus(statusId);
-                            
+
                             return (
                                 <TouchableOpacity
                                     onPress={() => handleStatusChange(statusId)}
@@ -681,7 +713,7 @@ const TaskDetailTab: React.FC<TaskDetailTabProps> = ({ data, RefreshData }) => {
                             const current = isCurrentStatus(statusId);
                             const selected = isStatusSelected(statusId);
                             const previous = isPreviousStatus(statusId);
-                            
+
                             return (
                                 <TouchableOpacity
                                     onPress={() => handleStatusChange(statusId)}
@@ -713,7 +745,7 @@ const TaskDetailTab: React.FC<TaskDetailTabProps> = ({ data, RefreshData }) => {
                             const current = isCurrentStatus(statusId);
                             const selected = isStatusSelected(statusId);
                             const previous = isPreviousStatus(statusId);
-                            
+
                             return (
                                 <TouchableOpacity
                                     onPress={() => handleStatusChange(statusId)}
@@ -744,7 +776,7 @@ const TaskDetailTab: React.FC<TaskDetailTabProps> = ({ data, RefreshData }) => {
                             const current = isCurrentStatus(statusId);
                             const selected = isStatusSelected(statusId);
                             const previous = isPreviousStatus(statusId);
-                            
+
                             return (
                                 <>
                                     <TouchableOpacity
@@ -768,9 +800,17 @@ const TaskDetailTab: React.FC<TaskDetailTabProps> = ({ data, RefreshData }) => {
                                     </TouchableOpacity>
                                     {/* Reason Field - Only shown when Incomplete is selected */}
                                     {selected && enabled && (
-                                        <View style={styles.reasonContainer}>
+                                        <View 
+                                            ref={reasonContainerRef}
+                                            style={styles.reasonContainer}
+                                            onLayout={(event) => {
+                                                const { y, height } = event.nativeEvent.layout;
+                                                reasonInputLayoutRef.current = { y, height };
+                                            }}
+                                        >
                                             <Text style={styles.reasonLabel}>Reason</Text>
                                             <TextInput
+                                                ref={reasonInputRef}
                                                 style={[styles.reasonInput, errorIncompleteReason && { borderColor: '#ef4444' }]}
                                                 placeholder="Enter reason for incomplete status"
                                                 placeholderTextColor="#999"
@@ -779,6 +819,14 @@ const TaskDetailTab: React.FC<TaskDetailTabProps> = ({ data, RefreshData }) => {
                                                 multiline={true}
                                                 numberOfLines={4}
                                                 textAlignVertical="top"
+                                                onFocus={() => {
+                                                    if (Platform.OS === 'ios' && scrollViewRef.current) {
+                                                        // Scroll to end to ensure TextInput is visible
+                                                        setTimeout(() => {
+                                                            scrollViewRef.current?.scrollToEnd({ animated: true });
+                                                        }, 300);
+                                                    }
+                                                }}
                                             />
                                         </View>
                                     )}
@@ -820,15 +868,17 @@ const TaskDetailTab: React.FC<TaskDetailTabProps> = ({ data, RefreshData }) => {
                         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center" }}>
                             <View style={{ flex: 1, flexDirection: 'row', justifyContent: "space-between", alignItems: "center" }}>
                                 <View style={{ height: 40, width: 40, backgroundColor: '#23a2a4', borderRadius: 10, alignItems: "center", justifyContent: "center" }}>
-                                    <Image source={{ uri: `${MediaBaseURL}${data?.imagePath}` }} style={{ width: '100%', height: '100%', borderRadius: 10 }} />
+                                    {data?.imagePath ? <FastImage source={{ uri: `${MediaBaseURL}${data?.imagePath}`, priority: FastImage.priority.normal }} style={{ width: '100%', height: '100%', borderRadius: 10 }} resizeMode={FastImage.resizeMode.cover} /> : <View style={{ width: 40, height: 40, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: '#DDDDDD' }} >
+                                        <Ionicons name="person" size={28} color="#AFAFAF" />
+                                    </View>}
                                 </View>
                                 <View style={{ flex: 1, alignItems: 'flex-start', marginLeft: 10 }}>
-                                    <Text style={{ ...globalTextStyles.bodyLarge, color: '#000' }}>{data?.PatientPlang}</Text>
+                                    <Text style={{ fontSize: 16, fontFamily: CAIRO_FONT_FAMILY.bold, lineHeight: 20, color: '#000' }}>{data?.PatientPlang}</Text>
                                     {/* <Text style={{ ...globalTextStyles.bodySmall, lineHeight: 15, color: '#222' }}>{data?.OrgTitlePlang}</Text> */}
                                     <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center" }}>
 
-                                        <Text style={{ ...globalTextStyles.bodySmall, color: '#222' }}>{data?.CellNumber.replace(/^\+/, '')}</Text>
-                                        <Text style={{ ...globalTextStyles.bodySmall, color: '#222' }}>+</Text>
+                                        <Text style={{ fontSize: 14, fontFamily: CAIRO_FONT_FAMILY.medium, lineHeight: 20, color: '#222' }}>{data?.CellNumber}</Text>
+                                        {/* <Text style={{ ...globalTextStyles.bodySmall, color: '#222' }}>+</Text> */}
 
                                         <TouchableOpacity onPress={() => callPatient()} style={{ width: 40, height: 20, marginLeft: 10, backgroundColor: '#2ab318', borderRadius: 10, alignItems: "center", justifyContent: "center" }}>
                                             <FontAwesome6 name="phone-volume" size={12} color="#fff" />
@@ -1133,7 +1183,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#19b123',
         borderWidth: 1,
         borderColor: '#19b123',
-      },
+    },
 });
 
 export default TaskDetailTab;

@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
     },
     detailValue: {
         fontSize: 14,
-        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        fontFamily: CAIRO_FONT_FAMILY.bold,
         lineHeight: Platform.OS === 'ios' ? 20 : 18,
         color: '#000',
     },

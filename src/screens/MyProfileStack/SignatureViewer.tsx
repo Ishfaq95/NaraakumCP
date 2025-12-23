@@ -32,7 +32,7 @@ interface RouteParams {
 const SignatureViewer = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  
+
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
@@ -43,24 +43,24 @@ const SignatureViewer = () => {
   const [isDownloading, setIsDownloading] = useState(false);
   useEffect(() => {
     getServiceProviderContractSigning();
-}, []);
+  }, []);
 
-const getServiceProviderContractSigning = async () => {
+  const getServiceProviderContractSigning = async () => {
     try {
-        setIsLoading(true);
-        const payload = {
-            UserloginInfoId: user?.Id,
-        };
-        const response = await profileService.getServiceProviderContractSigning(payload);
-        if (response?.ResponseStatus?.STATUSCODE === 200) {
-            setPdfPath(response?.ServiceProviderInfo[0]?.AgreementPDFMediaPath);
-        }
+      setIsLoading(true);
+      const payload = {
+        UserloginInfoId: user?.Id,
+      };
+      const response = await profileService.getServiceProviderContractSigning(payload);
+      if (response?.ResponseStatus?.STATUSCODE === 200) {
+        setPdfPath(response?.ServiceProviderInfo[0]?.AgreementPDFMediaPath);
+      }
     } catch (error: any) {
     }
     finally {
-        setIsLoading(false);
+      setIsLoading(false);
     }
-}
+  }
 
   // Handle PDF load success
   const onLoadComplete = (numberOfPages: number) => {
@@ -82,63 +82,63 @@ const getServiceProviderContractSigning = async () => {
   const getFileNameFromUrl = (url: string) => {
     const parts = url.split('/');
     return parts.pop() || 'document';
-}
+  }
 
-const handleViewFile = () => {
-    if(Platform.OS === 'ios'){
-        downloadFIleForIOS(`${MediaBaseURL}${pdfPath}`, getFileNameFromUrl(pdfPath));
-    }else{
-        downloadFile(`${MediaBaseURL}${pdfPath}`, getFileNameFromUrl(pdfPath));
+  const handleViewFile = () => {
+    if (Platform.OS === 'ios') {
+      downloadFIleForIOS(`${MediaBaseURL}${pdfPath}`, getFileNameFromUrl(pdfPath));
+    } else {
+      downloadFile(`${MediaBaseURL}${pdfPath}`, getFileNameFromUrl(pdfPath));
     }
-};
+  };
 
-const downloadFIleForIOS = async (url: string, fileName: string) => {
-    const {config, fs} = RNFetchBlob;
+  const downloadFIleForIOS = async (url: string, fileName: string) => {
+    const { config, fs } = RNFetchBlob;
     const DocumentDir = fs.dirs.DocumentDir;
     const filePath = `${DocumentDir}/${fileName}`;
 
     try {
-        const res = await config({
-            fileCache: true,
-            path: filePath,
-        }).fetch('GET', url);
-        
-        Alert.alert(
-            'File downloaded successfully',
-            'The file is saved to your device.',
-        );
-        RNFetchBlob.ios.previewDocument(filePath);
-    } catch (error) {
-        Alert.alert('File downloading error.');
-    } finally {
-        setIsDownloading(false);
-    }
-};
+      const res = await config({
+        fileCache: true,
+        path: filePath,
+      }).fetch('GET', url);
 
-const downloadFile = async (url: string, fileName: string) => {
-    const {config, fs} = RNFetchBlob;
+      Alert.alert(
+        'File downloaded successfully',
+        'The file is saved to your device.',
+      );
+      RNFetchBlob.ios.previewDocument(filePath);
+    } catch (error) {
+      Alert.alert('File downloading error.');
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  const downloadFile = async (url: string, fileName: string) => {
+    const { config, fs } = RNFetchBlob;
     const DownloadDir = fs.dirs.DownloadDir;
     const filePath = `${DownloadDir}/${fileName}`;
 
     try {
-        const res = await config({
-            fileCache: true,
-            addAndroidDownloads: {
-                useDownloadManager: true,
-                notification: true,
-                mediaScannable: true,
-                title: fileName,
-                path: filePath,
-            },
-        }).fetch('GET', url);
-        
-        Alert.alert('File downloaded successfully');
+      const res = await config({
+        fileCache: true,
+        addAndroidDownloads: {
+          useDownloadManager: true,
+          notification: true,
+          mediaScannable: true,
+          title: fileName,
+          path: filePath,
+        },
+      }).fetch('GET', url);
+
+      Alert.alert('File downloaded successfully');
     } catch (error) {
-        Alert.alert('File downloading error.');
+      Alert.alert('File downloading error.');
     } finally {
-        setIsDownloading(false);
+      setIsDownloading(false);
     }
-};
+  };
 
   // Ensure the PDF is available locally and return a local file URI (file://)
   const ensureLocalPdf = async (): Promise<string> => {
@@ -227,7 +227,7 @@ const downloadFile = async (url: string, fileName: string) => {
   return (
     <SafeAreaView style={styles.container}>
       {renderHeader()}
-      
+
       <View style={styles.pdfContainer}>
         <Pdf
           source={{ uri: `${MediaBaseURL}${pdfPath}` }}
@@ -241,14 +241,14 @@ const downloadFile = async (url: string, fileName: string) => {
           fitPolicy={0}
           horizontal={false}
         />
-        
+
         {loading && (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color="#239ea0" />
             <Text style={styles.loadingText}>Loading PDF...</Text>
           </View>
         )}
-        
+
         {!loading && totalPages > 0 && renderPageIndicator()}
       </View>
     </SafeAreaView>
@@ -267,24 +267,29 @@ const styles = StyleSheet.create({
     height: 56,
     paddingHorizontal: 10,
     backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
   },
   backButton: {
-    padding: 8,
+    // paddingHorizontal: 6,
   },
   headerTitle: {
     flex: 1,
     fontSize: 16,
     color: '#333',
     fontFamily: CAIRO_FONT_FAMILY.bold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
+    paddingLeft: 4,
   },
   headerActions: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   actionButton: {
-    padding: 8,
+    paddingHorizontal: 8,
     marginLeft: 8,
   },
   pdfContainer: {

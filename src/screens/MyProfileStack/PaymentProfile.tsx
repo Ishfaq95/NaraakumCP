@@ -100,13 +100,11 @@ const PaymentProfileScreen = () => {
     }
 
     const renderHeader = () => (
-        <View style={{ flexDirection: 'row', alignItems: 'center', height: 50, backgroundColor: '#fff', padding: 10,shadowColor: '#000',
-            shadowOffset: { width: 0, height: 1 },
+        <View style={{ flexDirection: 'row', alignItems: 'center', height: 50, backgroundColor: '#fff', paddingHorizontal: 10,elevation: 2,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
             shadowOpacity: 0.1,
-            shadowRadius: 2,
-            elevation: 2,
-            borderBottomWidth: 1,
-            borderBottomColor: '#0000001a', }}>
+            shadowRadius: 3, }}>
             <TouchableOpacity onPress={() => onBackPress()} style={styles.backButton}>
                 <Ionicons name="arrow-back-outline" size={24} color="#333" />
 

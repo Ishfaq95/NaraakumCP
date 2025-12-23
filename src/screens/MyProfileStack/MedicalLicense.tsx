@@ -644,6 +644,11 @@ const styles = StyleSheet.create({
         height: 56,
         backgroundColor: '#fff',
         paddingHorizontal: 10,
+        elevation: 2,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 3,
     },
     backButton: {
         padding: 8,

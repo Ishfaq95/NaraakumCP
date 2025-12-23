@@ -169,14 +169,12 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         height: 50,
         backgroundColor: '#fff',
-        padding: 10,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
+        paddingHorizontal: 10,
         elevation: 2,
-        borderBottomWidth: 1,
-        borderBottomColor: '#0000001a',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 3,
     },
     backButton: {
         padding: 5,
@@ -242,6 +240,8 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#239EA0',
         fontFamily: CAIRO_FONT_FAMILY.bold,
+        textAlign: 'right',
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
     },
     transferredContainer: {
         flexDirection: 'row',
@@ -294,6 +294,8 @@ const styles = StyleSheet.create({
         fontSize: 15,
         color: '#239EA0',
         fontFamily: CAIRO_FONT_FAMILY.bold,
+        textAlign: 'right',
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
     },
     // Transaction Section Styles
     transactionSectionHeader: {

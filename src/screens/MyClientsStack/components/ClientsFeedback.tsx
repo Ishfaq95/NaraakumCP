@@ -1,18 +1,21 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, Platform } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Platform, Modal } from 'react-native';
 import { myClientsService } from '../../../services/api/myClientsService';
 import { useSelector } from 'react-redux';
 import ClientFeedbackCard from './ClientFeedbackCard';
 import { CAIRO_FONT_FAMILY } from '../../../styles/globalStyles';
+import LoaderKit from 'react-native-loader-kit';
 
 const ClientsFeedback: React.FC = () => {
   const user = useSelector((state: any) => state.root.user.user);
   const [clientsFeedback, setClientsFeedback] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   useEffect(() => {
     getClientsFeedback();
   }, []);
 
   const getClientsFeedback = async () => {
+    setIsLoading(true);
     try {
       const payload = {
         UserloginInfoId: user.Id,
@@ -22,6 +25,8 @@ const ClientsFeedback: React.FC = () => {
         setClientsFeedback(response.List);
       }
     } catch (error) {
+    } finally {
+      setIsLoading(false);
     }
   };
   return (
@@ -32,9 +37,27 @@ const ClientsFeedback: React.FC = () => {
         keyExtractor={(item) => String(item.OrderId)}
         contentContainerStyle={{ gap: 10, paddingTop: 10 }}
         renderItem={({ item }) => (
-          <ClientFeedbackCard item={item} onDelete={() => {}} />
+          <ClientFeedbackCard item={item} onDelete={() => { }} />
         )}
       />
+
+      {isLoading && <Modal
+        transparent={true}
+        animationType="fade"
+        visible={isLoading}
+        statusBarTranslucent={true}
+        onRequestClose={() => { }}
+        hardwareAccelerated={Platform.OS === 'android'}
+        presentationStyle="overFullScreen"
+      >
+        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+          <LoaderKit
+            style={{ width: 100, height: 100 }}
+            name={'BallSpinFadeLoader'}
+            color={'green'}
+          />
+        </View>
+      </Modal>}
     </View>
   );
 };

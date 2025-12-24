@@ -15,6 +15,7 @@ import DX from './Step3Components/DX';
 import { useDispatch, useSelector } from 'react-redux';
 import { addVisitRecordService } from '../../../services/api/addVisitRecord';
 import SvgUri from 'react-native-svg-uri';
+import PatientAssessment from '../../../assets/icons/PatientAssessment';
 
 interface Step3Props {
   onNext: () => void;
@@ -144,11 +145,12 @@ const Step3PatientAssessment: React.FC<Step3Props> = ({
       {/* Header */}
       <View style={styles.headerSection}>
         <View style={styles.headerIconContainer}>
-          <SvgUri
+          {/* <SvgUri
             width={50}
             height={50}
             source={require('../../../assets/icons/PatientAssessment.svg')}
-          />
+          /> */}
+          <PatientAssessment width={50} height={50} />
         </View>
         <Text style={styles.headerTitle}>Patient Assessment</Text>
       </View>

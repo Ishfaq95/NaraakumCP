@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList, Platform, TextInput, Keyboard, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList, Platform, TextInput, Keyboard, ScrollView, Modal } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import ClientCard from './ClientCard';
@@ -11,6 +11,7 @@ import Entypo from 'react-native-vector-icons/Entypo';
 import { ROUTES } from '../../../shared/utils/routes';
 import { useNavigation } from '@react-navigation/native';
 import { CAIRO_FONT_FAMILY } from '../../../styles/globalStyles';
+import LoaderKit from 'react-native-loader-kit';
 
 const ClientsList: React.FC<{ onCountChange?: (n: number) => void }> = ({ onCountChange }) => {
   const [clientList, setClientList] = useState<any[]>([]);
@@ -23,6 +24,7 @@ const ClientsList: React.FC<{ onCountChange?: (n: number) => void }> = ({ onCoun
   const [bottomSheetHeight, setBottomSheetHeight] = useState('35%');
   const [filteredClientList, setFilteredClientList] = useState<any[]>([]);
   const scrollViewRef = React.useRef<ScrollView>(null);
+  const [isLoading, setIsLoading] = useState(false);
   useEffect(() => {
     getClients();
   }, []);
@@ -45,6 +47,7 @@ const ClientsList: React.FC<{ onCountChange?: (n: number) => void }> = ({ onCoun
   }, []);
 
   const getClients = async () => {
+    setIsLoading(true);
     try {
       const payload = {
         UserloginInfoId: user.Id,
@@ -55,6 +58,8 @@ const ClientsList: React.FC<{ onCountChange?: (n: number) => void }> = ({ onCoun
         setFilteredClientList(response.list);
       }
     } catch (error) {
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -227,6 +232,24 @@ const ClientsList: React.FC<{ onCountChange?: (n: number) => void }> = ({ onCoun
           </ScrollView>
         </View>
       </CustomBottomSheet>
+
+      {isLoading && <Modal
+                transparent={true}
+                animationType="fade"
+                visible={isLoading}
+                statusBarTranslucent={true}
+                onRequestClose={() => { }}
+                hardwareAccelerated={Platform.OS === 'android'}
+                presentationStyle="overFullScreen"
+            >
+                <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+                    <LoaderKit
+                        style={{ width: 100, height: 100 }}
+                        name={'BallSpinFadeLoader'}
+                        color={'green'}
+                    />
+                </View>
+            </Modal>}
     </View>
   );
 };

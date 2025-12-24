@@ -10,18 +10,25 @@ import {
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { CAIRO_FONT_FAMILY } from '../../styles/globalStyles';
-import { useDispatch } from 'react-redux';
-import { setUser } from '../../shared/redux/reducers/userReducer';
+import { useDispatch, useSelector } from 'react-redux';
+import { setTopic, setUser } from '../../shared/redux/reducers/userReducer';
 import { useNavigation } from '@react-navigation/native';
-
-
+import messaging from '@react-native-firebase/messaging';
+import { tokenRefreshService } from '../../services/axios/tokenRefreshService';
 
 const DeleteConfirmationScreen = () => {
   const dispatch = useDispatch();
   const navigation = useNavigation();
-
+  const { topic } = useSelector((state: any) => state.root.user);
   const handleAgree = () => {
+    if(topic){
+      messaging()
+        .unsubscribeFromTopic(topic)
+        .then(() => { });
+    }
     dispatch(setUser(null));
+    dispatch(setTopic(null));
+    tokenRefreshService.reset();
   };
 
   // Handle Android hardware back button - works like agree button

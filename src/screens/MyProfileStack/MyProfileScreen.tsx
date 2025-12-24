@@ -1,4 +1,4 @@
-import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, BackHandler } from 'react-native'
+import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, BackHandler, Modal, Platform } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import AppHeader from '../../components/common/AppHeader'
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -9,6 +9,7 @@ import { useSelector } from 'react-redux';
 import { appointmentService } from '../../services/api/appointmentService';
 import { ROUTES } from '../../shared/utils/routes';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
+import LoaderKit from 'react-native-loader-kit';
 
 const MyProfileScreen = () => {
   const [profileOptions, setProfileOptions] = useState([
@@ -51,6 +52,7 @@ const MyProfileScreen = () => {
   const [serviceProvider, setServiceProvider] = useState<any>(null);
   const user = useSelector((state: any) => state.root.user.user);
   const [profileSummary, setProfileSummary] = useState<any>({});
+  const [isLoading, setIsLoading] = useState(false);
   const navigation = useNavigation();
   const isFocused = useIsFocused();
   useEffect(() => {
@@ -85,6 +87,7 @@ const MyProfileScreen = () => {
   }, [profileSummary]);
 
   const getServiceProviderByUserId = async () => {
+    setIsLoading(true);
     try {
       const payload = {
         OrganizationId: user.OrganizationId,
@@ -95,18 +98,27 @@ const MyProfileScreen = () => {
         setServiceProvider(response.ServiceProvider[0]);
       }
     } catch (error: any) {
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const getServiceProviderMainSummary = async () => {
-    const payload = {
-      UserloginInfoId: user?.Id,
-    };
-    const response = await appointmentService.getServiceProviderMainSummary(payload);
-    if (response?.ResponseStatus?.STATUSCODE === 200) {
-      setProfileSummary(response.ServiceProviderSummary[0]);
-      updateProfileOptionsStatus(response.ServiceProviderSummary[0]);
+    try {
+      const payload = {
+        UserloginInfoId: user?.Id,
+      };
+      const response = await appointmentService.getServiceProviderMainSummary(payload);
+      if (response?.ResponseStatus?.STATUSCODE === 200) {
+        setProfileSummary(response.ServiceProviderSummary[0]);
+        updateProfileOptionsStatus(response.ServiceProviderSummary[0]);
+      }
+    } catch (error) {
+      
+    } finally {
+      setIsLoading(false);
     }
+    
   };
 
   const updateProfileOptionsStatus = (profileSummaryData: any) => {
@@ -216,6 +228,24 @@ const MyProfileScreen = () => {
           </ScrollView>
         </View>
       </View>
+
+      {isLoading && <Modal
+                transparent={true}
+                animationType="fade"
+                visible={isLoading}
+                statusBarTranslucent={true}
+                onRequestClose={() => { }}
+                hardwareAccelerated={Platform.OS === 'android'}
+                presentationStyle="overFullScreen"
+            >
+                <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+                    <LoaderKit
+                        style={{ width: 100, height: 100 }}
+                        name={'BallSpinFadeLoader'}
+                        color={'green'}
+                    />
+                </View>
+            </Modal>}
     </SafeAreaView>
   )
 }

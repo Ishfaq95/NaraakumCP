@@ -6,9 +6,10 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
+  Platform,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { globalTextStyles } from '../../../styles/globalStyles';
+import { CAIRO_FONT_FAMILY, globalTextStyles } from '../../../styles/globalStyles';
 import Dropdown from '../../../components/common/Dropdown';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomBottomSheet from '../../../components/common/CustomBottomSheet';
@@ -16,6 +17,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import { addVisitRecordService } from '../../../services/api/addVisitRecord';
 import { setVisitMainId } from '../../../shared/redux/reducers/generalDataReducer';
 import SvgUri from 'react-native-svg-uri';
+import PatientComplaint from '../../../assets/icons/PatientComplaint';
 
 interface Step1Props {
   patientData: any;
@@ -53,8 +55,8 @@ const Step1PatientComplaint: React.FC<Step1Props> = ({ patientData, onNext, onDa
   const manageVisitRecordData = () => {
     setChiefComplaint(visitRecordData?.PatientComplaint[0]?.ChiefComplaint);
     setPresentIllness(visitRecordData?.PatientComplaint[0]?.PresentIllness);
-    setDurationValue(visitRecordData?.PatientComplaint[0]?.DurationOfComplaint.toString());
-    setDurationUnit(visitRecordData?.PatientComplaint[0]?.CatTimeUnitId.toString());
+    setDurationValue(visitRecordData?.PatientComplaint[0]?.DurationOfComplaint?.toString());
+    setDurationUnit(visitRecordData?.PatientComplaint[0]?.CatTimeUnitId?.toString());
     setOtherComplaint(visitRecordData?.PatientComplaint[0]?.OtherComplaint);
   };
 
@@ -103,11 +105,12 @@ const Step1PatientComplaint: React.FC<Step1Props> = ({ patientData, onNext, onDa
         {/* Header with Icon */}
         <View style={styles.headerSection}>
           <View style={styles.headerIconContainer}>
-            <SvgUri
+            {/* <SvgUri
               width={50}
               height={50}
               source={require('../../../assets/icons/PatientComplaint.svg')}
-            />
+            /> */}
+            <PatientComplaint width={50} height={50} />
           </View>
           <Text style={styles.headerTitle}>Patient Complaint</Text>
         </View>
@@ -275,9 +278,10 @@ const styles = StyleSheet.create({
     // borderRadius: 25,
   },
   headerTitle: {
-    ...globalTextStyles.h5,
+    fontSize: 16,
+    fontFamily: CAIRO_FONT_FAMILY.bold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
     color: '#179c8e',
-    fontWeight: '600',
   },
   fieldContainer: {
     marginBottom: 20,

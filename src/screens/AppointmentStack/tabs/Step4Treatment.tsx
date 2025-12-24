@@ -15,6 +15,7 @@ import NewService, { NewServiceData } from './Step4Components/NewService';
 import ReferralConsultation, { ReferralData } from './Step4Components/ReferralConsultation';
 import Notes, { NotesData } from './Step4Components/Notes';
 import SvgUri from 'react-native-svg-uri';
+import TreatmentPlan from '../../../assets/icons/TreatmentPlan';
 
 interface Step4Props {
   // onComplete: () => void;
@@ -138,11 +139,12 @@ const Step4Treatment: React.FC<Step4Props> = ({
       {/* Header */}
       <View style={styles.headerSection}>
         <View style={styles.headerIconContainer}>
-          <SvgUri
+          {/* <SvgUri
             width={50}
             height={50}
             source={require('../../../assets/icons/TreatmentPlan.svg')}
-          />
+          /> */}
+          <TreatmentPlan width={50} height={50} />
         </View>
         <Text style={styles.headerTitle}>Treatment Plan</Text>
       </View>

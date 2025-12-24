@@ -8,6 +8,8 @@ import {
     I18nManager,
     ScrollView,
     TouchableWithoutFeedback,
+    Platform,
+    Modal,
 } from 'react-native';
 import { CAIRO_FONT_FAMILY, globalTextStyles } from '../../styles/globalStyles';
 import { authService } from '../../services/api/authService';
@@ -18,6 +20,8 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import FullScreenLoader from '../FullScreenLoader';
 import { setStep2PhoneNumber } from '../../shared/redux/reducers/userReducer';
 import { useDispatch } from 'react-redux';
+import { isTablet } from '../../shared/utils/deviceUtils';
+import LoaderKit from 'react-native-loader-kit';
 
 interface ServiceProviderSelectionProps {
     selectedProvider: string | null;
@@ -35,6 +39,7 @@ const ServiceProviderSelection: React.FC<ServiceProviderSelectionProps> = ({
     const isRTL = I18nManager.isRTL;
     const [serviceProviders, setServiceProviders] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+    const deviceIsTablet = isTablet();
 
     useEffect(() => {
         if (isFocused) {
@@ -64,7 +69,7 @@ const ServiceProviderSelection: React.FC<ServiceProviderSelectionProps> = ({
     return (
         <View style={styles.selectionContainer}>
             <Text style={styles.selectionTitle}>Service Provider Type</Text>
-            <ScrollView 
+            <ScrollView
                 style={styles.scrollViewContainer}
                 contentContainerStyle={styles.scrollViewContent}
                 scrollEnabled={true}
@@ -72,43 +77,43 @@ const ServiceProviderSelection: React.FC<ServiceProviderSelectionProps> = ({
                 bounces={true}
             >
                 <TouchableWithoutFeedback>
-                    <View style={styles.cardsGrid}>
+                    <View style={[styles.cardsGrid, deviceIsTablet ? { paddingHorizontal: 150 } : {}]}>
                         {serviceProviders.map((provider) => {
-                        return (
-                            <TouchableOpacity
-                                key={provider.Id}
-                                style={[
-                                    styles.providerCard,
-                                    selectedProvider === provider.Id && styles.providerCardSelected
-                                ]}
-                                onPress={() => onProviderSelect(provider.Id)}
-                            >
-                                <View style={[
-                                    styles.selectionIndicator,
-                                    selectedProvider === provider.Id && styles.selectionIndicatorActive
-                                ]}>
-                                    {selectedProvider === provider.Id && (
-                                        <Ionicons name="checkmark-sharp" size={20} color="#fff" />
-                                    )}
-                                </View>
+                            return (
+                                <TouchableOpacity
+                                    key={provider.Id}
+                                    style={[
+                                        styles.providerCard,
+                                        selectedProvider === provider.Id && styles.providerCardSelected
+                                    ]}
+                                    onPress={() => onProviderSelect(provider.Id)}
+                                >
+                                    <View style={[
+                                        styles.selectionIndicator,
+                                        selectedProvider === provider.Id && styles.selectionIndicatorActive
+                                    ]}>
+                                        {selectedProvider === provider.Id && (
+                                            <Ionicons name="checkmark-sharp" size={20} color="#fff" />
+                                        )}
+                                    </View>
 
-                                <View style={styles.iconContainer}>
-                                    {provider.UserRoleImagePath ? (
-                                        <UniversalImage source={{ uri: `${MediaBaseURL}${provider.UserRoleImagePath}` }} style={styles.providerIcon} />
-                                    ) : (
-                                        <Image source={require('../../assets/icons/test-tube.png')} style={styles.providerIcon} />
-                                    )}
-                                </View>
+                                    <View style={styles.iconContainer}>
+                                        {provider.UserRoleImagePath ? (
+                                            <UniversalImage source={{ uri: `${MediaBaseURL}${provider.UserRoleImagePath}` }} style={deviceIsTablet ? { width: 120, height: 120 } : styles.providerIcon} resizeMode={'contain'} />
+                                        ) : (
+                                            <Image source={require('../../assets/icons/test-tube.png')} style={deviceIsTablet ? { width: 120, height: 120 } : styles.providerIcon} resizeMode={'contain'} />
+                                        )}
+                                    </View>
 
-                                <Text style={[
-                                    styles.providerName,
-                                    selectedProvider === provider.Id && styles.providerNameSelected
-                                ]}>
-                                    {isRTL ? provider.TitleSlang : provider.TitlePlang}
-                                </Text>
-                            </TouchableOpacity>
-                        );
-                    })}
+                                    <Text style={[
+                                        styles.providerName,
+                                        selectedProvider === provider.Id && styles.providerNameSelected
+                                    ]}>
+                                        {isRTL ? provider.TitleSlang : provider.TitlePlang}
+                                    </Text>
+                                </TouchableOpacity>
+                            );
+                        })}
                     </View>
                 </TouchableWithoutFeedback>
             </ScrollView>
@@ -119,7 +124,23 @@ const ServiceProviderSelection: React.FC<ServiceProviderSelectionProps> = ({
                 </TouchableOpacity>
             </View>
 
-            {/* <FullScreenLoader visible={isLoading} /> */}
+            {isLoading && <Modal
+                transparent={true}
+                animationType="fade"
+                visible={isLoading}
+                statusBarTranslucent={true}
+                onRequestClose={() => { }}
+                hardwareAccelerated={Platform.OS === 'android'}
+                presentationStyle="overFullScreen"
+            >
+                <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+                    <LoaderKit
+                        style={{ width: 100, height: 100 }}
+                        name={'BallSpinFadeLoader'}
+                        color={'green'}
+                    />
+                </View>
+            </Modal>}
         </View>
     );
 };
@@ -149,6 +170,7 @@ const styles = StyleSheet.create({
         flexWrap: 'wrap',
         justifyContent: 'space-between',
         marginBottom: 20,
+        
     },
     providerCard: {
         width: '48%',

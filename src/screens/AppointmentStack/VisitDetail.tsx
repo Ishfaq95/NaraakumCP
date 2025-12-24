@@ -1,5 +1,5 @@
 import { useNavigation } from '@react-navigation/native';
-import { View, Text, SafeAreaView, StyleSheet, TouchableOpacity, ScrollView, Linking, Platform } from 'react-native';
+import { View, Text, SafeAreaView, StyleSheet, TouchableOpacity, ScrollView, Linking, Platform, Modal } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useEffect, useState } from 'react';
 import { appointmentService } from '../../services/api/appointmentService';
@@ -8,13 +8,14 @@ import MedicalHistoryTab from './tabs/MedicalHistoryTab';
 import PatientRatingTab from './tabs/PatientRatingTab';
 import { CAIRO_FONT_FAMILY } from '../../styles/globalStyles';
 import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
+import LoaderKit from 'react-native-loader-kit';
 
 const VisitDetailScreen = ({ route }: any) => {
     const { taskId } = route.params;
     const navigation = useNavigation();
     const [taskDetail, setTaskDetail] = useState<any>(null);
     const [activeTab, setActiveTab] = useState<'taskDetail' | 'medicalHistory' | 'patientRating'>('taskDetail');
-
+    const [isLoading, setIsLoading] = useState(false);
     useEffect(() => {
         if (taskId) {
             getTaskDetail();
@@ -22,13 +23,20 @@ const VisitDetailScreen = ({ route }: any) => {
     }, [taskId]);
 
     const getTaskDetail = async () => {
-        const payload = {
-            TaskId: taskId,
-        };
-        const response = await appointmentService.getTaskDetail(payload);
-        if (response?.ResponseStatus?.STATUSCODE === 200) {
-            setTaskDetail(response.TaskDetail[0]);
+        setIsLoading(true);
+        try {
+            const payload = {
+                TaskId: taskId,
+            };
+            const response = await appointmentService.getTaskDetail(payload);
+            if (response?.ResponseStatus?.STATUSCODE === 200) {
+                setTaskDetail(response.TaskDetail[0]);
+            }
+        } catch (error) {
+        } finally {
+            setIsLoading(false);
         }
+        
     }
 
     const callPatient = () => {
@@ -88,11 +96,7 @@ const VisitDetailScreen = ({ route }: any) => {
 
     const renderTabContent = () => {
         if (!taskDetail) {
-            return (
-                <View style={styles.loadingContainer}>
-                    <Text>Loading...</Text>
-                </View>
-            );
+            return null;
         }
 
         switch (activeTab) {
@@ -116,6 +120,24 @@ const VisitDetailScreen = ({ route }: any) => {
                     {renderTabContent()}
                 </View>
             </View>
+
+            {isLoading && <Modal
+                transparent={true}
+                animationType="fade"
+                visible={isLoading}
+                statusBarTranslucent={true}
+                onRequestClose={() => { }}
+                hardwareAccelerated={Platform.OS === 'android'}
+                presentationStyle="overFullScreen"
+            >
+                <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+                    <LoaderKit
+                        style={{ width: 100, height: 100 }}
+                        name={'BallSpinFadeLoader'}
+                        color={'green'}
+                    />
+                </View>
+            </Modal>}
         </SafeAreaView>
     );
 };

@@ -15,6 +15,7 @@ import Svg, { Path } from 'react-native-svg';
 import { globalTextStyles } from '../../styles/globalStyles';
 import { useTranslation } from 'react-i18next';
 import { ROUTES } from '../../shared/utils/routes';
+import { isTablet } from '../../shared/utils/deviceUtils';
 
 const { width } = Dimensions.get('window');
 
@@ -24,14 +25,10 @@ const BG = '#EAF5F3';
 const WelcomeScreen: React.FC = () => {
     const { t } = useTranslation();
     const navigation = useNavigation();
+    const deviceIsTablet = isTablet();
 
-    const handleLogin = () => {
-        // navigation.navigate('Login' as never);
-    };
+    console.log("deviceIsTablet", deviceIsTablet)
 
-    const handleCreateAccount = () => {
-        // navigation.navigate('Register' as never);
-    };
 
     return (
         <SafeAreaView style={styles.container}>
@@ -55,11 +52,11 @@ const WelcomeScreen: React.FC = () => {
                     width: width * 0.98,
                     height: width * 0.98 * (188 / 375),
                     resizeMode: 'contain',
-                    marginBottom: 16,
+                    marginBottom: deviceIsTablet ? 0 : 16,
                 }} />
             </View>
 
-            <View style={styles.actions}>
+            <View style={[styles.actions, deviceIsTablet && {height: '20%'}]}>
                 <ImageBackground
                     source={require('../../assets/icons/buttonsBackground.png')}
                     resizeMode='stretch'

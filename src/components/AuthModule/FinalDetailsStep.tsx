@@ -14,6 +14,7 @@ import CustomPhoneInput, { COUNTRIES } from '../common/CustomPhoneInput';
 import { setStep2PhoneNumber } from '../../shared/redux/reducers/userReducer';
 import { useDispatch } from 'react-redux';
 import { useAlert } from '../../contexts/AlertContext';
+import LoaderKit from 'react-native-loader-kit';
 
 interface FinalDetailsStepProps {
     phoneNumber: string;
@@ -58,6 +59,7 @@ const FinalDetailsStep: React.FC<FinalDetailsStepProps> = ({ phoneNumber, userIn
         initialDate.setFullYear(today.getFullYear() - 18);
         return initialDate;
     };
+    const [isLoading, setIsLoading] = useState(false);
     const [date, setDate] = useState(getInitialDate());
     const [gender, setGender] = useState<string | number>('Male');
     const [country, setCountry] = useState<string | number>('');
@@ -522,6 +524,7 @@ const FinalDetailsStep: React.FC<FinalDetailsStepProps> = ({ phoneNumber, userIn
         }
 
         try {
+            setIsLoading(true);
             // Convert date from DD/MM/YYYY to YYYY-MM-DD format
             const dateParts = dob.split('/');
             const formattedDob = dateParts.length === 3
@@ -566,6 +569,8 @@ const FinalDetailsStep: React.FC<FinalDetailsStepProps> = ({ phoneNumber, userIn
             }
 
         } catch (error) {
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -1025,6 +1030,24 @@ const FinalDetailsStep: React.FC<FinalDetailsStepProps> = ({ phoneNumber, userIn
 
                 </TouchableOpacity>
             </View>
+
+            {isLoading && <Modal
+                transparent={true}
+                animationType="fade"
+                visible={isLoading}
+                statusBarTranslucent={true}
+                onRequestClose={() => { }}
+                hardwareAccelerated={Platform.OS === 'android'}
+                presentationStyle="overFullScreen"
+            >
+                <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+                    <LoaderKit
+                        style={{ width: 100, height: 100 }}
+                        name={'BallSpinFadeLoader'}
+                        color={'green'}
+                    />
+                </View>
+            </Modal>}
         </View>
     );
 };
@@ -1123,7 +1146,7 @@ const styles = StyleSheet.create({
         gap: 6,
         backgroundColor: '#20B2AA',
         borderRadius: 12,
-        paddingVertical: 16,
+        paddingVertical: 10,
         alignItems: 'center',
         justifyContent: 'center',
     },

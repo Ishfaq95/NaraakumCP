@@ -19,6 +19,7 @@ import DateTimePicker from '@react-native-community/datetimepicker'
 import ConfirmationModal from '../../components/common/ConfirmationModal'
 import { CAIRO_FONT_FAMILY } from '../../styles/globalStyles'
 import { useAlert } from '../../contexts/AlertContext';
+import LoaderKit from 'react-native-loader-kit';
 
 const AppointmentListScreen = () => {
   const navigation = useNavigation();
@@ -951,6 +952,24 @@ const AppointmentListScreen = () => {
         }}
         title="Confirmation"
       />
+
+      {(isLoading || refreshing) && <Modal
+                transparent={true}
+                animationType="fade"
+                visible={isLoading || refreshing}
+                statusBarTranslucent={true}
+                onRequestClose={() => { }}
+                hardwareAccelerated={Platform.OS === 'android'}
+                presentationStyle="overFullScreen"
+            >
+                <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+                    <LoaderKit
+                        style={{ width: 100, height: 100 }}
+                        name={'BallSpinFadeLoader'}
+                        color={'green'}
+                    />
+                </View>
+            </Modal>}
     </SafeAreaView>
   )
 }

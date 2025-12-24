@@ -8,12 +8,13 @@ import {
     Alert,
     Platform,
     ScrollView,
+    Modal,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { CAIRO_FONT_FAMILY, globalTextStyles } from '../../styles/globalStyles';
 import { authService } from '../../services/api/authService';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import FullScreenLoader from '../FullScreenLoader';
+import LoaderKit from 'react-native-loader-kit';
 
 interface OTPVerificationStepProps {
     phoneNumber: string;
@@ -48,10 +49,10 @@ const OTPVerificationStep: React.FC<OTPVerificationStepProps> = ({
 
     const handleOTPChange = (index: number, value: string) => {
         setOtpError(false);
-        
+
         // Extract only digits from input
         const digitsOnly = value.replace(/\D/g, '');
-        
+
         // If no digits, clear the current field
         if (!digitsOnly) {
             const newOtp = [...otp];
@@ -64,7 +65,7 @@ const OTPVerificationStep: React.FC<OTPVerificationStepProps> = ({
         if (digitsOnly.length > 2) {
             // Extract first 4 digits from pasted text
             const digits = digitsOnly.split('').slice(0, 4);
-            
+
             // Fill OTP fields with pasted digits
             const newOtp = ['', '', '', ''];
             digits.forEach((digit, i) => {
@@ -72,26 +73,26 @@ const OTPVerificationStep: React.FC<OTPVerificationStepProps> = ({
                     newOtp[i] = digit;
                 }
             });
-            
+
             setOtp(newOtp);
-            
+
             // Blur all inputs and focus on the last filled input
             inputs.current.forEach(input => input?.blur());
-            
+
             const lastFilledIndex = Math.min(digits.length - 1, 3);
             if (lastFilledIndex >= 0) {
                 setTimeout(() => {
                     inputs.current[lastFilledIndex]?.focus();
                 }, 100);
             }
-            
+
             // Auto-verify if all 4 digits are pasted
             if (digits.length === 4) {
                 setTimeout(() => {
                     handleVerifyOTP(digits.join(''));
                 }, 200);
             }
-            
+
             return;
         }
 
@@ -117,17 +118,17 @@ const OTPVerificationStep: React.FC<OTPVerificationStepProps> = ({
                 "VerificationPlatformId": Platform.OS === 'ios' ? 3 : 2
             });
 
-            if(response.StatusCode.STATUSCODE === 3007){
+            if (response.StatusCode.STATUSCODE === 3007) {
                 onOTPVerified(otp);
                 return;
             }
 
-            if(response.StatusCode.STATUSCODE === 3016){
+            if (response.StatusCode.STATUSCODE === 3016) {
                 setOTPCodeExpired(true);
                 return;
             }
-            if(response.StatusCode.STATUSCODE === 3005){
-               setOtpError(true);
+            if (response.StatusCode.STATUSCODE === 3005) {
+                setOtpError(true);
             }
         } catch (error) {
         } finally {
@@ -171,61 +172,61 @@ const OTPVerificationStep: React.FC<OTPVerificationStepProps> = ({
 
     return (
         <View style={styles.container}>
-            <ScrollView contentContainerStyle={styles.scrollViewContent}>   
-            <View style={styles.headerSection}>
-                <Text style={styles.title}>
-                    Enter the verification code sent to the number
-                </Text>
+            <ScrollView contentContainerStyle={styles.scrollViewContent}>
+                <View style={styles.headerSection}>
+                    <Text style={styles.title}>
+                        Enter the verification code sent to the number
+                    </Text>
 
-                <View style={styles.phoneNumberContainer}>
-                    <Text style={styles.phoneNumber}>{phoneNumber}</Text>
-                    <TouchableOpacity onPress={onEditPhoneNumber} style={styles.editButton}>
-                        <Text style={styles.editButtonText}>Edit</Text>
-                    </TouchableOpacity>
-                </View>
-            </View>
-
-            <View style={styles.otpSection}>
-                <Text style={styles.otpLabel}>Enter OTP</Text>
-
-                <View style={styles.otpInputContainer}>
-                    {otp.map((digit, index) => (
-                        <TextInput
-                            key={index}
-                            ref={ref => { inputs.current[index] = ref; }}
-                            style={[
-                                styles.otpInput,
-                                digit ? styles.otpInputFilled : null
-                            ]}
-                            value={digit}
-                            onChangeText={(value) => handleOTPChange(index, value)}
-                            onKeyPress={({ nativeEvent }) => handleKeyPress(index, nativeEvent.key)}
-                            keyboardType="number-pad"
-                            maxLength={4}
-                            textAlign="center"
-                            selectTextOnFocus
-                        />
-                    ))}
+                    <View style={styles.phoneNumberContainer}>
+                        <Text style={styles.phoneNumber}>{phoneNumber}</Text>
+                        <TouchableOpacity onPress={onEditPhoneNumber} style={styles.editButton}>
+                            <Text style={styles.editButtonText}>Edit</Text>
+                        </TouchableOpacity>
+                    </View>
                 </View>
 
-                {otpError && <Text style={styles.otpErrorText}>{t('invalid_otp')}</Text>}
-                {otpCodeExpired && <Text style={styles.otpErrorText}>{'Verification Code Expired'}</Text>}
-            </View>
+                <View style={styles.otpSection}>
+                    <Text style={styles.otpLabel}>Enter OTP</Text>
 
-            <TouchableOpacity
-                onPress={handleResendCode}
-                disabled={isResendDisabled}
-                style={styles.resendButton}
-            >
-                <Text style={[
-                    styles.resendButtonText,
-                    isResendDisabled && styles.resendButtonTextDisabled
-                ]}>
-                    {isResendDisabled ? `Resend code (${countdown}s)` : 'Resend code'}
-                </Text>
-            </TouchableOpacity>
+                    <View style={styles.otpInputContainer}>
+                        {otp.map((digit, index) => (
+                            <TextInput
+                                key={index}
+                                ref={ref => { inputs.current[index] = ref; }}
+                                style={[
+                                    styles.otpInput,
+                                    digit ? styles.otpInputFilled : null
+                                ]}
+                                value={digit}
+                                onChangeText={(value) => handleOTPChange(index, value)}
+                                onKeyPress={({ nativeEvent }) => handleKeyPress(index, nativeEvent.key)}
+                                keyboardType="number-pad"
+                                maxLength={4}
+                                textAlign="center"
+                                selectTextOnFocus
+                            />
+                        ))}
+                    </View>
 
-            {isResendSuccess && <Text style={styles.resendSuccessText}>{t('code_sent_successfully')}</Text>}
+                    {otpError && <Text style={styles.otpErrorText}>{t('invalid_otp')}</Text>}
+                    {otpCodeExpired && <Text style={styles.otpErrorText}>{'Verification Code Expired'}</Text>}
+                </View>
+
+                <TouchableOpacity
+                    onPress={handleResendCode}
+                    disabled={isResendDisabled}
+                    style={styles.resendButton}
+                >
+                    <Text style={[
+                        styles.resendButtonText,
+                        isResendDisabled && styles.resendButtonTextDisabled
+                    ]}>
+                        {isResendDisabled ? `Resend code (${countdown}s)` : 'Resend code'}
+                    </Text>
+                </TouchableOpacity>
+
+                {isResendSuccess && <Text style={styles.resendSuccessText}>{t('code_sent_successfully')}</Text>}
             </ScrollView>
             <View style={styles.navigationContainer}>
                 <TouchableOpacity disabled={!isOTPComplete} style={[styles.nextButton, !isOTPComplete && styles.nextButtonDisabled]} onPress={handleNext}>
@@ -234,7 +235,23 @@ const OTPVerificationStep: React.FC<OTPVerificationStepProps> = ({
                 </TouchableOpacity>
             </View>
 
-            {/* <FullScreenLoader visible={isLoading} /> */}
+            {isLoading && <Modal
+                transparent={true}
+                animationType="fade"
+                visible={isLoading}
+                statusBarTranslucent={true}
+                onRequestClose={() => { }}
+                hardwareAccelerated={Platform.OS === 'android'}
+                presentationStyle="overFullScreen"
+            >
+                <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+                    <LoaderKit
+                        style={{ width: 100, height: 100 }}
+                        name={'BallSpinFadeLoader'}
+                        color={'green'}
+                    />
+                </View>
+            </Modal>}
         </View>
     );
 };
@@ -281,7 +298,7 @@ const styles = StyleSheet.create({
     editButtonText: {
         fontSize: 14,
         fontFamily: CAIRO_FONT_FAMILY.semiBold,
-        lineHeight:Platform.OS === 'ios' ?0 : 16,
+        lineHeight: Platform.OS === 'ios' ? 0 : 16,
         fontWeight: '600',
         color: '#666',
     },
@@ -311,7 +328,7 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: '600',
         color: '#333',
-        
+
     },
     otpInputFilled: {
         borderColor: '#20B2AA',
@@ -343,7 +360,7 @@ const styles = StyleSheet.create({
         ...globalTextStyles.bodyMedium,
         textAlign: 'center',
         fontWeight: '500',
-        color: '#20B2AA',
+        color: '#198754',
         marginTop: 10,
     },
     otpErrorText: {
@@ -370,7 +387,7 @@ const styles = StyleSheet.create({
     nextButton: {
         backgroundColor: '#20B2AA',
         borderRadius: 12,
-        paddingVertical: 16,
+        paddingVertical: 10,
         // paddingHorizontal: 24,
         flexDirection: 'row',
         alignItems: 'center',

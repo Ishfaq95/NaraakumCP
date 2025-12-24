@@ -7,12 +7,15 @@ import { crashlyticsService } from '../shared/services/crashlytics/crashlytics.s
 import useMutationHook from '../Network/useMutationHook';
 import { MediaBaseURL } from '../shared/utils/constants';
 import { profileService } from '../services/api/profileService';
+import messaging from '@react-native-firebase/messaging';
+import { tokenRefreshService } from '../services/axios/tokenRefreshService';
 
 const AppInitializer = () => {
   const dispatch = useDispatch();
   const [appState, setAppState] = useState(AppState.currentState);
   const { expiresAt, appVersionCode } = useSelector((state: any) => state.root.user);
   const { user } = useSelector((state: any) => state.root.user);
+  const { topic } = useSelector((state: any) => state.root.user);
   // API hooks
   const { mutate, isSuccess, isError, data } = useMutationHook(
     '/authValidator/token',
@@ -57,6 +60,12 @@ const AppInitializer = () => {
           if (userInfo?.isDeleted) {
             dispatch(setUser(null));
             dispatch(setTopic(null));
+            tokenRefreshService.reset();
+            if(topic){
+              messaging()
+                .unsubscribeFromTopic(topic)
+                .then(() => { });
+            }
           }
             console.log("response", response.UserDetail[0])
         }

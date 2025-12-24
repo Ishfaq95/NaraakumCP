@@ -15,11 +15,6 @@ import {
   Platform,
   SafeAreaView,
 } from 'react-native';
-import colors from '../../shared/utils/color';
-import VideoOff from '../../assets/icons/VideoOff';
-import VideoOn from '../../assets/icons/VideoOn';
-import MicOff from '../../assets/icons/MicOff';
-import MicOn from '../../assets/icons/MicOn';
 import BackIcon from '../../assets/icons/BackIcon';
 import CameraOffImage from '../../assets/icons/CameraOffImage';
 import {ROUTES} from '../../shared/utils/routes';
@@ -189,6 +184,7 @@ const PreViewScreen = ({navigation, route}: any) => {
 
   const getVideoSDKTokenFromAPI = async () => {
     const videoSDKToken = await getVideoSDKToken();
+    console.log("videoSDKToken.Data.Token",videoSDKToken.Data.Token)
     setVideoSDKToken(videoSDKToken.Data.Token);
   };
 

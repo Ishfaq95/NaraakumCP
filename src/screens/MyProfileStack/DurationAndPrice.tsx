@@ -63,12 +63,14 @@ const DurationAndPrice = ({ route }: { route: any }) => {
         if (cleaned === '') {
             return '';
         }
-        let num = parseInt(cleaned, 10);
+        // Limit to 5 digits maximum - prevent 6th digit input
+        const limited = cleaned.length > 5 ? cleaned.substring(0, 5) : cleaned;
+        let num = parseInt(limited, 10);
         if (isNaN(num)) {
             return '';
         }
+        // Only apply min validation, don't auto-clamp to max
         if (num < min) num = min;
-        if (num > max) num = max;
         return num.toString();
     };
 

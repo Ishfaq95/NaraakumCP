@@ -7,6 +7,7 @@ import {
     TouchableOpacity,
     Platform,
     Alert,
+    Modal,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { CAIRO_FONT_FAMILY, globalTextStyles } from '../../styles/globalStyles';
@@ -20,6 +21,7 @@ import { setStep2PhoneNumber, setUser } from '../../shared/redux/reducers/userRe
 import { useDispatch, useSelector } from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
+import LoaderKit from 'react-native-loader-kit';
 
 const PersonalInfoStep: React.FC<{userRoleId: any, onNext: (userInfo: any, phoneNumber: string) => void}> = ({userRoleId, onNext}) => {
     const { t } = useTranslation();
@@ -355,6 +357,24 @@ const PersonalInfoStep: React.FC<{userRoleId: any, onNext: (userInfo: any, phone
                     </TouchableOpacity>
                 </View>
             </View>
+
+            {isLoading && <Modal
+                transparent={true}
+                animationType="fade"
+                visible={isLoading}
+                statusBarTranslucent={true}
+                onRequestClose={() => { }}
+                hardwareAccelerated={Platform.OS === 'android'}
+                presentationStyle="overFullScreen"
+            >
+                <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+                    <LoaderKit
+                        style={{ width: 100, height: 100 }}
+                        name={'BallSpinFadeLoader'}
+                        color={'green'}
+                    />
+                </View>
+            </Modal>}
         </View>
     );
 };
@@ -397,7 +417,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#20B2AA',
         width: '100%',
         borderRadius: 12,
-        paddingVertical: 14,
+        paddingVertical: 10,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',

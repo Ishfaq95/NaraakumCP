@@ -13,6 +13,7 @@ import { globalTextStyles } from '../../../styles/globalStyles';
 import { useSelector } from 'react-redux';
 import { addVisitRecordService } from '../../../services/api/addVisitRecord';
 import SvgUri from 'react-native-svg-uri';
+import PatientHistory from '../../../assets/icons/PatientHistory';
 
 interface Step2Props {
   onNext: () => void;
@@ -217,11 +218,7 @@ const Step2PatientHistory: React.FC<Step2Props> = ({
         {/* Header with Icon */}
         <View style={styles.headerSection}>
           <View style={styles.headerIconContainer}>
-            <SvgUri
-              width={50}
-              height={50}
-              source={require('../../../assets/icons/PatientHistory.svg')}
-            />
+            <PatientHistory width={50} height={50} />
           </View>
           <Text style={styles.headerTitle}>Patient History</Text>
         </View>

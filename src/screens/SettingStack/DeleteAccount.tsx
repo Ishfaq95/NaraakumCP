@@ -38,7 +38,7 @@ const DeleteAccountScreen = () => {
     const renderHeader = () => (
         <View style={styles.header}>
             <TouchableOpacity onPress={handleBack} style={styles.backButton}>
-                <Ionicons name="chevron-back" size={24} color="#333" />
+                <Ionicons name="arrow-back-outline" size={24} color="#333" />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Delete My Account</Text>
         </View>

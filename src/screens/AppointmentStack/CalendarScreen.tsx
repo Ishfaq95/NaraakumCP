@@ -24,6 +24,7 @@ import { CAIRO_FONT_FAMILY, globalTextStyles } from '../../styles/globalStyles';
 import Header from '../../components/common/Header';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
 import { ROUTES } from '../../shared/utils/routes';
+import LoaderKit from 'react-native-loader-kit';
 
 interface MarkedDates {
   [date: string]: {
@@ -57,6 +58,7 @@ const CalendarScreen: React.FC = () => {
 
 
   const getTaskbyServiceProviderId = async () => {
+    setIsLoading(true);
     try {
       const payload: any = {
         "UserId": user?.Id,
@@ -113,6 +115,8 @@ const CalendarScreen: React.FC = () => {
         setAllTasks(taskList);
       }
     } catch (error) {
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -228,12 +232,12 @@ const CalendarScreen: React.FC = () => {
   };
 
   const renderHeader = () => (
-    <View style={{ flexDirection: 'row', alignItems: 'center', height: 50, backgroundColor: '#fff', padding: 10 }}>
+    <View style={{ flexDirection: 'row', alignItems: 'center', height: 50, backgroundColor: '#fff', paddingHorizontal: 10 }}>
       <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-        <Ionicons name="chevron-back" size={24} color="#333" />
+        <Ionicons name="arrow-back-outline" size={24} color="#333" />
 
       </TouchableOpacity>
-      <Text style={{fontSize:16,fontFamily:CAIRO_FONT_FAMILY.bold,lineHeight:20,color:'#191919'}}>Appointment Calendar</Text>
+      <Text style={{fontSize:16,fontFamily:CAIRO_FONT_FAMILY.bold,lineHeight: Platform.OS === 'ios' ? 0 : 24,color:'#191919'}}>Appointment Calendar</Text>
     </View>
   );
 
@@ -543,6 +547,24 @@ const CalendarScreen: React.FC = () => {
           </View>
         </CustomBottomSheet>
       </View>
+
+      {isLoading && <Modal
+                transparent={true}
+                animationType="fade"
+                visible={isLoading}
+                statusBarTranslucent={true}
+                onRequestClose={() => { }}
+                hardwareAccelerated={Platform.OS === 'android'}
+                presentationStyle="overFullScreen"
+            >
+                <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+                    <LoaderKit
+                        style={{ width: 100, height: 100 }}
+                        name={'BallSpinFadeLoader'}
+                        color={'green'}
+                    />
+                </View>
+            </Modal>}
     </SafeAreaView>
   );
 };
@@ -780,7 +802,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   backButton: {
-    padding: 5,
+    // padding: 5,
     backgroundColor: '#fff',
     borderRadius: 10,
   },

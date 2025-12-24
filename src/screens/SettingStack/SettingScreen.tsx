@@ -4,7 +4,7 @@ import AppHeader from '../../components/common/AppHeader'
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import SettingsMenu from '../../components/Profile/SettingsMenu';
 import { useDispatch, useSelector } from 'react-redux';
-import { setUser } from '../../shared/redux/reducers/userReducer';
+import { setTopic, setUser } from '../../shared/redux/reducers/userReducer';
 import { ROUTES } from '../../shared/utils/routes';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
 import CustomBottomSheet from '../../components/common/CustomBottomSheet';
@@ -14,6 +14,7 @@ import Dropdown from '../../components/common/Dropdown';
 import { settingService } from '../../services/api/settingService';
 import FullScreenLoader from '../../components/FullScreenLoader';
 import { tokenRefreshService } from '../../services/axios/tokenRefreshService';
+import messaging from '@react-native-firebase/messaging';
 
 const ReminderTimeUnit = [
   { label: 'Minutes', value: '6' },
@@ -54,6 +55,7 @@ const SettingScreen = () => {
   const navigation = useNavigation();
   const user = useSelector((state: any) => state.root.user.user);
   const [reminderSettingBottomSheetVisible, setReminderSettingBottomSheetVisible] = useState(false);
+  const { topic } = useSelector((state: any) => state.root.user);
   const [reminderTimeUnit, setReminderTimeUnit] = useState<string>('6'); // Default to minutes
   const [reminderMinutesAndHours, setReminderMinutesAndHours] = useState<string>('5'); // Default value
   const [settingsMenuItems, setSettingsMenuItems] = useState([
@@ -159,7 +161,13 @@ const SettingScreen = () => {
   }
   
   const handleLogout = () => {
+    if(topic){
+      messaging()
+        .unsubscribeFromTopic(topic)
+        .then(() => { });
+    }
     dispatch(setUser(null));
+    dispatch(setTopic(null));
     // Reset token refresh service on logout to clear any queued requests
     tokenRefreshService.reset();
     // Implement logout functionality

@@ -16,6 +16,7 @@ import {
   Keyboard,
   TouchableWithoutFeedback,
   Alert,
+  Modal,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Dropdown } from 'react-native-element-dropdown';
@@ -36,6 +37,7 @@ import CustomPhoneInput, { COUNTRIES } from '../../components/common/CustomPhone
 import { ROUTES } from '../../shared/utils/routes';
 import { useNavigation } from '@react-navigation/native';
 import AntDesign from 'react-native-vector-icons/AntDesign';
+import LoaderKit from 'react-native-loader-kit';
 
 const MIN_HEIGHT = 550; // Absolute minimum height
 const OPTIMAL_HEIGHT = 750; // Height for medium screens
@@ -408,7 +410,7 @@ const LoginScreen = () => {
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <AuthHeader onBack={handleBack} />
-      {/* <FullScreenLoader visible={isLoading} /> */}
+      
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardAvoidingView}>
@@ -556,6 +558,24 @@ const LoginScreen = () => {
           </ScrollView>
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
+      
+      {isLoading && <Modal
+                transparent={true}
+                animationType="fade"
+                visible={isLoading}
+                statusBarTranslucent={true}
+                onRequestClose={() => { }}
+                hardwareAccelerated={Platform.OS === 'android'}
+                presentationStyle="overFullScreen"
+            >
+                <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+                    <LoaderKit
+                        style={{ width: 100, height: 100 }}
+                        name={'BallSpinFadeLoader'}
+                        color={'green'}
+                    />
+                </View>
+            </Modal>}
     </View>
   );
 };

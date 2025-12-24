@@ -1,7 +1,7 @@
 import { View, Text, SafeAreaView, StyleSheet, TouchableOpacity, ScrollView, Switch, Image, Platform } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { CAIRO_FONT_FAMILY, globalTextStyles } from '../../styles/globalStyles';
-import { useNavigation } from '@react-navigation/native';
+import { useIsFocused, useNavigation } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { profileService } from '../../services/api/profileService';
 import { useSelector } from 'react-redux';
@@ -22,10 +22,11 @@ const ServiceProfile = () => {
     const user = useSelector((state: any) => state.root.user.user);
     const { showAlert } = useAlert();
     const defaultLevelRenderArray =['Consultant','Specialist','General Physician'];
+    const isFocused = useIsFocused();
 
     useEffect(() => {
         getServiceProviderRoleAndSpecialty();
-    }, []);
+    }, [isFocused]);
 
     useEffect(() => {
         if (serviceProviderRoleAndSpecialty) {

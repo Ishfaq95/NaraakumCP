@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, FlatList, TouchableOpacity, Alert, Image, TextInput, ScrollView, KeyboardAvoidingView, Platform, Keyboard, useColorScheme } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, FlatList, TouchableOpacity, Alert, Image, TextInput, ScrollView, KeyboardAvoidingView, Platform, Keyboard, useColorScheme, Modal } from 'react-native';
 import CustomScreensHeader from '../../components/common/CustomScreensHeader';
 import PromotionItem from '../../components/PromotionItem';
 import { CAIRO_FONT_FAMILY, globalTextStyles } from '../../styles/globalStyles';
@@ -60,15 +60,23 @@ const PromotionAndDiscount: React.FC = () => {
     }, []);
 
     const getPromoCodeListFN = async () => {
-        const payload = {
-            OrganizationId: user.OrganizationId,
-            ServiceProviderId: user.Id,
-        };
+        setIsLoading(true);
+        try {
+            const payload = {
+                OrganizationId: user.OrganizationId,
+                ServiceProviderId: user.Id,
+            };
 
-        const response = await settingService.getPromoCodeList(payload);
-        if (response.ResponseStatus.STATUSCODE == 200) {
-            setPromoCodeList(response.Data);
+            const response = await settingService.getPromoCodeList(payload);
+            if (response.ResponseStatus.STATUSCODE == 200) {
+                setPromoCodeList(response.Data);
+            }
+        } catch (error) {
+
+        } finally {
+            setIsLoading(false);
         }
+
     };
 
     const addPromoCodeFN = async () => {
@@ -129,14 +137,21 @@ const PromotionAndDiscount: React.FC = () => {
     };
 
     const handleDeletePromotion = async (promotion: any) => {
-        const payload = {
-            PromocodeId: promotion.Id,
-        };
-        const response = await settingService.deletePromoCode(payload);
-        if (response.StatusCode.STATUSCODE == 11021) {
-            getPromoCodeListFN();
-        } else {
-            Alert.alert('Error', response.Message);
+        try {
+            setIsLoading(true);
+            const payload = {
+                PromocodeId: promotion.Id,
+            };
+            const response = await settingService.deletePromoCode(payload);
+            if (response.StatusCode.STATUSCODE == 11021) {
+                getPromoCodeListFN();
+            } else {
+                Alert.alert('Error', response.Message);
+            }
+        } catch (error) {
+
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -162,13 +177,20 @@ const PromotionAndDiscount: React.FC = () => {
     };
 
     const handleSavePromoCode = async () => {
+        try {
+
+        } catch (error) {
+
+        } finally {
+            setIsLoading(false);
+        }
         // Reset all errors first
         setPromoCodeError(false);
         setDiscountError(false);
         setNumberOfClientsError(false);
         setNumberOfUsesError(false);
 
-        
+
 
         let hasError = false;
 
@@ -231,7 +253,7 @@ const PromotionAndDiscount: React.FC = () => {
 
         const response = await settingService.addPromoCode(payload);
         if (response.StatusCode.STATUSCODE == 11022) {
-            
+
             setTimeout(() => {
                 showAlert({
                     title: response.StatusCode.MESSAGE,
@@ -250,7 +272,6 @@ const PromotionAndDiscount: React.FC = () => {
             resetForm();
             setAddPromoCodeBottomSheetVisible(false);
         }
-        setIsLoading(false);
     };
 
     const formatDate = (date: Date) => {
@@ -544,25 +565,23 @@ const PromotionAndDiscount: React.FC = () => {
                 </KeyboardAvoidingView>
             </CustomBottomSheet>
 
-            {isLoading && <View
-                pointerEvents="auto"
-                style={[
-                    StyleSheet.absoluteFillObject,
-                    {
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        backgroundColor: 'rgba(0,0,0,0.2)', // optional dim overlay
-                        zIndex: 9999,
-                        elevation: 9999,
-                    },
-                ]}
+            {isLoading && <Modal
+                transparent={true}
+                animationType="fade"
+                visible={isLoading}
+                statusBarTranslucent={true}
+                onRequestClose={() => { }}
+                hardwareAccelerated={Platform.OS === 'android'}
+                presentationStyle="overFullScreen"
             >
-                <LoaderKit
-                    style={{ width: 100, height: 100 }}
-                    name="BallSpinFadeLoader"
-                    color="green"
-                />
-            </View>}
+                <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+                    <LoaderKit
+                        style={{ width: 100, height: 100 }}
+                        name={'BallSpinFadeLoader'}
+                        color={'green'}
+                    />
+                </View>
+            </Modal>}
         </SafeAreaView>
     );
 };
@@ -754,7 +773,7 @@ const bottomSheetStyles = StyleSheet.create({
     saveButton: {
         backgroundColor: '#00A19D',
         borderRadius: 12,
-        paddingVertical: 16,
+        paddingVertical: 10,
         alignItems: 'center',
         justifyContent: 'center',
     },

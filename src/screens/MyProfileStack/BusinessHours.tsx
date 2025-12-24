@@ -74,8 +74,10 @@ const BusinessHours = ({ route }: { route: any }) => {
     const [showCustomEndPicker, setShowCustomEndPicker] = useState(false);
     const [editSlots, setEditSlots] = useState<any>(null);
     const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const [isLoading, setIsLoading] = useState(false);
 
     const addServiceProviderHolidays = async (daysState: { [key: number]: boolean }) => {
+        setIsLoading(true);
         const dayText = daysOfWeek.map((day, index) => {
             return {
                 Day: day,
@@ -102,6 +104,8 @@ const BusinessHours = ({ route }: { route: any }) => {
             }
         }
         catch (error: any) {
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -152,6 +156,7 @@ const BusinessHours = ({ route }: { route: any }) => {
 
     const getServiceProviderHolidays = async () => {
         try {
+            setIsLoading(true);
             const payload = {
                 ServiceProviderId: user?.Id,
             };
@@ -160,11 +165,14 @@ const BusinessHours = ({ route }: { route: any }) => {
                 setHolidays(response?.Holidays || []);
             }
         } catch (error: any) {
+        } finally {
+            setIsLoading(false);
         }
     };
 
     const getServiceProviderAvailability = async (monthDate: moment.Moment) => {
         try {
+            setIsLoading(true);
             const startOfTargetMonth = monthDate.clone().startOf('month').format('YYYY-MM-DD');
             const payload = {
                 CatAvailabilityTypeId: 0,
@@ -177,6 +185,8 @@ const BusinessHours = ({ route }: { route: any }) => {
                 setAvailability(response?.Data || []);
             }
         } catch (error: any) {
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -326,6 +336,7 @@ const BusinessHours = ({ route }: { route: any }) => {
     };
 
     const handleDatePress = (date: moment.Moment) => {
+        setIsLoading(true);
         setSelectedDate(date);
         const existingIndex = selectedDates.findIndex(d => d.isSame(date, 'day'));
         if (existingIndex >= 0) {
@@ -333,9 +344,12 @@ const BusinessHours = ({ route }: { route: any }) => {
         } else {
             setSelectedDates(prev => [...prev, date]);
         }
+        setIsLoading(false);
     };
 
     const handleDelete = async (slot: any) => {
+        try {
+            setIsLoading(true);
         const payload = {
             "ServiceProviderAvailabilityIds": slot.IDs,
             "filter": "fullslot",
@@ -351,6 +365,11 @@ const BusinessHours = ({ route }: { route: any }) => {
                 type: 'success',
             });
             getServiceProviderAvailability(selectedMonth);
+        }
+        } catch (error) {
+            
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -378,18 +397,26 @@ const BusinessHours = ({ route }: { route: any }) => {
     };
 
     const handleCopyToNextMonth = async () => {
-        const payload = {
-            "ServiceProviderId": user?.Id,
-            "Date": selectedMonth.clone().startOf('month').format('YYYY-MM-DD'),
-        };
-        const response = await profileService.copyServiceProviderAvailabilityToNextMonth(payload);
-        if (response?.ResponseStatus?.STATUSCODE == 200) {
-            showAlert({
-                title: response?.ResponseStatus?.MESSAGE,
-                message: '',
-                type: 'success',
-            });
-            getServiceProviderAvailability(selectedMonth);
+        try {
+            setIsLoading(true);
+            const payload = {
+                "CatServiceServeTypeId": Data?.CatServiceServeTypeId,
+                "ServiceProviderId": user?.Id,
+                "Date": selectedMonth.clone().startOf('month').format('YYYY-MM-DD'),
+            };
+            const response = await profileService.copyServiceProviderAvailabilityToNextMonth(payload);
+            if (response?.ResponseStatus?.STATUSCODE == 200) {
+                showAlert({
+                    title: response?.ResponseStatus?.MESSAGE,
+                    message: '',
+                    type: 'success',
+                });
+                getServiceProviderAvailability(selectedMonth);
+            }
+        } catch (error) {
+            
+        } finally {
+            setIsLoading(false);
         }
     };
 

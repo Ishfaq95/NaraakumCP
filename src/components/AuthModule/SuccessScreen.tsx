@@ -35,7 +35,7 @@ const styles = StyleSheet.create({
     navigationContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginVertical: 10,
+        // marginVertical: 10,
     },
     nextButton: {
         backgroundColor: '#20B2AA',

@@ -6,10 +6,14 @@ import {
   TouchableOpacity,
   ScrollView,
   TextInput,
+  Platform,
+  KeyboardAvoidingView,
+  Keyboard,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { globalTextStyles } from '../../../styles/globalStyles';
+import Voice from '@dev-amirzubair/react-native-voice';
+import { CAIRO_FONT_FAMILY, globalTextStyles } from '../../../styles/globalStyles';
 import { useSelector } from 'react-redux';
 import { addVisitRecordService } from '../../../services/api/addVisitRecord';
 import SvgUri from 'react-native-svg-uri';
@@ -66,6 +70,14 @@ const Step2PatientHistory: React.FC<Step2Props> = ({
     { id: '1', value: '', hasError: false }
   ]);
   const dataHydratedRef = useRef(false);
+  const listeningFieldRef = useRef<string | null>(null);
+  const [listeningField, setListeningField] = useState<string | null>(null);
+  const stopRequestedRef = useRef(false);
+  const scrollViewRef = useRef<ScrollView>(null);
+  const inputPositions = useRef<{ [key: string]: number }>({});
+  const pendingScrollKey = useRef<string | null>(null);
+  const keyboardHeight = useRef(0);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
 
   useEffect(() => {
     if (dataHydratedRef.current) {
@@ -151,11 +163,160 @@ const Step2PatientHistory: React.FC<Step2Props> = ({
     }
   };
 
+  const appendSpeechValue = (prevValue: string, spokenText: string) => {
+    const trimmedPrev = prevValue.trim();
+    const trimmedNew = spokenText.trim();
+    if (Platform.OS === 'android') {
+      if (trimmedPrev && trimmedNew) {
+        return `${trimmedPrev} ${trimmedNew}`;
+      }
+      return trimmedPrev || trimmedNew;
+    }
+    return spokenText;
+  };
+
+  const handleInputLayout = (key: string, event: any) => {
+    if (Platform.OS === 'ios') {
+      const { y } = event.nativeEvent.layout;
+      inputPositions.current[key] = y;
+    }
+  };
+
+  const updateFieldFromSpeech = (fieldKey: string, spokenText: string) => {
+    const normalized = spokenText.trim();
+    if (!normalized) return;
+    const [section, id] = fieldKey.split(':');
+    const updater = (setter: React.Dispatch<React.SetStateAction<HistoryItem[]>>) => {
+      setter(prev =>
+        prev.map(item =>
+          item.id === id
+            ? { ...item, value: appendSpeechValue(item.value, normalized), hasError: false }
+            : item
+        )
+      );
+    };
+
+    switch (section) {
+      case 'pmh':
+        updater(setPastMedicalHistory);
+        break;
+      case 'psh':
+        updater(setPastSurgicalHistory);
+        break;
+      case 'allergy':
+        updater(setAllergy);
+        break;
+      case 'meds':
+        updater(setCurrentMeds);
+        break;
+    }
+  };
+
+  const startListening = async (fieldKey: string) => {
+    try {
+      if (listeningField && listeningField !== fieldKey) {
+        stopRequestedRef.current = true;
+        await Voice.stop();
+      }
+
+      stopRequestedRef.current = false;
+      listeningFieldRef.current = fieldKey;
+      setListeningField(fieldKey);
+      await Voice.start('en-US');
+    } catch {
+      listeningFieldRef.current = null;
+      setListeningField(null);
+    }
+  };
+
+  const stopListening = async () => {
+    stopRequestedRef.current = true;
+    try {
+      await Voice.stop();
+    } catch {
+      // ignore
+    }
+    listeningFieldRef.current = null;
+    setListeningField(null);
+  };
+
+  const handleMicPress = async (fieldKey: string) => {
+    if (listeningField === fieldKey) {
+      await stopListening();
+      return;
+    }
+    await startListening(fieldKey);
+  };
+
+  useEffect(() => {
+    Voice.onSpeechStart = () => {
+      if (listeningFieldRef.current) {
+        setListeningField(listeningFieldRef.current);
+      }
+    };
+
+    Voice.onSpeechResults = (event: any) => {
+      const spokenText = event?.value?.[0] ?? '';
+      if (!spokenText || !listeningFieldRef.current) {
+        return;
+      }
+
+      updateFieldFromSpeech(listeningFieldRef.current, spokenText);
+      if (Platform.OS === 'android') {
+        listeningFieldRef.current = null;
+        setListeningField(null);
+      }
+    };
+
+    Voice.onSpeechEnd = () => {
+      if (stopRequestedRef.current) {
+        stopRequestedRef.current = false;
+        listeningFieldRef.current = null;
+        setListeningField(null);
+        return;
+      }
+
+      if (Platform.OS === 'ios' && listeningFieldRef.current) {
+        Voice.start('en-US');
+      }
+    };
+
+    Voice.onSpeechError = () => {
+      stopRequestedRef.current = false;
+      listeningFieldRef.current = null;
+      setListeningField(null);
+    };
+
+    return () => {
+      Voice.destroy().then(() => Voice.removeAllListeners());
+    };
+  }, []);
+
+  useEffect(() => {
+    if (Platform.OS === 'ios') {
+      const showSub = Keyboard.addListener('keyboardWillShow', (event) => {
+        keyboardHeight.current = event.endCoordinates.height;
+        setIsKeyboardVisible(true);
+      });
+      const hideSub = Keyboard.addListener('keyboardWillHide', () => {
+        keyboardHeight.current = 0;
+        setIsKeyboardVisible(false);
+      });
+
+      return () => {
+        showSub.remove();
+        hideSub.remove();
+      };
+    }
+    return undefined;
+  }, []);
+
   const renderSection = (
     title: string,
     items: HistoryItem[],
     setItems: React.Dispatch<React.SetStateAction<HistoryItem[]>>,
-    placeholder: string
+    placeholder: string,
+    sectionId: string
   ) => {
     return (
       <View style={styles.sectionContainer}>
@@ -170,13 +331,16 @@ const Step2PatientHistory: React.FC<Step2Props> = ({
           </TouchableOpacity>
         </View>
 
-        {items.map((item, index) => (
+        {items.map((item, index) => {
+          const fieldKey = `${sectionId}:${item.id}`;
+          return (
           <View
             key={item.id}
             style={[
               styles.inputRow,
               item.hasError && styles.inputRowError,
             ]}
+            onLayout={(event) => handleInputLayout(fieldKey, event)}
           >
             <TextInput
               style={styles.input}
@@ -186,9 +350,16 @@ const Step2PatientHistory: React.FC<Step2Props> = ({
               onChangeText={(text) => handleTextChange(item.id, text, items, setItems)}
             />
             <View style={styles.iconContainer}>
-              {/* <TouchableOpacity style={styles.editIcon}>
-                <Icon name="create-outline" size={20} color="#179c8e" />
-              </TouchableOpacity> */}
+              <TouchableOpacity
+                style={styles.micButton}
+                onPress={() => handleMicPress(`${sectionId}:${item.id}`)}
+              >
+                <Icon
+                  name={listeningField === `${sectionId}:${item.id}` ? 'mic-off' : 'mic'}
+                  size={20}
+                  color="#666"
+                />
+              </TouchableOpacity>
               {index > 0 && (
                 <TouchableOpacity
                   style={styles.removeIcon}
@@ -203,18 +374,29 @@ const Step2PatientHistory: React.FC<Step2Props> = ({
               )}
             </View>
           </View>
-        ))}
+        );
+        })}
       </View>
     );
   };
 
   return (
     <View style={styles.container}>
-      <ScrollView
-        style={styles.scrollView}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoidingView}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 120 : 0}
       >
+        <ScrollView
+          // ref={scrollViewRef}
+          style={styles.scrollView}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingBottom: Platform.OS === 'ios' ? (isKeyboardVisible ? 20 : 10) : 20 },
+          ]}
+          keyboardShouldPersistTaps="handled"
+        >
         {/* Header with Icon */}
         <View style={styles.headerSection}>
           <View style={styles.headerIconContainer}>
@@ -228,7 +410,8 @@ const Step2PatientHistory: React.FC<Step2Props> = ({
           'Past Medical History',
           pastMedicalHistory,
           setPastMedicalHistory,
-          'Past Medical History'
+          'Past Medical History',
+          'pmh'
         )}
 
         {/* Past Surgical History */}
@@ -236,7 +419,8 @@ const Step2PatientHistory: React.FC<Step2Props> = ({
           'Past Surgical History',
           pastSurgicalHistory,
           setPastSurgicalHistory,
-          'Past Surgical History'
+          'Past Surgical History',
+          'psh'
         )}
 
         {/* Allergy */}
@@ -244,7 +428,8 @@ const Step2PatientHistory: React.FC<Step2Props> = ({
           'Allergy',
           allergy,
           setAllergy,
-          'Allergy'
+          'Allergy',
+          'allergy'
         )}
 
         {/* Current Meds */}
@@ -252,22 +437,20 @@ const Step2PatientHistory: React.FC<Step2Props> = ({
           'Current Meds',
           currentMeds,
           setCurrentMeds,
-          'Current Meds'
+          'Current Meds',
+          'meds'
         )}
-      </ScrollView>
+        </ScrollView>
 
-      {/* Footer Buttons */}
-      <View style={styles.footer}>
-        {/* <TouchableOpacity style={styles.backButton} onPress={onPrevious}>
-          <Text style={styles.backButtonText}>Previous</Text>
-        </TouchableOpacity> */}
-        <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
-          <Text style={styles.nextButtonText}>Save / Next</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.skipButton} onPress={onSkip}>
-          <Text style={styles.skipButtonText}>Skip</Text>
-        </TouchableOpacity>
-      </View>
+        <View style={styles.footer}>
+          <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
+            <Text style={styles.nextButtonText}>Save / Next</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.skipButton} onPress={onSkip}>
+            <Text style={styles.skipButtonText}>Skip</Text>
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
     </View>
   );
 };
@@ -276,6 +459,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f0f8f7',
+  },
+  keyboardAvoidingView: {
+    flex: 1,
   },
   scrollView: {
     flex: 1,
@@ -367,6 +553,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
+  micButton: {
+    padding: 4,
+  },
   editIcon: {
     padding: 4,
   },
@@ -375,7 +564,8 @@ const styles = StyleSheet.create({
   },
   footer: {
     flexDirection: 'row',
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
     backgroundColor: '#f0f8f7',
     borderTopWidth: 1,
     borderTopColor: '#e0e0e0',
@@ -399,7 +589,7 @@ const styles = StyleSheet.create({
     flex: 1.5,
     backgroundColor: '#179c8e',
     borderRadius: 8,
-    paddingVertical: 14,
+    paddingVertical: 10,
     alignItems: 'center',
     elevation: 2,
     shadowColor: '#000',
@@ -408,23 +598,25 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
   },
   nextButtonText: {
-    ...globalTextStyles.bodyMedium,
+    fontSize: 16,
+    fontFamily: CAIRO_FONT_FAMILY.semiBold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 24,
     color: '#fff',
-    fontWeight: '600',
   },
   skipButton: {
     flex: 0.8,
     backgroundColor: '#fff',
     borderRadius: 8,
-    paddingVertical: 14,
+    paddingVertical: 10,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#d0d0d0',
   },
   skipButtonText: {
-    ...globalTextStyles.bodyMedium,
+    fontSize: 16,
+    fontFamily: CAIRO_FONT_FAMILY.semiBold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 24,
     color: '#666',
-    fontWeight: '600',
   },
 });
 

@@ -69,6 +69,7 @@ const Stepper: React.FC<StepperProps> = ({ currentStep, totalSteps, onStepPress 
         onClose={() => setVisible(false)}
         backdropClickable={true}
         showHandle={false}
+        maxHeight={220}
       >
         <View style={styles.bottomSheetContainer}>
           <View style={{flexDirection:'row', justifyContent:'space-between', alignItems:'center', paddingHorizontal: 16, paddingVertical: 16}}>

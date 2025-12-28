@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   ScrollView,
   Platform,
+  KeyboardAvoidingView,
+  Keyboard,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { CAIRO_FONT_FAMILY, globalTextStyles } from '../../../styles/globalStyles';
@@ -18,6 +20,7 @@ import { addVisitRecordService } from '../../../services/api/addVisitRecord';
 import { setVisitMainId } from '../../../shared/redux/reducers/generalDataReducer';
 import SvgUri from 'react-native-svg-uri';
 import PatientComplaint from '../../../assets/icons/PatientComplaint';
+import Voice from '@dev-amirzubair/react-native-voice';
 
 interface Step1Props {
   patientData: any;
@@ -32,10 +35,26 @@ const Step1PatientComplaint: React.FC<Step1Props> = ({ patientData, onNext, onDa
   const [durationUnit, setDurationUnit] = useState('Day');
   const [otherComplaint, setOtherComplaint] = useState('');
   const [visible, setVisible] = useState(false);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const visitRecordData: any = useSelector((state: any) => state.root.generalData.visitRecordData);
   const visitmainId: any = useSelector((state: any) => state.root.generalData.visitmainId);
   const user: any = useSelector((state: any) => state.root.user.user);
   const dispatch = useDispatch();
+  const scrollViewRef = useRef<ScrollView>(null);
+  const chiefComplaintRef = useRef<TextInput>(null);
+  const presentIllnessRef = useRef<TextInput>(null);
+  const durationValueRef = useRef<TextInput>(null);
+  const otherComplaintRef = useRef<TextInput>(null);
+  const chiefComplaintContainerRef = useRef<View>(null);
+  const presentIllnessContainerRef = useRef<View>(null);
+  const durationContainerRef = useRef<View>(null);
+  const otherComplaintContainerRef = useRef<View>(null);
+  const inputPositions = useRef<{ [key: string]: number }>({});
+  const keyboardHeight = useRef(0);
+  const pendingScrollKey = useRef<string | null>(null);
+  const stopRequestedRef = useRef(false);
+  const activeFieldRef = useRef<string | null>(null);
+  const [listeningField, setListeningField] = useState<string | null>(null);
 
   const durationOptions = [
     { label: 'Day', value: '1' },
@@ -51,6 +70,33 @@ const Step1PatientComplaint: React.FC<Step1Props> = ({ patientData, onNext, onDa
       manageVisitRecordData();
     }
   }, [visitRecordData]);
+
+  useEffect(() => {
+    if (Platform.OS === 'ios') {
+      const keyboardWillShowListener = Keyboard.addListener('keyboardWillShow', (e) => {
+        keyboardHeight.current = e.endCoordinates.height;
+        setIsKeyboardVisible(true);
+        // Scroll to pending input if any
+        if (pendingScrollKey.current) {
+          setTimeout(() => {
+            scrollToInput(pendingScrollKey.current!);
+            pendingScrollKey.current = null;
+          }, 100);
+        }
+      });
+
+      const keyboardWillHideListener = Keyboard.addListener('keyboardWillHide', () => {
+        keyboardHeight.current = 0;
+        setIsKeyboardVisible(false);
+        pendingScrollKey.current = null;
+      });
+
+      return () => {
+        keyboardWillShowListener.remove();
+        keyboardWillHideListener.remove();
+      };
+    }
+  }, []);
 
   const manageVisitRecordData = () => {
     setChiefComplaint(visitRecordData?.PatientComplaint[0]?.ChiefComplaint);
@@ -95,131 +141,358 @@ const Step1PatientComplaint: React.FC<Step1Props> = ({ patientData, onNext, onDa
     return false;
   };
 
+  const scrollToInput = (key: string) => {
+    if (Platform.OS !== 'ios' || !scrollViewRef.current) return;
+    
+    // Use stored position from onLayout (this is relative to ScrollView content container)
+    const position = inputPositions.current[key];
+    if (position !== undefined) {
+      // When keyboard appears, KeyboardAvoidingView with padding behavior adds padding at bottom
+      // We need to scroll so the input is visible above the keyboard
+      // Scroll to position minus some offset to keep input visible
+      // The offset should account for some header space (around 100-150px)
+      const scrollOffset = 150;
+      const targetScrollY = Math.max(0, position - scrollOffset);
+      
+      setTimeout(() => {
+        scrollViewRef.current?.scrollTo({
+          y: targetScrollY,
+          animated: true,
+        });
+      }, 250);
+    }
+  };
+
+  const handleInputLayout = (key: string, event: any) => {
+    if (Platform.OS === 'ios') {
+      const { y } = event.nativeEvent.layout;
+      inputPositions.current[key] = y;
+    }
+  };
+
+  const updateFieldFromSpeech = (fieldKey: string, value: string) => {
+    const normalized = value.trim();
+    if (!normalized) return;
+
+    const appendValue = (prevValue: string) => {
+      const trimmedPrev = prevValue.trim();
+      const trimmedNew = normalized;
+      if (Platform.OS === 'android') {
+        if (trimmedPrev && trimmedNew) {
+          return `${trimmedPrev} ${trimmedNew}`;
+        }
+        return trimmedPrev || trimmedNew;
+      }
+      return normalized;
+    };
+
+    switch (fieldKey) {
+      case 'chiefComplaint':
+        setChiefComplaint(prev => appendValue(prev));
+        break;
+      case 'presentIllness':
+        setPresentIllness(prev => appendValue(prev));
+        break;
+      case 'duration':
+        setDurationValue(prev => appendValue(prev));
+        break;
+      case 'otherComplaint':
+        setOtherComplaint(prev => appendValue(prev));
+        break;
+    }
+  };
+
+  const startListening = async (fieldKey: string) => {
+    try {
+      if (listeningField && listeningField !== fieldKey) {
+        stopRequestedRef.current = true;
+        await Voice.stop();
+      }
+
+      stopRequestedRef.current = false;
+      activeFieldRef.current = fieldKey;
+      setListeningField(fieldKey);
+      await Voice.start('en-US');
+    } catch (error) {
+      activeFieldRef.current = null;
+      setListeningField(null);
+    }
+  };
+
+  const stopListening = async () => {
+    stopRequestedRef.current = true;
+    try {
+      await Voice.stop();
+    } catch (error) {
+      // ignore
+    }
+    activeFieldRef.current = null;
+    setListeningField(null);
+  };
+
+  const handleMicPress = async (fieldKey: string) => {
+    if(Platform.OS === 'ios') {
+      await stopListening();
+
+      console.log("listeningField",listeningField);
+
+      if(listeningField || listeningField === fieldKey) {
+        return
+      }else {
+        await startListening(fieldKey);
+      }
+    }else{
+      if (listeningField === fieldKey) {
+        await stopListening();
+        return;
+      } 
+      await startListening(fieldKey);
+    }
+    
+  };
+
+  useEffect(() => {
+    Voice.onSpeechStart = () => {
+      if (activeFieldRef.current) {
+        setListeningField(activeFieldRef.current);
+      }
+    };
+
+    Voice.onSpeechResults = (event: any) => {
+      const spokenText = event?.value?.[0] ?? '';
+      if (!spokenText || !activeFieldRef.current) {
+        return;
+      }
+
+      updateFieldFromSpeech(activeFieldRef.current, spokenText);
+      if (Platform.OS === 'android') {
+        activeFieldRef.current = null;
+        setListeningField(null);
+      }
+    };
+
+    Voice.onSpeechEnd = () => {
+      if (stopRequestedRef.current) {
+        stopRequestedRef.current = false;
+        activeFieldRef.current = null;
+        setListeningField(null);
+        return;
+      }
+
+      if (Platform.OS === 'ios' && listeningField) {
+        Voice.start('en-US');
+      }
+    };
+
+    Voice.onSpeechError = () => {
+      stopRequestedRef.current = false;
+      activeFieldRef.current = null;
+      setListeningField(null);
+    };
+
+    return () => {
+      Voice.destroy().then(() => Voice.removeAllListeners());
+    };
+  }, []);
+
   return (
     <View style={styles.container}>
-      <ScrollView
-        style={styles.scrollView}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoidingView}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
       >
-        {/* Header with Icon */}
-        <View style={styles.headerSection}>
-          <View style={styles.headerIconContainer}>
-            {/* <SvgUri
-              width={50}
-              height={50}
-              source={require('../../../assets/icons/PatientComplaint.svg')}
-            /> */}
-            <PatientComplaint width={50} height={50} />
+        <ScrollView
+          ref={scrollViewRef}
+          style={styles.scrollView}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingBottom: Platform.OS === 'ios' ? (isKeyboardVisible ? 100 : 20) : 20 }
+          ]}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+        >
+          {/* Header with Icon */}
+          <View style={styles.headerSection}>
+            <View style={styles.headerIconContainer}>
+              <PatientComplaint width={50} height={50} />
+            </View>
+            <Text style={styles.headerTitle}>Patient Complaint</Text>
           </View>
-          <Text style={styles.headerTitle}>Patient Complaint</Text>
-        </View>
 
-        {/* Chief Complaint */}
-        <View style={styles.fieldContainer}>
-          <Text style={styles.label}>Chief Complaint</Text>
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.textInput}
-              placeholder="Chief Complaint"
-              placeholderTextColor="#999"
-              value={chiefComplaint}
-              onChangeText={setChiefComplaint}
-              multiline
-            />
-            {/* <TouchableOpacity style={styles.iconButton}>
-              <Icon name="create-outline" size={20} color="#179c8e" />
-            </TouchableOpacity> */}
-          </View>
-        </View>
-
-        {/* Present Illness */}
-        <View style={styles.fieldContainer}>
-          <Text style={styles.label}>Present Illness</Text>
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.textInput}
-              placeholder="Description"
-              placeholderTextColor="#999"
-              value={presentIllness}
-              onChangeText={setPresentIllness}
-              multiline
-            />
-            {/* <TouchableOpacity style={styles.iconButton}>
-              <Icon name="create-outline" size={20} color="#179c8e" />
-            </TouchableOpacity> */}
-          </View>
-        </View>
-
-        {/* Duration Of Complaint */}
-        <View style={styles.fieldContainer}>
-          <Text style={styles.label}>Duration Of Complaint</Text>
-          <View style={styles.durationContainer}>
-            <View style={styles.durationInputWrapper}>
+          {/* Chief Complaint */}
+          <View 
+            ref={chiefComplaintContainerRef}
+            style={styles.fieldContainer}
+            onLayout={(event) => handleInputLayout('chiefComplaint', event)}
+          >
+            <Text style={styles.label}>Chief Complaint</Text>
+            <View style={styles.inputContainer}>
               <TextInput
-                style={styles.durationInput}
-                placeholder="0"
+                ref={chiefComplaintRef}
+                style={styles.textInput}
+                placeholder="Chief Complaint"
                 placeholderTextColor="#999"
-                value={durationValue}
-                onChangeText={setDurationValue}
-                keyboardType="numeric"
+                value={chiefComplaint}
+                onChangeText={setChiefComplaint}
+                multiline
+                onFocus={() => {
+                  if (Platform.OS === 'ios') {
+                    pendingScrollKey.current = 'chiefComplaint';
+                    // If keyboard is already visible, scroll immediately
+                    if (keyboardHeight.current > 0) {
+                      setTimeout(() => scrollToInput('chiefComplaint'), 300);
+                    }
+                  }
+                }}
               />
-            </View>
-            <View style={styles.dropdownWrapper}>
-              <Dropdown
-                data={durationOptions}
-                value={durationUnit}
-                onChange={(value) => setDurationUnit(value as string)}
-                placeholder="Select"
-                // containerStyle={styles.dropdown}
-                containerStyle={{ height: 45 }}
-                dropdownStyle={[{ height: 45 }]}
-              />
+              <TouchableOpacity
+                style={styles.iconButton}
+                onPress={() => handleMicPress('chiefComplaint')}
+              >
+                {listeningField === 'chiefComplaint' ? <Ionicons name="mic-off" size={20} color="#666" /> : <Ionicons name="mic" size={20} color="#666" />}
+              </TouchableOpacity>
             </View>
           </View>
-        </View>
 
-        {/* Other Complaint */}
-        <View style={styles.fieldContainer}>
-          <Text style={styles.label}>Other Complaint</Text>
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.textInput}
-              placeholder="Other Complaint"
-              placeholderTextColor="#999"
-              value={otherComplaint}
-              onChangeText={setOtherComplaint}
-              multiline
-            />
-            {/* <TouchableOpacity style={styles.iconButton}>
-              <Icon name="create-outline" size={20} color="#179c8e" />
-            </TouchableOpacity> */}
+          {/* Present Illness */}
+          <View 
+            ref={presentIllnessContainerRef}
+            style={styles.fieldContainer}
+            onLayout={(event) => handleInputLayout('presentIllness', event)}
+          >
+            <Text style={styles.label}>Present Illness</Text>
+            <View style={styles.inputContainer}>
+              <TextInput
+                ref={presentIllnessRef}
+                style={styles.textInput}
+                placeholder="Description"
+                placeholderTextColor="#999"
+                value={presentIllness}
+                onChangeText={setPresentIllness}
+                multiline
+                onFocus={() => {
+                  if (Platform.OS === 'ios') {
+                    pendingScrollKey.current = 'presentIllness';
+                    // If keyboard is already visible, scroll immediately
+                    if (keyboardHeight.current > 0) {
+                      setTimeout(() => scrollToInput('presentIllness'), 300);
+                    }
+                  }
+                }}
+              />
+              <TouchableOpacity
+                style={styles.iconButton}
+                onPress={() => handleMicPress('presentIllness')}
+              >
+                {listeningField === 'presentIllness' ? <Ionicons name="mic-off" size={20} color="#666" /> : <Ionicons name="mic" size={20} color="#666" />}
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-      </ScrollView>
 
-      {/* Save / Next Button */}
-      <View style={styles.footer}>
-        <TouchableOpacity style={[styles.nextButton]} onPress={() => {
-          if (!visitRecordData && isDataValid()) {
-            setVisible(true);
-          } else {
-            if (visitmainId) {
-              handleSave();
+          {/* Duration Of Complaint */}
+          <View 
+            ref={durationContainerRef}
+            style={styles.fieldContainer}
+            onLayout={(event) => handleInputLayout('duration', event)}
+          >
+            <Text style={styles.label}>Duration Of Complaint</Text>
+            <View style={styles.durationContainer}>
+              <View style={styles.durationInputWrapper}>
+                <TextInput
+                  ref={durationValueRef}
+                  style={styles.durationInput}
+                  placeholder="0"
+                  placeholderTextColor="#999"
+                  value={durationValue}
+                  onChangeText={setDurationValue}
+                  keyboardType="numeric"
+                  onFocus={() => {
+                    if (Platform.OS === 'ios') {
+                      pendingScrollKey.current = 'duration';
+                      // If keyboard is already visible, scroll immediately
+                      if (keyboardHeight.current > 0) {
+                        setTimeout(() => scrollToInput('duration'), 300);
+                      }
+                    }
+                  }}
+                />
+              </View>
+              <View style={styles.dropdownWrapper}>
+                <Dropdown
+                  data={durationOptions}
+                  value={durationUnit}
+                  onChange={(value) => setDurationUnit(value as string)}
+                  placeholder="Select"
+                  // containerStyle={styles.dropdown}
+                  containerStyle={{ height: 45 }}
+                  dropdownStyle={[{ height: 45 }]}
+                />
+              </View>
+            </View>
+          </View>
+
+          {/* Other Complaint */}
+          <View 
+            ref={otherComplaintContainerRef}
+            style={styles.fieldContainer}
+            onLayout={(event) => handleInputLayout('otherComplaint', event)}
+          >
+            <Text style={styles.label}>Other Complaint</Text>
+            <View style={styles.inputContainer}>
+              <TextInput
+                ref={otherComplaintRef}
+                style={styles.textInput}
+                placeholder="Other Complaint"
+                placeholderTextColor="#999"
+                value={otherComplaint}
+                onChangeText={setOtherComplaint}
+                multiline
+                onFocus={() => {
+                  if (Platform.OS === 'ios') {
+                    pendingScrollKey.current = 'otherComplaint';
+                    // If keyboard is already visible, scroll immediately
+                    if (keyboardHeight.current > 0) {
+                      setTimeout(() => scrollToInput('otherComplaint'), 300);
+                    }
+                  }
+                }}
+              />
+              <TouchableOpacity
+                style={styles.iconButton}
+                onPress={() => handleMicPress('otherComplaint')}
+              >
+                {listeningField === 'otherComplaint' ? <Ionicons name="mic-off" size={20} color="#666" /> : <Ionicons name="mic" size={20} color="#666" />}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </ScrollView>
+
+        {/* Save / Next Button */}
+        <View style={styles.footer}>
+          <TouchableOpacity style={[styles.nextButton]} onPress={() => {
+            if (!visitRecordData && isDataValid()) {
+              setVisible(true);
             } else {
-              handleAddVisitMain();
+              if (visitmainId) {
+                handleSave();
+              } else {
+                handleAddVisitMain();
+              }
             }
-          }
-        }}>
-          <Text style={[styles.nextButtonText, { color: !visitRecordData ? '#fff' : '#fff' }]}>Save / Next</Text>
-        </TouchableOpacity>
-      </View>
+          }}>
+            <Text style={[styles.nextButtonText, { color: !visitRecordData ? '#fff' : '#fff' }]}>Save / Next</Text>
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
 
       <CustomBottomSheet
         visible={visible}
         onClose={() => setVisible(false)}
         backdropClickable={true}
         showHandle={false}
+        maxHeight={"20%"}
       >
         <View style={styles.bottomSheetContainer}>
           <View style={{flexDirection:'row', justifyContent:'space-between', alignItems:'center', paddingHorizontal: 16, paddingVertical: 16}}>
@@ -246,6 +519,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f0f8f7',
+  },
+  keyboardAvoidingView: {
+    flex: 1,
   },
   scrollView: {
     flex: 1,
@@ -281,7 +557,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: CAIRO_FONT_FAMILY.bold,
     lineHeight: Platform.OS === 'ios' ? 0 : 20,
-    color: '#179c8e',
+    color: '#23a2a4',
   },
   fieldContainer: {
     marginBottom: 20,
@@ -333,6 +609,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
+    position: 'relative',
   },
   durationInput: {
     ...globalTextStyles.bodySmall,
@@ -342,6 +619,12 @@ const styles = StyleSheet.create({
   dropdownWrapper: {
     height: 45,
     width: '59%',
+  },
+  durationMicButton: {
+    position: 'absolute',
+    right: 10,
+    top: 10,
+    padding: 4,
   },
   dropdown: {
     backgroundColor: '#fff',
@@ -359,9 +642,9 @@ const styles = StyleSheet.create({
     borderTopColor: '#e0e0e0',
   },
   nextButton: {
-    backgroundColor: '#179c8e',
+    backgroundColor: '#23a2a4',
     borderRadius: 8,
-    paddingVertical: 14,
+    paddingVertical: 10,
     alignItems: 'center',
     elevation: 2,
     shadowColor: '#000',
@@ -370,15 +653,16 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
   },
   nextButtonText: {
-    ...globalTextStyles.bodyMedium,
+    fontSize: 16,
+    fontFamily: CAIRO_FONT_FAMILY.bold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
     color: '#fff',
-    fontWeight: '600',
   },
   bottomSheetContainer: {
     flex: 1,
   },
   bottomSheetButton: {
-    backgroundColor: '#179c8e',
+    backgroundColor: '#23a2a4',
     borderRadius: 10,
     paddingVertical: 10,
     paddingHorizontal: 20,

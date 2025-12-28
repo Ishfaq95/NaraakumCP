@@ -200,7 +200,7 @@ const AddSessionRecord = ({ route }: { route: any }) => {
     const renderHeader = () => (
         <View style={styles.header}>
             <TouchableOpacity onPress={backButtonPress} style={styles.backButton}>
-                <Ionicons name="chevron-back" size={24} color="#333" />
+                <Ionicons name="arrow-back-outline" size={24} color="#333" />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Add Session Record</Text>
         </View>
@@ -254,7 +254,7 @@ const AddSessionRecord = ({ route }: { route: any }) => {
     const renderHeaderReview = () => (
         <View style={styles.header}>
             <TouchableOpacity onPress={backButtonPress} style={styles.backButton}>
-                <Ionicons name="chevron-back" size={24} color="#333" />
+                <Ionicons name="arrow-back-outline" size={24} color="#333" />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Session Record</Text>
         </View>

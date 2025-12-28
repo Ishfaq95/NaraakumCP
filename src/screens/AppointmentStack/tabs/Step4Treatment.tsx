@@ -5,9 +5,10 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  Platform,
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { globalTextStyles } from '../../../styles/globalStyles';
+import { CAIRO_FONT_FAMILY, globalTextStyles } from '../../../styles/globalStyles';
 import Procedures, { ProceduresData } from './Step4Components/Procedures';
 import Prescription, { PrescriptionData } from './Step4Components/Prescription';
 import PatientInstructions, { PatientInstructionsData } from './Step4Components/PatientInstructions';
@@ -266,7 +267,8 @@ const styles = StyleSheet.create({
   },
   footer: {
     flexDirection: 'row',
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
     backgroundColor: '#f0f8f7',
     borderTopWidth: 1,
     borderTopColor: '#e0e0e0',
@@ -276,21 +278,22 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
     borderRadius: 8,
-    paddingVertical: 14,
+    paddingVertical: 10,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#179c8e',
   },
   backButtonText: {
-    ...globalTextStyles.bodyMedium,
+    fontSize: 16,
+    fontFamily: CAIRO_FONT_FAMILY.semiBold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 24,
     color: '#179c8e',
-    fontWeight: '600',
   },
   completeButton: {
     flex: 1,
     backgroundColor: '#179c8e',
     borderRadius: 8,
-    paddingVertical: 14,
+    paddingVertical: 10,
     alignItems: 'center',
     elevation: 2,
     shadowColor: '#000',
@@ -299,9 +302,10 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
   },
   completeButtonText: {
-    ...globalTextStyles.bodyMedium,
+    fontSize: 16,
+    fontFamily: CAIRO_FONT_FAMILY.semiBold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 24,
     color: '#fff',
-    fontWeight: '600',
   },
 });
 

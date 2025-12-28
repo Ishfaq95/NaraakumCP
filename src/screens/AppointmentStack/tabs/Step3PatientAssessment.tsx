@@ -5,9 +5,10 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  Platform,
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { globalTextStyles } from '../../../styles/globalStyles';
+import { CAIRO_FONT_FAMILY, globalTextStyles } from '../../../styles/globalStyles';
 import VitalSigns from './Step3Components/VitalSigns';
 import OE from './Step3Components/OE';
 import LabXRays from './Step3Components/LabXRays';
@@ -277,7 +278,8 @@ const styles = StyleSheet.create({
   },
   footer: {
     flexDirection: 'row',
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
     backgroundColor: '#f0f8f7',
     borderTopWidth: 1,
     borderTopColor: '#e0e0e0',
@@ -287,7 +289,7 @@ const styles = StyleSheet.create({
     flex: 2,
     backgroundColor: '#179c8e',
     borderRadius: 8,
-    paddingVertical: 14,
+    paddingVertical: 10,
     alignItems: 'center',
     elevation: 2,
     shadowColor: '#000',
@@ -296,23 +298,25 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
   },
   nextButtonText: {
-    ...globalTextStyles.bodyMedium,
+    fontSize: 16,
+    fontFamily: CAIRO_FONT_FAMILY.semiBold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 24,
     color: '#fff',
-    fontWeight: '600',
   },
   skipButton: {
     flex: 1,
     backgroundColor: '#fff',
     borderRadius: 8,
-    paddingVertical: 14,
+    paddingVertical: 10,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#d0d0d0',
   },
   skipButtonText: {
-    ...globalTextStyles.bodyMedium,
+    fontSize: 16,
+    fontFamily: CAIRO_FONT_FAMILY.semiBold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 24,
     color: '#666',
-    fontWeight: '600',
   },
 });
 

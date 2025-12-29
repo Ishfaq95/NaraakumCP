@@ -48,27 +48,27 @@ const AppInitializer = () => {
 
   const getUserInfoByUserId = async () => {
     try {
-        const payload = {
-            UserlogiInfoId: user.Id,
-        };
-        const response = await profileService.getUserInfoByUserId(payload);
-        if (response?.ResponseStatus?.STATUSCODE === 200) {
-          const userInfo = response.UserDetail[0];
-          if (userInfo?.isDeleted) {
-            dispatch(setUser(null));
-            dispatch(setTopic(null));
-            tokenRefreshService.reset();
-            if(topic){
-              messaging()
-                .unsubscribeFromTopic(topic)
-                .then(() => { });
-            }
+      const payload = {
+        UserlogiInfoId: user.Id,
+      };
+      const response = await profileService.getUserInfoByUserId(payload);
+      if (response?.ResponseStatus?.STATUSCODE === 200) {
+        const userInfo = response.UserDetail[0];
+        if (userInfo?.isDeleted) {
+          dispatch(setUser(null));
+          dispatch(setTopic(null));
+          tokenRefreshService.reset();
+          if (topic) {
+            messaging()
+              .unsubscribeFromTopic(topic)
+              .then(() => { });
           }
         }
+      }
     }
     catch (error: any) {
     }
-}
+  }
 
   useEffect(() => {
     if (appState === 'active') {
@@ -192,7 +192,7 @@ const AppInitializer = () => {
         token: (data as any).access_token,
         expiresAt: (data as any).expires,
       };
-      
+
       dispatch(setToken(sessionToken));
       setTimeout(AppversionAPICall, 100);
     }

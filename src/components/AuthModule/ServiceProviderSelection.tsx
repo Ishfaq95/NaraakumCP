@@ -69,7 +69,7 @@ const ServiceProviderSelection: React.FC<ServiceProviderSelectionProps> = ({
     return (
         <View style={styles.selectionContainer}>
             <Text style={styles.selectionTitle}>Service Provider Type</Text>
-            <ScrollView
+            {!isLoading ? <ScrollView
                 style={styles.scrollViewContainer}
                 contentContainerStyle={styles.scrollViewContent}
                 scrollEnabled={true}
@@ -116,31 +116,19 @@ const ServiceProviderSelection: React.FC<ServiceProviderSelectionProps> = ({
                         })}
                     </View>
                 </TouchableWithoutFeedback>
-            </ScrollView>
+            </ScrollView>: <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <LoaderKit
+                    style={{ width: 100, height: 100 }}
+                    name={'BallSpinFadeLoader'}
+                    color={'green'}
+                />
+            </View>}
             <View style={styles.navigationContainer}>
                 <TouchableOpacity disabled={!selectedProvider} style={[styles.nextButton, !selectedProvider && styles.nextButtonDisabled]} onPress={handleNext}>
                     <Text style={styles.nextButtonText}>{`Next 1/4`}</Text>
                     <Ionicons name="arrow-forward" size={22} color="#fff" />
                 </TouchableOpacity>
             </View>
-
-            {isLoading && <Modal
-                transparent={true}
-                animationType="fade"
-                visible={isLoading}
-                statusBarTranslucent={true}
-                onRequestClose={() => { }}
-                hardwareAccelerated={Platform.OS === 'android'}
-                presentationStyle="overFullScreen"
-            >
-                <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
-                    <LoaderKit
-                        style={{ width: 100, height: 100 }}
-                        name={'BallSpinFadeLoader'}
-                        color={'green'}
-                    />
-                </View>
-            </Modal>}
         </View>
     );
 };

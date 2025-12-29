@@ -57,5 +57,6 @@ export const ROUTES = {
     ArabicBioScreen: 'ArabicBioScreen',
     WorkAreas: 'WorkAreas',
     DeleteConfirmationScreen: 'DeleteConfirmationScreen',
+    NetworkError: 'NetworkError',
   };
   

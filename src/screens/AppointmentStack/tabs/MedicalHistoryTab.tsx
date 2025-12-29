@@ -94,7 +94,7 @@ const MedicalHistoryTab: React.FC<MedicalHistoryTabProps> = ({ data }) => {
 
     const handleVisitRecordPress = (item: any) => {
         dispatch(setVisitMainId(item.Id));
-        navigation.navigate(ROUTES.AddSessionRecord, { patientData: data, step: 5 });
+        navigation.navigate(ROUTES.AddSessionRecord, { patientData: data, step: 5, OrderDetail: item });
     };
 
     const handleOtherVisitRecordPress = (item: any) => {
@@ -166,7 +166,7 @@ const MedicalHistoryTab: React.FC<MedicalHistoryTabProps> = ({ data }) => {
 
             {/* Add Session Record Button */}
             <View style={styles.addButtonContainer}>
-                <TouchableOpacity onPress={() => navigation.navigate(ROUTES.AddSessionRecord, { patientData: data })} disabled={currentRecords.length > 0} style={[styles.addButton, currentRecords.length > 0 && { opacity: 0.5 }]}>
+                <TouchableOpacity onPress={() => navigation.navigate(ROUTES.AddSessionRecord, { patientData: data, OrderDetail: data })} disabled={currentRecords.length > 0} style={[styles.addButton, currentRecords.length > 0 && { opacity: 0.5 }]}>
                     <Ionicons name="add-circle-outline" size={20} color="#fff" />
                     <Text style={styles.addButtonText}>Add Session Record</Text>
                 </TouchableOpacity>

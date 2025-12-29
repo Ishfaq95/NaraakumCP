@@ -40,6 +40,8 @@ interface Step3Data {
 const AddSessionRecord = ({ route }: { route: any }) => {
     const navigation = useNavigation();
     const patientData: any = route?.params?.patientData || null;
+    const OrderDetail: any = route?.params?.OrderDetail || null;
+    console.log("OrderDetail", OrderDetail)
     const step: any = route?.params?.step || null;
     const visitRecordData: any = useSelector((state: any) => state.root.generalData.visitRecordData);
     const visitmainId: any = useSelector((state: any) => state.root.generalData.visitmainId);
@@ -53,6 +55,8 @@ const AddSessionRecord = ({ route }: { route: any }) => {
             getVisitMainRecordDetail();
         }
     }, [visitmainId]);
+
+    console.log("visitRecordData", visitRecordData)
 
     useEffect(() => {
         if (step) {
@@ -186,8 +190,6 @@ const AddSessionRecord = ({ route }: { route: any }) => {
     };
 
     const handleSaveAndComplete = (data: any) => {
-        // handleDataChange('step4', data);
-        // handleNext();
         setCurrentStep(5);
     };
 
@@ -202,7 +204,7 @@ const AddSessionRecord = ({ route }: { route: any }) => {
             <TouchableOpacity onPress={backButtonPress} style={styles.backButton}>
                 <Ionicons name="arrow-back-outline" size={24} color="#333" />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>Add Session Record</Text>
+            <Text style={styles.headerTitle}>{(OrderDetail?.CatCategoryId != 42 || (OrderDetail?.CatServiceServeTypeId && OrderDetail?.CatServiceServeTypeId != 1)) ? 'Visit Record' : 'Session Record'}</Text>
         </View>
     );
 

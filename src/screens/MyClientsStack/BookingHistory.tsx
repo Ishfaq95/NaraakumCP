@@ -234,7 +234,7 @@ const BookingHistory = ({ route }: { route: any }) => {
                 };
                 navigation.navigate(ROUTES.PrescriptionView, { prescriptionData: params });
             } else {
-                navigation.navigate(ROUTES.AddSessionRecord as never, { patientData: Patient });
+                navigation.navigate(ROUTES.AddSessionRecord as never, { patientData: Patient, OrderDetail: item });
             }
         };
 

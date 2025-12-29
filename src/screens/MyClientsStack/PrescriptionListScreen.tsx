@@ -147,7 +147,7 @@ const PrescriptionListScreen = ({ route }: { route: any }) => {
 
         const handleEditPress = () => {
             dispatch(setVisitMainId(item.Id));
-            navigation.navigate(ROUTES.AddSessionRecord, { patientData: Patient, step: 5 });
+            navigation.navigate(ROUTES.AddSessionRecord, { patientData: Patient, step: 5 ,OrderDetail: item});
         };
 
         return (

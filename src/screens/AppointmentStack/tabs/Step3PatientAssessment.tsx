@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,8 @@ import {
   TouchableOpacity,
   ScrollView,
   Platform,
+  KeyboardAvoidingView,
+  Keyboard,
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { CAIRO_FONT_FAMILY, globalTextStyles } from '../../../styles/globalStyles';
@@ -41,6 +43,27 @@ const Step3PatientAssessment: React.FC<Step3Props> = ({
     labXRays: [],
     dx: [],
   });
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+  const keyboardHeight = useRef(0);
+
+  useEffect(() => {
+    if (Platform.OS === 'ios') {
+      const showSub = Keyboard.addListener('keyboardWillShow', (event) => {
+        keyboardHeight.current = event.endCoordinates.height;
+        setIsKeyboardVisible(true);
+      });
+      const hideSub = Keyboard.addListener('keyboardWillHide', () => {
+        keyboardHeight.current = 0;
+        setIsKeyboardVisible(false);
+      });
+
+      return () => {
+        showSub.remove();
+        hideSub.remove();
+      };
+    }
+    return undefined;
+  }, []);
 
   useEffect(() => {
     if (visitRecordData) {
@@ -57,7 +80,41 @@ const Step3PatientAssessment: React.FC<Step3Props> = ({
   };
 
   const handleSave = async () => {
-    await handleSaveVitalSigns();
+     await handleSaveVitalSigns();
+    console.log("assessmentData.dx",assessmentData.dx)
+     await handleSaveDiagnosis();
+
+    
+    handleNext();
+  };
+
+  const createDiagnosisPayload = () => {
+    return assessmentData.dx.map((item: any) => ({
+      CatDiagnosisSpecialtyId: item.specialtyId || item.CatDiagnosisSpecialtyId,
+      CatDxType: item.CatDxType,
+      Detail: item.Detail.map((code: any) => ({
+        Id: code.CatICD10CodeId,
+        Code: code.Code,
+        Diagnosis: code.Diagnosis,
+      })),
+    }));
+  };
+
+  const handleSaveDiagnosis = async () => {
+    try {
+      const payload = {
+        VisitMainId: visitmainId,
+        Diagnosis: createDiagnosisPayload(),
+      };
+      console.log("payload",payload)
+      const response = await addVisitRecordService.addEditVisitPatientDiagnosis(payload);
+      if (response?.StatusCode?.STATUSCODE == 12019) {
+        getVisitMainRecordDetail();
+      }
+    }
+    catch (error: any) {
+      console.log("error",error)
+    }
   };
 
   const handleSaveVitalSigns = async () => {
@@ -143,14 +200,23 @@ const Step3PatientAssessment: React.FC<Step3Props> = ({
 
   return (
     <View style={styles.container}>
+    <KeyboardAvoidingView
+        style={styles.keyboardAvoidingView}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 180 : 0}
+      >
+        <ScrollView
+          style={styles.scrollView}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingBottom: Platform.OS === 'ios' ? (isKeyboardVisible ? 20 : 10) : 20 },
+          ]}
+          keyboardShouldPersistTaps="handled"
+        >
       {/* Header */}
       <View style={styles.headerSection}>
         <View style={styles.headerIconContainer}>
-          {/* <SvgUri
-            width={50}
-            height={50}
-            source={require('../../../assets/icons/PatientAssessment.svg')}
-          /> */}
           <PatientAssessment width={50} height={50} />
         </View>
         <Text style={styles.headerTitle}>Patient Assessment</Text>
@@ -190,6 +256,8 @@ const Step3PatientAssessment: React.FC<Step3Props> = ({
         {renderTabContent()}
       </View>
 
+      </ScrollView>
+      </KeyboardAvoidingView>
       {/* Footer Buttons */}
       <View style={styles.footer}>
         <TouchableOpacity style={styles.nextButton} onPress={handleSave}>
@@ -208,6 +276,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f0f8f7',
+  },
+  keyboardAvoidingView: {
+    flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    // paddingHorizontal: 16,
+    paddingBottom: 20,
   },
   headerSection: {
     flexDirection: 'row',

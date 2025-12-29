@@ -2,44 +2,53 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Platform, Image } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { CAIRO_FONT_FAMILY } from '../../styles/globalStyles';
+import { useSelector } from 'react-redux';
 
 interface ProfileManagementGridProps {
   options: any[];
 }
 
 const ProfileManagementGrid: React.FC<ProfileManagementGridProps> = ({ options }) => {
+  const user = useSelector((state: any) => state.root.user.user);
+
+
   return (
     <View style={styles.container}>
       <Text style={styles.sectionTitle}>Profile Management</Text>
 
       <View style={styles.grid}>
-        {options.map((option) => (
-          <TouchableOpacity
-            key={option.id}
-            style={styles.gridItem}
-            onPress={option.onPress}
-          >
-            <View style={styles.cardContent}>
-              <View style={[styles.iconContainer]}>
-                <Image source={option.image} style={{ width: 34, height: 34 }} />
+        {options.map((option) => {
+          if(user.CatUserRoleId == 5 && option.id == 'service'){
+            return null;
+          }
+          return (
+            <TouchableOpacity
+              key={option.id}
+              style={styles.gridItem}
+              onPress={option.onPress}
+            >
+              <View style={styles.cardContent}>
+                <View style={[styles.iconContainer]}>
+                  <Image source={option.image} style={{ width: 34, height: 34 }} />
+                </View>
+  
+                {option.id !== 'clients' && (
+                  option.isComplete ? (
+                    <View style={styles.completeTag}>
+                      <Text style={styles.completeText}>Complete</Text>
+                    </View>
+                  ) : (
+                    <View style={styles.incompleteTag}>
+                      <Text style={styles.incompleteText}>Incomplete</Text>
+                    </View>
+                  )
+                )}
+  
+                <Text style={styles.optionTitle}>{option.title}</Text>
               </View>
-
-              {option.id !== 'clients' && (
-                option.isComplete ? (
-                  <View style={styles.completeTag}>
-                    <Text style={styles.completeText}>Complete</Text>
-                  </View>
-                ) : (
-                  <View style={styles.incompleteTag}>
-                    <Text style={styles.incompleteText}>Incomplete</Text>
-                  </View>
-                )
-              )}
-
-              <Text style={styles.optionTitle}>{option.title}</Text>
-            </View>
-          </TouchableOpacity>
-        ))}
+            </TouchableOpacity>
+          )
+        })}
       </View>
     </View>
   );

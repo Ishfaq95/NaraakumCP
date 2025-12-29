@@ -166,7 +166,7 @@ const MyProfileScreen = () => {
     }
     
     // ServiceProfile is worth 34%
-    if (profileSummary.ServiceProfile == 'Completed') {
+    if (profileSummary.ServiceProfile == 'Completed' || user.CatUserRoleId == 5) {
       completionPercentage += 34;
     }
     

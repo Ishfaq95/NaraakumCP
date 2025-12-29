@@ -543,6 +543,15 @@ export const addServiceProviderHolidays = async (credentials: any) => {
     }
 }
 
+export const updateServiceProviderCategoryActiveStatus = async (credentials: any) => {
+    try {
+        const response = await axiosInstance.post('user/UpdateServiceProviderCategoryActiveStatus', credentials);
+        return response.data;
+    } catch (error: any) {
+        throw error;    
+    }
+}
+
 // Export all profile related functions
 export const profileService = {
     getServiceProviderByUserId,
@@ -582,4 +591,5 @@ export const profileService = {
     updateServiceProviderAvailability,
     copyServiceProviderAvailabilityToNextMonth,
     addServiceProviderHolidays,
+    updateServiceProviderCategoryActiveStatus,
 }; 

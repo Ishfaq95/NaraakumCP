@@ -348,6 +348,7 @@ const LabXRays: React.FC<LabXRaysProps> = ({
         onClose={handleCloseBottomSheet}
         showHandle={false}
         backdropClickable={false}
+        maxHeight={400}
       >
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}

@@ -168,6 +168,54 @@ export const getOrderListAddedByServiceProvider = async (credentials: any) => {
     }
 };
 
+export const getAllDiagnosisSpecialty = async () => {
+    try {
+        const response = await axiosInstance.get(
+            `visitRecord/GetAllDiagnosisSpecialty`
+        );
+        return response.data;
+    }
+    catch (error: any) {
+        throw {
+            message: error?.response?.data?.message || 'Get all diagnosis specialty failed',
+            status: error?.response?.status,
+            code: error?.response?.data?.code
+        };
+    }
+};
+
+export const getAllIcd10Codes = async (credentials: any) => {
+    try {
+        const response = await axiosInstance.post(
+            `visitRecord/GetICD10CodeDiagnosis`,
+            credentials
+        );
+        return response.data;
+    }
+    catch (error: any) {
+        throw {
+            message: error?.response?.data?.message || 'Get all icd 10 codes failed',
+            status: error?.response?.status,
+            code: error?.response?.data?.code
+        };
+    }
+};
+export const addEditVisitPatientDiagnosis = async (credentials: any) => {
+    try {
+        const response = await axiosInstance.post(
+            `visitRecord/AddEditVisitPatientDiagnosis`,
+            credentials
+        );
+        return response.data;
+    }
+    catch (error: any) {
+        throw {
+            message: error?.response?.data?.message || 'Add edit visit patient diagnosis failed',
+            status: error?.response?.status,
+            code: error?.response?.data?.code
+        };
+    }
+};
 
 
 // Export all appointment related functions
@@ -182,4 +230,7 @@ export const addVisitRecordService = {
     getAllFileTypes,
     deleteVisitPatientLabXRay,
     getOrderListAddedByServiceProvider,
+    getAllDiagnosisSpecialty,
+    getAllIcd10Codes,
+    addEditVisitPatientDiagnosis,
 }; 

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { CAIRO_FONT_FAMILY } from '../../styles/globalStyles';
+import { useSelector } from 'react-redux';
 
 interface ProfileSummary {
   ProfileManagement?: string;
@@ -18,6 +19,7 @@ const ProfileCompletionNotice: React.FC<ProfileCompletionNoticeProps> = ({
   profileSummary,
   onCompleteProfile,
 }) => {
+  const user = useSelector((state: any) => state.root.user.user);
   const calculateCompletionPercentage = (): number => {
     let completionPercentage = 0;
     
@@ -32,7 +34,7 @@ const ProfileCompletionNotice: React.FC<ProfileCompletionNoticeProps> = ({
     }
     
     // ServiceProfile is worth 34%
-    if (profileSummary.ServiceProfile === 'Completed') {
+    if (profileSummary.ServiceProfile === 'Completed' || user.CatUserRoleId == 5) {
       completionPercentage += 34;
     }
     

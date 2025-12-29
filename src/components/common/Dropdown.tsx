@@ -7,9 +7,10 @@ import {
   Modal,
   FlatList,
   Dimensions,
+  Platform,
 } from 'react-native';
 import { I18nManager } from 'react-native';
-import { globalTextStyles } from '../../styles/globalStyles';
+import { CAIRO_FONT_FAMILY, globalTextStyles } from '../../styles/globalStyles';
 import Icon from 'react-native-vector-icons/Ionicons';
 
 interface DropdownItem {
@@ -84,7 +85,7 @@ const Dropdown: React.FC<DropdownProps> = ({
         }}
         disabled={disabled}
       >
-        <Text style={[styles.dropdownButtonText, labelStyle]}>
+        <Text numberOfLines={1} style={[styles.dropdownButtonText, labelStyle]}>
           {selectedItem ? selectedItem.label : placeholder}
         </Text>
         {/* <View style={[styles.arrow, I18nManager.isRTL && styles.arrowRTL]} /> */}
@@ -145,6 +146,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    width: '100%',
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderWidth: 1,
@@ -153,7 +155,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   dropdownButtonText: {
-    ...globalTextStyles.bodySmall,
+    fontSize: 16,
+    fontFamily: CAIRO_FONT_FAMILY.medium,
+    width: '90%',
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
     color: '#333',
   },
   arrow: {

@@ -24,6 +24,8 @@ const ServiceProfile = () => {
     const defaultLevelRenderArray =['Consultant','Specialist','General Physician'];
     const isFocused = useIsFocused();
 
+    console.log("homeVisitEnabled",homeVisitEnabled)
+
     useEffect(() => {
         getServiceProviderRoleAndSpecialty();
     }, [isFocused]);
@@ -280,7 +282,21 @@ const ServiceProfile = () => {
         ];
     };
 
-    const onToggleService = (service: string, value: boolean) => {
+    const updateServiceProviderCategoryActiveStatus = async (isActive: any) => {
+        const payload = {
+            UserloginInfoId: user.Id,
+            CatCategoryId: 36,
+            isActive: isActive ? 1 : 0,
+            CatServiceServeTypeId:2
+        };
+        const response = await profileService.updateServiceProviderCategoryActiveStatus(payload);
+        if(response?.StatusCode?.STATUSCODE == 11026){
+            setHomeVisitEnabled(isActive);
+            getServiceProviderRoleAndSpecialty()
+        }
+    }
+
+    const onToggleService = async (service: string, value: boolean) => {
         if (service === 'onlineConsultation') {
             if (Object.keys(onlineConsultationData).length === 0) {
                 showAlert({
@@ -293,11 +309,16 @@ const ServiceProfile = () => {
             setOnlineConsultationEnabled(value);
         } else if (service === 'homeVisit') {
             if (Object.keys(homeVisitData).length === 0) {
-                showAlert({
-                    title: 'Please select your specialty level to proceed.',
-                    message: '',
-                    type: 'info',
-                });
+                if(user.CatUserRoleId == 9){
+                    updateServiceProviderCategoryActiveStatus(value)
+                }else{
+                    showAlert({
+                        title: 'Please select your specialty level to proceed.',
+                        message: '',
+                        type: 'info',
+                    });
+                }
+                
                 return;
             }
             setHomeVisitEnabled(value);

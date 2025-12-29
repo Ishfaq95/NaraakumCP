@@ -65,8 +65,6 @@ const TaskDetailTab: React.FC<TaskDetailTabProps> = ({ data, RefreshData }) => {
     // Get current status ID from data and convert to number (API returns as string)
     const currentStatusId = data?.CatOrderStatusId ? Number(data.CatOrderStatusId) : null;
 
-    console.log("Current Status ID", selectedStatusId, currentStatusId);
-
     useEffect(() => {
         const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', (e) => {
             if(Platform.OS === 'ios') {
@@ -102,8 +100,6 @@ const TaskDetailTab: React.FC<TaskDetailTabProps> = ({ data, RefreshData }) => {
             year: 'numeric'
         }).replace(/\//g, '/');
     };
-
-    console.log("Data", data);
 
     const formatTime = (timeString: string) => {
         if (!timeString) return 'N/A';
@@ -414,8 +410,6 @@ const TaskDetailTab: React.FC<TaskDetailTabProps> = ({ data, RefreshData }) => {
             patientId: appointment.PatientUserProfileInfoId,
             serviceProviderId: appointment.UserloginInfoId
         };
-
-        console.log("called 5")
 
         navigation.navigate(ROUTES.preViewCall, { Data: meetingInfo });
     }

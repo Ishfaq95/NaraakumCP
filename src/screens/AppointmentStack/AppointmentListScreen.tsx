@@ -421,8 +421,6 @@ const AppointmentListScreen = () => {
       serviceProviderId: appointment.UserloginInfoId
     };
 
-    console.log("called 1")
-
     navigation.navigate(ROUTES.preViewCall, { Data: meetingInfo });
   }
 

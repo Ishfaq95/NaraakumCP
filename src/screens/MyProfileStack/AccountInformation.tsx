@@ -221,7 +221,6 @@ const AccountInformationScreen = () => {
 
     useEffect(() => {
         if (userInfo) {
-            console.log("userInfo", userInfo)
             setProfileImage(userInfo.ImagePath);
             setEnglishName(userInfo.FullNamePlang);
             setArabicName(userInfo.FullNameSlang);
@@ -240,8 +239,6 @@ const AccountInformationScreen = () => {
             setEmail(userInfo.Email);
         }
     }, [userInfo])
-
-    console.log("dob", dob)
 
     const getUserInfoByUserId = async () => {
         try {
@@ -507,7 +504,6 @@ const AccountInformationScreen = () => {
 
         try {
             const response = await profileService.updateServiceProviderPersonalProfile(payload);
-            console.log("response", response)
             if (response.ResponseStatus.STATUSCODE === 200) {
                 getUserInfoByUserId()
                 showAlert({
@@ -518,7 +514,6 @@ const AccountInformationScreen = () => {
             }
         }
         catch (error: any) {
-            console.log("error", error)
         }
     }
 

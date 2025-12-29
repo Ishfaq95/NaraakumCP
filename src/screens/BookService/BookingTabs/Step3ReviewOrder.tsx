@@ -79,7 +79,6 @@ const Step3ReviewOrder = ({ Patient, handleNext }: { Patient: any, handleNext: (
 
   const renderDoctorTag = useCallback(({ item, index }: { item: any; index: number }) => {
     const selectedItem = item.items[0];
-    console.log(selectedItem);
 
     const imagePath = selectedItem.ServiceProviderImagePath ? `${MediaBaseURL}${selectedItem.ServiceProviderImagePath}` : selectedItem.LogoImagePath ? `${MediaBaseURL}${selectedItem.LogoImagePath}` : null;
     const name = selectedItem.ServiceProviderFullnamePlang ? selectedItem.ServiceProviderFullnamePlang : selectedItem.orgTitlePlang;

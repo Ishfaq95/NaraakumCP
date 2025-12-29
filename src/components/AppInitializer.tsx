@@ -46,8 +46,6 @@ const AppInitializer = () => {
     }
   }, [user])
 
-  console.log("user ID", user?.Id)
-
   const getUserInfoByUserId = async () => {
     try {
         const payload = {
@@ -56,7 +54,6 @@ const AppInitializer = () => {
         const response = await profileService.getUserInfoByUserId(payload);
         if (response?.ResponseStatus?.STATUSCODE === 200) {
           const userInfo = response.UserDetail[0];
-          console.log("userInfo", userInfo)
           if (userInfo?.isDeleted) {
             dispatch(setUser(null));
             dispatch(setTopic(null));
@@ -67,7 +64,6 @@ const AppInitializer = () => {
                 .then(() => { });
             }
           }
-            console.log("response", response.UserDetail[0])
         }
     }
     catch (error: any) {

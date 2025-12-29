@@ -27,9 +27,6 @@ const WelcomeScreen: React.FC = () => {
     const navigation = useNavigation();
     const deviceIsTablet = isTablet();
 
-    console.log("deviceIsTablet", deviceIsTablet)
-
-
     return (
         <SafeAreaView style={styles.container}>
             <View style={{width: '100%', alignItems: 'flex-end',paddingHorizontal: 16}}>

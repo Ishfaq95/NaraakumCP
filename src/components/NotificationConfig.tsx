@@ -110,7 +110,6 @@ const NotificationsCenter = () => {
           if (data?.notificationFrom == 'reminder') {
             handleNavigationFromNotification(data);
           }else if(data?.notificationFrom == "JoinMeeting" && currentScreen != ROUTES.Meeting){
-            console.log("called 2")
             navigation.navigate(ROUTES.preViewCall,{
               Data:data,
             })

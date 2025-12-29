@@ -324,7 +324,6 @@ const Step2DoctorListing = ({ handleNext, handleReloadNext, Patient }: { handleN
         setSquares(makeList);
       }
     } catch (error) {
-      console.log(error);
     }
   }
 
@@ -372,7 +371,6 @@ const Step2DoctorListing = ({ handleNext, handleReloadNext, Patient }: { handleN
         fetchHospitalListByServices(selectedCityId, selectedSquareId, searchNearMe ? `${selectedLocation?.latitude},${selectedLocation?.longitude}` : null);
       }
     } catch (error) {
-      console.log(error);
     }
   }
 
@@ -1120,8 +1118,6 @@ const Step2DoctorListing = ({ handleNext, handleReloadNext, Patient }: { handleN
   }
 
   const calculateTotalPrice = (items: any[]) => {
-    console.log(items);
-    
     return  items.reduce((total, item) => total + (parseFloat(item.ServicePrice)*(item.Quantity || 1) || 0), 0);
   }
 

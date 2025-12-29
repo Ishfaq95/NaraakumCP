@@ -68,8 +68,6 @@ const Step1 = ({ handleNext, Patient }: { handleNext: () => void, Patient: any }
   // const SelectedCardItem = existingCardItems.length > 0 ? existingCardItems.filter((item: any) => item.ItemUniqueId === category.Id) : [];
   const dispatch = useDispatch();
 
-  console.log('existingCardItems', existingCardItems);
-
   useEffect(() => {
     getOfferedServicesCategories();
   }, []);

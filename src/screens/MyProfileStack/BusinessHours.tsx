@@ -231,8 +231,7 @@ const BusinessHours = ({ route }: { route: any }) => {
             return date.isBetween(start, end, 'day', '[]');
         });
     };
-
-    console.log("availability", availability);
+    
     const getAvailabilitySlotsForDate = (date: moment.Moment) => {
         // Don't return slots for holidays
         if (isHoliday(date)) {

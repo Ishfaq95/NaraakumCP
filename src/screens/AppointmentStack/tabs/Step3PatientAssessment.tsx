@@ -81,7 +81,6 @@ const Step3PatientAssessment: React.FC<Step3Props> = ({
 
   const handleSave = async () => {
      await handleSaveVitalSigns();
-    console.log("assessmentData.dx",assessmentData.dx)
      await handleSaveDiagnosis();
 
     
@@ -106,14 +105,12 @@ const Step3PatientAssessment: React.FC<Step3Props> = ({
         VisitMainId: visitmainId,
         Diagnosis: createDiagnosisPayload(),
       };
-      console.log("payload",payload)
       const response = await addVisitRecordService.addEditVisitPatientDiagnosis(payload);
       if (response?.StatusCode?.STATUSCODE == 12019) {
         getVisitMainRecordDetail();
       }
     }
     catch (error: any) {
-      console.log("error",error)
     }
   };
 

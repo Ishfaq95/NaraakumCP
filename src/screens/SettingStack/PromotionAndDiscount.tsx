@@ -119,7 +119,7 @@ const PromotionAndDiscount: React.FC = () => {
         } else {
             setExpiryDate(new Date());
         }
-        console.log("promotion.IsSingleUserMultipleUsage", promotion)
+        
         setMultipleClientsCanUse(promotion.NumberOfUsageAllowed > 0);
         setNumberOfClients(promotion.NumberOfUsageAllowed > 0 ? promotion.NumberOfUsageAllowed.toString() : '');
         setSingleClientMultipleUse(promotion.IsSingleUserMultipleUsage == true);

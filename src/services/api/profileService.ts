@@ -380,7 +380,6 @@ export const updateServiceProviderPersonalProfile = async (credentials: any) => 
         return response.data;
     }
     catch (error: any) {
-        console.log("error",error)
         throw {
             message: error?.response?.data?.message || 'Update service provider personal profile failed',
             status: error?.response?.status,

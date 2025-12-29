@@ -24,8 +24,6 @@ const ServiceProfile = () => {
     const defaultLevelRenderArray =['Consultant','Specialist','General Physician'];
     const isFocused = useIsFocused();
 
-    console.log("homeVisitEnabled",homeVisitEnabled)
-
     useEffect(() => {
         getServiceProviderRoleAndSpecialty();
     }, [isFocused]);
@@ -405,8 +403,6 @@ const ServiceProfile = () => {
             });
         }
     };
-
-    console.log("user?.CatUserRoleId",user?.CatUserRoleId)
 
     return (
         <SafeAreaView style={styles.container}>

@@ -94,7 +94,6 @@ const LoginScreen = () => {
     setSelectedCountry(country);
   };
 
-  console.log("rememberMeRedux", rememberMeRedux)
   // Function to extract country code and phone number from full number
   const extractPhoneInfo = (fullNumber: string) => {
     if (!fullNumber) return { countryCode: 'SA', phoneNumber: '' };

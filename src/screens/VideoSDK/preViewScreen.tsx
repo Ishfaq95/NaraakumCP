@@ -184,7 +184,6 @@ const PreViewScreen = ({navigation, route}: any) => {
 
   const getVideoSDKTokenFromAPI = async () => {
     const videoSDKToken = await getVideoSDKToken();
-    console.log("videoSDKToken.Data.Token",videoSDKToken.Data.Token)
     setVideoSDKToken(videoSDKToken.Data.Token);
   };
 
@@ -284,7 +283,6 @@ const PreViewScreen = ({navigation, route}: any) => {
   };
 
   const handleBackPress = async () => {
-    console.log('handleBackPress called - clearing interval');
     // Clear session expiration check interval
     clearSessionCheckInterval();
     
@@ -315,7 +313,6 @@ const PreViewScreen = ({navigation, route}: any) => {
   // Helper function to clear interval
   const clearSessionCheckInterval = () => {
     if (sessionCheckIntervalRef.current) {
-      console.log('Clearing session check interval:', sessionCheckIntervalRef.current);
       clearInterval(sessionCheckIntervalRef.current);
       sessionCheckIntervalRef.current = null;
     }
@@ -324,7 +321,6 @@ const PreViewScreen = ({navigation, route}: any) => {
   // Add effect to check session expiration
   useEffect(() => {
     const checkSessionExpiration = () => {
-      console.log("Session expiration check called");
       const now = new Date();
       const endTime = new Date(sessionEndTime);
       setIsSessionExpired(now > endTime);
@@ -336,11 +332,9 @@ const PreViewScreen = ({navigation, route}: any) => {
     // Set up interval to check every minute
     const interval = setInterval(checkSessionExpiration, 60000);
     sessionCheckIntervalRef.current = interval;
-    console.log('Session check interval created:', interval);
 
     // Cleanup interval on unmount
     return () => {
-      console.log('useEffect cleanup - clearing interval');
       clearSessionCheckInterval();
     };
   }, [sessionEndTime]);
@@ -348,7 +342,6 @@ const PreViewScreen = ({navigation, route}: any) => {
   // Add navigation listener to cleanup when navigating away
   useEffect(() => {
     const unsubscribe = navigation.addListener('beforeRemove', () => {
-      console.log('Navigation beforeRemove - clearing interval');
       clearSessionCheckInterval();
     });
 

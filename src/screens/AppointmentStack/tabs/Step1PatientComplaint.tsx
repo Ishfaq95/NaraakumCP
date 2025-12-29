@@ -234,8 +234,6 @@ const Step1PatientComplaint: React.FC<Step1Props> = ({ patientData, onNext, onDa
     if(Platform.OS === 'ios') {
       await stopListening();
 
-      console.log("listeningField",listeningField);
-
       if(listeningField || listeningField === fieldKey) {
         return
       }else {

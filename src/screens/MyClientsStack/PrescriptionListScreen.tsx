@@ -116,8 +116,6 @@ const PrescriptionListScreen = ({ route }: { route: any }) => {
         );
     };
 
-    console.log("prescriptionList", prescriptionList)
-
     const handleCloseSearch = () => {
         Keyboard.dismiss();
         if (searchText.length > 0) {

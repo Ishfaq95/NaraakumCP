@@ -1,9 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import {
   View,
-  ActivityIndicator,
   StyleSheet,
-  Modal,
   Dimensions,
   Platform,
 } from 'react-native';
@@ -16,45 +14,22 @@ interface FullScreenLoaderProps {
 const { width, height } = Dimensions.get('window');
 
 const FullScreenLoader: React.FC<FullScreenLoaderProps> = ({ visible }) => {
-  const [isLayoutReady, setIsLayoutReady] = useState(false);
+  // Return null immediately when not visible - no rendering, no blocking
+  if (!visible) {
+    return null;
+  }
 
-  // Reset layout state when visibility changes
-  useEffect(() => {
-    if (visible) {
-      // Small delay to ensure layout is calculated before showing content
-      const timer = setTimeout(() => {
-        setIsLayoutReady(true);
-      }, 10);
-      return () => clearTimeout(timer);
-    } else {
-      setIsLayoutReady(false);
-    }
-  }, [visible]);
-
-  if (!visible) return null;
-  
   return (
-    <Modal
-      transparent={true}
-      animationType="fade"
-      visible={visible}
-      statusBarTranslucent={false}
-      onRequestClose={() => {}}
-      hardwareAccelerated={Platform.OS === 'android'}
-      presentationStyle="overFullScreen"
+    <View
+      style={styles.container}
+      pointerEvents="box-none"
+      collapsable={false}
     >
       <View 
-        style={styles.container}
-        collapsable={false}
-        needsOffscreenAlphaCompositing={false}
+        style={styles.overlay} 
+        pointerEvents="auto"
       >
-        <View 
-          style={[
-            styles.loaderContainer,
-            // Ensure loader is absolutely centered even before flex layout completes
-            { opacity: isLayoutReady ? 1 : 0 }
-          ]}
-        >
+        <View style={styles.loaderContainer}>
           <LoaderKit
             style={{ width: 100, height: 100 }}
             name={'BallSpinFadeLoader'}
@@ -62,7 +37,7 @@ const FullScreenLoader: React.FC<FullScreenLoaderProps> = ({ visible }) => {
           />
         </View>
       </View>
-    </Modal>
+    </View>
   );
 };
 
@@ -75,6 +50,19 @@ const styles = StyleSheet.create({
     bottom: 0,
     width: width,
     height: height,
+    zIndex: 9999,
+    elevation: Platform.OS === 'android' ? 9999 : 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  overlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: '100%',
+    height: '100%',
     backgroundColor: 'rgba(0, 0, 0, 0.3)',
     justifyContent: 'center',
     alignItems: 'center',
@@ -86,7 +74,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     width: 140,
     height: 140,
+    backgroundColor: 'transparent',
   },
 });
 
-export default FullScreenLoader; 
+export default FullScreenLoader;

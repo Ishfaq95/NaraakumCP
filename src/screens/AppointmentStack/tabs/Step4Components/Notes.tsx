@@ -1,10 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TextInput,
-  ScrollView,
 } from 'react-native';
 import { globalTextStyles } from '../../../../styles/globalStyles';
 
@@ -14,31 +13,37 @@ export interface NotesData {
 
 interface NotesProps {
   onDataChange?: (data: NotesData) => void;
+  scrollToInput?: (inputRef: React.RefObject<TextInput | View | null>) => void;
 }
 
-const Notes: React.FC<NotesProps> = ({ onDataChange }) => {
+const Notes: React.FC<NotesProps> = ({ onDataChange, scrollToInput }) => {
   const [notes, setNotes] = useState<string>('');
+  const notesCardRef = useRef<View>(null);
+
+  const handleFocus = () => {
+    if (scrollToInput && notesCardRef.current) {
+      scrollToInput(notesCardRef);
+    }
+  };
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}
-      keyboardShouldPersistTaps="handled"
-    >
-      <Text style={styles.sectionTitle}>Notes</Text>
+    <View style={styles.container}>
+      <View style={styles.content}>
+        <Text style={styles.sectionTitle}>Notes</Text>
 
-<View style={styles.card}>
-  <TextInput
-        style={styles.textInput}
-        placeholder="Notes"
-        placeholderTextColor="#999"
-        value={notes}
-        onChangeText={setNotes}
-        multiline
-      />
-</View>
-    </ScrollView>
+        <View ref={notesCardRef} style={styles.card}>
+          <TextInput
+            style={styles.textInput}
+            placeholder="Notes"
+            placeholderTextColor="#999"
+            value={notes}
+            onChangeText={setNotes}
+            multiline
+            onFocus={handleFocus}
+          />
+        </View>
+      </View>
+    </View>
   );
 };
 

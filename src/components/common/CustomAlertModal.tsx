@@ -20,6 +20,7 @@ interface CustomAlertModalProps {
   cancelText?: string;
   type?: 'info' | 'success' | 'warning' | 'error';
   showCancelButton?: boolean;
+  dismissable?: boolean; // If false, alert cannot be dismissed
 }
 
 const CustomAlertModal: React.FC<CustomAlertModalProps> = ({
@@ -32,6 +33,7 @@ const CustomAlertModal: React.FC<CustomAlertModalProps> = ({
   cancelText = 'Cancel',
   type = 'info',
   showCancelButton = false,
+  dismissable = true,
 }) => {
   const getIconConfig = () => {
     switch (type) {
@@ -55,7 +57,17 @@ const CustomAlertModal: React.FC<CustomAlertModalProps> = ({
     if (onConfirm) {
       onConfirm();
     }
-    onClose();
+    // Only close if dismissable, unless onConfirm explicitly wants to close
+    if (dismissable) {
+      onClose();
+    }
+  };
+
+  const handleClose = () => {
+    // Only allow closing if dismissable
+    if (dismissable) {
+      onClose();
+    }
   };
 
   if (!visible) {
@@ -67,17 +79,19 @@ const CustomAlertModal: React.FC<CustomAlertModalProps> = ({
       visible={visible}
       transparent={true}
       animationType="fade"
-      onRequestClose={onClose}
+      onRequestClose={dismissable ? onClose : undefined}
       statusBarTranslucent={true}
       hardwareAccelerated={true}
       presentationStyle="overFullScreen"
     >
       <View style={styles.overlay}>
         <View style={styles.container}>
-          {/* Close Button */}
-          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-            <AntDesign name="close" size={24} color="#888" />
-          </TouchableOpacity>
+          {/* Close Button - Only show if dismissable */}
+          {dismissable && (
+            <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
+              <AntDesign name="close" size={24} color="#888" />
+            </TouchableOpacity>
+          )}
 
           {/* Icon */}
           <View style={styles.iconContainer}>
@@ -97,7 +111,7 @@ const CustomAlertModal: React.FC<CustomAlertModalProps> = ({
             {showCancelButton && (
               <TouchableOpacity
                 style={[styles.button, styles.cancelButton]}
-                onPress={onClose}
+                onPress={handleClose}
               >
                 <Text style={styles.cancelButtonText}>{cancelText}</Text>
               </TouchableOpacity>

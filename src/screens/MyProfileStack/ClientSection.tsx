@@ -214,29 +214,6 @@ const ClientSectionScreen = () => {
         </View>
     );
 
-    if (isLoading) {
-        return (
-            <SafeAreaView style={styles.container}>
-                <View style={{ flex: 1, backgroundColor: '#e4f1ef' }}>
-                    {renderHeader()}
-                    <View style={{ flex: 1, padding: 12 }}>
-                        <Text style={styles.title}>You can specify the gender and age group of clients who can book an appointment with you</Text>
-                        <View style={{ flex: 1, marginTop: 10 }}>
-                            <Text style={{ fontSize: 16, fontFamily: CAIRO_FONT_FAMILY.bold, color: '#191919', lineHeight: Platform.OS === 'ios' ? 0 : 20, paddingBottom: 10 }}>My Preferences</Text>
-                        </View>
-                    </View>
-                </View>
-                <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center' }}>
-                <LoaderKit
-                        style={{ width: 100, height: 100 }}
-                        name={'BallSpinFadeLoader'}
-                        color={'green'}
-                    />
-                </View>
-            </SafeAreaView>
-        )
-    }
-
     return (
         <SafeAreaView style={styles.container}>
             <View style={{ flex: 1, backgroundColor: '#e4f1ef' }}>
@@ -362,7 +339,7 @@ const ClientSectionScreen = () => {
                 </CustomBottomSheet>
             </View>
 
-           
+            <FullScreenLoader visible={isLoading} />
         </SafeAreaView>
     )
 }

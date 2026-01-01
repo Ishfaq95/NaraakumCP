@@ -287,6 +287,7 @@ const ServiceProfile = () => {
             isActive: isActive ? 1 : 0,
             CatServiceServeTypeId:2
         };
+        console.log("Payload",payload)
         const response = await profileService.updateServiceProviderCategoryActiveStatus(payload);
         if(response?.StatusCode?.STATUSCODE == 11026){
             setHomeVisitEnabled(isActive);

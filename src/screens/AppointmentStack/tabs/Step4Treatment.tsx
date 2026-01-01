@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,9 @@ import {
   TouchableOpacity,
   ScrollView,
   Platform,
+  KeyboardAvoidingView,
+  Keyboard,
+  TextInput,
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { CAIRO_FONT_FAMILY, globalTextStyles } from '../../../styles/globalStyles';
@@ -47,6 +50,8 @@ const Step4Treatment: React.FC<Step4Props> = ({
   data,
   onDataChange,
 }) => {
+  const scrollViewRef = useRef<ScrollView>(null);
+  const contentContainerRef = useRef<View>(null);
   const [activeTab, setActiveTab] = useState<TabType>('procedures');
   const [formData, setFormData] = useState({
     procedures: data?.procedures || {},
@@ -100,35 +105,100 @@ const Step4Treatment: React.FC<Step4Props> = ({
     // onComplete();
   };
 
+  // Function to scroll to a TextInput when it's focused
+  const scrollToInput = useCallback((inputRef: React.RefObject<TextInput | View | null>) => {
+    if (!scrollViewRef.current || !inputRef.current) return;
+
+    // Small delay to ensure keyboard is shown and layout is updated
+    setTimeout(() => {
+      if (inputRef.current && scrollViewRef.current && contentContainerRef.current) {
+        // Measure the input position relative to the content container
+        inputRef.current.measureLayout(
+          contentContainerRef.current,
+          (x, y, width, height) => {
+            // Scroll to position with offset to show input above keyboard
+            const scrollOffset = y - 150; // 150px from top of visible area
+            scrollViewRef.current?.scrollTo({
+              y: Math.max(0, scrollOffset),
+              animated: true,
+            });
+          },
+          () => {
+            // Fallback: use measureInWindow for the input
+            if (inputRef.current) {
+              inputRef.current.measureInWindow((x, y, width, height) => {
+                // Approximate scroll - this is less accurate but works as fallback
+                scrollViewRef.current?.scrollTo({
+                  y: Math.max(0, y - 200),
+                  animated: true,
+                });
+              });
+            }
+          }
+        );
+      }
+    }, Platform.OS === 'ios' ? 300 : 100);
+  }, []);
+
+  // Handle keyboard show event as fallback
+  useEffect(() => {
+    if (Platform.OS === 'ios') {
+      const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
+        // KeyboardAvoidingView should handle most of the positioning
+        // This is just a fallback to ensure content is scrollable
+      });
+
+      return () => {
+        keyboardDidShowListener.remove();
+      };
+    }
+  }, []);
+
+
   const renderTabContent = () => {
     switch (activeTab) {
       case 'procedures':
         return (
-          <Procedures onDataChange={(data) => handleSubDataChange('procedures', data)} />
+          <Procedures 
+            onDataChange={(data) => handleSubDataChange('procedures', data)}
+            scrollToInput={scrollToInput}
+          />
         );
       case 'prescription':
         return (
-          <Prescription onDataChange={(data) => handleSubDataChange('prescription', data)} />
+          <Prescription 
+            onDataChange={(data) => handleSubDataChange('prescription', data)}
+            scrollToInput={scrollToInput}
+          />
         );
       case 'patientInstructions':
         return (
-            <PatientInstructions
+          <PatientInstructions
             onDataChange={(data) => handleSubDataChange('patientInstructions', data)}
+            scrollToInput={scrollToInput}
           />
         );
       case 'newService':
         return (
-          <NewService patientData={patientData} onDataChange={(data) => handleSubDataChange('newService', data)} />
+          <NewService 
+            patientData={patientData} 
+            onDataChange={(data) => handleSubDataChange('newService', data)}
+            scrollToInput={scrollToInput}
+          />
         );
       case 'referralConsultation':
         return (
           <ReferralConsultation
             onDataChange={(data) => handleSubDataChange('referralConsultation', data)}
+            scrollToInput={scrollToInput}
           />
         );
       case 'notes':
         return (
-          <Notes onDataChange={(data) => handleSubDataChange('notes', data)} />
+          <Notes 
+            onDataChange={(data) => handleSubDataChange('notes', data)}
+            scrollToInput={scrollToInput}
+          />
         );
       default:
         return null;
@@ -137,58 +207,71 @@ const Step4Treatment: React.FC<Step4Props> = ({
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.headerSection}>
-        <View style={styles.headerIconContainer}>
-          {/* <SvgUri
-            width={50}
-            height={50}
-            source={require('../../../assets/icons/TreatmentPlan.svg')}
-          /> */}
-          <TreatmentPlan width={50} height={50} />
-        </View>
-        <Text style={styles.headerTitle}>Treatment Plan</Text>
-      </View>
-
-      {/* Tabs */}
-      <View style={styles.tabsContainer}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+        enabled={Platform.OS === 'ios'}
+      >
         <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.tabsScrollContent}
+          ref={scrollViewRef}
+          style={styles.scrollView}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
+          nestedScrollEnabled={true}
         >
-          {tabs.map((tab) => (
-            <TouchableOpacity
-              key={tab.key}
-              style={[
-                styles.tab,
-                activeTab === tab.key && styles.activeTab,
-              ]}
-              onPress={() => handleTabChange(tab.key)}
+          <View ref={contentContainerRef}>
+          {/* Header */}
+          <View style={styles.headerSection}>
+            <View style={styles.headerIconContainer}>
+              <TreatmentPlan width={50} height={50} />
+            </View>
+            <Text style={styles.headerTitle}>Treatment Plan</Text>
+          </View>
+
+          {/* Tabs */}
+          <View style={styles.tabsContainer}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.tabsScrollContent}
+              keyboardShouldPersistTaps="handled"
             >
-              <Text
-                style={[
-                  styles.tabText,
-                  activeTab === tab.key && styles.activeTabText,
-                ]}
-              >
-                {tab.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
+              {tabs.map((tab) => (
+                <TouchableOpacity
+                  key={tab.key}
+                  style={[
+                    styles.tab,
+                    activeTab === tab.key && styles.activeTab,
+                  ]}
+                  onPress={() => handleTabChange(tab.key)}
+                >
+                  <Text
+                    style={[
+                      styles.tabText,
+                      activeTab === tab.key && styles.activeTabText,
+                    ]}
+                  >
+                    {tab.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+
+          {/* Content */}
+          <View style={styles.contentContainer}>{renderTabContent()}</View>
+          </View>
         </ScrollView>
-      </View>
-
-      {/* Content */}
-      <View style={styles.contentContainer}>{renderTabContent()}</View>
-
-      {/* Footer Buttons */}
-      <View style={styles.footer}>
-        <TouchableOpacity style={styles.completeButton} onPress={handleComplete}>
-          <Text style={styles.completeButtonText}>Save & Complete</Text>
-        </TouchableOpacity>
-      </View>
+        {/* Footer Buttons */}
+        <View style={styles.footer}>
+          <TouchableOpacity style={styles.completeButton} onPress={handleComplete}>
+            <Text style={styles.completeButtonText}>Save & Complete</Text>
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
     </View>
   );
 };
@@ -197,6 +280,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f0f8f7',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: Platform.OS === 'ios' ? 20 : 20,
   },
   headerSection: {
     flexDirection: 'row',

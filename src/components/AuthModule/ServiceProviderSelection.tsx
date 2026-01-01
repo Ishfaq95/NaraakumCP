@@ -69,7 +69,7 @@ const ServiceProviderSelection: React.FC<ServiceProviderSelectionProps> = ({
     return (
         <View style={styles.selectionContainer}>
             <Text style={styles.selectionTitle}>Service Provider Type</Text>
-            {!isLoading ? <ScrollView
+           <ScrollView
                 style={styles.scrollViewContainer}
                 contentContainerStyle={styles.scrollViewContent}
                 scrollEnabled={true}
@@ -116,19 +116,14 @@ const ServiceProviderSelection: React.FC<ServiceProviderSelectionProps> = ({
                         })}
                     </View>
                 </TouchableWithoutFeedback>
-            </ScrollView>: <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                <LoaderKit
-                    style={{ width: 100, height: 100 }}
-                    name={'BallSpinFadeLoader'}
-                    color={'green'}
-                />
-            </View>}
+            </ScrollView>
             <View style={styles.navigationContainer}>
                 <TouchableOpacity disabled={!selectedProvider} style={[styles.nextButton, !selectedProvider && styles.nextButtonDisabled]} onPress={handleNext}>
                     <Text style={styles.nextButtonText}>{`Next 1/4`}</Text>
                     <Ionicons name="arrow-forward" size={22} color="#fff" />
                 </TouchableOpacity>
             </View>
+            <FullScreenLoader visible={isLoading} />
         </View>
     );
 };

@@ -1,10 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TextInput,
-  ScrollView,
 } from 'react-native';
 import Dropdown from '../../../../components/common/Dropdown';
 import { globalTextStyles } from '../../../../styles/globalStyles';
@@ -17,6 +16,7 @@ export interface ReferralData {
 
 interface ReferralConsultationProps {
   onDataChange?: (data: ReferralData) => void;
+  scrollToInput?: (inputRef: React.RefObject<TextInput | View | null>) => void;
 }
 
 const REFERRAL_TYPES = [
@@ -26,57 +26,70 @@ const REFERRAL_TYPES = [
   { label: 'Follow-up Consultation', value: 'follow_up' },
 ];
 
-const ReferralConsultation: React.FC<ReferralConsultationProps> = ({ onDataChange }) => {
+const ReferralConsultation: React.FC<ReferralConsultationProps> = ({ onDataChange, scrollToInput }) => {
   const [referralType, setReferralType] = useState<string>('');
   const [specialistName, setSpecialistName] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
+  const specialistCardRef = useRef<View>(null);
+  const notesCardRef = useRef<View>(null);
+
+  const handleSpecialistFocus = () => {
+    if (scrollToInput && specialistCardRef.current) {
+      scrollToInput(specialistCardRef);
+    }
+  };
+
+  const handleNotesFocus = () => {
+    if (scrollToInput && notesCardRef.current) {
+      scrollToInput(notesCardRef);
+    }
+  };
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}
-      keyboardShouldPersistTaps="handled"
-    >
-      <Text style={styles.sectionTitle}>Referral / Consultation</Text>
+    <View style={styles.container}>
+      <View style={styles.content}>
+        <Text style={styles.sectionTitle}>Referral / Consultation</Text>
 
-      <View style={styles.card}>
-        <Text style={styles.label}>Referral Type</Text>
-        <View style={styles.dropdownWrapper}>
-          <Dropdown
-            data={REFERRAL_TYPES}
-            value={referralType}
-            placeholder="Select an option"
-            onChange={(value) => setReferralType(value as string)}
-            containerStyle={styles.dropdownContainer}
-            dropdownStyle={styles.dropdownInner}
+        <View style={styles.card}>
+          <Text style={styles.label}>Referral Type</Text>
+          <View style={styles.dropdownWrapper}>
+            <Dropdown
+              data={REFERRAL_TYPES}
+              value={referralType}
+              placeholder="Select an option"
+              onChange={(value) => setReferralType(value as string)}
+              containerStyle={styles.dropdownContainer}
+              dropdownStyle={styles.dropdownInner}
+            />
+          </View>
+        </View>
+
+        <View ref={specialistCardRef} style={styles.card}>
+          <Text style={styles.label}>Specialist Name</Text>
+          <TextInput
+            style={styles.singleLine}
+            placeholder="Enter specialist or clinic name"
+            placeholderTextColor="#9ba0a5"
+            value={specialistName}
+            onChangeText={setSpecialistName}
+            onFocus={handleSpecialistFocus}
+          />
+        </View>
+
+        <View ref={notesCardRef} style={styles.card}>
+          <Text style={styles.label}>Notes</Text>
+          <TextInput
+            style={styles.textArea}
+            multiline
+            placeholder="Add additional notes for the referral"
+            placeholderTextColor="#9ba0a5"
+            value={notes}
+            onChangeText={setNotes}
+            onFocus={handleNotesFocus}
           />
         </View>
       </View>
-
-      <View style={styles.card}>
-        <Text style={styles.label}>Specialist Name</Text>
-        <TextInput
-          style={styles.singleLine}
-          placeholder="Enter specialist or clinic name"
-          placeholderTextColor="#9ba0a5"
-          value={specialistName}
-          onChangeText={setSpecialistName}
-        />
-      </View>
-
-      <View style={styles.card}>
-        <Text style={styles.label}>Notes</Text>
-        <TextInput
-          style={styles.textArea}
-          multiline
-          placeholder="Add additional notes for the referral"
-          placeholderTextColor="#9ba0a5"
-          value={notes}
-          onChangeText={setNotes}
-        />
-      </View>
-    </ScrollView>
+    </View>
   );
 };
 

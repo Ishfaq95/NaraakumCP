@@ -23,6 +23,7 @@ export interface NewServiceData {
 interface NewServiceProps { 
   onDataChange?: (data: NewServiceData) => void;
   patientData: any;
+  scrollToInput?: (inputRef: React.RefObject<TextInput | View | null>) => void;
 }
 
 const NewService: React.FC<NewServiceProps> = ({ patientData, onDataChange }) => {
@@ -125,6 +126,7 @@ const NewService: React.FC<NewServiceProps> = ({ patientData, onDataChange }) =>
           renderItem={({ item }) => renderServiceItem(item)}
           keyExtractor={(item) => item?.OrderID?.toString() ?? Math.random().toString()}
           ListEmptyComponent={<View style={{flex:1,marginTop: '30%', justifyContent: 'center', alignItems: 'center'}}><Text style={{...globalTextStyles.bodyMedium, color: '#1a3c40'}}>No services added</Text></View>}
+          scrollEnabled={false}
         />
       </View>
     </View>

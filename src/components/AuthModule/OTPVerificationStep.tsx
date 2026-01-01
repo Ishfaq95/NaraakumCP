@@ -15,6 +15,7 @@ import { CAIRO_FONT_FAMILY, globalTextStyles } from '../../styles/globalStyles';
 import { authService } from '../../services/api/authService';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import LoaderKit from 'react-native-loader-kit';
+import FullScreenLoader from '../FullScreenLoader';
 
 interface OTPVerificationStepProps {
     phoneNumber: string;
@@ -235,23 +236,7 @@ const OTPVerificationStep: React.FC<OTPVerificationStepProps> = ({
                 </TouchableOpacity>
             </View>
 
-            {isLoading && <Modal
-                transparent={true}
-                animationType="fade"
-                visible={isLoading}
-                statusBarTranslucent={true}
-                onRequestClose={() => { }}
-                hardwareAccelerated={Platform.OS === 'android'}
-                presentationStyle="overFullScreen"
-            >
-                <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
-                    <LoaderKit
-                        style={{ width: 100, height: 100 }}
-                        name={'BallSpinFadeLoader'}
-                        color={'green'}
-                    />
-                </View>
-            </Modal>}
+            <FullScreenLoader visible={isLoading} />
         </View>
     );
 };

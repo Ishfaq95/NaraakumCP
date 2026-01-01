@@ -15,6 +15,7 @@ import { setStep2PhoneNumber } from '../../shared/redux/reducers/userReducer';
 import { useDispatch } from 'react-redux';
 import { useAlert } from '../../contexts/AlertContext';
 import LoaderKit from 'react-native-loader-kit';
+import FullScreenLoader from '../FullScreenLoader';
 
 interface FinalDetailsStepProps {
     phoneNumber: string;
@@ -1031,23 +1032,7 @@ const FinalDetailsStep: React.FC<FinalDetailsStepProps> = ({ phoneNumber, userIn
                 </TouchableOpacity>
             </View>
 
-            {isLoading && <Modal
-                transparent={true}
-                animationType="fade"
-                visible={isLoading}
-                statusBarTranslucent={true}
-                onRequestClose={() => { }}
-                hardwareAccelerated={Platform.OS === 'android'}
-                presentationStyle="overFullScreen"
-            >
-                <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
-                    <LoaderKit
-                        style={{ width: 100, height: 100 }}
-                        name={'BallSpinFadeLoader'}
-                        color={'green'}
-                    />
-                </View>
-            </Modal>}
+            <FullScreenLoader visible={isLoading} />
         </View>
     );
 };

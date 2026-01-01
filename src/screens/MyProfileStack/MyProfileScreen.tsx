@@ -10,6 +10,7 @@ import { appointmentService } from '../../services/api/appointmentService';
 import { ROUTES } from '../../shared/utils/routes';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
 import LoaderKit from 'react-native-loader-kit';
+import FullScreenLoader from '../../components/FullScreenLoader';
 
 const MyProfileScreen = () => {
   const [profileOptions, setProfileOptions] = useState([
@@ -229,23 +230,7 @@ const MyProfileScreen = () => {
         </View>
       </View>
 
-      {isLoading && <Modal
-                transparent={true}
-                animationType="fade"
-                visible={isLoading}
-                statusBarTranslucent={true}
-                onRequestClose={() => { }}
-                hardwareAccelerated={Platform.OS === 'android'}
-                presentationStyle="overFullScreen"
-            >
-                <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
-                    <LoaderKit
-                        style={{ width: 100, height: 100 }}
-                        name={'BallSpinFadeLoader'}
-                        color={'green'}
-                    />
-                </View>
-            </Modal>}
+      <FullScreenLoader visible={isLoading} />
     </SafeAreaView>
   )
 }

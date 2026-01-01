@@ -1,10 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TextInput,
-  ScrollView,
 } from 'react-native';
 import { globalTextStyles } from '../../../../styles/globalStyles';
 
@@ -14,31 +13,37 @@ export interface PatientInstructionsData {
 
 interface PatientInstructionsProps {
   onDataChange?: (data: PatientInstructionsData) => void;
+  scrollToInput?: (inputRef: React.RefObject<TextInput | View | null>) => void;
 }
 
-const PatientInstructions: React.FC<PatientInstructionsProps> = ({ onDataChange }) => {
+const PatientInstructions: React.FC<PatientInstructionsProps> = ({ onDataChange, scrollToInput }) => {
   const [instructions, setInstructions] = useState<string>('');
+  const instructionsCardRef = useRef<View>(null);
+
+  const handleFocus = () => {
+    if (scrollToInput && instructionsCardRef.current) {
+      scrollToInput(instructionsCardRef);
+    }
+  };
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}
-      keyboardShouldPersistTaps="handled"
-    >
-      <Text style={styles.sectionTitle}>Patient Instructions</Text>
+    <View style={styles.container}>
+      <View style={styles.content}>
+        <Text style={styles.sectionTitle}>Patient Instructions</Text>
 
-      <View style={styles.card}>
-        <TextInput
-              style={styles.textInput}
-              placeholder="Patient Instructions"
-              placeholderTextColor="#999"
-              value={instructions}
-              onChangeText={setInstructions}
-              multiline
-            />
+        <View ref={instructionsCardRef} style={styles.card}>
+          <TextInput
+            style={styles.textInput}
+            placeholder="Patient Instructions"
+            placeholderTextColor="#999"
+            value={instructions}
+            onChangeText={setInstructions}
+            multiline
+            onFocus={handleFocus}
+          />
+        </View>
       </View>
-    </ScrollView>
+    </View>
   );
 };
 

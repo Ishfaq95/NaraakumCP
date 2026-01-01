@@ -1,9 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   TextInput,
   TouchableOpacity,
 } from 'react-native';
@@ -19,6 +18,7 @@ export interface ProceduresData {
 interface ProceduresProps {
   data?: ProceduresData;
   onDataChange?: (data: ProceduresData) => void;
+  scrollToInput?: (inputRef: React.RefObject<TextInput | View | null>) => void;
 }
 
 const PROCEDURE_OPTIONS = [
@@ -29,17 +29,20 @@ const PROCEDURE_OPTIONS = [
   { label: 'Cavity Filling', value: 'cavity_filling' },
 ];
 
-const Procedures: React.FC<ProceduresProps> = ({ data, onDataChange }) => {
+const Procedures: React.FC<ProceduresProps> = ({ data, onDataChange, scrollToInput }) => {
   const [selectedProcedure, setSelectedProcedure] = useState<string>('');
   const [comments, setComments] = useState<string>('');
+  const commentInputRef = useRef<TextInput>(null);
+  const commentCardRef = useRef<View>(null);
+
+  const handleCommentFocus = () => {
+    if (scrollToInput && commentCardRef.current) {
+      scrollToInput(commentCardRef);
+    }
+  };
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}
-      keyboardShouldPersistTaps="handled"
-    >
+    <View style={styles.content}>
       <Text style={styles.sectionTitle}>Procedures</Text>
 
       <View style={styles.fieldContainer}>
@@ -58,21 +61,23 @@ const Procedures: React.FC<ProceduresProps> = ({ data, onDataChange }) => {
 
       <View style={styles.fieldContainer}>
         <Text style={styles.label}>Comments</Text>
-        <View style={styles.commentCard}>
+        <View ref={commentCardRef} style={styles.commentCard}>
           <TextInput
+            ref={commentInputRef}
             style={styles.commentInput}
             placeholder="Procedures"
             placeholderTextColor="#9ba0a5"
             multiline
             value={comments}
             onChangeText={setComments}
+            onFocus={handleCommentFocus}
           />
           <TouchableOpacity style={styles.commentAction}>
             <Icon name="pencil" size={18} color="#6f7c82" />
           </TouchableOpacity>
         </View>
       </View>
-    </ScrollView>
+    </View>
   );
 };
 

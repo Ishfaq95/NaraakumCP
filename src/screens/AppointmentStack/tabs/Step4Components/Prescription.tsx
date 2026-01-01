@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   TextInput,
-  ScrollView,
   TouchableOpacity,
   FlatList,
 } from 'react-native';
@@ -17,6 +16,7 @@ export interface PrescriptionData {
 
 interface PrescriptionProps {
   onDataChange?: (data: PrescriptionData) => void;
+  scrollToInput?: (inputRef: React.RefObject<TextInput | View | null>) => void;
 }
 
 const Prescription: React.FC<PrescriptionProps> = ({ onDataChange }) => {
@@ -24,27 +24,25 @@ const Prescription: React.FC<PrescriptionProps> = ({ onDataChange }) => {
   const [instructions, setInstructions] = useState<string>('');
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}
-      keyboardShouldPersistTaps="handled"
-    >
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Text style={{ ...globalTextStyles.h5, color: '#1a3c40' }}>Medicines List</Text>
-        <TouchableOpacity style={{ backgroundColor: '#179c8e', padding: 10, borderRadius: 10 }}>
-          <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>Add Medicines</Text>
-        </TouchableOpacity>
+    <View style={styles.container}>
+      <View style={styles.content}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Text style={{ ...globalTextStyles.h5, color: '#1a3c40' }}>Medicines List</Text>
+          <TouchableOpacity style={{ backgroundColor: '#179c8e', padding: 10, borderRadius: 10 }}>
+            <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>Add Medicines</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={{flex:1}}>
+          <FlatList
+            data={medications}
+            renderItem={({ item }) => <Text>{item}</Text>}
+            keyExtractor={(item) => item.toString()}
+            ListEmptyComponent={<View style={{flex:1,marginTop: '30%', justifyContent: 'center', alignItems: 'center'}}><Text style={{...globalTextStyles.bodyMedium, color: '#1a3c40'}}>No medicines added</Text></View>}
+            scrollEnabled={false}
+          />
+        </View>
       </View>
-      <View style={{flex:1}}>
-        <FlatList
-          data={medications}
-          renderItem={({ item }) => <Text>{item}</Text>}
-          keyExtractor={(item) => item.toString()}
-          ListEmptyComponent={<View style={{flex:1,marginTop: '30%', justifyContent: 'center', alignItems: 'center'}}><Text style={{...globalTextStyles.bodyMedium, color: '#1a3c40'}}>No medicines added</Text></View>}
-        />
-      </View>
-    </ScrollView>
+    </View>
   );
 };
 

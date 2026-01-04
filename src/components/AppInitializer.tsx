@@ -9,6 +9,33 @@ import { MediaBaseURL } from '../shared/utils/constants';
 import { profileService } from '../services/api/profileService';
 import messaging from '@react-native-firebase/messaging';
 import { tokenRefreshService } from '../services/axios/tokenRefreshService';
+import { store } from '../shared/redux/store';
+
+export const getMediaToken = async () => {
+  try {
+    const params = new URLSearchParams();
+    params.append('grant_type', 'password');
+    params.append('apikey', '15F79088-0CE7-4274-9725-EB48CF58AD56');
+    params.append('platformId', '1');
+
+    const response = await fetch(`${MediaBaseURL}/authValidator/GetToken`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: params.toString(),
+    });
+
+    const data = await response.json();
+    if (data.status == '200') {
+      store.dispatch(setMediaToken({
+        token: data.access_token,
+        expiresAt: data.expires,
+      }));
+    }
+  } catch (error) {
+  }
+};
 
 const AppInitializer = () => {
   const dispatch = useDispatch();
@@ -134,31 +161,7 @@ const AppInitializer = () => {
     }
   };
 
-  const getMediaToken = async () => {
-    try {
-      const params = new URLSearchParams();
-      params.append('grant_type', 'password');
-      params.append('apikey', '15F79088-0CE7-4274-9725-EB48CF58AD56');
-      params.append('platformId', '1');
-
-      const response = await fetch(`${MediaBaseURL}/authValidator/GetToken`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: params.toString(),
-      });
-
-      const data = await response.json();
-      if (data.status == '200') {
-        dispatch(setMediaToken({
-          token: data.access_token,
-          expiresAt: data.expires,
-        }));
-      }
-    } catch (error) {
-    }
-  };
+  
 
   // Back handler
   useEffect(() => {

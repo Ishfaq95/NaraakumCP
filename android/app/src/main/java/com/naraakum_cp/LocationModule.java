@@ -87,6 +87,63 @@ public class LocationModule extends ReactContextBaseJavaModule {
         }
     }
 
+    @ReactMethod
+    public void openSettings() {
+        try {
+            if (reactContext == null) {
+                Log.e(TAG, "React context is null in openSettings");
+                return;
+            }
+
+            // Try to get current activity first
+            android.app.Activity currentActivity = reactContext.getCurrentActivity();
+            Intent settingsIntent = new Intent(android.provider.Settings.ACTION_SETTINGS);
+            settingsIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            
+            if (currentActivity != null) {
+                // Use current activity if available
+                currentActivity.startActivity(settingsIntent);
+                Log.d(TAG, "Settings opened successfully using current activity");
+            } else {
+                // Fallback to reactContext
+                reactContext.startActivity(settingsIntent);
+                Log.d(TAG, "Settings opened successfully using reactContext");
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error opening settings: " + e.getMessage(), e);
+            // Fallback: Try to open wireless settings
+            try {
+                android.app.Activity currentActivity = reactContext.getCurrentActivity();
+                Intent wirelessIntent = new Intent(android.provider.Settings.ACTION_WIRELESS_SETTINGS);
+                wirelessIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                
+                if (currentActivity != null) {
+                    currentActivity.startActivity(wirelessIntent);
+                } else {
+                    reactContext.startActivity(wirelessIntent);
+                }
+                Log.d(TAG, "Opened wireless settings as fallback");
+            } catch (Exception e2) {
+                Log.e(TAG, "Error opening wireless settings: " + e2.getMessage(), e2);
+                // Last resort: Try WiFi settings
+                try {
+                    android.app.Activity currentActivity = reactContext.getCurrentActivity();
+                    Intent wifiIntent = new Intent(android.provider.Settings.ACTION_WIFI_SETTINGS);
+                    wifiIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    
+                    if (currentActivity != null) {
+                        currentActivity.startActivity(wifiIntent);
+                    } else {
+                        reactContext.startActivity(wifiIntent);
+                    }
+                    Log.d(TAG, "Opened WiFi settings as last resort");
+                } catch (Exception e3) {
+                    Log.e(TAG, "All settings open attempts failed: " + e3.getMessage(), e3);
+                }
+            }
+        }
+    }
+
     public void sendLocationUpdate(double latitude, double longitude) {
         try {
             if (reactContext == null) {

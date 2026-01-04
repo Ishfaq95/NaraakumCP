@@ -2,6 +2,7 @@ import axios, { AxiosResponse, InternalAxiosRequestConfig, AxiosError } from 'ax
 import { store } from '../shared/redux/store';
 import { BaseURL } from '../shared/utils/constants';
 import { tokenRefreshService } from '../services/axios/tokenRefreshService';
+import { getMediaToken } from '../components/AppInitializer';
 
 // Create an Axios instance
 const axiosInstance = axios.create({
@@ -51,6 +52,7 @@ axiosInstance.interceptors.response.use(
 
     // Handle 401 Unauthorized - Token expired
     if (error.response && error.response.status === 401) {
+      getMediaToken();
       const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
       
       // Skip token refresh for token refresh endpoint itself

@@ -61,26 +61,6 @@ const MyProfileScreen = () => {
     getServiceProviderMainSummary();
   }, [isFocused]);
 
-  // Handle Android hardware back button same as "Back To Profile"
-  useEffect(() => {
-
-    const subscription = BackHandler.addEventListener('hardwareBackPress',() => {
-      return true; // prevent default behavior
-    });
-
-    return () => {
-        subscription.remove();
-    };
-}, []);
-
-   // Disable iOS swipe-back gesture on this screen
-   useEffect(() => {
-    navigation.setOptions({
-        // @ts-ignore - gestureEnabled exists on native stack / stack navigators
-        gestureEnabled: false,
-    } as any);
-}, [navigation]);
-
   useEffect(() => {
     if (Object.keys(profileSummary).length > 0) {
       updateProfileOptionsStatus(profileSummary);

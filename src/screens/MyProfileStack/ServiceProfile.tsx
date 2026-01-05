@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react'
 import { CAIRO_FONT_FAMILY, globalTextStyles } from '../../styles/globalStyles';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { profileService } from '../../services/api/profileService';
+import { profileService, roleCategories } from '../../services/api/profileService';
 import { useSelector } from 'react-redux';
 import { useAlert } from '../../contexts/AlertContext';
 import CustomBottomSheet from '../../components/common/CustomBottomSheet';
@@ -21,7 +21,7 @@ const ServiceProfile = () => {
     const [selectedSpecialties, setSelectedSpecialties] = useState<string[]>([]);
     const user = useSelector((state: any) => state.root.user.user);
     const { showAlert } = useAlert();
-    const defaultLevelRenderArray =['Consultant','Specialist','General Physician'];
+    const defaultLevelRenderArray = ['Consultant', 'Specialist', 'General Physician'];
     const isFocused = useIsFocused();
 
     useEffect(() => {
@@ -45,7 +45,7 @@ const ServiceProfile = () => {
                 const firstService = serviceProviderRoleAndSpecialty.Service[0];
                 setSelectedLevelId(firstService.CatLevelId);
             }
-            
+
             if (serviceProviderRoleAndSpecialty.Specialty && serviceProviderRoleAndSpecialty.Specialty.length > 0) {
                 const specialtyIds = serviceProviderRoleAndSpecialty.Specialty.map((s: any) => s.Id);
                 setSelectedSpecialties(specialtyIds);
@@ -55,9 +55,9 @@ const ServiceProfile = () => {
 
     const parseServiceData = (categorySummary: any[]) => {
         // Check if categorySummary has valid data
-        const hasValidData = categorySummary && 
-                            categorySummary.length > 0 && 
-                            categorySummary.some(item => item.CatServiceServeTypeId);
+        const hasValidData = categorySummary &&
+            categorySummary.length > 0 &&
+            categorySummary.some(item => item.CatServiceServeTypeId);
 
         if (!hasValidData) {
             // Set empty data objects so cards still render
@@ -72,7 +72,7 @@ const ServiceProfile = () => {
         const onlineConsultation = categorySummary.find(
             (item) => item.CatServiceServeTypeId === 1
         );
-        
+
         // Find Home Visit (CatServiceServeTypeId === 2)
         const homeVisit = categorySummary.find(
             (item) => item.CatServiceServeTypeId === 2
@@ -103,13 +103,18 @@ const ServiceProfile = () => {
         try {
             const payload = {
                 CatLevelId: selectedLevelId,
-                CatSpecialtyIds:selectedSpecialties.join(','),
+                CatSpecialtyIds: selectedSpecialties.join(','),
                 UserloginInfoId: user.Id,
             };
             const response = await profileService.assignRoleAndSpecialty(payload);
             if (response?.ResponseStatus?.STATUSCODE === 200) {
                 setIsSpecialtyLevelBottomSheetVisible(false);
                 getServiceProviderRoleAndSpecialty();
+                showAlert({
+                    title: 'Role and specialty level saved successfully',
+                    message: '',
+                    type: 'success',
+                });
             }
         }
         catch (error: any) {
@@ -140,7 +145,7 @@ const ServiceProfile = () => {
     const renderSpecialtyLevel = () => (
         <View style={styles.sectionContainer}>
             <Text style={styles.sectionTitle}>Choose Your Specialty level</Text>
-            <TouchableOpacity 
+            <TouchableOpacity
                 style={styles.menuItem}
                 onPress={() => {
                     // Re-initialize selected values when opening bottom sheet
@@ -157,8 +162,8 @@ const ServiceProfile = () => {
             >
                 <Text style={styles.menuItemText}>Specialty level</Text>
                 <View style={styles.menuItemRight}>
-                    <View style={[styles.completeBadge, serviceProviderRoleAndSpecialty?.Specialty?.length > 0 ? {backgroundColor: '#198754',paddingVertical: 0,borderRadius: 10} : {backgroundColor: '#ffdcdc',paddingVertical: 3,borderRadius: 10}]}>
-                        <Text style={[styles.completeBadgeText,{color: serviceProviderRoleAndSpecialty?.Specialty?.length > 0 ? '#fff' : '#c50d0d'}]}>{serviceProviderRoleAndSpecialty?.Specialty?.length > 0 ? 'complete' : 'incomplete'}</Text>
+                    <View style={[styles.completeBadge, serviceProviderRoleAndSpecialty?.Specialty?.length > 0 ? { backgroundColor: '#198754', paddingVertical: 0, borderRadius: 10 } : { backgroundColor: '#ffdcdc', paddingVertical: 3, borderRadius: 10 }]}>
+                        <Text style={[styles.completeBadgeText, { color: serviceProviderRoleAndSpecialty?.Specialty?.length > 0 ? '#fff' : '#c50d0d' }]}>{serviceProviderRoleAndSpecialty?.Specialty?.length > 0 ? 'complete' : 'incomplete'}</Text>
                     </View>
                     <Ionicons name="chevron-forward" size={20} color="#666" />
                 </View>
@@ -171,8 +176,10 @@ const ServiceProfile = () => {
         icon: any,
         enabled: boolean,
         onToggle: (value: boolean) => void,
-        menuItems: Array<{title: string, onPress: () => void, isComplete: boolean}>
-    ) => (
+        menuItems: Array<{ title: string, onPress: () => void, isComplete: boolean }>
+    ) => {
+        console.log("menuItems",menuItems)
+        return (
         <View style={styles.serviceCard}>
             <View style={styles.serviceHeader}>
                 <View style={styles.serviceIconContainer}>
@@ -185,7 +192,7 @@ const ServiceProfile = () => {
                     trackColor={{ false: '#DBDBDB', true: '#239ea0' }}
                     thumbColor="#fff"
                     ios_backgroundColor="#DBDBDB"
-                    style={Platform.OS === 'ios' ? { transform: [{ scaleX: 0.7}, { scaleY: 0.7 }] } : {}}
+                    style={Platform.OS === 'ios' ? { transform: [{ scaleX: 0.7 }, { scaleY: 0.7 }] } : {}}
                 />
             </View>
             {enabled && (
@@ -195,7 +202,8 @@ const ServiceProfile = () => {
                             key={index}
                             style={[
                                 styles.expandedMenuItem,
-                                index < menuItems.length - 1 && styles.expandedMenuItemBorder
+                                styles.expandedMenuItemBorder
+                                // index < menuItems.length - 1 && styles.expandedMenuItemBorder
                             ]}
                             onPress={item.onPress}
                         >
@@ -205,7 +213,7 @@ const ServiceProfile = () => {
                                     styles.completeBadge,
                                     !item.isComplete && styles.incompleteBadge
                                 ]}>
-                                    <Text style={[styles.completeBadgeText,{color: !item.isComplete ? '#de574d' : '#198754'}]}>
+                                    <Text style={[styles.completeBadgeText, { color: !item.isComplete ? '#de574d' : '#198754' }]}>
                                         {item.isComplete ? 'complete' : 'incomplete'}
                                     </Text>
                                 </View>
@@ -217,6 +225,7 @@ const ServiceProfile = () => {
             )}
         </View>
     );
+}
 
     // Helper function to check if duration and price are complete
     const isDurationPriceComplete = (data: any) => {
@@ -239,16 +248,16 @@ const ServiceProfile = () => {
         if (!onlineConsultationData || Object.keys(onlineConsultationData).length === 0) {
             return [];
         }
-        
+
         return [
             {
                 title: 'Business hours',
-                onPress: () => navigation.navigate(ROUTES.BusinessHours as never,{Data:onlineConsultationData}),
+                onPress: () => navigation.navigate(ROUTES.BusinessHours as never, { Data: onlineConsultationData }),
                 isComplete: isBusinessHoursComplete(onlineConsultationData)
             },
             {
                 title: 'Duration & Price',
-                onPress: () => navigation.navigate(ROUTES.DurationAndPrice as never,{Data:onlineConsultationData}),
+                onPress: () => navigation.navigate(ROUTES.DurationAndPrice as never, { Data: onlineConsultationData }),
                 isComplete: isDurationPriceComplete(onlineConsultationData)
             },
         ];
@@ -260,42 +269,65 @@ const ServiceProfile = () => {
         if (!homeVisitData || Object.keys(homeVisitData).length === 0) {
             return [];
         }
-        
-        return [
-            {
-                title: 'Business hours',
-                onPress: () => navigation.navigate(ROUTES.BusinessHours as never,{Data:homeVisitData}),
-                isComplete: isBusinessHoursComplete(homeVisitData)
-            },
-            {
-                title: 'Duration & Price',
-                onPress: () => navigation.navigate(ROUTES.DurationAndPrice as never,{Data:homeVisitData}),
-                isComplete: isDurationPriceComplete(homeVisitData)
-            },
-            {
-                title: 'Work Areas',
-                onPress: () => navigation.navigate(ROUTES.WorkAreas as never,{Data:homeVisitData}),
-                isComplete: isWorkAreasComplete(homeVisitData)
-            },
-        ];
+
+        if(user?.CatOrganizationModeId == 2){
+            return [
+                {
+                    title: 'Business hours',
+                    onPress: () => navigation.navigate(ROUTES.BusinessHours as never, { Data: homeVisitData }),
+                    isComplete: isBusinessHoursComplete(homeVisitData)
+                },
+                {
+                    title: 'Duration & Price',
+                    onPress: () => navigation.navigate(ROUTES.DurationAndPrice as never, { Data: homeVisitData }),
+                    isComplete: isDurationPriceComplete(homeVisitData)
+                },
+                {
+                    title: 'Work Areas',
+                    onPress: () => navigation.navigate(ROUTES.WorkAreas as never, { Data: homeVisitData }),
+                    isComplete: isWorkAreasComplete(homeVisitData)
+                },
+            ];
+        }else {
+            return [
+                {
+                    title: 'Business hours',
+                    onPress: () => navigation.navigate(ROUTES.BusinessHours as never, { Data: homeVisitData }),
+                    isComplete: isBusinessHoursComplete(homeVisitData)
+                },
+                {
+                    title: 'Duration & Price',
+                    onPress: () => navigation.navigate(ROUTES.DurationAndPrice as never, { Data: homeVisitData }),
+                    isComplete: isDurationPriceComplete(homeVisitData)
+                }
+            ];
+        }
+
+       
     };
 
-    const updateServiceProviderCategoryActiveStatus = async (isActive: any) => {
+    const getCategoryId = (CatServiceServeTypeId: number) => {
+       const CategoryId = roleCategories.find((role: any) => role.Id == user?.CatUserRoleId)?.Categories.find((category: any) => category.CatServiceServeTypeId == CatServiceServeTypeId)?.Id;
+       return CategoryId;
+    }
+
+    const updateServiceProviderCategoryActiveStatus = async (isActive: any, CatServiceServeTypeId: number) => {
         const payload = {
             UserloginInfoId: user.Id,
-            CatCategoryId: 36,
+            CatCategoryId: getCategoryId(CatServiceServeTypeId),
             isActive: isActive ? 1 : 0,
-            CatServiceServeTypeId:2
+            CatServiceServeTypeId: CatServiceServeTypeId
         };
-        console.log("Payload",payload)
+        
         const response = await profileService.updateServiceProviderCategoryActiveStatus(payload);
-        if(response?.StatusCode?.STATUSCODE == 11026){
+        if (response?.StatusCode?.STATUSCODE == 11026) {
             setHomeVisitEnabled(isActive);
             getServiceProviderRoleAndSpecialty()
         }
     }
 
     const onToggleService = async (service: string, value: boolean) => {
+        updateServiceProviderCategoryActiveStatus(value,service=="onlineConsultation" ? 1 : 2);
         if (service === 'onlineConsultation') {
             if (Object.keys(onlineConsultationData).length === 0) {
                 showAlert({
@@ -308,16 +340,13 @@ const ServiceProfile = () => {
             setOnlineConsultationEnabled(value);
         } else if (service === 'homeVisit') {
             if (Object.keys(homeVisitData).length === 0) {
-                if(user.CatUserRoleId == 9){
-                    updateServiceProviderCategoryActiveStatus(value)
-                }else{
-                    showAlert({
-                        title: 'Please select your specialty level to proceed.',
-                        message: '',
-                        type: 'info',
-                    });
-                }
-                
+
+                showAlert({
+                    title: 'Please select your specialty level to proceed.',
+                    message: '',
+                    type: 'info',
+                });
+
                 return;
             }
             setHomeVisitEnabled(value);
@@ -326,7 +355,7 @@ const ServiceProfile = () => {
 
     const handleLevelSelect = (levelId: number) => {
         setSelectedLevelId(levelId);
-        
+
         // Clear specialties only when changing to General Physician (CatLevelId: 3)
         if (levelId === 3) {
             setSelectedSpecialties([]);
@@ -384,7 +413,7 @@ const ServiceProfile = () => {
 
             // TODO: Call your API to save the specialty level
             // const response = await profileService.saveSpecialtyLevel(payload);
-            
+
             // After successful save
             setIsSpecialtyLevelBottomSheetVisible(false);
             showAlert({
@@ -413,20 +442,20 @@ const ServiceProfile = () => {
                     {user?.CatUserRoleId == 3 && renderSpecialtyLevel()}
 
                     {user?.CatUserRoleId == 3 && <View style={styles.divider} />}
-                    
+
                     <Text style={styles.activateServicesTitle}>Activate Your Services</Text>
-                    
+
                     {(user?.CatUserRoleId == 7 || user?.CatUserRoleId == 3) && renderServiceCard(
                         'Online Consultation',
-                        <Image source={require('../../assets/icons/RemoteConsultant.png')} resizeMode='contain' style={{width: 50,height: 50}} />,
+                        <Image source={require('../../assets/icons/RemoteConsultant.png')} resizeMode='contain' style={{ width: 50, height: 50 }} />,
                         onlineConsultationEnabled,
                         (value: boolean) => onToggleService('onlineConsultation', value),
                         getOnlineConsultationMenuItems()
                     )}
-                    
+
                     {renderServiceCard(
                         'Home Visit',
-                        <Image source={require('../../assets/icons/HomeVisit.png')} resizeMode='contain' style={{width: 50,height: 50}} />,
+                        <Image source={require('../../assets/icons/HomeVisit.png')} resizeMode='contain' style={{ width: 50, height: 50 }} />,
                         homeVisitEnabled,
                         (value: boolean) => onToggleService('homeVisit', value),
                         getHomeVisitMenuItems()
@@ -436,12 +465,13 @@ const ServiceProfile = () => {
 
             <CustomBottomSheet
                 visible={isSpecialtyLevelBottomSheetVisible}
-                maxHeight={selectedLevelId ? (selectedLevelId === 1 || selectedLevelId === 2) ? "80%" : "35%" : "35%"}
+                maxHeight={selectedLevelId ? (selectedLevelId === 1 || selectedLevelId === 2) ? "72%" : "26%" : "26%"}
                 onClose={() => setIsSpecialtyLevelBottomSheetVisible(false)}
+                showHandle={false}
             >
                 <View style={styles.bottomSheetContent}>
                     {/* Close Button */}
-                    <TouchableOpacity 
+                    <TouchableOpacity
                         style={styles.closeButton}
                         onPress={() => setIsSpecialtyLevelBottomSheetVisible(false)}
                     >
@@ -458,10 +488,10 @@ const ServiceProfile = () => {
                             const level = serviceProviderRoleAndSpecialty?.AllLevelService?.find(
                                 (l: any) => l.TitlePlang === levelName
                             );
-                            
+
                             // If level doesn't exist in API data, skip rendering it
                             if (!level) return null;
-                            
+
                             return (
                                 <TouchableOpacity
                                     key={level.CatLevelId}
@@ -486,17 +516,17 @@ const ServiceProfile = () => {
                     {selectedLevelId && (selectedLevelId === 1 || selectedLevelId === 2) && (
                         <View style={styles.specialtiesContainer}>
                             <Text style={styles.specialtiesTitle}>Choose Specialties:</Text>
-                            <ScrollView 
+                            <ScrollView
                                 style={styles.specialtiesList}
                                 showsVerticalScrollIndicator={true}
                             >
                                 {serviceProviderRoleAndSpecialty?.AllSpecialty?.map((specialty: any, index: number) => {
                                     const isChecked = selectedSpecialties.includes(specialty.Id);
-                                    
+
                                     return (
                                         <TouchableOpacity
                                             key={specialty.Id}
-                                            style={[styles.specialtyItem,index == serviceProviderRoleAndSpecialty?.AllSpecialty?.length - 1 && {paddingBottom: 30}]}
+                                            style={[styles.specialtyItem, index == serviceProviderRoleAndSpecialty?.AllSpecialty?.length - 1 && { paddingBottom: 30 }]}
                                             onPress={() => handleSpecialtyToggle(specialty.Id)}
                                         >
                                             <View style={[
@@ -516,7 +546,7 @@ const ServiceProfile = () => {
                     )}
 
                     {/* Save Button */}
-                    <TouchableOpacity 
+                    <TouchableOpacity
                         style={styles.saveButton}
                         onPress={assignRoleAndSpecialty}
                     >
@@ -627,17 +657,20 @@ const styles = StyleSheet.create({
         marginHorizontal: 16,
         marginBottom: 16,
         borderRadius: 12,
-        elevation: 1,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 2,
+        borderWidth: 1,
+        borderColor: '#E0E0E0',
+        // elevation: 2,
+        // shadowColor: '#000',
+        // shadowOffset: { width: 0, height: 1 },
+        // shadowOpacity: 0.05,
+        // shadowRadius: 2,
         overflow: 'hidden',
     },
     serviceHeader: {
         flexDirection: 'row',
         alignItems: 'center',
-        padding: 16,
+        paddingHorizontal: 16,
+        paddingVertical: 12,
     },
     serviceIconContainer: {
         marginRight: 12,
@@ -660,17 +693,18 @@ const styles = StyleSheet.create({
         borderTopColor: '#f0f0f0',
         marginHorizontal: 16,
         marginBottom: 16,
+        paddingTop: 8,
     },
     expandedMenuItem: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        borderColor:'#239ea0',
+        borderColor: '#239ea0',
         borderWidth: 1,
         borderRadius: 10,
         paddingVertical: 8,
         paddingHorizontal: 8,
-        marginBottom:6
+        marginBottom: 6
     },
     expandedMenuItemBorder: {
         borderBottomWidth: 1,
@@ -804,36 +838,39 @@ const styles = StyleSheet.create({
     },
     levelTabsContainer: {
         flexDirection: 'row',
+        width: '100%',
+        alignItems: 'center',
+        justifyContent: 'center',
         gap: 8,
         marginBottom: 20,
     },
     levelTab: {
-        flex: 1,
-        paddingVertical: 2,
-        paddingHorizontal: 8,
+        // flex: 1,
+        paddingVertical: 6,
+        paddingHorizontal: 12,
         borderRadius: 20,
         borderWidth: 1,
-        borderColor: 'lightgray',
+        borderColor: '#E0E0E0',
         backgroundColor: '#fff',
         alignItems: 'center',
         justifyContent: 'center',
     },
     levelTabActive: {
-        borderColor: '#239ea0',
+        borderColor: '#239EA0',
         borderWidth: 1,
-        backgroundColor: '#e4f1ef',
+        backgroundColor: '#E9F5F6',
     },
     levelTabText: {
-        fontSize: 15,
+        fontSize: 14,
         fontFamily: CAIRO_FONT_FAMILY.semiBold,
         lineHeight: Platform.OS === 'ios' ? 0 : 20,
-        color: 'black',
+        color: '#191919',
     },
     levelTabTextActive: {
         color: '#239ea0',
     },
     specialtiesContainer: {
-        marginBottom: 20,
+        marginBottom: 10,
     },
     specialtiesTitle: {
         fontSize: 16,
@@ -868,7 +905,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
     },
     checkboxChecked: {
-            backgroundColor: '#239ea0',
+        backgroundColor: '#239ea0',
         borderColor: '#239ea0',
     },
     specialtyText: {
@@ -882,7 +919,6 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         alignItems: 'center',
         justifyContent: 'center',
-        marginTop: 8,
     },
     saveButtonText: {
         color: '#fff',

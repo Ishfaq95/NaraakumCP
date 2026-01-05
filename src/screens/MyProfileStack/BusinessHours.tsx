@@ -10,6 +10,11 @@ import moment from 'moment';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Platform } from 'react-native';
 import { useAlert } from '../../contexts/AlertContext';
+import FullScreenLoader from '../../components/FullScreenLoader';
+import ConfirmationModal from '../../components/common/ConfirmationModal';
+import CustomBottomSheet from '../../components/common/CustomBottomSheet';
+import CommonRadioButton from '../../components/common/CommonRadioButton';
+import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
 
 type ViewMode = 'Month' | 'Week' | 'Day' | 'Custom';
 
@@ -75,9 +80,20 @@ const BusinessHours = ({ route }: { route: any }) => {
     const [editSlots, setEditSlots] = useState<any>(null);
     const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const [isLoading, setIsLoading] = useState(false);
+    const [enableConfirmationModal, setEnableConfirmationModal] = useState(false);
+    const [conflictBottomSheetVisible, setConflictBottomSheetVisible] = useState(false);
+    const [conflictResolution, setConflictResolution] = useState<'keepPrevious' | 'saveNew'>('saveNew');
+    const [conflictingSlots, setConflictingSlots] = useState<any[]>([]);
+    const [copyToNextMonthModalVisible, setCopyToNextMonthModalVisible] = useState(false);
+    const [slotsInfoModalVisible, setSlotsInfoModalVisible] = useState(false);
+    const [selectedDateSlots, setSelectedDateSlots] = useState<any[]>([]);
+    const [selectedDateForInfo, setSelectedDateForInfo] = useState<moment.Moment | null>(null);
+    const [deleteConfirmationModalVisible, setDeleteConfirmationModalVisible] = useState(false);
+    const [slotToDelete, setSlotToDelete] = useState<any>(null);
 
     const addServiceProviderHolidays = async (daysState: { [key: number]: boolean }) => {
-        setIsLoading(true);
+
+
         const dayText = daysOfWeek.map((day, index) => {
             return {
                 Day: day,
@@ -85,13 +101,14 @@ const BusinessHours = ({ route }: { route: any }) => {
             }
         });
 
+        setIsLoading(true);
         const payload = {
             ServiceProviderId: user?.Id,
             Days: dayText.filter(d => !d.IsActive).map(d => d.Day).join(',')
         };
-        
+
         try {
-            
+
             const response = await profileService.addServiceProviderHolidays(payload);
             if (response?.ResponseStatus?.STATUSCODE == 200) {
                 getServiceProviderHolidays();
@@ -142,8 +159,6 @@ const BusinessHours = ({ route }: { route: any }) => {
 
             // Mark holidays as OFF
             holidays.forEach(holiday => {
-                // API WeekDay: 1=Sunday, 2=Monday, 3=Tuesday, 4=Wednesday, 5=Thursday, 6=Friday, 7=Saturday
-                // Convert to moment index: 0=Sunday, 1=Monday, 2=Tuesday, 3=Wednesday, 4=Thursday, 5=Friday, 6=Saturday
                 const momentIndex = holiday.WeekDay - 1;
                 if (momentIndex >= 0 && momentIndex <= 6) {
                     newBusinessDays[momentIndex] = false;
@@ -169,6 +184,8 @@ const BusinessHours = ({ route }: { route: any }) => {
             setIsLoading(false);
         }
     };
+
+    console.log("editSlots", editSlots)
 
     const getServiceProviderAvailability = async (monthDate: moment.Moment) => {
         try {
@@ -201,10 +218,32 @@ const BusinessHours = ({ route }: { route: any }) => {
 
     const toggleBusinessDay = (dayIndex: number) => {
         setBusinessDays(prev => {
+            // Calculate what the updated state would be
             const updated = {
                 ...prev,
                 [dayIndex]: !prev[dayIndex],
             };
+
+            // Check if at least one day would remain active
+            const dayText = daysOfWeek.map((day, index) => {
+                return {
+                    Day: day,
+                    IsActive: updated[index]
+                }
+            });
+
+            const activeDays = dayText.filter(d => d.IsActive == true);
+
+            // If no active days would remain, show alert and don't update state
+            if (activeDays.length == 0) {
+                showAlert({
+                    title: 'Please select at least one day',
+                    message: '',
+                    type: 'warning',
+                });
+                return prev; // Return previous state without updating
+            }
+
             // Call API only when user toggles a checkbox
             addServiceProviderHolidays(updated);
             return updated;
@@ -231,7 +270,7 @@ const BusinessHours = ({ route }: { route: any }) => {
             return date.isBetween(start, end, 'day', '[]');
         });
     };
-    
+
     const getAvailabilitySlotsForDate = (date: moment.Moment) => {
         // Don't return slots for holidays
         if (isHoliday(date)) {
@@ -245,7 +284,12 @@ const BusinessHours = ({ route }: { route: any }) => {
         });
     };
 
-    const formatDisplayDate = (date: moment.Moment | null) => date ? date.format('DD-MMM-YYYY') : '';
+    const getAvailabilitySlotsCount = (date: moment.Moment) => {
+        // Get the count of slots for a specific date
+        return getAvailabilitySlotsForDate(date).length;
+    };
+
+    const formatDisplayDate = (date: moment.Moment | null) => date ? date.format('DD/MM/YYYY') : '';
 
     const handleCustomStartChange = (_event: any, date?: Date) => {
         setShowCustomStartPicker(Platform.OS === 'ios');
@@ -318,7 +362,7 @@ const BusinessHours = ({ route }: { route: any }) => {
                 <View style={styles.selectedMonthRow}>
                     <MaterialIcons name="calendar-today" size={20} color="#00A896" />
                     <Text style={styles.selectedMonthText}>
-                        Selected Week is: <Text style={styles.selectedMonthTextValue}>{start.format('DD-MMM-YYYY')} - {end.format('DD-MMM-YYYY')}</Text>
+                        Selected Week is: <Text style={styles.selectedMonthTextValue}>{start.format('DD/MM/YYYY')} - {end.format('DD/MM/YYYY')}</Text>
                     </Text>
                 </View>
             );
@@ -328,47 +372,67 @@ const BusinessHours = ({ route }: { route: any }) => {
             <View style={styles.selectedMonthRow}>
                 <MaterialIcons name="calendar-today" size={20} color="#00A896" />
                 <Text style={styles.selectedMonthText}>
-                    Selected Date is: <Text style={styles.selectedMonthTextValue}>{selectedDate.format('DD-MMM-YYYY')}</Text>
+                    Selected Date is: <Text style={styles.selectedMonthTextValue}>{selectedDate.format('DD/MM/YYYY')}</Text>
                 </Text>
             </View>
         );
     };
 
     const handleDatePress = (date: moment.Moment) => {
-        setIsLoading(true);
-        setSelectedDate(date);
-        const existingIndex = selectedDates.findIndex(d => d.isSame(date, 'day'));
-        if (existingIndex >= 0) {
-            setSelectedDates(prev => prev.filter((_, i) => i !== existingIndex));
+        const slotsCount = getAvailabilitySlotsCount(date);
+        
+        // If count is greater than 1, show info modal with slot times
+        if (slotsCount > 1) {
+            const slots = getAvailabilitySlotsForDate(date);
+            setSelectedDateSlots(slots);
+            setSelectedDateForInfo(date);
+            setSlotsInfoModalVisible(true);
         } else {
-            setSelectedDates(prev => [...prev, date]);
+            // Normal behavior for single or no slots
+            setIsLoading(true);
+            setSelectedDate(date);
+            const existingIndex = selectedDates.findIndex(d => d.isSame(date, 'day'));
+            if (existingIndex >= 0) {
+                setSelectedDates(prev => prev.filter((_, i) => i !== existingIndex));
+            } else {
+                setSelectedDates(prev => [...prev, date]);
+            }
+            setIsLoading(false);
         }
-        setIsLoading(false);
     };
 
-    const handleDelete = async (slot: any) => {
+    const handleDeleteClick = (slot: any) => {
+        setSlotToDelete(slot);
+        setDeleteConfirmationModalVisible(true);
+    };
+
+    const handleDelete = async () => {
+        if (!slotToDelete) return;
+        
+        setDeleteConfirmationModalVisible(false);
         try {
             setIsLoading(true);
-        const payload = {
-            "ServiceProviderAvailabilityIds": slot.IDs,
-            "filter": "fullslot",
-            "StartDate": moment(slot.StartDate).format("YYYY-MM-DD"),
-            "EndDate": moment(slot.EndDate).format("YYYY-MM-DD"),
-            "CatServiceServeTypeId": Data?.CatServiceServeTypeId
-        };
-        const response = await profileService.deleteServiceProviderAvailability(payload);
-        if (response?.ResponseStatus?.STATUSCODE == 200) {
-            showAlert({
-                title: response?.ResponseStatus?.MESSAGE,
-                message: '',
-                type: 'success',
-            });
-            getServiceProviderAvailability(selectedMonth);
-        }
+            const payload = {
+                "ServiceProviderAvailabilityIds": slotToDelete.IDs,
+                "filter": "fullslot",
+                "StartDate": moment(slotToDelete.StartDate).format("YYYY-MM-DD"),
+                "EndDate": moment(slotToDelete.EndDate).format("YYYY-MM-DD"),
+                "CatServiceServeTypeId": Data?.CatServiceServeTypeId
+            };
+            const response = await profileService.deleteServiceProviderAvailability(payload);
+            if (response?.ResponseStatus?.STATUSCODE == 200) {
+                showAlert({
+                    title: "Slot has been deleted successfully",
+                    message: '',
+                    type: 'success',
+                });
+                getServiceProviderAvailability(selectedMonth);
+            }
         } catch (error) {
-            
+
         } finally {
             setIsLoading(false);
+            setSlotToDelete(null);
         }
     };
 
@@ -396,6 +460,7 @@ const BusinessHours = ({ route }: { route: any }) => {
     };
 
     const handleCopyToNextMonth = async () => {
+        setCopyToNextMonthModalVisible(false);
         try {
             setIsLoading(true);
             const payload = {
@@ -413,76 +478,93 @@ const BusinessHours = ({ route }: { route: any }) => {
                 getServiceProviderAvailability(selectedMonth);
             }
         } catch (error) {
-            
+
         } finally {
             setIsLoading(false);
         }
     };
 
     const handleUpdate = async () => {
-        let payloadStartDate: moment.Moment | null = null;
-        let payloadEndDate: moment.Moment | null = null;
-        let catAvailabilityTypeId = 1;
+        setIsLoading(true);
+        try {
+            let payloadStartDate: moment.Moment | null = null;
+            let payloadEndDate: moment.Moment | null = null;
+            let catAvailabilityTypeId = 1;
 
-        if (viewMode === 'Month') {
-            const today = moment().startOf('day');
-            const monthStart = selectedMonth.clone().startOf('month');
-            payloadStartDate = selectedMonth.isSame(today, 'month') ? moment.max(monthStart, today) : monthStart;
-            payloadEndDate = selectedMonth.clone().endOf('month');
-            catAvailabilityTypeId = 3;
-        } else if (viewMode === 'Week') {
-            payloadStartDate = selectedDate.clone().startOf('week');
-            payloadEndDate = selectedDate.clone().endOf('week');
-            catAvailabilityTypeId = 2;
-        } else if (viewMode === 'Day') {
-            payloadStartDate = selectedDate.clone().startOf('day');
-            payloadEndDate = selectedDate.clone().startOf('day');
-            catAvailabilityTypeId = 1;
-        } else if (viewMode === 'Custom') {
-            payloadStartDate = customStartDate;
-            payloadEndDate = customEndDate;
-            catAvailabilityTypeId = 4;
+            if (viewMode === 'Month') {
+                const today = moment().startOf('day');
+                const monthStart = selectedMonth.clone().startOf('month');
+                payloadStartDate = selectedMonth.isSame(today, 'month') ? moment.max(monthStart, today) : monthStart;
+                payloadEndDate = selectedMonth.clone().endOf('month');
+                catAvailabilityTypeId = 3;
+            } else if (viewMode === 'Week') {
+                payloadStartDate = selectedDate.clone().startOf('week');
+                payloadEndDate = selectedDate.clone().endOf('week');
+                catAvailabilityTypeId = 2;
+            } else if (viewMode === 'Day') {
+                payloadStartDate = selectedDate.clone().startOf('day');
+                payloadEndDate = selectedDate.clone().startOf('day');
+                catAvailabilityTypeId = 1;
+            } else if (viewMode === 'Custom') {
+                payloadStartDate = customStartDate;
+                payloadEndDate = customEndDate;
+                catAvailabilityTypeId = 4;
+            }
+
+            if (!payloadStartDate || !payloadEndDate) {
+                setIsLoading(false);
+                return;
+            }
+
+            const startTime24 = moment(startTime, 'h:mm A').format('HH:mm');
+            const endTime24 = moment(endTime, 'h:mm A').format('HH:mm');
+
+            const payload = {
+                "Ids": editSlots.IDs,
+                "OrganizationId": user?.OrganizationId || Data?.OrganizationId,
+                "ServiceProviderId": user?.Id,
+                "StartTime": startTime24,
+                "EndTime": endTime24,
+                "CatAvailabilityTypeId": catAvailabilityTypeId,
+                "StartDate": payloadStartDate.format('YYYY-MM-DD'),
+                "EndDate": payloadEndDate.format('YYYY-MM-DD'),
+                "CatServiceServeTypeId": Data?.CatServiceServeTypeId
+            }
+
+            const response = await profileService.updateServiceProviderAvailability(payload);
+            if (response?.ResponseStatus?.STATUSCODE == 200) {
+                if (response?.StatusCode?.STATUSCODE == 11001) {
+                    setConflictBottomSheetVisible(true);
+                    setConflictingSlots(response?.Data);
+                    return;
+                }
+                setEditSlots(null);
+                setStartTime('');
+                setEndTime('');
+                setViewMode('Month');
+                setSelectedMonth(moment());
+                setCustomStartDate(null);
+                setCustomEndDate(null);
+                showAlert({
+                    title: response?.ResponseStatus?.MESSAGE,
+                    message: '',
+                    type: 'success',
+                });
+                getServiceProviderAvailability(selectedMonth);
+            }
+        } catch (error) {
+
+        } finally {
+            setIsLoading(false);
         }
-
-        if (!payloadStartDate || !payloadEndDate) {
-            return;
-        }
-
-        const startTime24 = moment(startTime, 'h:mm A').format('HH:mm');
-        const endTime24 = moment(endTime, 'h:mm A').format('HH:mm');
-
-        const payload = {
-            "Ids": editSlots.IDs,
-            "OrganizationId": user?.OrganizationId || Data?.OrganizationId,
-            "ServiceProviderId": user?.Id,
-            "StartTime": startTime24,
-            "EndTime": endTime24,
-            "CatAvailabilityTypeId": catAvailabilityTypeId,
-            "StartDate": payloadStartDate.format('YYYY-MM-DD'),
-            "EndDate": payloadEndDate.format('YYYY-MM-DD'),
-            "CatServiceServeTypeId": Data?.CatServiceServeTypeId
-        }
-
-        const response = await profileService.updateServiceProviderAvailability(payload);
-        if (response?.ResponseStatus?.STATUSCODE == 200) {
-            setEditSlots(null);
-            setStartTime('');
-            setEndTime('');
-            setViewMode('Month');
-            setSelectedMonth(moment());
-            setCustomStartDate(null);
-            setCustomEndDate(null);
-            showAlert({
-                title: response?.ResponseStatus?.MESSAGE,
-                message: '',
-                type: 'success',
-            });
-            getServiceProviderAvailability(selectedMonth);
-        }
-
     };
 
+    const onClickSave = async () => {
+        setEnableConfirmationModal(true);
+    }
+
     const handleSave = async () => {
+        setEnableConfirmationModal(false);
         const hasStart = !!startTime;
         const hasEnd = !!endTime;
         let hasDate = true;
@@ -539,34 +621,46 @@ const BusinessHours = ({ route }: { route: any }) => {
             return;
         }
 
-        setIsSaving(true);
-        const payload = {
-            OrganizationId: user?.OrganizationId || Data?.OrganizationId,
-            ServiceProviderId: user?.Id,
-            StartDate: payloadStartDate.format('YYYY-MM-DD'),
-            EndDate: payloadEndDate.format('YYYY-MM-DD'),
-            StartTime: startTime24,
-            EndTime: endTime24,
-            CatAvailabilityTypeId: catAvailabilityTypeId,
-            CatServiceServeTypeId: Data?.CatServiceServeTypeId,
-        };
-        const response = await profileService.addUpdateServiceProviderAvailability(payload);
-        if (response?.ResponseStatus?.STATUSCODE == 200) {
-            showAlert({
-                title: response?.ResponseStatus?.MESSAGE,
-                message: '',
-                type: 'success',
-            });
+        try {
 
-            getServiceProviderAvailability(selectedMonth);
+            setIsLoading(true);
+            const payload = {
+                OrganizationId: user?.OrganizationId || Data?.OrganizationId,
+                ServiceProviderId: user?.Id,
+                StartDate: payloadStartDate.format('YYYY-MM-DD'),
+                EndDate: payloadEndDate.format('YYYY-MM-DD'),
+                StartTime: startTime24,
+                EndTime: endTime24,
+                CatAvailabilityTypeId: catAvailabilityTypeId,
+                CatServiceServeTypeId: Data?.CatServiceServeTypeId,
+            };
+            const response = await profileService.addUpdateServiceProviderAvailability(payload);
+            if (response?.ResponseStatus?.STATUSCODE == 200) {
+                if (response?.StatusCode?.STATUSCODE == 11001) {
+                    setConflictBottomSheetVisible(true);
+                    setConflictingSlots(response?.Data);
+                    return;
+                }
+                showAlert({
+                    title: response?.ResponseStatus?.MESSAGE,
+                    message: '',
+                    type: 'success',
+                });
+
+                getServiceProviderAvailability(selectedMonth);
+            }
+
+        } catch (error) {
+        } finally {
+            setIsLoading(false);
         }
-        setIsSaving(false);
     };
 
     const handleClear = () => {
         setStartTime('');
         setEndTime('');
         setSelectedDates([]);
+        setEditSlots(null);
     };
 
     const formatTimeForDisplay = (time: string) => {
@@ -575,7 +669,7 @@ const BusinessHours = ({ route }: { route: any }) => {
     };
 
     const renderHeader = () => (
-        <View style={styles.header}>
+        <View style={[styles.header, { borderBottomWidth: 1, borderBottomColor: '#eee' }]}>
             <TouchableOpacity onPress={backButtonPress} style={styles.backButton}>
                 <Ionicons name="arrow-back-outline" size={24} color="#333" />
             </TouchableOpacity>
@@ -594,8 +688,8 @@ const BusinessHours = ({ route }: { route: any }) => {
                             value={businessDays[index]}
                             onValueChange={() => toggleBusinessDay(index)}
                             trackColor={{ false: '#DBDBDB', true: '#239ea0' }}
-                            thumbColor={ '#fff'}
-                            style={Platform.OS === 'ios' ? { transform: [{ scaleX: 0.7}, { scaleY: 0.7 }] } : {}}
+                            thumbColor={'#fff'}
+                            style={Platform.OS === 'ios' ? { transform: [{ scaleX: 0.7 }, { scaleY: 0.7 }] } : {}}
                         />
                     </View>
                 ))}
@@ -752,6 +846,7 @@ const BusinessHours = ({ route }: { route: any }) => {
                         {week.map((date, dayIndex) => {
                             const isCurrentMonth = date.month() === selectedMonth.month();
                             const hasAvailability = isDateInAvailability(date);
+                            const slotsCount = getAvailabilitySlotsCount(date);
                             const isSelected = selectedDates.some(d => d.isSame(date, 'day'));
                             const isDateHoliday = isHoliday(date);
                             const isToday = date.isSame(moment(), 'day');
@@ -777,9 +872,9 @@ const BusinessHours = ({ route }: { route: any }) => {
                                     ]}>
                                         {date.date()}
                                     </Text>
-                                    {hasAvailability && isCurrentMonth && !isDateHoliday && (
+                                    {hasAvailability && isCurrentMonth && !isDateHoliday && slotsCount > 0 && (
                                         <View style={styles.availabilityDot} >
-                                            <Text style={{ fontSize: 10, fontFamily: CAIRO_FONT_FAMILY.semiBold, lineHeight: Platform.OS === 'ios' ? 17 : 15, color: '#fff' }}>{'1'}</Text>
+                                            <Text style={{ fontSize: 10, fontFamily: CAIRO_FONT_FAMILY.semiBold, lineHeight: Platform.OS === 'ios' ? 17 : 15, color: '#fff' }}>{slotsCount}</Text>
                                         </View>
                                     )}
                                 </TouchableOpacity>
@@ -961,12 +1056,99 @@ const BusinessHours = ({ route }: { route: any }) => {
         );
     };
 
+    const handleRemoveConflict = async () => {
+        setIsLoading(true);
+        let payloadStartDate: moment.Moment | null = null;
+        let payloadEndDate: moment.Moment | null = null;
+        let catAvailabilityTypeId = 1;
+
+        if (viewMode === 'Month') {
+            const today = moment().startOf('day');
+            const monthStart = selectedMonth.clone().startOf('month');
+            payloadStartDate = selectedMonth.isSame(today, 'month') ? moment.max(monthStart, today) : monthStart;
+            payloadEndDate = selectedMonth.clone().endOf('month');
+            catAvailabilityTypeId = 3;
+        } else if (viewMode === 'Week') {
+            payloadStartDate = selectedDate.clone().startOf('week');
+            payloadEndDate = selectedDate.clone().endOf('week');
+            catAvailabilityTypeId = 2;
+        } else if (viewMode === 'Day') {
+            payloadStartDate = selectedDate.clone().startOf('day');
+            payloadEndDate = selectedDate.clone().startOf('day');
+            catAvailabilityTypeId = 1;
+        } else if (viewMode === 'Custom') {
+            payloadStartDate = customStartDate;
+            payloadEndDate = customEndDate;
+            catAvailabilityTypeId = 4;
+        }
+
+        const startTime24 = moment(startTime, 'h:mm A').format('HH:mm');
+        const endTime24 = moment(endTime, 'h:mm A').format('HH:mm');
+        try {
+            const payload = {
+                OrganizationId: user?.OrganizationId || Data?.OrganizationId,
+                UserLoginInfoId: user?.Id,
+                StartDate: payloadStartDate?.format('YYYY-MM-DD'),
+                EndDate: payloadEndDate?.format('YYYY-MM-DD'),
+                StartTime: startTime24,
+                EndTime: endTime24,
+                CatAvailabilityTypeId: catAvailabilityTypeId.toString(),
+                CatServiceServeTypeId: Data?.CatServiceServeTypeId,
+                IskeepPrevious: conflictResolution === 'keepPrevious' ? 1 : 0,
+            }
+            const response = await profileService.serviceProviderAvailabilityRemoveConflict(payload);
+            if (response?.ResponseStatus?.STATUSCODE == 200) {
+                getServiceProviderAvailability(selectedMonth);
+                showAlert({
+                    title: response?.ResponseStatus?.MESSAGE,
+                    message: '',
+                    type: 'success',
+                });
+            }
+        }
+        catch (error) {
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
+    const checkOffDay = () => {
+        if (viewMode == 'Day') {
+            // Check if selected day is a past day
+            if (selectedDate.isBefore(moment(), 'day')) {
+                return true;
+            }
+            // Check if selected day is in business days
+            if (businessDays[selectedDate.day()]) {
+                return false;
+            } else {
+                return true;
+            }
+        } else if (viewMode == 'Month') {
+            // Check if selected month is a past month
+            if (selectedMonth.isBefore(moment(), 'month')) {
+                return true;
+            }
+            return false;
+        } else if (viewMode == 'Week') {
+            // Check if selected week is a past week (check if end of week is before current week)
+            const weekEnd = selectedDate.clone().endOf('week');
+            const currentWeekEnd = moment().endOf('week');
+            if (weekEnd.isBefore(currentWeekEnd, 'day')) {
+                return true;
+            }
+            return false;
+        } else {
+            return false;
+        }
+    }
+
     const renderScheduleSection = () => {
         return (
             <View style={styles.scheduleSection}>
                 <View style={styles.scheduleTitleRow}>
                     <Text style={styles.scheduleTitle}>Schedule</Text>
-                    {availability.length > 0 && <TouchableOpacity onPress={handleCopyToNextMonth}>
+                    {availability.length > 0 && <TouchableOpacity onPress={() => setCopyToNextMonthModalVisible(true)}>
                         <Text style={styles.copyToNextMonth}>Copy to Next Month</Text>
                     </TouchableOpacity>}
                 </View>
@@ -1034,10 +1216,15 @@ const BusinessHours = ({ route }: { route: any }) => {
                             mode="time"
                             display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                             onChange={(event, date) => {
-                                setShowStartTimePicker(Platform.OS === 'ios');
-                                if (date) {
-                                    setTempStartTime(date);
-                                    setStartTime(moment(date).format('h:mm A'));
+                                console.log("event", event.type);
+                                if (event.type == 'set') {
+                                    setShowStartTimePicker(false);
+                                    if (date) {
+                                        setTempStartTime(date);
+                                        setStartTime(moment(date).format('h:mm A'));
+                                    }
+                                } else {
+                                    setShowStartTimePicker(false);
                                 }
                             }}
                             textColor={isDarkMode ? '#FFFFFF' : '#000000'}
@@ -1053,10 +1240,14 @@ const BusinessHours = ({ route }: { route: any }) => {
                             mode="time"
                             display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                             onChange={(event, date) => {
-                                setShowEndTimePicker(Platform.OS === 'ios');
-                                if (date) {
-                                    setTempEndTime(date);
-                                    setEndTime(moment(date).format('h:mm A'));
+                                if (event.type == 'set') {
+                                    setShowEndTimePicker(false);
+                                    if (date) {
+                                        setTempEndTime(date);
+                                        setEndTime(moment(date).format('h:mm A'));
+                                    }
+                                } else {
+                                    setShowEndTimePicker(false);
                                 }
                             }}
                             textColor={isDarkMode ? '#FFFFFF' : '#000000'}
@@ -1065,16 +1256,16 @@ const BusinessHours = ({ route }: { route: any }) => {
                     </View>
                 )}
 
-                <View style={styles.scheduleButtons}>
+                {!checkOffDay() ? <View style={styles.scheduleButtons}>
                     <TouchableOpacity
                         style={styles.saveButton}
-                        onPress={editSlots ? handleUpdate : handleSave}
+                        onPress={editSlots ? handleUpdate : onClickSave}
                         disabled={isSaving}
                     >
                         {isSaving ? (
                             <ActivityIndicator color="#fff" />
                         ) : (
-                            <Text style={styles.saveButtonText}>Save</Text>
+                            <Text style={styles.saveButtonText}>{editSlots ? 'Update' : 'Save'}</Text>
                         )}
                     </TouchableOpacity>
                     <TouchableOpacity
@@ -1083,7 +1274,10 @@ const BusinessHours = ({ route }: { route: any }) => {
                     >
                         <Text style={styles.clearButtonText}>Clear</Text>
                     </TouchableOpacity>
-                </View>
+                </View> :
+                    <View style={styles.scheduleButtons}>
+                        <Text style={{ fontSize: 16, fontFamily: CAIRO_FONT_FAMILY.semiBold, lineHeight: Platform.OS === 'ios' ? 0 : 20, color: '#dc3545' }}>Schedule in previous date is not allowed </Text>
+                    </View>}
 
                 <View style={styles.markedSlotsSection}>
                     <Text style={styles.markedSlotsTitle}>Already marked slots</Text>
@@ -1106,16 +1300,16 @@ const BusinessHours = ({ route }: { route: any }) => {
                         const endPeriod = endHour < 12 ? 'AM' : 'PM';
 
                         return (
-                            <View key={index} style={styles.markedSlot}>
+                            <View key={index} style={[styles.markedSlot, editSlots?.IDs == slot?.IDs ? { backgroundColor: '#b8b5b5' } : {}]}>
                                 <Text style={styles.markedSlotTime}>{`${startHourAMPMText}:${startMinuteText} ${period} - ${endHourAMPMText}:${endMinuteText} ${endPeriod}`}</Text>
                                 <Text style={styles.markedSlotDate}>
-                                    {moment(slot.start).format('YYYY-MM-DD')} - {moment(slot.end).format('YYYY-MM-DD')}
+                                    {moment(slot.start).format('DD/MM/YYYY')} - {moment(slot.end).format('DD/MM/YYYY')}
                                 </Text>
                                 <View style={styles.markedSlotActions}>
                                     <TouchableOpacity onPress={() => handleEditButton(slot)}>
                                         <MaterialIcons name="edit" size={20} color="#666" />
                                     </TouchableOpacity>
-                                    <TouchableOpacity onPress={() => handleDelete(slot)}>
+                                    <TouchableOpacity onPress={() => handleDeleteClick(slot)}>
                                         <MaterialIcons name="delete" size={20} color="#FF3B30" />
                                     </TouchableOpacity>
                                 </View>
@@ -1131,14 +1325,14 @@ const BusinessHours = ({ route }: { route: any }) => {
 
     return (
         <SafeAreaView style={styles.container}>
-            {renderHeader()}
-            <View style={{ flex: 1 }}>
-                <ScrollView
-                    style={styles.scrollView}
-                    showsVerticalScrollIndicator={false}
-                    keyboardShouldPersistTaps="handled"
-                >
-                    <View style={styles.mainContent}>
+            <View style={styles.mainContent}>
+                {renderHeader()}
+                <View style={{ flex: 1 }}>
+                    <ScrollView
+                        style={styles.scrollView}
+                        showsVerticalScrollIndicator={false}
+                        keyboardShouldPersistTaps="handled"
+                    >
                         <View style={{ padding: 16, alignItems: 'center', justifyContent: 'center' }}>
                             <Image
                                 resizeMode='contain'
@@ -1169,9 +1363,203 @@ const BusinessHours = ({ route }: { route: any }) => {
                                 {renderScheduleSection()}
                             </View>
                         </View>
-                    </View>
-                </ScrollView>
+                    </ScrollView>
+                </View>
             </View>
+
+            <ConfirmationModal
+                visible={enableConfirmationModal}
+                onClose={() => setEnableConfirmationModal(false)}
+                onYes={handleSave}
+                onNo={() => setEnableConfirmationModal(false)}
+                title="Confirmation"
+                message="Are you sure you want to save schedule for month ?"
+            />
+
+            <ConfirmationModal
+                visible={copyToNextMonthModalVisible}
+                onClose={() => setCopyToNextMonthModalVisible(false)}
+                onYes={handleCopyToNextMonth}
+                onNo={() => setCopyToNextMonthModalVisible(false)}
+                title="Confirmation"
+                message={`Copy Slots From ${moment(selectedMonth.clone().startOf('month')).format('MMM YYYY')} To ${moment(selectedMonth.clone().add(1, 'month').endOf('month')).format('MMM YYYY')} ?`}
+            />
+
+            <ConfirmationModal
+                visible={deleteConfirmationModalVisible}
+                onClose={() => {
+                    setDeleteConfirmationModalVisible(false);
+                    setSlotToDelete(null);
+                }}
+                onYes={handleDelete}
+                onNo={() => {
+                    setDeleteConfirmationModalVisible(false);
+                    setSlotToDelete(null);
+                }}
+                title="Delete Confirmation"
+                message={`Are you sure you want to delete this slot from ${moment(slotToDelete?.start).format('DD/MM/YYYY')} to ${moment(slotToDelete?.end).format('DD/MM/YYYY')}?`}
+            />
+
+            <CustomBottomSheet
+                visible={slotsInfoModalVisible}
+                onClose={() => {
+                    setSlotsInfoModalVisible(false);
+                    setSelectedDateSlots([]);
+                    setSelectedDateForInfo(null);
+                }}
+                showHandle={true}
+                maxHeight={Platform.OS === 'ios' ? '50%' : "50%"}
+                backdropClickable={true}
+            >
+                <View style={styles.slotsInfoContainer}>
+                    <Text style={styles.slotsInfoTitle}>
+                        Slots for {selectedDateForInfo?.format('DD/MM/YYYY')}
+                    </Text>
+                    <ScrollView 
+                        style={styles.slotsInfoScroll}
+                        showsVerticalScrollIndicator={true}
+                    >
+                        {selectedDateSlots.map((slot, index) => {
+                            const startHour = parseInt(slot.StartTime.split(':')[0]);
+                            const endHour = parseInt(slot.EndTime.split(':')[0]);
+                            const startMinute = parseInt(slot.StartTime.split(':')[1]);
+                            const endMinute = parseInt(slot.EndTime.split(':')[1]);
+
+                            const startHourAMPM = startHour % 12 === 0 ? 12 : startHour % 12;
+                            const endHourAMPM = endHour % 12 === 0 ? 12 : endHour % 12;
+
+                            const startHourAMPMText = startHourAMPM < 10 ? `0${startHourAMPM}` : startHourAMPM;
+                            const endHourAMPMText = endHourAMPM < 10 ? `0${endHourAMPM}` : endHourAMPM;
+
+                            const startMinuteText = startMinute < 10 ? `0${startMinute}` : startMinute;
+                            const endMinuteText = endMinute < 10 ? `0${endMinute}` : endMinute;
+
+                            const period = startHour < 12 ? 'AM' : 'PM';
+                            const endPeriod = endHour < 12 ? 'AM' : 'PM';
+
+                            return (
+                                <View key={index} style={styles.slotInfoItem}>
+                                    <View style={styles.slotInfoTimeContainer}>
+                                        <Text style={styles.slotInfoTime}>
+                                            {`${startHourAMPMText}:${startMinuteText} ${period} - ${endHourAMPMText}:${endMinuteText} ${endPeriod}`}
+                                        </Text>
+                                    </View>
+                                    <Text style={styles.slotInfoDateRange}>
+                                        {moment(slot.start).format('DD/MM/YYYY')} - {moment(slot.end).format('DD/MM/YYYY')}
+                                    </Text>
+                                </View>
+                            );
+                        })}
+                    </ScrollView>
+                    <TouchableOpacity
+                        style={styles.slotsInfoCloseButton}
+                        onPress={() => {
+                            setSlotsInfoModalVisible(false);
+                            setSelectedDateSlots([]);
+                            setSelectedDateForInfo(null);
+                        }}
+                    >
+                        <Text style={styles.slotsInfoCloseButtonText}>Close</Text>
+                    </TouchableOpacity>
+                </View>
+            </CustomBottomSheet>
+
+            <CustomBottomSheet
+                visible={conflictBottomSheetVisible}
+                onClose={() => {
+                    setConflictBottomSheetVisible(false);
+                }}
+                showHandle={false}
+                maxHeight={Platform.OS === 'ios' ? '80%' : "70%"}
+                backdropClickable={true}
+            >
+                <View style={styles.conflictSheetContainer}>
+                    {/* Title */}
+                    <Text style={styles.conflictTitle}>Conflict Confirmation</Text>
+
+                    {/* Warning Icon */}
+                    <View style={styles.warningIconContainer}>
+                        <FontAwesome6 name={'circle-exclamation'} size={64} color={'#dc3545'} />
+                    </View>
+
+                    {/* Radio Buttons */}
+                    <View style={styles.radioButtonsContainer}>
+                        <CommonRadioButton
+                            selected={conflictResolution === 'keepPrevious'}
+                            onPress={() => setConflictResolution('keepPrevious')}
+                            label="Keep The Previous Slots"
+                            style={styles.radioButton}
+                        />
+                        <CommonRadioButton
+                            selected={conflictResolution === 'saveNew'}
+                            onPress={() => setConflictResolution('saveNew')}
+                            label="Save New Slots"
+                            style={styles.radioButton}
+                        />
+                    </View>
+
+                    {/* Conflicting Slots Section */}
+                    <Text style={styles.conflictingSlotsTitle}>Conflicting Slots:</Text>
+
+                    {/* Scrollable Table */}
+                    <ScrollView
+                        style={styles.conflictTableScroll}
+                        showsVerticalScrollIndicator={true}
+                    >
+                        <View style={styles.conflictTable}>
+                            {/* Table Header */}
+                            <View style={styles.conflictTableHeader}>
+                                <Text style={[styles.conflictTableHeaderText, { flex: 1.2 }]}>Start Date</Text>
+                                <Text style={[styles.conflictTableHeaderText, { flex: 1.2 }]}>End Date</Text>
+                                <Text style={[styles.conflictTableHeaderText, { flex: 1 }]}>Start Time</Text>
+                                <Text style={[styles.conflictTableHeaderText, { flex: 1 }]}>End Time</Text>
+                            </View>
+
+                            {/* Table Rows */}
+                            {conflictingSlots.map((slot, index) => (
+                                <View key={index} style={styles.conflictTableRow}>
+                                    <Text style={[styles.conflictTableRowText, { flex: 1.2 }]}>
+                                        {moment(slot.StartDate).format('DD/MM/YYYY')}
+                                    </Text>
+                                    <Text style={[styles.conflictTableRowText, { flex: 1.2 }]}>
+                                        {moment(slot.EndDate).format('DD/MM/YYYY')}
+                                    </Text>
+                                    <Text style={[styles.conflictTableRowText, { flex: 1 }]}>
+                                        {moment(slot.StartTime, 'HH:mm').format('h:mm A')}
+                                    </Text>
+                                    <Text style={[styles.conflictTableRowText, { flex: 1 }]}>
+                                        {moment(slot.EndTime, 'HH:mm').format('h:mm A')}
+                                    </Text>
+                                </View>
+                            ))}
+                        </View>
+                    </ScrollView>
+
+                    {/* Action Buttons */}
+                    <View style={styles.conflictButtonsContainer}>
+                        <TouchableOpacity
+                            style={styles.conflictSaveButton}
+                            onPress={() => {
+                                // Handle save based on conflictResolution
+                                setConflictBottomSheetVisible(false);
+                                handleRemoveConflict()
+                            }}
+                        >
+                            <Text style={styles.conflictSaveButtonText}>Save</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={styles.conflictCancelButton}
+                            onPress={() => {
+                                setConflictBottomSheetVisible(false);
+                            }}
+                        >
+                            <Text style={styles.conflictCancelButtonText}>Cancel</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </CustomBottomSheet>
+
+            <FullScreenLoader visible={isLoading} />
         </SafeAreaView>
     )
 }
@@ -1191,14 +1579,14 @@ const styles = StyleSheet.create({
     header: {
         flexDirection: 'row',
         alignItems: 'center',
+        height: 56,
         backgroundColor: '#fff',
-        paddingVertical: 12,
-        paddingHorizontal: 8,
         elevation: 2,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 3,
+        paddingHorizontal: 8,
     },
     backButton: {
         padding: 5,
@@ -1261,7 +1649,7 @@ const styles = StyleSheet.create({
     },
     monthYearText: {
         fontSize: 14,
-        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        fontFamily: CAIRO_FONT_FAMILY.bold,
         lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#333',
     },
@@ -1346,7 +1734,7 @@ const styles = StyleSheet.create({
     },
     availabilityDot: {
         position: 'absolute',
-        bottom: 4,
+        bottom: 0,
         width: 15,
         height: 15,
         borderRadius: 15,
@@ -1554,9 +1942,10 @@ const styles = StyleSheet.create({
     },
     copyToNextMonth: {
         fontSize: 16,
-        color: '#0f0f0f',
+        color: '#23A2A4',
         fontFamily: CAIRO_FONT_FAMILY.bold,
         lineHeight: Platform.OS === 'ios' ? 0 : 20,
+        textDecorationLine: 'underline',
     },
     selectedMonthRow: {
         flexDirection: 'row',
@@ -1606,7 +1995,7 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontFamily: CAIRO_FONT_FAMILY.semiBold,
         lineHeight: Platform.OS === 'ios' ? 0 : 20,
-        color: '#0f0f0f',
+        color: '#23A2A4',
     },
     timeInput: {
         borderWidth: 1,
@@ -1639,7 +2028,7 @@ const styles = StyleSheet.create({
     },
     clearButton: {
         flex: 1,
-        backgroundColor: '#00A896',
+        backgroundColor: '#6C757D',
         borderRadius: 8,
         padding: 14,
         alignItems: 'center',
@@ -1655,7 +2044,7 @@ const styles = StyleSheet.create({
     },
     markedSlotsTitle: {
         fontSize: 14,
-        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        fontFamily: CAIRO_FONT_FAMILY.bold,
         lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#333',
         marginBottom: 12,
@@ -1678,16 +2067,185 @@ const styles = StyleSheet.create({
         fontSize: 12,
         fontFamily: CAIRO_FONT_FAMILY.medium,
         lineHeight: Platform.OS === 'ios' ? 0 : 20,
-        color: '#666',
+        color: '#000',
     },
     markedSlotActions: {
         flexDirection: 'row',
         gap: 12,
+        marginLeft: 12,
     },
     datePickerContainer: {
         borderRadius: 8,
         overflow: 'hidden',
         marginVertical: 8,
+    },
+    conflictSheetContainer: {
+        flex: 1,
+        padding: 20,
+        backgroundColor: '#fff',
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+    },
+    conflictTitle: {
+        fontSize: 18,
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 22,
+        color: '#000',
+        marginBottom: 20,
+    },
+    warningIconContainer: {
+        alignItems: 'center',
+        marginBottom: 24,
+    },
+    warningIcon: {
+        width: 80,
+        height: 80,
+        borderRadius: 40,
+        backgroundColor: '#FF3B30',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    radioButtonsContainer: {
+        flexDirection: 'column',
+        height: 100,
+        gap: 12,
+    },
+    radioButton: {
+        flex: 1,
+        marginVertical: 0,
+    },
+    conflictingSlotsTitle: {
+        fontSize: 16,
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
+        color: '#000',
+        textAlign: 'center',
+        marginVertical: 16,
+    },
+    conflictTableScroll: {
+        flex: 1,
+        marginBottom: 20,
+    },
+    conflictTable: {
+        borderWidth: 1,
+        borderColor: '#E0E0E0',
+        borderRadius: 8,
+        overflow: 'hidden',
+    },
+    conflictTableHeader: {
+        flexDirection: 'row',
+        backgroundColor: '#F5F5F5',
+        paddingVertical: 12,
+        paddingHorizontal: 8,
+        borderBottomWidth: 1,
+        borderBottomColor: '#E0E0E0',
+    },
+    conflictTableHeaderText: {
+        fontSize: 13,
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 18,
+        color: '#000',
+        textAlign: 'center',
+    },
+    conflictTableRow: {
+        flexDirection: 'row',
+        paddingVertical: 12,
+        paddingHorizontal: 8,
+        borderBottomWidth: 1,
+        borderBottomColor: '#F0F0F0',
+    },
+    conflictTableRowText: {
+        fontSize: 12,
+        fontFamily: CAIRO_FONT_FAMILY.medium,
+        lineHeight: Platform.OS === 'ios' ? 0 : 18,
+        color: '#333',
+        textAlign: 'center',
+    },
+    conflictButtonsContainer: {
+        flexDirection: 'row',
+        gap: 12,
+        marginTop: 8,
+    },
+    conflictSaveButton: {
+        flex: 1,
+        backgroundColor: '#00A79D',
+        borderRadius: 8,
+        paddingVertical: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    conflictSaveButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
+    },
+    conflictCancelButton: {
+        flex: 1,
+        backgroundColor: '#6C757D',
+        borderRadius: 8,
+        paddingVertical: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    conflictCancelButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
+    },
+    slotsInfoContainer: {
+        flex: 1,
+        padding: 20,
+        backgroundColor: '#fff',
+    },
+    slotsInfoTitle: {
+        fontSize: 18,
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 22,
+        color: '#000',
+        marginBottom: 20,
+        textAlign: 'center',
+    },
+    slotsInfoScroll: {
+        flex: 1,
+        marginBottom: 16,
+    },
+    slotInfoItem: {
+        backgroundColor: '#F5F5F5',
+        borderRadius: 8,
+        padding: 16,
+        marginBottom: 12,
+        borderLeftWidth: 4,
+        borderLeftColor: '#00A79D',
+    },
+    slotInfoTimeContainer: {
+        marginBottom: 8,
+    },
+    slotInfoTime: {
+        fontSize: 16,
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
+        color: '#00A79D',
+    },
+    slotInfoDateRange: {
+        fontSize: 13,
+        fontFamily: CAIRO_FONT_FAMILY.medium,
+        lineHeight: Platform.OS === 'ios' ? 0 : 18,
+        color: '#666',
+    },
+    slotsInfoCloseButton: {
+        backgroundColor: '#00A79D',
+        borderRadius: 8,
+        paddingVertical: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    slotsInfoCloseButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
     },
 });
 

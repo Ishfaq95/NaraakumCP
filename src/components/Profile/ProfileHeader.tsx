@@ -67,8 +67,8 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           </View>
         </View>
         <View style={styles.statusContainer}>
-          <View style={[styles.statusDot, { backgroundColor: isActive ? '#23a2a4' : '#de574d' }]} />
-          <Text style={[styles.statusText, { color: isActive ? '#23a2a4' : '#de574d' }]}>{isActive ? 'Active' : 'Inactive'}</Text>
+          <View style={[styles.statusDot, { backgroundColor: isActive ? '#00AB94' : '#de574d' }]} />
+          <Text style={[styles.statusText, { color: isActive ? '#38B96A' : '#de574d' }]}>{isActive ? 'Active' : 'Inactive'}</Text>
         </View>
       </View>
 

@@ -6,6 +6,7 @@ import { useNavigation } from '@react-navigation/native';
 import { profileService } from '../../services/api/profileService';
 import { useSelector } from 'react-redux';
 import { useAlert } from '../../contexts/AlertContext';
+import CustomSwitch from '../../components/common/CustomSwitch';
 
 const DurationAndPrice = ({ route }: { route: any }) => {
     const navigation = useNavigation();
@@ -17,6 +18,8 @@ const DurationAndPrice = ({ route }: { route: any }) => {
     const [allowWithNurse, setAllowWithNurse] = useState(false);
     const [nursePrice, setNursePrice] = useState('');
     const [durationAndPriceData, setDurationAndPriceData] = useState<any>(null);
+    const [servicePricesAvailable, setServicePricesAvailable] = useState(false);
+    const [servicePrices, setServicePrices] = useState<any>([]);
     const [errors, setErrors] = useState({
         visitDuration: false,
         visitPrice: false,
@@ -54,6 +57,22 @@ const DurationAndPrice = ({ route }: { route: any }) => {
         const response = await profileService.getServiceProviderDurationAndPrice(payload);
         if (response.ResponseStatus.STATUSCODE == 200) {
             setDurationAndPriceData(response.Data[0]);
+            if (response?.ServicePrice && response?.ServicePrice?.length > 0) {
+                setServicePricesAvailable(true);
+                // Format service prices with proper structure
+                const formattedPrices = response.ServicePrice.map((item: any) => ({
+                    Price: item.Price || 0,
+                    CatServiceId: item.CatServiceId?.toString() || '',
+                    isActive: item.isActive !== undefined ? item.isActive : false,
+                    isDeleted: item.isDeleted !== undefined ? item.isDeleted : false,
+                    TitleSlang: item.TitleSlang || '',
+                    TitlePlang: item.TitlePlang || '',
+                }));
+                setServicePrices(formattedPrices);
+            } else {
+                setServicePricesAvailable(false);
+                setServicePrices([]);
+            }
         }
     };
 
@@ -91,6 +110,36 @@ const DurationAndPrice = ({ route }: { route: any }) => {
         setNursePrice(value);
         setErrors(prev => ({ ...prev, nursePrice: false }));
     };
+
+    const handleServicePriceToggle = async (item: any) => {
+        try {
+            const payload: any = {
+                UserloginInfoId: user.Id,
+                CatServiceId: item.CatServiceId,
+                isActive: item.isActive ? 0 : 1,
+            }
+
+            console.log("payload", payload);
+
+            const response = await profileService.updateServiceProviderServiceActiveStatus(payload);
+            if (response.StatusCode.STATUSCODE == 11034) {
+                getServiceProviderDurationAndPrice();
+                showAlert({
+                    title: response.StatusCode.MESSAGE,
+                    message: '',
+                    type: 'success',
+                });
+            }
+        } catch (error) {
+        }
+    };
+
+    const handleServicePriceChange = (index: number, text: string) => {
+        const value = clampNumberInput(text, 1, 99999);
+        const updatedPrices = [...servicePrices];
+        updatedPrices[index].Price = parseInt(value) || 0;
+        setServicePrices(updatedPrices);
+    };
     const validateForm = () => {
         const newErrors = {
             visitDuration: false,
@@ -104,10 +153,11 @@ const DurationAndPrice = ({ route }: { route: any }) => {
             newErrors.visitDuration = true;
         }
 
-        // Validate visit price (1-100000)
-        const price = parseFloat(visitPrice);
-        if (!visitPrice || isNaN(price) || price < 1 || price > 100000) {
-            newErrors.visitPrice = true;
+        if (!servicePricesAvailable) {// Validate visit price (1-100000)
+            const price = parseFloat(visitPrice);
+            if (!visitPrice || isNaN(price) || price < 1 || price > 100000) {
+                newErrors.visitPrice = true;
+            }
         }
 
         // Validate nurse price if checkbox is checked
@@ -124,17 +174,25 @@ const DurationAndPrice = ({ route }: { route: any }) => {
 
     const handleSave = async () => {
         if (validateForm()) {
-
             const payload: any = {
                 UserloginInfoId: user.Id,
                 CatCategoryId: Data.CatCategoryId,
                 SlotDuration: visitDuration,
-                Price: visitPrice,
+                Price: visitPrice || 0,
                 CatServiceServeTypeId: Data.CatServiceServeTypeId,
             };
 
             if (allowWithNurse) {
                 payload.PriceWithNurse = nursePrice;
+            }
+
+            // Include service prices if available
+            if (servicePricesAvailable && servicePrices.length > 0) {
+                payload.ServicePriceList = servicePrices.map((item: any) => ({
+                    Price: item.Price || 0,
+                    CatServiceId: item.CatServiceId,
+
+                }));
             }
 
             const response = await profileService.addServiceProviderDurationAndPrice(payload);
@@ -144,9 +202,7 @@ const DurationAndPrice = ({ route }: { route: any }) => {
                     message: '',
                     type: 'success',
                 });
-
             }
-        } else {
         }
     };
 
@@ -204,54 +260,98 @@ const DurationAndPrice = ({ route }: { route: any }) => {
                                     placeholderTextColor="#999"
                                 />
                             </View>
+                            {servicePricesAvailable ? (
+                                <View style={styles.servicePricesContainer}>
+                                    <Text style={styles.sessionPackagesTitle}>Select Session Packages</Text>
+                                    {servicePrices.map((item: any, index: number) => {
+                                        return (
+                                            <View key={index} style={styles.servicePriceItem}>
+                                                {/* Toggle Box */}
+                                                <View style={styles.toggleBox}>
+                                                    <Text style={styles.toggleBoxText} numberOfLines={2}>
+                                                        {item.TitlePlang || item.TitleSlang}
+                                                    </Text>
+                                                    <CustomSwitch
+                                                        value={item.isActive}
+                                                        onValueChange={() => handleServicePriceToggle(item)}
+                                                    />
+                                                </View>
 
-                            {/* Visit Price */}
-                            <View style={styles.inputGroup}>
-                                <Text style={styles.label}>{Data?.CatServiceServeTypeId == 1 ? 'Session Price' : 'Visit Price'}</Text>
-                                <View style={[styles.priceInputContainer, errors.visitPrice && styles.inputError]}>
-                                    <TextInput
-                                        style={styles.priceInput}
-                                        value={visitPrice}
-                                        onChangeText={handleVisitPriceChange}
-                                        keyboardType="numeric"
-                                        placeholder="0"
-                                        placeholderTextColor="#999"
-                                    />
-                                    <Text style={styles.currency}>/ SAR</Text>
+                                                {/* Package Price Input - Only show when toggle is active */}
+                                                {item.isActive && (
+                                                    <View style={styles.packagePriceSection}>
+                                                        <Text style={styles.packagePriceLabel}>Package Price</Text>
+                                                        <View style={styles.packagePriceInputContainer}>
+                                                            <TextInput
+                                                                style={styles.packagePriceInput}
+                                                                value={item.Price?.toString() || '0'}
+                                                                onChangeText={(text) => handleServicePriceChange(index, text)}
+                                                                keyboardType="numeric"
+                                                                placeholder="0"
+                                                                placeholderTextColor="#999"
+                                                            />
+                                                            <Text style={styles.packagePriceCurrency}>/ SAR</Text>
+                                                        </View>
+                                                    </View>
+                                                )}
+                                            </View>
+                                        );
+                                    })}
                                 </View>
-                            </View>
-
-                            {/* Allow with nurse checkbox */}
-                            {Data?.CatServiceServeTypeId == 2 && <TouchableOpacity
-                                style={styles.checkboxContainer}
-                                onPress={() => setAllowWithNurse(!allowWithNurse)}
-                                activeOpacity={0.7}
-                            >
-                                <View style={[styles.checkbox, allowWithNurse && styles.checkboxChecked]}>
-                                    {allowWithNurse && (
-                                        <Ionicons name="checkmark" size={16} color="#fff" />
-                                    )}
-                                </View>
-                                <Text style={styles.checkboxLabel}>Allow with nurse</Text>
-                            </TouchableOpacity>}
-
-                            {/* Nurse Price (conditional) */}
-                            {Data?.CatServiceServeTypeId == 2 && allowWithNurse && (
-                                <View style={styles.inputGroup}>
-                                    <Text style={styles.label}>Price Of A Visit With A Nurse</Text>
-                                    <View style={[styles.priceInputContainer, errors.nursePrice && styles.inputError]}>
-                                        <TextInput
-                                            style={styles.priceInput}
-                                            value={nursePrice}
-                                            onChangeText={handleNursePriceChange}
-                                            keyboardType="numeric"
-                                            placeholder="0"
-                                            placeholderTextColor="#999"
-                                        />
-                                        <Text style={styles.currency}>/ SAR</Text>
+                            ) : (
+                                <>
+                                    {/* Visit Price */}
+                                    <View style={styles.inputGroup}>
+                                        <Text style={styles.label}>{Data?.CatServiceServeTypeId == 1 ? 'Session Price' : 'Visit Price'}</Text>
+                                        <View style={[styles.priceInputContainer, errors.visitPrice && styles.inputError]}>
+                                            <TextInput
+                                                style={styles.priceInput}
+                                                value={visitPrice}
+                                                onChangeText={handleVisitPriceChange}
+                                                keyboardType="numeric"
+                                                placeholder="0"
+                                                placeholderTextColor="#999"
+                                            />
+                                            <Text style={styles.currency}>/ SAR</Text>
+                                        </View>
                                     </View>
-                                </View>
+
+                                    {/* Allow with nurse checkbox */}
+                                    {(Data?.CatServiceServeTypeId == 2 && Data.CatCategoryId == 32) && <TouchableOpacity
+                                        style={styles.checkboxContainer}
+                                        onPress={() => setAllowWithNurse(!allowWithNurse)}
+                                        activeOpacity={0.7}
+                                    >
+                                        <View style={[styles.checkbox, allowWithNurse && styles.checkboxChecked]}>
+                                            {allowWithNurse && (
+                                                <Ionicons name="checkmark" size={16} color="#fff" />
+                                            )}
+                                        </View>
+                                        <Text style={styles.checkboxLabel}>Allow with nurse</Text>
+                                    </TouchableOpacity>}
+
+                                    {/* Nurse Price (conditional) */}
+                                    {(Data?.CatServiceServeTypeId == 2 && Data.CatCategoryId == 32 && allowWithNurse) && (
+                                        <View style={styles.inputGroup}>
+                                            <Text style={styles.label}>Price Of A Visit With A Nurse</Text>
+                                            <View style={[styles.priceInputContainer, errors.nursePrice && styles.inputError]}>
+                                                <TextInput
+                                                    style={styles.priceInput}
+                                                    value={nursePrice}
+                                                    onChangeText={handleNursePriceChange}
+                                                    keyboardType="numeric"
+                                                    placeholder="0"
+                                                    placeholderTextColor="#999"
+                                                />
+                                                <Text style={styles.currency}>/ SAR</Text>
+                                            </View>
+                                        </View>
+                                    )}
+                                </>
+
                             )}
+
+
                         </View>
                     </View>
                 </ScrollView>
@@ -433,6 +533,70 @@ const styles = StyleSheet.create({
         fontFamily: CAIRO_FONT_FAMILY.bold,
         lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#fff',
+    },
+    sessionPackagesTitle: {
+        fontSize: 15,
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
+        color: '#0F0F0F',
+        marginBottom: 16,
+        paddingHorizontal: 8,
+    },
+    servicePricesContainer: {
+        paddingHorizontal: 8,
+        paddingTop: 16,
+    },
+    servicePriceItem: {
+        marginBottom: 20,
+    },
+    toggleBox: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        backgroundColor: '#E8F4F3',
+        borderRadius: 12,
+        paddingHorizontal: 16,
+        paddingVertical: 14,
+        marginBottom: 12,
+    },
+    toggleBoxText: {
+        flex: 1,
+        fontSize: 15,
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        color: '#0F0F0F',
+        marginRight: 12,
+    },
+    packagePriceSection: {
+        paddingHorizontal: 4,
+    },
+    packagePriceLabel: {
+        fontSize: 15,
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
+        color: '#0F0F0F',
+        marginBottom: 8,
+    },
+    packagePriceInputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#E0E0E0',
+        borderRadius: 8,
+        paddingHorizontal: 16,
+        backgroundColor: '#fff',
+    },
+    packagePriceInput: {
+        flex: 1,
+        paddingVertical: 12,
+        fontSize: 16,
+        color: '#000',
+    },
+    packagePriceCurrency: {
+        fontSize: 15,
+        color: '#00A79D',
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
+        marginLeft: 4,
     },
 })
 

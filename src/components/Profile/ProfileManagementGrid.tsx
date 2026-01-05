@@ -11,6 +11,9 @@ interface ProfileManagementGridProps {
 const ProfileManagementGrid: React.FC<ProfileManagementGridProps> = ({ options }) => {
   const user = useSelector((state: any) => state.root.user.user);
 
+const hideServiceOption = () => {
+  return (user.CatUserRoleId == 5 || user.CatUserRoleId == 8) && user.CatOrganizationModeId == 1;
+}
 
   return (
     <View style={styles.container}>
@@ -18,7 +21,7 @@ const ProfileManagementGrid: React.FC<ProfileManagementGridProps> = ({ options }
 
       <View style={styles.grid}>
         {options.map((option) => {
-          if(user.CatUserRoleId == 5 && option.id == 'service'){
+          if(hideServiceOption() && option.id == 'service'){
             return null;
           }
           return (

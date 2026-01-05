@@ -29,6 +29,7 @@ const EnglishBioScreen = () => {
     const [aboutDoctorSlang, setAboutDoctorSlang] = useState<string>('');
     const [sectionData, setSectionData] = useState<SectionData>({});
     const [serviceProviderBio, setServiceProviderBio] = useState<any>(null);
+    const [universityError, setUniversityError] = useState<boolean>(false);
     const { showAlert } = useAlert();
     const user = useSelector((state: any) => state.root.user.user);
     useEffect(() => {
@@ -128,6 +129,17 @@ const EnglishBioScreen = () => {
     };
 
     const handleItemChange = (headId: number, itemId: string, value: string) => {
+        // Clear validation error when user starts typing in University field
+        // Check if either English or Arabic has a value after this change
+        if (headId === 1 && universityError) {
+            const currentItem = sectionData[headId]?.find(item => item.id === itemId);
+            const hasEnglishValue = value.trim() !== '';
+            const hasArabicValue = currentItem?.valueSlang?.trim() !== '';
+            
+            if (hasEnglishValue || hasArabicValue) {
+                setUniversityError(false);
+            }
+        }
         setSectionData(prev => ({
             ...prev,
             [headId]: prev[headId].map(item =>
@@ -135,6 +147,8 @@ const EnglishBioScreen = () => {
             )
         }));
     };
+
+    console.log("sectionData",englishBioHeads)
 
     const makeBioPayload = () => {
         const payload: any[] = [];
@@ -144,18 +158,18 @@ const EnglishBioScreen = () => {
             const headId = parseInt(headIdStr);
             const items = sectionData[headId] || [];
             
-            // Filter out temp items and empty values
+            // Include items that have either English OR Arabic value
             const validItems = items.filter(item => 
                 !item.id.startsWith('temp-') && 
-                item.value.trim() !== ''
+                (item.value?.trim() !== '' || item.valueSlang?.trim() !== '')
             );
             
             // Create payload objects for each valid item
             validItems.forEach((item) => {
                 payload.push({
                     CatServiceProviderBioHeadId: headId,
-                    ValuePlang: item.value,
-                    ValueSlang: item.valueSlang || '' // Use stored ValueSlang if exists, otherwise empty
+                    ValuePlang: item.value || '', // English value (can be empty if only Arabic exists)
+                    ValueSlang: item.valueSlang || '' // Arabic value (can be empty if only English exists)
                 });
             });
         });
@@ -164,7 +178,20 @@ const EnglishBioScreen = () => {
     }
 
     const handleSave = async () => {
-        // TODO: Implement save functionality
+        // Validate University field (Id: 1) - must have either English or Arabic value
+        const universityItems = sectionData[1] || [];
+        const universityItem = universityItems.length > 0 ? universityItems[0] : null;
+        const hasEnglishValue = universityItem?.value?.trim() !== '';
+        const hasArabicValue = universityItem?.valueSlang?.trim() !== '';
+        
+        // Check if at least one language has a value
+        if (!hasEnglishValue && !hasArabicValue) {
+            setUniversityError(true);
+            return;
+        }
+        
+        setUniversityError(false);
+        
         const payload = {
             UserloginInfoId: user?.Id,
             AboutPlang: aboutDoctor,
@@ -184,6 +211,8 @@ const EnglishBioScreen = () => {
     const renderSection = (head: BioHead) => {
         const items = sectionData[head.Id] || [];
         const isMembership = head.Id === 6; // Membership doesn't have add button
+        const isUniversity = head.Id === 1; // University field for validation
+        const showError = isUniversity && universityError;
 
         // If no items exist, show at least one empty input
         const displayItems = items.length > 0 ? items : [{ id: 'temp-' + head.Id, value: '', valueSlang: undefined }];
@@ -197,7 +226,10 @@ const EnglishBioScreen = () => {
                     return (
                         <View key={item.id} style={styles.inputRow}>
                             <TextInput
-                                style={styles.input}
+                                style={[
+                                    styles.input,
+                                    showError && styles.inputError
+                                ]}
                                 placeholder={head.TitlePlang}
                                 value={item.value}
                                 onChangeText={(value) => {
@@ -207,6 +239,10 @@ const EnglishBioScreen = () => {
                                             ...prev,
                                             [head.Id]: [{ id: Date.now().toString(), value, valueSlang: undefined }]
                                         }));
+                                        // Clear validation error if value is entered
+                                        if (isUniversity && universityError && value.trim() !== '') {
+                                            setUniversityError(false);
+                                        }
                                     } else {
                                         handleItemChange(head.Id, item.id, value);
                                     }
@@ -354,6 +390,10 @@ const styles = StyleSheet.create({
         height: 50,
         borderWidth: 1,
         borderColor: '#e0e0e0',
+    },
+    inputError: {
+        borderColor: '#ff4444',
+        borderWidth: 1,
     },
     deleteButton: {
         marginLeft: 8,

@@ -78,10 +78,6 @@ const RootNavigator = () => {
       <Stack.Screen
         name={ROUTES.AppNavigator}
         component={BottomTabs}
-        options={{
-          // Disable iOS swipe-back gesture from the main bottom-tab navigator
-          gestureEnabled: Platform.OS === 'ios' ? false : true,
-        }}
       />
       <Stack.Screen name={ROUTES.CalendarScreen} component={CalendarScreen} />
       <Stack.Screen name={ROUTES.PromotionAndDiscount} component={PromotionAndDiscount} />

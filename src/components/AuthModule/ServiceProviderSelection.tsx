@@ -123,6 +123,7 @@ const ServiceProviderSelection: React.FC<ServiceProviderSelectionProps> = ({
                     <Ionicons name="arrow-forward" size={22} color="#fff" />
                 </TouchableOpacity>
             </View>
+            
             <FullScreenLoader visible={isLoading} />
         </View>
     );

@@ -2,6 +2,103 @@ import { MediaBaseURL } from '../../shared/utils/constants';
 import axiosInstance from '../axios/axiosConfig';
 import { store } from '../../shared/redux/store';
 
+export const roleCategories= [
+    {
+        "Role": "Doctor",
+        "Id": 3,
+        "Categories": [
+            {
+                "Id": "42",
+                "TitlePlang": "Online Consultation",
+                "TitleSlang": "استشارة عن بعد",
+                "ImagePath": "assets/images/OnlineConsultationService.svg",
+                "CatServiceServeTypeId": 1,
+                "CatCategoryTypeId": "4",
+                "Price": 49
+            },
+            {
+                "Id": "32",
+                "TitlePlang": "Home Visit",
+                "TitleSlang": "زيارة طبيب",
+                "ImagePath": "assets/images/HomeVisitService.svg",
+                "CatServiceServeTypeId": 2,
+                "CatCategoryTypeId": "3",
+                "Price": 10
+            }
+        ]
+    },
+    {
+        "Role": "Nurse",
+        "Id": 5,
+        "Categories": [
+            {
+                "Id": "10",
+                "TitlePlang": "Home Visit",
+                "TitleSlang": "زيارة تمريض",
+                "ImagePath": "assets/images/HomeVisitService.svg",
+                "CatServiceServeTypeId": 2,
+                "CatCategoryTypeId": "3",
+                "Price": 50
+            }
+        ]
+    },
+    {
+        "Role": "Physiotherapist",
+        "Id": 7,
+        "Categories": [
+            {
+                "Id": "34",
+                "TitlePlang": "Online Consultation",
+                "TitleSlang": "استشارة عن بعد",
+                "ImagePath": "assets/images/OnlineConsultationService.svg",
+                "CatServiceServeTypeId": 1,
+                "CatCategoryTypeId": "4",
+                "Price": 49
+            },
+            {
+                "Id": "34",
+                "TitlePlang": "Home Visit",
+                "TitleSlang": "العلاج الطبيعي ",
+                "ImagePath": "assets/images/HomeVisitService.svg",
+                "CatServiceServeTypeId": 2,
+                "CatCategoryTypeId": "3",
+                "Price": 300
+            }
+            
+        ]
+    },
+    {
+        "Role": "Caregiver",
+        "Id": 9,
+        "Categories": [
+            {
+                "Id": "36",
+                "TitlePlang": "Home Visit",
+                "TitleSlang": "المرافق الصحي",
+                "ImagePath": "assets/images/HomeVisitService.svg",
+                "CatServiceServeTypeId": 2,
+                "CatCategoryTypeId": "3",
+                "Price": 350
+            }
+        ]
+    },
+    {
+        "Role": "Lab Technician",
+        "Id": 8,
+        "Categories": [
+            {
+                "Id": "35",
+                "TitlePlang": "Home Visit",
+                "TitleSlang": "التحاليل المخبرية",
+                "ImagePath": "assets/images/HomeVisitService.svg",
+                "CatServiceServeTypeId": 2,
+                "CatCategoryTypeId": "3",
+                "Price": 480
+            }
+        ]
+    }
+]
+
 export const getServiceProviderByUserId = async (credentials: any) => {
     try {
         const response = await axiosInstance.post(
@@ -312,11 +409,7 @@ export const addUpdateServiceProviderMedicalLicense = async (credentials: any) =
         return response.data;
     }
     catch (error: any) {
-        throw {
-            message: error?.response?.data?.message || 'Add/Update medical license failed',
-            status: error?.response?.status,
-            code: error?.response?.data?.code
-        };
+        return error;
     }
 }
 
@@ -551,6 +644,25 @@ export const updateServiceProviderCategoryActiveStatus = async (credentials: any
     }
 }
 
+export const updateServiceProviderServiceActiveStatus = async (credentials: any) => {
+    try {
+        const response = await axiosInstance.post('user/UpdateServiceProviderServiceActiveStatus', credentials);
+        return response.data;
+    } catch (error: any) {
+        throw error;    
+    }
+}
+
+export const serviceProviderAvailabilityRemoveConflict = async (credentials: any) => {
+    try {
+        const response = await axiosInstance.post('organization/ServiceProviderAvailabilityRemoveConflict', credentials);
+        return response.data;
+    } catch (error: any) {
+        console.log(error);
+        throw error;    
+    }
+}
+
 // Export all profile related functions
 export const profileService = {
     getServiceProviderByUserId,
@@ -591,4 +703,6 @@ export const profileService = {
     copyServiceProviderAvailabilityToNextMonth,
     addServiceProviderHolidays,
     updateServiceProviderCategoryActiveStatus,
+    updateServiceProviderServiceActiveStatus,
+    serviceProviderAvailabilityRemoveConflict,
 }; 

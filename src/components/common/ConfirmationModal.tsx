@@ -8,6 +8,7 @@ import {
   Animated,
   TouchableWithoutFeedback,
   Dimensions,
+  Platform,
 } from 'react-native';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import { CAIRO_FONT_FAMILY } from '../../styles/globalStyles';
@@ -139,7 +140,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
               <Text style={styles.buttonText}>{yesText}</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={styles.button}
+              style={[styles.button,{backgroundColor:'#6C757D'}]}
               onPress={onNo}
               activeOpacity={0.8}
             >
@@ -210,7 +211,7 @@ const styles = StyleSheet.create({
   button: {
     flex: 1,
     backgroundColor: '#179c8e',
-    paddingVertical: 12,
+    paddingVertical: 6,
     paddingHorizontal: 20,
     borderRadius: 8,
     alignItems: 'center',
@@ -219,6 +220,7 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 16,
     fontFamily: CAIRO_FONT_FAMILY.semiBold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
     color: '#FFFFFF',
   },
 });

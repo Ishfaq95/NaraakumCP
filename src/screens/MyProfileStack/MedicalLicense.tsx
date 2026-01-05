@@ -14,6 +14,8 @@ import RNFetchBlob from 'react-native-blob-util';
 import { MediaBaseURL } from '../../shared/utils/constants';
 import { CAIRO_FONT_FAMILY } from '../../styles/globalStyles';
 import { useAlert } from '../../contexts/AlertContext';
+import FullScreenLoader from '../../components/FullScreenLoader';
+import ConfirmationModal from '../../components/common/ConfirmationModal';
 
 interface MedicalLicense {
     Id: number;
@@ -55,7 +57,10 @@ const MedicalLicenseScreen = () => {
     const [placeOfIssueError, setPlaceOfIssueError] = useState(false);
     const [specialityError, setSpecialityError] = useState(false);
     const [expiryDateError, setExpiryDateError] = useState(false);
+    const [deleteConfirmModalVisible, setDeleteConfirmModalVisible] = useState(false);
     const { showAlert } = useAlert();
+    const [licenseToDelete, setLicenseToDelete] = useState<any>(null);
+    const [fileSelectionError, setFileSelectionError] = useState(false);
     // Mock data - replace with actual API call
     useEffect(() => {
         getServiceProviderMedicalLicense();
@@ -137,44 +142,46 @@ const MedicalLicenseScreen = () => {
     }
 
     const handleViewFile = (license: MedicalLicense) => {
+        setIsDownloading(true);
         const fileName = getFileNameFromUrl(license.FilePath);
         const completeUrl = `${MediaBaseURL}${license.FilePath}`;
-        if(Platform.OS === 'ios'){
+        if (Platform.OS === 'ios') {
             downloadFIleForIOS(completeUrl, fileName);
-        }else{
+        } else {
             downloadFile(completeUrl, fileName);
         }
-        
+
     };
 
     const downloadFIleForIOS = async (url: string, fileName: string) => {
-        const {config, fs} = RNFetchBlob;
+        const { config, fs } = RNFetchBlob;
         const DocumentDir = fs.dirs.DocumentDir;
         const filePath = `${DocumentDir}/${fileName}`;
-    
+
         try {
             const res = await config({
                 fileCache: true,
                 path: filePath,
             }).fetch('GET', url);
+
             
-            Alert.alert(
-                'File downloaded successfully',
-                'The file is saved to your device.',
-            );
             RNFetchBlob.ios.previewDocument(filePath);
         } catch (error) {
-            Alert.alert('File downloading error.');
+            showAlert({
+                title: 'File downloading error.',
+                message: 'Please try again.',
+                type: 'error',
+            });
         } finally {
             setIsDownloading(false);
         }
     };
-    
+
     const downloadFile = async (url: string, fileName: string) => {
-        const {config, fs} = RNFetchBlob;
+        const { config, fs } = RNFetchBlob;
         const DownloadDir = fs.dirs.DownloadDir;
         const filePath = `${DownloadDir}/${fileName}`;
-    
+
         try {
             const res = await config({
                 fileCache: true,
@@ -186,23 +193,38 @@ const MedicalLicenseScreen = () => {
                     path: filePath,
                 },
             }).fetch('GET', url);
-            
-            Alert.alert('File downloaded successfully');
+
+            showAlert({
+                title: 'File downloaded successfully',
+                message: 'The file is saved to your device.',
+                type: 'success',
+            });
         } catch (error) {
-            Alert.alert('File downloading error.');
+            showAlert({
+                title: 'File downloading error.',
+                message: 'Please try again.',
+                type: 'error',
+            });
         } finally {
             setIsDownloading(false);
         }
     };
 
-    const handleDelete = async (license: MedicalLicense) => {
-        // Handle delete action
-        const payload = {
-            MedicalLicenseId: license.Id,
-        };
-        const response = await profileService.deleteServiceProviderMedicalLicense(payload);
-        if (response.ResponseStatus.STATUSCODE == 200) {
-            getServiceProviderMedicalLicense();
+    const handleDelete = async (license: any) => {
+        try {
+            setLoading(true);
+            setDeleteConfirmModalVisible(false);
+            // Handle delete action
+            const payload = {
+                MedicalLicenseId: license.Id,
+            };
+            const response = await profileService.deleteServiceProviderMedicalLicense(payload);
+            if (response.ResponseStatus.STATUSCODE == 200) {
+                getServiceProviderMedicalLicense();
+            }
+        } catch (error: any) {
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -249,10 +271,11 @@ const MedicalLicenseScreen = () => {
                 const fileExtension = fileName.toLowerCase().substring(fileName.lastIndexOf('.'));
 
                 if (!allowedExtensions.includes(fileExtension)) {
-                    Alert.alert('Error', 'Please upload a valid file (.pdf, .doc, .docx, .jpg, .png)');
+                    setFileSelectionError(true);
+                    setFileError(true);
                     return;
                 }
-
+                setFileSelectionError(false);
                 setSelectedFile({
                     uri: file.uri,
                     type: fileType,
@@ -261,7 +284,11 @@ const MedicalLicenseScreen = () => {
                 setFileError(false);
             }
         } catch (error) {
-            Alert.alert('Error', 'Failed to pick document');
+            showAlert({
+                title: 'Error',
+                message: 'Failed to pick document',
+                type: 'error',
+            });
         }
     };
 
@@ -332,7 +359,7 @@ const MedicalLicenseScreen = () => {
 
             if (selectedFile) {
                 const uploadResponse = await profileService.uploadFile(selectedFile, user);
-                
+
                 if (uploadResponse.ResponseStatus.STATUSCODE == 200) {
                     // Prepare payload for API
                     const payload = {
@@ -346,7 +373,7 @@ const MedicalLicenseScreen = () => {
                     };
 
                     const response = await profileService.addUpdateServiceProviderMedicalLicense(payload);
-                    if(response.StatusCode.STATUSCODE == 11020){
+                    if (response.StatusCode.STATUSCODE == 11020) {
                         setIsAddLicenseBottomSheetVisible(false);
                         setTimeout(() => {
                             showAlert({
@@ -371,7 +398,11 @@ const MedicalLicenseScreen = () => {
 
 
         } catch (error: any) {
-            Alert.alert('Error', error.message || 'Failed to save license');
+            showAlert({
+                title: 'Error',
+                message: 'Invalid file selected',
+                type: 'error',
+            });
         } finally {
             setIsSaving(false);
         }
@@ -426,7 +457,10 @@ const MedicalLicenseScreen = () => {
                 </TouchableOpacity>
                 <TouchableOpacity
                     style={styles.deleteButton}
-                    onPress={() => handleDelete(item)}
+                    onPress={() => {
+                        setDeleteConfirmModalVisible(true);
+                        setLicenseToDelete(item);
+                    }}
                 >
                     <Text style={styles.deleteButtonText}>Delete</Text>
                 </TouchableOpacity>
@@ -473,7 +507,7 @@ const MedicalLicenseScreen = () => {
                     setIsAddLicenseBottomSheetVisible(false);
                 }}
                 showHandle={false}
-                maxHeight={Platform.OS === 'ios' ? '80%' : 400}
+                maxHeight={Platform.OS === 'ios' ? '80%' : "60%"}
                 backdropClickable={true}
             >
                 <KeyboardAvoidingView
@@ -500,13 +534,14 @@ const MedicalLicenseScreen = () => {
                             style={bottomSheetStyles.scrollView}
                             contentContainerStyle={bottomSheetStyles.scrollContent}
                             keyboardShouldPersistTaps="handled"
-                            showsVerticalScrollIndicator={false}
+                            showsVerticalScrollIndicator={true}
                         >
                             {/* File Upload Section */}
                             <TouchableOpacity
                                 style={[
                                     bottomSheetStyles.uploadContainer,
-                                    fileError && bottomSheetStyles.uploadContainerError
+                                    fileError && bottomSheetStyles.uploadContainerError,
+                                    fileSelectionError && {marginBottom: 0}
                                 ]}
                                 onPress={handlePickDocument}
                             >
@@ -514,7 +549,9 @@ const MedicalLicenseScreen = () => {
                                 <Text style={bottomSheetStyles.uploadTitle}>Upload your Medical License</Text>
                                 <Text style={bottomSheetStyles.uploadSubtitle}>.pdf,.doc,.docx,.jpg,.png</Text>
                             </TouchableOpacity>
-
+                            {fileSelectionError && (
+                                <Text style={{ backgroundColor: '#fff', color: '#FF3B30', fontSize: 12, fontFamily: CAIRO_FONT_FAMILY.regular, lineHeight: Platform.OS === 'ios' ? 0 : 20, marginTop: 4 }}>Please upload a valid file (.pdf, .doc, .docx, .jpg, .png)</Text>
+                            )}
                             {/* Selected File Display */}
                             {selectedFile && (
                                 <View style={bottomSheetStyles.fileDisplayContainer}>
@@ -571,21 +608,21 @@ const MedicalLicenseScreen = () => {
                                     onPress={() => showDatePicker ? setShowDatePicker(false) : setShowDatePicker(true)}
                                 >
                                     <Text style={bottomSheetStyles.dateText}>
-                                        { expiryDate ? formatDate(expiryDate) : '--/--/----'}
+                                        {expiryDate ? formatDate(expiryDate) : '--/--/----'}
                                     </Text>
                                     <MaterialIcons name="calendar-today" size={20} color="#666" />
                                 </TouchableOpacity>
                                 {showDatePicker && (
                                     <View style={Platform.OS === 'ios' ? [styles.datePickerContainer, { backgroundColor: isDarkMode ? '#1C1C1E' : '#fff' }] : null}>
-                                    <DateTimePicker
-                                        value={expiryDate ? new Date(expiryDate) : new Date()}
-                                        mode="date"
-                                        display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                                        onChange={handleDateChange}
-                                        minimumDate={new Date()}
-                                        textColor={isDarkMode ? '#FFFFFF' : '#000000'}
-                                                themeVariant={isDarkMode ? 'dark' : 'light'}
-                                    />
+                                        <DateTimePicker
+                                            value={expiryDate ? new Date(expiryDate) : new Date()}
+                                            mode="date"
+                                            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                                            onChange={handleDateChange}
+                                            minimumDate={new Date()}
+                                            textColor={isDarkMode ? '#FFFFFF' : '#000000'}
+                                            themeVariant={isDarkMode ? 'dark' : 'light'}
+                                        />
                                     </View>
                                 )}
                             </View>
@@ -625,6 +662,18 @@ const MedicalLicenseScreen = () => {
                     </View>
                 </KeyboardAvoidingView>
             </CustomBottomSheet>
+
+            <ConfirmationModal
+                visible={deleteConfirmModalVisible}
+                message="Are you sure you want to delete?"
+                onYes={() => handleDelete(licenseToDelete)}
+                onNo={() => {
+                    setDeleteConfirmModalVisible(false);
+                }}
+                title="Confirmation"
+            />
+
+            <FullScreenLoader visible={loading || isDownloading} />
         </SafeAreaView>
     )
 }
@@ -662,7 +711,7 @@ const styles = StyleSheet.create({
     contentContainer: {
         flex: 1,
         padding: 16,
-        paddingTop:20
+        paddingTop: 20
     },
     listContent: {
         paddingBottom: 40,
@@ -682,7 +731,7 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#666',
         fontFamily: CAIRO_FONT_FAMILY.regular,
-        lineHeight:  20,
+        lineHeight: 20,
         textAlign: 'center',
     },
     licenseCard: {
@@ -802,6 +851,7 @@ const bottomSheetStyles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#fff',
+        borderRadius: 16,
     },
     header: {
         flexDirection: 'row',

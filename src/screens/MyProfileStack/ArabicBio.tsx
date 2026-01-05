@@ -29,7 +29,7 @@ const ArabicBioScreen = () => {
     const [aboutDoctorPlang, setAboutDoctorPlang] = useState<string>('');
     const [sectionData, setSectionData] = useState<SectionData>({});
     const [serviceProviderBio, setServiceProviderBio] = useState<any>(null);
-    const [originalApiData, setOriginalApiData] = useState<SectionData>({}); // Store original API data
+    const [universityError, setUniversityError] = useState<boolean>(false);
     const user = useSelector((state: any) => state.root.user.user);
     const { showAlert } = useAlert();
     useEffect(() => {
@@ -108,7 +108,6 @@ const ArabicBioScreen = () => {
             });
             
             setSectionData(mappedData);
-            setOriginalApiData(JSON.parse(JSON.stringify(mappedData))); // Store a deep copy of original data
         }
     }, [serviceProviderBio, arabicBioHeads]);
 
@@ -130,6 +129,17 @@ const ArabicBioScreen = () => {
     };
 
     const handleItemChange = (headId: number, itemId: string, value: string, isEnglish: boolean = false) => {
+        // Clear validation error when user starts typing in University field
+        // Check if either English or Arabic has a value after this change
+        if (headId === 1 && universityError) {
+            const currentItem = sectionData[headId]?.find(item => item.id === itemId);
+            const hasEnglishValue = isEnglish ? value.trim() !== '' : (currentItem?.valuePlang?.trim() !== '');
+            const hasArabicValue = !isEnglish ? value.trim() !== '' : (currentItem?.valueSlang?.trim() !== '');
+            
+            if (hasEnglishValue || hasArabicValue) {
+                setUniversityError(false);
+            }
+        }
         setSectionData(prev => ({
             ...prev,
             [headId]: prev[headId].map(item =>
@@ -142,9 +152,9 @@ const ArabicBioScreen = () => {
 
     const makeBioPayload = () => {
         const payload: any[] = [];
-        const processedItems = new Map<string, boolean>(); // Track processed items by ValuePlang + headId
         
-        // First, process current sectionData (user's edits)
+        // Only use current sectionData (user's current state)
+        // If user removed a value, it won't be in sectionData, so it won't be included
         Object.keys(sectionData).forEach((headIdStr) => {
             const headId = parseInt(headIdStr);
             const items = sectionData[headId] || [];
@@ -152,41 +162,16 @@ const ArabicBioScreen = () => {
             // Include items that have either English text OR Arabic text
             const validItems = items.filter(item => 
                 !item.id.startsWith('temp-') && 
-                (item.valuePlang.trim() !== '' || item.valueSlang.trim() !== '')
+                (item.valuePlang?.trim() !== '' || item.valueSlang?.trim() !== '')
             );
             
+            // Create payload objects for each valid item
             validItems.forEach((item) => {
-                const key = `${headId}-${item.valuePlang}`;
-                if (!processedItems.has(key)) {
-                    payload.push({
-                        CatServiceProviderBioHeadId: headId,
-                        ValuePlang: item.valuePlang || '',
-                        ValueSlang: item.valueSlang || ''
-                    });
-                    processedItems.set(key, true);
-                }
-            });
-        });
-        
-        // Then, merge with original API data to include items that weren't edited
-        Object.keys(originalApiData).forEach((headIdStr) => {
-            const headId = parseInt(headIdStr);
-            const originalItems = originalApiData[headId] || [];
-            
-            originalItems.forEach((item) => {
-                // Include items from original API that have English text (even if Arabic is empty)
-                // and haven't been processed yet
-                if (item.valuePlang && item.valuePlang.trim() !== '') {
-                    const key = `${headId}-${item.valuePlang}`;
-                    if (!processedItems.has(key)) {
-                        payload.push({
-                            CatServiceProviderBioHeadId: headId,
-                            ValuePlang: item.valuePlang,
-                            ValueSlang: item.valueSlang || '' // Preserve original Arabic or empty
-                        });
-                        processedItems.set(key, true);
-                    }
-                }
+                payload.push({
+                    CatServiceProviderBioHeadId: headId,
+                    ValuePlang: item.valuePlang || '', // English value (can be empty if only Arabic exists)
+                    ValueSlang: item.valueSlang || '' // Arabic value (can be empty if only English exists)
+                });
             });
         });
         
@@ -194,6 +179,20 @@ const ArabicBioScreen = () => {
     }
 
     const handleSave = async () => {
+        // Validate University field (Id: 1) - must have either English or Arabic value
+        const universityItems = sectionData[1] || [];
+        const universityItem = universityItems.length > 0 ? universityItems[0] : null;
+        const hasEnglishValue = universityItem?.valuePlang?.trim() !== '';
+        const hasArabicValue = universityItem?.valueSlang?.trim() !== '';
+        
+        // Check if at least one language has a value
+        if (!hasEnglishValue && !hasArabicValue) {
+            setUniversityError(true);
+            return;
+        }
+        
+        setUniversityError(false);
+        
         const payload = {
             UserloginInfoId: user?.Id,
             AboutPlang: aboutDoctorPlang,
@@ -213,6 +212,8 @@ const ArabicBioScreen = () => {
     const renderSection = (head: BioHead) => {
         const items = sectionData[head.Id] || [];
         const isMembership = head.Id === 6; // Membership doesn't have add button
+        const isUniversity = head.Id === 1; // University field for validation
+        const showError = isUniversity && universityError;
 
         // If no items exist, show at least one empty input
         const displayItems = items.length > 0 ? items : [{ id: 'temp-' + head.Id, valuePlang: '', valueSlang: '' }];
@@ -241,7 +242,10 @@ const ArabicBioScreen = () => {
                                     </TouchableOpacity>
                                 )}
                                 <TextInput
-                                    style={styles.input}
+                                    style={[
+                                        styles.input,
+                                        showError && styles.inputError
+                                    ]}
                                     placeholder={head.TitleSlang}
                                     value={item.valueSlang}
                                     onChangeText={(value) => {
@@ -251,6 +255,10 @@ const ArabicBioScreen = () => {
                                                 ...prev,
                                                 [head.Id]: [{ id: Date.now().toString(), valuePlang: '', valueSlang: value }]
                                             }));
+                                            // Clear validation error if value is entered
+                                            if (isUniversity && universityError && value.trim() !== '') {
+                                                setUniversityError(false);
+                                            }
                                         } else {
                                             handleItemChange(head.Id, item.id, value);
                                         }
@@ -423,6 +431,10 @@ const styles = StyleSheet.create({
         height: 50,
         borderWidth: 1,
         borderColor: '#e0e0e0',
+    },
+    inputError: {
+        borderColor: '#ff4444',
+        borderWidth: 1,
     },
     deleteButton: {
         marginLeft: 8,

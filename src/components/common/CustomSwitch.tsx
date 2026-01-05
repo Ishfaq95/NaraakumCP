@@ -23,9 +23,9 @@ const CustomSwitch: React.FC<CustomSwitchProps> = ({ value, onValueChange, disab
   );
 };
 
-const SWITCH_WIDTH = 66;
-const SWITCH_HEIGHT = 33;
-const KNOB_SIZE = 29;
+const SWITCH_WIDTH = 50;
+const SWITCH_HEIGHT = 25;
+const KNOB_SIZE = 20;
 
 const styles = StyleSheet.create({
   switchBase: {

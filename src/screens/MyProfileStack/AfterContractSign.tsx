@@ -49,7 +49,7 @@ const AfterContractSign: React.FC = () => {
 
                 <Text style={styles.title}>Thank you for your signature.</Text>
                 <Text style={styles.subtitle}>
-                   {user?.Email ? "The data will be reviewed and the contract file{'\n'}will be sent to your email." : "Your contract has been signed successfully."}
+                   {user?.Email ? "The data will be reviewed and the contract file will be sent to your email." : "Your contract has been signed successfully."}
                 </Text>
                 {user?.Email && <Text style={styles.email}>{user?.Email}</Text>}
 

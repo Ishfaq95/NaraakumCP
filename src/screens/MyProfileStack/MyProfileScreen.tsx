@@ -133,6 +133,10 @@ const MyProfileScreen = () => {
     );
   };
 
+  const hideServiceOption = () => {
+    return (user.CatUserRoleId == 5 || user.CatUserRoleId == 8) && user.CatOrganizationModeId == 1;
+  }
+
   const calculateCompletionPercentage = (): number => {
     let completionPercentage = 0;
     
@@ -147,7 +151,7 @@ const MyProfileScreen = () => {
     }
     
     // ServiceProfile is worth 34%
-    if (profileSummary.ServiceProfile == 'Completed' || user.CatUserRoleId == 5) {
+    if (profileSummary.ServiceProfile == 'Completed' || hideServiceOption()) {
       completionPercentage += 34;
     }
     

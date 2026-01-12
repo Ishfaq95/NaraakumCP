@@ -137,7 +137,7 @@ const PrescriptionListScreen = ({ route }: { route: any }) => {
     };
 
     const renderPrescriptionItem = ({ item }: { item: any }) => {
-
+console.log("item",item)
 
         const handleDetailsPress = () => {
             // Navigate to prescription details screen
@@ -157,6 +157,14 @@ const PrescriptionListScreen = ({ route }: { route: any }) => {
                     <Text style={styles.prescriptionLabelVertical}>Prescribed by</Text>
                     <Text style={styles.prescriptionValueLeft}>
                         {item.FullnamePlang?.trim() || 'N/A'}
+                    </Text>
+                </View>
+
+                {/* Order ID */}
+                <View style={styles.prescriptionRow}>
+                    <Text style={styles.prescriptionLabel}>Order ID</Text>
+                    <Text style={styles.prescriptionValueRight}>
+                        {item?.OrderId || 'N/A'}
                     </Text>
                 </View>
 

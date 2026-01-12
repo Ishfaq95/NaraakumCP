@@ -157,6 +157,7 @@ const BookingHistory = ({ route }: { route: any }) => {
     };
 
     const renderBookingItem = ({ item }: { item: any }) => {
+        console.log("item",item)
         const { date, time } = formatDateTime(item.SchedulingDate, item.SchedulingTime);
         const statusColor = getStatusColor(item.OrderStatusTitlePlang);
 
@@ -241,6 +242,10 @@ const BookingHistory = ({ route }: { route: any }) => {
         return (
             <View style={styles.bookingCard}>
                 <View style={styles.bookingRow}>
+                    <Text style={styles.bookingLabel}>Order ID</Text>
+                    <Text style={styles.bookingValue}>{item.OrderID}</Text>
+                </View>
+                <View style={styles.bookingRow}>
                     <Text style={styles.bookingLabel}>Service</Text>
                     <Text style={styles.bookingValue}>{item.CatServicePlang}</Text>
                 </View>
@@ -254,7 +259,7 @@ const BookingHistory = ({ route }: { route: any }) => {
                 </View>
                 <View style={styles.bookingRow}>
                     <Text style={styles.bookingLabel}>Duration</Text>
-                    <Text style={styles.bookingValue}>{item.DurationMinutes} Min</Text>
+                    <Text style={styles.bookingValue}>{item.DurationMinutes ? item.DurationMinutes : 0} Min</Text>
                 </View>
                 <View style={styles.bookingRow}>
                     <View style={styles.statusRow}>

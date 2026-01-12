@@ -53,7 +53,9 @@ const AccountInformationScreen = () => {
     const [showPassword, setShowPassword] = useState(false)
     const [showConfirmPassword, setShowConfirmPassword] = useState(false)
     const [passwordError, setPasswordError] = useState(false)
+    const [passwordInvalidError, setPasswordInvalidError] = useState(false)
     const [confirmPasswordError, setConfirmPasswordError] = useState(false)
+    const [emailValidationError, setEmailValidationError] = useState(false)
     const [languages, setLanguages] = useState<any[]>([]);
     const [countries, setCountries] = useState<any[]>([]);
     const [country, setCountry] = useState<string | number>('');
@@ -97,6 +99,27 @@ const AccountInformationScreen = () => {
     const [selectedYear, setSelectedYear] = useState(date.getFullYear());
     const [selectedMonth, setSelectedMonth] = useState(date.getMonth());
     const [selectedDay, setSelectedDay] = useState(date.getDate());
+    const [currentPasswordBottomSheetEnabled, setCurrentPasswordBottomSheetEnabled] = useState(false)
+    const [bottomSheetHeight, setBottomSheetHeight] = useState('35%');
+    const [currentPassword, setCurrentPassword] = useState('');
+    const [currentPasswordError, setCurrentPasswordError] = useState(false)
+    const [showCurrentPassword, setShowCurrentPassword] = useState(false)
+    useEffect(() => {
+        if (Platform.OS === 'ios') {
+
+            const keyboardDidShow = Keyboard.addListener('keyboardDidShow', (e) => {
+                setBottomSheetHeight('60%');
+            });
+            const keyboardDidHide = Keyboard.addListener('keyboardDidHide', () => {
+                setBottomSheetHeight('35%');
+            });
+
+            return () => {
+                keyboardDidShow.remove();
+                keyboardDidHide.remove();
+            };
+        }
+    }, []);
 
     useEffect(() => {
         const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', (e) => {
@@ -453,6 +476,7 @@ const AccountInformationScreen = () => {
     const handlePasswordChange = (text: string) => {
         setPassword(text);
         if (passwordError) setPasswordError(false); // remove red border on edit
+        if (passwordInvalidError) setPasswordInvalidError(false); // remove validation error on edit
     };
 
     const handleConfirmPasswordChange = (text: string) => {
@@ -461,27 +485,52 @@ const AccountInformationScreen = () => {
     };
 
     const renderHeader = () => (
-        <View style={{ flexDirection: 'row', alignItems: 'center', height: 50, backgroundColor: '#fff',paddingHorizontal: 10,elevation: 2,
+        <View style={{
+            flexDirection: 'row', alignItems: 'center', height: 50, backgroundColor: '#fff', paddingHorizontal: 10, elevation: 2,
             shadowColor: '#000',
             shadowOffset: { width: 0, height: 2 },
             shadowOpacity: 0.1,
-            shadowRadius: 3, }}>
+            shadowRadius: 3,
+        }}>
             <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
                 <Ionicons name="arrow-back-outline" size={24} color="#333" />
 
             </TouchableOpacity>
-            <Text style={{ fontSize: 16, fontFamily: CAIRO_FONT_FAMILY.bold, color: '#333', lineHeight: Platform.OS === 'ios' ? 0 : 20 }}>Personal Profile</Text>
+            <Text style={{ fontSize: 16, fontFamily: CAIRO_FONT_FAMILY.bold, color: '#333', lineHeight: Platform.OS === 'ios' ? 0 : 20 }}>Account Information</Text>
         </View>
     );
+    const validatePassword = (pwd: string) => {
+        // At least 8 characters, at least one uppercase, one lowercase, one number, one special character
+        const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/;
+        return regex.test(pwd);
+    };
+
+    const getCurrentPassword = async () => {
+        if (password) {
+            if (password.trim() !== '' && !validatePassword(password)) {
+                setPasswordInvalidError(true);
+                setPasswordError(true);
+                return;
+            }
+
+            if (password.trim() !== '' && password !== confirmPassword) {
+                setConfirmPasswordError(true)
+                return;
+            }
+
+            setCurrentPasswordBottomSheetEnabled(true);
+            return;
+        } else {
+            updateUserProfileHandler();
+            return
+        }
+    }
 
     const updateUserProfileHandler = async () => {
-        if (password.trim() !== '' && password !== confirmPassword) {
-            setConfirmPasswordError(true)
-            return;
-        }
+
 
         const fullPhoneNumber = `${selectedCountryUpdated?.dialCode}${updatedPhoneNumber.replace(/\s+/g, "")}`
-        const payload = {
+        const payload: any = {
             "FullNamePlang": englishName,
             "FullNameSlang": arabicName,
             "CellNumber": fullPhoneNumber,
@@ -491,7 +540,6 @@ const AccountInformationScreen = () => {
             "Gender": gender === 'male' ? '1' : '0',
             "DateofBirth": dob,
             "ImagePath": profileImage,
-            "Password": password,
             "UserLoginInfoId": user.Id,
             YearsofExperience: experience,
             CountryId: country.toString(),
@@ -500,17 +548,37 @@ const AccountInformationScreen = () => {
 
         if (password) {
             payload.Password = password;
+            payload.CurrentPassword = currentPassword;
         }
 
         try {
             const response = await profileService.updateServiceProviderPersonalProfile(payload);
             if (response.ResponseStatus.STATUSCODE === 200) {
-                getUserInfoByUserId()
-                showAlert({
-                    title: 'Profile updated successfully',
-                    message: '',
-                    type: 'success',
-                });
+                if (response.StatusCode.STATUSCODE == 3025) {
+                    setCurrentPasswordError(true)
+                } else if (response.StatusCode.STATUSCODE == 3015) {
+                    setCurrentPasswordBottomSheetEnabled(false)
+                    setCurrentPasswordError(false)
+                    setCurrentPassword('')
+                    setPassword('')
+                    setConfirmPassword('')
+                    setConfirmPasswordError(false)
+                    setPasswordInvalidError(false)
+                    setPasswordError(false)
+                    getUserInfoByUserId()
+                    showAlert({
+                        title: 'Profile updated successfully',
+                        message: '',
+                        type: 'success',
+                    });
+                } else {
+                    showAlert({
+                        title: response.StatusCode.MESSAGE,
+                        message: '',
+                        type: 'error',
+                    });
+                }
+
             }
         }
         catch (error: any) {
@@ -610,6 +678,15 @@ const AccountInformationScreen = () => {
             setEmailInputError(true)
             return;
         }
+
+        const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.[a-zA-Z]{2,3})+$/;
+        if (updatedEmail && !emailRegex.test(updatedEmail)) {
+            setEmailValidationError(true)
+            return;
+        } else {
+            setEmailValidationError(false)
+        }
+
         try {
             setIsUploading(true)
             const payload = {
@@ -639,6 +716,7 @@ const AccountInformationScreen = () => {
             }
 
         } catch (error) {
+            setEmailValidationError(true)
         } finally {
             setIsUploading(false);
         }
@@ -652,6 +730,8 @@ const AccountInformationScreen = () => {
     const HandleCloseVerifyModal = () => {
         setOtpValue('')
         setOpenVerifyBottomSheet(false)
+        setOTPAPIError(false)
+        setResentCode(false)
         setOpenVerifyBottomSheetHeight("63%")
     }
 
@@ -692,6 +772,10 @@ const AccountInformationScreen = () => {
 
             const response = await profileService.verifyUserUpdatedData(payload)
             if (response?.StatusCode?.STATUSCODE == 3007) {
+                setOTPAPIError(false)
+                setOtpValueError(false)
+                setResentCode(false)
+                setOtpValue('')
                 updateUserProfileHandler()
             }
             if (response?.StatusCode?.STATUSCODE == 3005) {
@@ -810,14 +894,14 @@ const AccountInformationScreen = () => {
             {/* <View style={{ flex: 1, backgroundColor: '#e4f1ef' }}> */}
             {renderHeader()}
             <View style={{ flex: 1, backgroundColor: '#e4f1ef' }}>
-                <View style={{ height: 100, backgroundColor: '#23a2a4',paddingTop: 10 }} >
-                    <Image 
-                        source={require('../../assets/icons/logo.png')} 
-                        style={{ 
-                            width: 100, 
+                <View style={{ height: 100, backgroundColor: '#23a2a4', paddingTop: 10 }} >
+                    <Image
+                        source={require('../../assets/icons/logo.png')}
+                        style={{
+                            width: 100,
                             height: 100,
-                            ...(Platform.OS === 'ios' ? { tintColor: '#5a898a' } : {tintColor: '#5a898a'})
-                        }}  
+                            ...(Platform.OS === 'ios' ? { tintColor: '#5a898a' } : { tintColor: '#5a898a' })
+                        }}
                         resizeMode='contain'
                     />
                 </View>
@@ -825,7 +909,7 @@ const AccountInformationScreen = () => {
                     <View style={{ height: 80, marginTop: 50, backgroundColor: '#fff', borderRadius: 10, padding: 10, justifyContent: 'center', alignItems: 'center' }}>
                         <View style={{ position: 'absolute', height: 100, borderWidth: 2, borderColor: '#fff', width: 100, bottom: 50, backgroundColor: '#999', borderRadius: 50, }}>
                             <FastImage
-                                source={{ 
+                                source={{
                                     uri: tempImageUri || (profileImage ? `${MediaBaseURL}${profileImage}` : ''),
                                     priority: FastImage.priority.normal
                                 }}
@@ -915,8 +999,8 @@ const AccountInformationScreen = () => {
 
                                     <View style={{ width: '48%', }}>
                                         <Text style={styles.label}>Date of Birth</Text>
-                                        <View style={[styles.input,{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}>
-                                            <Text style={{ fontSize: 15, color: '#000', fontFamily: CAIRO_FONT_FAMILY.regular, fontWeight: '400' }}>{dob}</Text>
+                                        <View style={[styles.input, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}>
+                                            <Text style={{ fontSize: 15, color: '#000', fontFamily: CAIRO_FONT_FAMILY.regular, fontWeight: '400' }}>{moment(dob).format('DD/MM/YYYY')}</Text>
                                             <TouchableOpacity onPress={showDatePicker} style={[styles.dateOfBirthBtn]}>
                                                 <Icon name="calendar-month" size={18} color="#000" style={{ marginLeft: 4 }} />
                                             </TouchableOpacity>
@@ -1181,7 +1265,7 @@ const AccountInformationScreen = () => {
                                     <TextInput
                                         style={[
                                             styles.passwordInput,
-                                            passwordError && styles.inputError
+                                            (passwordError || passwordInvalidError) && styles.inputError
                                         ]}
                                         placeholder={"********"}
                                         value={password}
@@ -1202,6 +1286,7 @@ const AccountInformationScreen = () => {
                                         )}
                                     </TouchableOpacity>
                                 </View>
+                                {passwordInvalidError && <Text style={styles.errorText}>Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character</Text>}
                                 {/* Confirm Password */}
                                 <Text style={styles.label}>Confirm Password</Text>
                                 <View style={styles.passwordContainer}>
@@ -1245,7 +1330,7 @@ const AccountInformationScreen = () => {
                         </ScrollView>
                     </KeyboardAvoidingView>
                     <View style={{ paddingVertical: 10 }}>
-                        <TouchableOpacity onPress={updateUserProfileHandler} style={{ backgroundColor: '#23a2a4', padding: 10, borderRadius: 10, alignItems: 'center', justifyContent: 'center' }}>
+                        <TouchableOpacity onPress={getCurrentPassword} style={{ backgroundColor: '#23a2a4', padding: 10, borderRadius: 10, alignItems: 'center', justifyContent: 'center' }}>
                             <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>Save</Text>
                         </TouchableOpacity>
                     </View>
@@ -1312,7 +1397,7 @@ const AccountInformationScreen = () => {
                             }}
                             value={updatedEmail}
                             onClosePress={HandleCloseEmailModal}
-                            inputError={emailInputError}
+                            inputError={emailInputError || emailValidationError}
                         />
 
                     </View>
@@ -1380,6 +1465,90 @@ const AccountInformationScreen = () => {
                             <Text style={styles.imagePickerOptionText}>Choose from Library</Text>
                         </TouchableOpacity>
                     </View>
+                </View>
+            </CustomBottomSheet>
+
+            <CustomBottomSheet
+                visible={currentPasswordBottomSheetEnabled}
+                onClose={() => {
+                    setCurrentPasswordBottomSheetEnabled(false)
+                    setCurrentPasswordError(false)
+                    setCurrentPassword('')
+                }}
+                showHandle={false}
+                maxHeight={bottomSheetHeight}
+                backdropClickable={true}
+            >
+                <View style={styles.searchContainer}>
+                    <ScrollView
+                        ref={scrollViewRef}
+                        style={{ flex: 1, paddingHorizontal: 16 }}
+                        contentContainerStyle={{ paddingTop: 16 }}
+                        keyboardShouldPersistTaps="handled"
+                        showsVerticalScrollIndicator={false}
+                        bounces={false}
+                    >
+                        {/* Header */}
+                        <View style={styles.searchHeader}>
+                            <Text style={styles.searchTitle}>Change Password</Text>
+                            <TouchableOpacity onPress={() => {
+                                setCurrentPasswordBottomSheetEnabled(false)
+                                setCurrentPasswordError(false)
+                                setCurrentPassword('')
+                            }} style={styles.closeButton}>
+                                <Ionicons name="close" size={24} color="#404B53" />
+                            </TouchableOpacity>
+                        </View>
+
+                        {/* Separator */}
+                        <View style={styles.searchSeparator} />
+
+                        {/* Search Input Section */}
+                        <View style={[styles.searchInputContainer, currentPasswordError && { marginBottom: 2 }]}>
+                            <Text style={styles.searchLabel}>Enter Your Current Password</Text>
+
+                            <View style={styles.passwordContainer}>
+                                <TextInput
+
+                                    style={[
+                                        styles.passwordInput,
+                                        currentPasswordError && styles.inputError
+                                    ]}
+                                    placeholder={"********"}
+                                    value={currentPassword}
+                                    textContentType='oneTimeCode'
+                                    onChangeText={(text) => {
+                                        setCurrentPassword(text)
+                                        setCurrentPasswordError(false)
+                                    }}
+                                    secureTextEntry={!showCurrentPassword}
+                                    placeholderTextColor="#999"
+                                    returnKeyType="done"
+                                    onSubmitEditing={updateUserProfileHandler}
+                                />
+                                <TouchableOpacity
+                                    style={styles.eyeIcon}
+                                    onPress={() => setShowCurrentPassword(!showCurrentPassword)}
+                                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                                >
+                                    {showCurrentPassword ? (
+                                        <Ionicons name="eye" size={22} color="#666666" />
+                                    ) : (
+                                        <Ionicons name="eye-off" size={22} color="#666666" />
+                                    )}
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                        {currentPasswordError && <Text style={styles.errorText}>Current Password is incorrect</Text>}
+                        {/* Search Button */}
+                        <TouchableOpacity
+                            style={styles.searchButtonContainer}
+                            onPress={updateUserProfileHandler}
+                            activeOpacity={0.8}
+                        >
+                            <Text style={styles.searchButtonText}>Save</Text>
+                        </TouchableOpacity>
+                    </ScrollView>
                 </View>
             </CustomBottomSheet>
         </SafeAreaView>
@@ -1643,6 +1812,70 @@ const styles = StyleSheet.create({
     },
     pickerItemTextSelectedDark: {
         color: '#20B2AA',
+    },
+    searchContainer: {
+        flex: 1,
+    },
+    searchScrollContent: {
+        paddingHorizontal: 20,
+        paddingTop: 16,
+        paddingBottom: Platform.OS === 'ios' ? 20 : 16,
+    },
+    searchHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 12,
+    },
+    searchTitle: {
+        fontSize: 18,
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        color: '#000000',
+    },
+    closeButton: {
+        padding: 4,
+    },
+    searchSeparator: {
+        height: 1,
+        backgroundColor: '#E5E7EB',
+        marginBottom: 20,
+    },
+    searchInputContainer: {
+        marginBottom: 24,
+    },
+    searchLabel: {
+        fontSize: 14,
+        fontFamily: CAIRO_FONT_FAMILY.regular,
+        color: '#000000',
+        marginBottom: 8,
+    },
+    searchInput: {
+        height: 48,
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
+        borderRadius: 8,
+        paddingHorizontal: 16,
+        fontSize: 16,
+        fontFamily: CAIRO_FONT_FAMILY.regular,
+        color: '#000000',
+        backgroundColor: '#FFFFFF',
+    },
+    searchButtonContainer: {
+        backgroundColor: '#00A19D',
+        borderRadius: 8,
+        height: 48,
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    searchButtonText: {
+        fontSize: 16,
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        color: '#FFFFFF',
     },
 });
 

@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, FlatList, TextInput, ScrollView, KeyboardAvoidingView, Platform, Alert, ActivityIndicator, Image, Keyboard, useColorScheme } from 'react-native'
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, FlatList, TextInput, ScrollView, KeyboardAvoidingView, Platform, Alert, ActivityIndicator, Image, Keyboard, useColorScheme, Modal } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -47,6 +47,8 @@ const MedicalLicenseScreen = () => {
     const [placeOfIssue, setPlaceOfIssue] = useState<string | number>('');
     const [expiryDate, setExpiryDate] = useState<any>(null);
     const [showDatePicker, setShowDatePicker] = useState(false);
+    const [showExpiryDateModal, setShowExpiryDateModal] = useState(false);
+    const [tempExpiryDate, setTempExpiryDate] = useState<Date | null>(null);
     const [speciality, setSpeciality] = useState<string | number>('');
     const [editingLicenseId, setEditingLicenseId] = useState<number | null>(null);
     const colorScheme = useColorScheme();
@@ -242,6 +244,9 @@ const MedicalLicenseScreen = () => {
         setSpeciality('');
         setEditingLicenseId(null);
         setExpiryDateError(false);
+        setShowDatePicker(false);
+        setShowExpiryDateModal(false);
+        setTempExpiryDate(null);
         // Reset errors
         setFileError(false);
         setLicenseNoError(false);
@@ -305,9 +310,16 @@ const MedicalLicenseScreen = () => {
     };
 
     const handleDateChange = (event: any, selectedDate?: Date) => {
-        setShowDatePicker(Platform.OS === 'ios');
-        if (selectedDate) {
-            setExpiryDate(selectedDate);
+        if (Platform.OS === 'android') {
+            setShowDatePicker(false);
+            if (event.type === 'set' && selectedDate) {
+                setExpiryDate(selectedDate);
+            }
+        } else {
+            // iOS - this is called from the Done button
+            if (selectedDate) {
+                setExpiryDate(selectedDate);
+            }
         }
     };
 
@@ -407,6 +419,7 @@ const MedicalLicenseScreen = () => {
             setIsSaving(false);
         }
     };
+
 
     const renderHeader = () => (
         <View style={styles.header}>
@@ -604,25 +617,88 @@ const MedicalLicenseScreen = () => {
                             <View style={bottomSheetStyles.inputGroup}>
                                 <Text style={bottomSheetStyles.label}>Expiry Date</Text>
                                 <TouchableOpacity
-                                    style={[bottomSheetStyles.dateInputContainer, expiryDateError && bottomSheetStyles.dateInputContainerError]}
-                                    onPress={() => showDatePicker ? setShowDatePicker(false) : setShowDatePicker(true)}
+                                    style={[
+                                        bottomSheetStyles.dateInputContainer, 
+                                        expiryDateError && bottomSheetStyles.dateInputContainerError,
+                                        Platform.OS === 'ios' && showExpiryDateModal && bottomSheetStyles.dateInputContainerActive
+                                    ]}
+                                    onPress={() => {
+                                        if (Platform.OS === 'ios') {
+                                            if (showExpiryDateModal) {
+                                                // If already showing, cancel
+                                                setTempExpiryDate(expiryDate ? new Date(expiryDate) : null);
+                                                setShowExpiryDateModal(false);
+                                            } else {
+                                                // Show the picker
+                                                setTempExpiryDate(expiryDate ? new Date(expiryDate) : new Date());
+                                                setShowExpiryDateModal(true);
+                                            }
+                                        } else {
+                                            setShowDatePicker(!showDatePicker);
+                                        }
+                                    }}
                                 >
                                     <Text style={bottomSheetStyles.dateText}>
                                         {expiryDate ? formatDate(expiryDate) : '--/--/----'}
                                     </Text>
-                                    <MaterialIcons name="calendar-today" size={20} color="#666" />
+                                    <MaterialIcons 
+                                        name={Platform.OS === 'ios' && showExpiryDateModal ? "keyboard-arrow-up" : "calendar-today"} 
+                                        size={20} 
+                                        color={Platform.OS === 'ios' && showExpiryDateModal ? "#00A896" : "#666"} 
+                                    />
                                 </TouchableOpacity>
-                                {showDatePicker && (
-                                    <View style={Platform.OS === 'ios' ? [styles.datePickerContainer, { backgroundColor: isDarkMode ? '#1C1C1E' : '#fff' }] : null}>
-                                        <DateTimePicker
-                                            value={expiryDate ? new Date(expiryDate) : new Date()}
-                                            mode="date"
-                                            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                                            onChange={handleDateChange}
-                                            minimumDate={new Date()}
-                                            textColor={isDarkMode ? '#FFFFFF' : '#000000'}
-                                            themeVariant={isDarkMode ? 'dark' : 'light'}
-                                        />
+                                {Platform.OS === 'android' && showDatePicker && (
+                                    <DateTimePicker
+                                        value={expiryDate ? new Date(expiryDate) : new Date()}
+                                        mode="date"
+                                        display="default"
+                                        onChange={handleDateChange}
+                                        minimumDate={new Date()}
+                                    />
+                                )}
+                                {Platform.OS === 'ios' && showExpiryDateModal && (
+                                    <View style={bottomSheetStyles.iosDatePickerContainer}>
+                                        <View style={[bottomSheetStyles.iosDatePickerWrapper, isDarkMode && bottomSheetStyles.iosDatePickerWrapperDark]}>
+                                            <DateTimePicker
+                                                value={tempExpiryDate || (expiryDate ? new Date(expiryDate) : new Date())}
+                                                mode="date"
+                                                display="spinner"
+                                                onChange={(event, selectedDate) => {
+                                                    // Update temp value when picker changes
+                                                    if (selectedDate) {
+                                                        setTempExpiryDate(selectedDate);
+                                                    }
+                                                }}
+                                                minimumDate={new Date()}
+                                                textColor={isDarkMode ? '#FFFFFF' : '#000000'}
+                                                themeVariant={isDarkMode ? 'dark' : 'light'}
+                                            />
+                                        </View>
+                                        <View style={bottomSheetStyles.iosDatePickerButtons}>
+                                            <TouchableOpacity
+                                                style={bottomSheetStyles.iosDatePickerCancelButton}
+                                                onPress={() => {
+                                                    // Reset temp value on cancel
+                                                    setTempExpiryDate(expiryDate ? new Date(expiryDate) : null);
+                                                    setShowExpiryDateModal(false);
+                                                }}
+                                            >
+                                                <Text style={bottomSheetStyles.iosDatePickerCancelText}>Cancel</Text>
+                                            </TouchableOpacity>
+                                            <TouchableOpacity
+                                                style={bottomSheetStyles.iosDatePickerDoneButton}
+                                                onPress={() => {
+                                                    // Apply the temp value when Done is clicked
+                                                    if (tempExpiryDate) {
+                                                        handleDateChange({ type: 'set' }, tempExpiryDate);
+                                                    }
+                                                    setShowExpiryDateModal(false);
+                                                    setExpiryDateError(false);
+                                                }}
+                                            >
+                                                <Text style={bottomSheetStyles.iosDatePickerDoneText}>Done</Text>
+                                            </TouchableOpacity>
+                                        </View>
                                     </View>
                                 )}
                             </View>
@@ -965,9 +1041,74 @@ const bottomSheetStyles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 14,
     },
+    dateInputContainerActive: {
+        borderColor: '#00A896',
+        borderWidth: 2,
+        backgroundColor: '#F0FDFC',
+    },
     dateText: {
         fontSize: 15,
         color: '#000',
+    },
+    iosDatePickerContainer: {
+        marginTop: 12,
+        paddingTop: 12,
+        borderTopWidth: 1,
+        borderTopColor: '#E0E0E0',
+    },
+    iosDatePickerWrapper: {
+        backgroundColor: '#fff',
+        borderRadius: 8,
+        overflow: 'hidden',
+        marginBottom: 12,
+        borderWidth: 2,
+        borderColor: '#00A896',
+        shadowColor: '#00A896',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    iosDatePickerWrapperDark: {
+        backgroundColor: '#1C1C1E',
+        borderColor: '#00A896',
+    },
+    iosDatePickerButtons: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        gap: 12,
+    },
+    iosDatePickerCancelButton: {
+        flex: 1,
+        paddingVertical: 12,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#E0E0E0',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    iosDatePickerCancelText: {
+        fontSize: 16,
+        fontFamily: CAIRO_FONT_FAMILY.regular,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
+        color: '#999',
+    },
+    iosDatePickerDoneButton: {
+        flex: 1,
+        paddingVertical: 12,
+        borderRadius: 8,
+        backgroundColor: '#00A896',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    iosDatePickerDoneText: {
+        fontSize: 16,
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
+        color: '#fff',
     },
     footer: {
         paddingHorizontal: 20,

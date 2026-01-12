@@ -14,7 +14,7 @@ import { CAIRO_FONT_FAMILY } from '../../../styles/globalStyles';
 import LoaderKit from 'react-native-loader-kit';
 import FullScreenLoader from '../../../components/FullScreenLoader';
 
-const ClientsList: React.FC<{ onCountChange?: (n: number) => void }> = ({ onCountChange }) => {
+const ClientsList: React.FC<{ onCountChange?: (n: number) => void, setIsLoading?: (isLoading: boolean) => void }> = ({ onCountChange, setIsLoading }) => {
   const [clientList, setClientList] = useState<any[]>([]);
   const user = useSelector((state: any) => state.root.user.user);
   const [selectedClient, setSelectedClient] = useState<any>(null);
@@ -25,7 +25,6 @@ const ClientsList: React.FC<{ onCountChange?: (n: number) => void }> = ({ onCoun
   const [bottomSheetHeight, setBottomSheetHeight] = useState('35%');
   const [filteredClientList, setFilteredClientList] = useState<any[]>([]);
   const scrollViewRef = React.useRef<ScrollView>(null);
-  const [isLoading, setIsLoading] = useState(false);
   useEffect(() => {
     getClients();
   }, []);
@@ -48,7 +47,7 @@ const ClientsList: React.FC<{ onCountChange?: (n: number) => void }> = ({ onCoun
   }, []);
 
   const getClients = async () => {
-    setIsLoading(true);
+    setIsLoading?.(true);
     try {
       const payload = {
         UserloginInfoId: user.Id,
@@ -60,7 +59,7 @@ const ClientsList: React.FC<{ onCountChange?: (n: number) => void }> = ({ onCoun
       }
     } catch (error) {
     } finally {
-      setIsLoading(false);
+      setIsLoading?.(false);
     }
   };
 
@@ -233,8 +232,6 @@ const ClientsList: React.FC<{ onCountChange?: (n: number) => void }> = ({ onCoun
           </ScrollView>
         </View>
       </CustomBottomSheet>
-
-      <FullScreenLoader visible={isLoading} />
     </View>
   );
 };

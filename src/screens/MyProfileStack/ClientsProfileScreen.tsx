@@ -10,7 +10,7 @@ const ClientsProfileScreen = () => {
     const [clientsMenuItems, setClientsMenuItems] = useState([
         {
             id: 'clientSection',
-            title: 'Client Section',
+            title: 'Client Selection',
             icon: 'pricetag-outline',
             Image: require('../../assets/icons/clientsIcon.png'),
             iconColor: '#00A19D',

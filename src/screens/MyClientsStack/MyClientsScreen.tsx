@@ -7,9 +7,11 @@ import ClientsFeedback from './components/ClientsFeedback';
 import { ROUTES } from '../../shared/utils/routes';
 import { useNavigation } from '@react-navigation/native';
 import { CAIRO_FONT_FAMILY } from '../../styles/globalStyles';
+import FullScreenLoader from '../../components/FullScreenLoader';
 
 const MyClientsScreen = () => {
   const navigation = useNavigation();
+  const [isLoading, setIsLoading] = useState(false);
   const handleNotificationPress = () => {
     navigation.navigate(ROUTES.NotificationListScreen as never);
   };
@@ -61,14 +63,15 @@ const MyClientsScreen = () => {
       <View style={{ flex: 1, backgroundColor: '#e4f1ef' }}>
         {renderTabs()}
         <View style={{ flex: 1, padding: 12 }}>
-          {activeTab === 'list' ? <ClientsList /> : <ClientsFeedback />}
+          {activeTab === 'list' ? <ClientsList setIsLoading={setIsLoading} /> : <ClientsFeedback setIsLoading={setIsLoading} />}
         </View>
       </View>
+      <FullScreenLoader visible={isLoading} />
     </SafeAreaView>
-  )
-}
+  );
+};
 
-export default MyClientsScreen
+export default MyClientsScreen;
 
 const styles = StyleSheet.create({
   scrollContainer: {

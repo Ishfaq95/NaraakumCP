@@ -170,7 +170,7 @@ export const VerificationCodeCompoent: React.FC<smsProps> = ({ onClosePress, OTP
           Enter Verification Code <Text style={{ color: 'red' }}>*</Text>
         </Text>
         <View style={[styles.otpView, (otpError || otpApiError) && { borderWidth: 1, borderColor: 'red', borderRadius: 8 }]}>
-          <TextInput returnKeyType='done' value={value} onChangeText={onChangeText} placeholder="ضع الرمز" style={[styles.inputText, { textAlign: 'center', width: '90%' },]} />
+          <TextInput returnKeyType='done' value={value} onChangeText={onChangeText} placeholder="Enter Verification Code" style={[styles.inputText, { textAlign: 'center', width: '90%' },]} />
         </View>
         {otpApiError && <Text style={{ color: 'red', fontSize: 12, marginTop: -10, fontFamily: CAIRO_FONT_FAMILY.medium, textAlign: 'left' }}>Invalid Code</Text>}
         <TouchableOpacity onPress={OtpSubmitButton} style={styles.optButton} disabled={isLoading}>

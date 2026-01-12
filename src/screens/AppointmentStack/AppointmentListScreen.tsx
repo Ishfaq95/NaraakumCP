@@ -1,4 +1,4 @@
-import { View, Text, SafeAreaView, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, TextInput, ScrollView, KeyboardAvoidingView, Platform, Modal, RefreshControl, Image, useColorScheme } from 'react-native'
+import { View, Text, SafeAreaView, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, TextInput, ScrollView, KeyboardAvoidingView, Platform, Modal, RefreshControl, Image, useColorScheme, Dimensions } from 'react-native'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import AppHeader from '../../components/common/AppHeader'
 import AppointmentStatistics from '../../components/Appointment/AppointmentStatistics'
@@ -76,6 +76,13 @@ const AppointmentListScreen = () => {
   const [showStartTimeModal, setShowStartTimeModal] = useState(false);
   const [showEndDateModal, setShowEndDateModal] = useState(false);
   const [showEndTimeModal, setShowEndTimeModal] = useState(false);
+  
+  // Temporary values for iOS pickers (to hold changes until Done is clicked)
+  const [tempStartDate, setTempStartDate] = useState<Date | null>(null);
+  const [tempStartTime, setTempStartTime] = useState<Date | null>(null);
+  const [tempEndDate, setTempEndDate] = useState<Date | null>(null);
+  const [tempEndTime, setTempEndTime] = useState<Date | null>(null);
+  
   const [unavailabilityAPIError, setUnavailabilityAPIError] = useState('');
   const { showAlert } = useAlert();
 
@@ -527,7 +534,7 @@ const AppointmentListScreen = () => {
 
     const response = await appointmentService.addEditServiceProviderUnAvailability(payload);
     if (response?.ResponseStatus?.STATUSCODE === 200) {
-      if(response?.StatusCode?.STATUSCODE === 11011) {
+      if(response?.StatusCode?.STATUSCODE === 11011 || response?.StatusCode?.STATUSCODE === 11012) {
         setUnavailabilityAPIError(response?.StatusCode?.MESSAGE);
         return;
       }else {
@@ -555,41 +562,82 @@ const AppointmentListScreen = () => {
   const handleStartDateChange = (event: any, selectedDate?: Date) => {
     if (Platform.OS === 'android') {
       setShowStartDatePicker(false);
+      // Only update state if user confirmed (type === 'set')
+      // If dismissed (type === 'dismissed'), don't update state
+      if (event.type === 'set' && selectedDate) {
+        setStartDate(selectedDate);
+        setStartDateError(false);
+      } else if (event.type === 'dismissed') {
+        // Reset temp value when dismissed
+        setTempStartDate(startDate ? new Date(startDate) : null);
+      }
+    } else {
+      // iOS - this is called from the Done button
+      if (selectedDate) {
+        setStartDate(selectedDate);
+        setStartDateError(false);
+      }
     }
-    if (selectedDate) {
-      setStartDate(selectedDate);
-    }
-    setStartDateError(false);
   };
 
   const handleStartTimeChange = (event: any, selectedTime?: Date) => {
     if (Platform.OS === 'android') {
       setShowStartTimePicker(false);
+      // Only update state if user confirmed (type === 'set')
+      if (event.type === 'set' && selectedTime) {
+        setStartTime(selectedTime);
+        setStartTimeError(false);
+      } else if (event.type === 'dismissed') {
+        // Reset temp value when dismissed
+        setTempStartTime(startTime ? new Date(startTime) : null);
+      }
+    } else {
+      // iOS - this is called from the Done button
+      if (selectedTime) {
+        setStartTime(selectedTime);
+        setStartTimeError(false);
+      }
     }
-    if (selectedTime) {
-      setStartTime(selectedTime);
-    }
-    setStartTimeError(false);
   };
 
   const handleEndDateChange = (event: any, selectedDate?: Date) => {
     if (Platform.OS === 'android') {
       setShowEndDatePicker(false);
+      // Only update state if user confirmed (type === 'set')
+      if (event.type === 'set' && selectedDate) {
+        setEndDate(selectedDate);
+        setEndDateError(false);
+      } else if (event.type === 'dismissed') {
+        // Reset temp value when dismissed
+        setTempEndDate(endDate ? new Date(endDate) : null);
+      }
+    } else {
+      // iOS - this is called from the Done button
+      if (selectedDate) {
+        setEndDate(selectedDate);
+        setEndDateError(false);
+      }
     }
-    if (selectedDate) {
-      setEndDate(selectedDate);
-    }
-    setEndDateError(false);
   };
 
   const handleEndTimeChange = (event: any, selectedTime?: Date) => {
     if (Platform.OS === 'android') {
       setShowEndTimePicker(false);
+      // Only update state if user confirmed (type === 'set')
+      if (event.type === 'set' && selectedTime) {
+        setEndTime(selectedTime);
+        setEndTimeError(false);
+      } else if (event.type === 'dismissed') {
+        // Reset temp value when dismissed
+        setTempEndTime(endTime ? new Date(endTime) : null);
+      }
+    } else {
+      // iOS - this is called from the Done button
+      if (selectedTime) {
+        setEndTime(selectedTime);
+        setEndTimeError(false);
+      }
     }
-    if (selectedTime) {
-      setEndTime(selectedTime);
-    }
-    setEndTimeError(false);
   };
 
   const handleSaveUnavailability = () => {
@@ -611,36 +659,57 @@ const AppointmentListScreen = () => {
   const renderDateTimePicker = (
     type: 'date' | 'time',
     value: Date,
+    tempValue: Date | null,
+    setTempValue: (date: Date) => void,
     onChange: (event: any, date?: Date) => void,
     showModal: boolean,
     setShowModal: (show: boolean) => void,
     label: string
   ) => {
     if (Platform.OS === 'ios') {
+      const displayValue = tempValue || value;
+      
       return (
         <Modal
           visible={showModal}
           transparent={true}
           animationType="slide"
-          onRequestClose={() => setShowModal(false)}
+          onRequestClose={() => {
+            // Reset temp value on cancel
+            setTempValue(value);
+            setShowModal(false);
+          }}
         >
           <View style={unavailabilityStyles.modalOverlay}>
             <View style={[unavailabilityStyles.modalContent, isDarkMode && unavailabilityStyles.modalContentDark]}>
               <View style={[unavailabilityStyles.modalHeader, isDarkMode && unavailabilityStyles.modalHeaderDark]}>
-                <TouchableOpacity onPress={() => setShowModal(false)}>
+                <TouchableOpacity onPress={() => {
+                  // Reset temp value on cancel
+                  setTempValue(value);
+                  setShowModal(false);
+                }}>
                   <Text style={[unavailabilityStyles.cancelButtonText, isDarkMode && unavailabilityStyles.cancelButtonTextDark]}>Cancel</Text>
                 </TouchableOpacity>
                 <Text style={[unavailabilityStyles.modalTitle, isDarkMode && unavailabilityStyles.modalTitleDark]}>{label}</Text>
-                <TouchableOpacity onPress={() => setShowModal(false)}>
+                <TouchableOpacity onPress={() => {
+                  // Apply the temp value when Done is clicked
+                  onChange({ type: 'set' }, displayValue);
+                  setShowModal(false);
+                }}>
                   <Text style={[unavailabilityStyles.doneButtonText, isDarkMode && unavailabilityStyles.doneButtonTextDark]}>Done</Text>
                 </TouchableOpacity>
               </View>
               <View style={[unavailabilityStyles.datePickerContainer, isDarkMode && unavailabilityStyles.datePickerContainerDark]}>
                 <DateTimePicker
-                  value={value}
+                  value={displayValue}
                   mode={type}
                   display="spinner"
-                  onChange={onChange}
+                  onChange={(event, selectedDate) => {
+                    // Update temp value when picker changes, but don't call onChange yet
+                    if (selectedDate) {
+                      setTempValue(selectedDate);
+                    }
+                  }}
                   textColor={isDarkMode ? '#FFFFFF' : '#000000'}
                   themeVariant={isDarkMode ? 'dark' : 'light'}
                 />
@@ -689,10 +758,11 @@ const AppointmentListScreen = () => {
           <FlatList
             data={appointments}
             keyExtractor={(item) => item.RowId}
-            contentContainerStyle={[
-              {  },
-              appointments.length === 0 && { flexGrow: 1, minHeight: '100%' }
-            ]}
+            contentContainerStyle={
+              appointments.length === 0 
+                ? { flexGrow: 1 } 
+                : {}
+            }
             renderItem={({ item }) => renderItem({ item })}
             onEndReached={loadMoreAppointments}
             onEndReachedThreshold={0.3}
@@ -736,7 +806,7 @@ const AppointmentListScreen = () => {
             )}
             ListEmptyComponent={() => (
               !refreshing ? (
-                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <View style={styles.emptyContainer}>
                   <Image source={require('../../assets/images/EmptyList.png')} style={{ width: 50, height: 50 }} />
                   <Text style={{ color: '#666', fontSize: 16, paddingTop: 10 }}>There are no appointments available</Text>
                 </View>
@@ -791,8 +861,12 @@ const AppointmentListScreen = () => {
                 style={[unavailabilityStyles.inputContainer, startDateError && unavailabilityStyles.inputError]}
                 onPress={() => {
                   if (Platform.OS === 'ios') {
+                    // Initialize temp value when opening modal
+                    setTempStartDate(startDate ? new Date(startDate) : new Date());
                     setShowStartDateModal(true);
                   } else {
+                    // Initialize temp value when opening picker for Android
+                    setTempStartDate(startDate ? new Date(startDate) : new Date());
                     setShowStartDatePicker(true);
                   }
                 }}
@@ -810,8 +884,12 @@ const AppointmentListScreen = () => {
                 style={[unavailabilityStyles.inputContainer, startTimeError && unavailabilityStyles.inputError]}
                 onPress={() => {
                   if (Platform.OS === 'ios') {
+                    // Initialize temp value when opening modal
+                    setTempStartTime(startTime ? new Date(startTime) : new Date());
                     setShowStartTimeModal(true);
                   } else {
+                    // Initialize temp value when opening picker for Android
+                    setTempStartTime(startTime ? new Date(startTime) : new Date());
                     setShowStartTimePicker(true);
                   }
                 }}
@@ -832,8 +910,12 @@ const AppointmentListScreen = () => {
                 style={[unavailabilityStyles.inputContainer, endDateError && unavailabilityStyles.inputError]}
                 onPress={() => {
                   if (Platform.OS === 'ios') {
+                    // Initialize temp value when opening modal
+                    setTempEndDate(endDate ? new Date(endDate) : new Date());
                     setShowEndDateModal(true);
                   } else {
+                    // Initialize temp value when opening picker for Android
+                    setTempEndDate(endDate ? new Date(endDate) : new Date());
                     setShowEndDatePicker(true);
                   }
                 }}
@@ -851,8 +933,12 @@ const AppointmentListScreen = () => {
                 style={[unavailabilityStyles.inputContainer, endTimeError && unavailabilityStyles.inputError]}
                 onPress={() => {
                   if (Platform.OS === 'ios') {
+                    // Initialize temp value when opening modal
+                    setTempEndTime(endTime ? new Date(endTime) : new Date());
                     setShowEndTimeModal(true);
                   } else {
+                    // Initialize temp value when opening picker for Android
+                    setTempEndTime(endTime ? new Date(endTime) : new Date());
                     setShowEndTimePicker(true);
                   }
                 }}
@@ -906,7 +992,7 @@ const AppointmentListScreen = () => {
         {/* Android Date/Time Pickers */}
         {Platform.OS === 'android' && showStartDatePicker && (
           <DateTimePicker
-            value={startDate ? new Date(startDate) : new Date()}
+            value={tempStartDate || (startDate ? new Date(startDate) : new Date())}
             mode="date"
             display="default"
             onChange={handleStartDateChange}
@@ -914,7 +1000,7 @@ const AppointmentListScreen = () => {
         )}
         {Platform.OS === 'android' && showStartTimePicker && (
           <DateTimePicker
-            value={startTime ? new Date(startTime) : new Date()}
+            value={tempStartTime || (startTime ? new Date(startTime) : new Date())}
             mode="time"
             display="default"
             onChange={handleStartTimeChange}
@@ -922,7 +1008,7 @@ const AppointmentListScreen = () => {
         )}
         {Platform.OS === 'android' && showEndDatePicker && (
           <DateTimePicker
-            value={endDate ? new Date(endDate) : new Date()}
+            value={tempEndDate || (endDate ? new Date(endDate) : new Date())}
             mode="date"
             display="default"
             onChange={handleEndDateChange}
@@ -930,7 +1016,7 @@ const AppointmentListScreen = () => {
         )}
         {Platform.OS === 'android' && showEndTimePicker && (
           <DateTimePicker
-            value={endTime ? new Date(endTime) : new Date()}
+            value={tempEndTime || (endTime ? new Date(endTime) : new Date())}
             mode="time"
             display="default"
             onChange={handleEndTimeChange}
@@ -938,10 +1024,10 @@ const AppointmentListScreen = () => {
         )}
 
         {/* iOS Date/Time Modals */}
-        {renderDateTimePicker('date', startDate ? new Date(startDate) : new Date(), handleStartDateChange, showStartDateModal, setShowStartDateModal, 'Start Date')}
-        {renderDateTimePicker('time', startTime ? new Date(startTime) : new Date(), handleStartTimeChange, showStartTimeModal, setShowStartTimeModal, 'Start Time')}
-        {renderDateTimePicker('date', endDate ? new Date(endDate) : new Date(), handleEndDateChange, showEndDateModal, setShowEndDateModal, 'End Date')}
-        {renderDateTimePicker('time', endTime ? new Date(endTime) : new Date(), handleEndTimeChange, showEndTimeModal, setShowEndTimeModal, 'End Time')}
+        {renderDateTimePicker('date', startDate ? new Date(startDate) : new Date(), tempStartDate, setTempStartDate, handleStartDateChange, showStartDateModal, setShowStartDateModal, 'Start Date')}
+        {renderDateTimePicker('time', startTime ? new Date(startTime) : new Date(), tempStartTime, setTempStartTime, handleStartTimeChange, showStartTimeModal, setShowStartTimeModal, 'Start Time')}
+        {renderDateTimePicker('date', endDate ? new Date(endDate) : new Date(), tempEndDate, setTempEndDate, handleEndDateChange, showEndDateModal, setShowEndDateModal, 'End Date')}
+        {renderDateTimePicker('time', endTime ? new Date(endTime) : new Date(), tempEndTime, setTempEndTime, handleEndTimeChange, showEndTimeModal, setShowEndTimeModal, 'End Time')}
       </CustomBottomSheet>
 
       <ConfirmationModal
@@ -993,6 +1079,11 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

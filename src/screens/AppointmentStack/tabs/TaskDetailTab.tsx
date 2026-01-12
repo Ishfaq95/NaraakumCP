@@ -861,7 +861,7 @@ const TaskDetailTab: React.FC<TaskDetailTabProps> = ({ data, RefreshData }) => {
                         </TouchableOpacity>
                     </View>
                     <View style={{ paddingHorizontal: 16 }}>
-                        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center" }}>
+                        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center",marginTop: 10 }}>
                             <View style={{ flex: 1, flexDirection: 'row', justifyContent: "space-between", alignItems: "center" }}>
                                 <View style={{ height: 40, width: 40, backgroundColor: '#23a2a4', borderRadius: 10, alignItems: "center", justifyContent: "center" }}>
                                     {data?.imagePath ? <FastImage source={{ uri: `${MediaBaseURL}${data?.imagePath}`, priority: FastImage.priority.normal }} style={{ width: '100%', height: '100%', borderRadius: 10 }} resizeMode={FastImage.resizeMode.cover} /> : <View style={{ width: 40, height: 40, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: '#DDDDDD' }} >

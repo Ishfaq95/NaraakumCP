@@ -7,16 +7,15 @@ import { CAIRO_FONT_FAMILY } from '../../../styles/globalStyles';
 import LoaderKit from 'react-native-loader-kit';
 import FullScreenLoader from '../../../components/FullScreenLoader';
 
-const ClientsFeedback: React.FC = () => {
+const ClientsFeedback: React.FC<{ setIsLoading?: (isLoading: boolean) => void }> = ({ setIsLoading }) => {
   const user = useSelector((state: any) => state.root.user.user);
   const [clientsFeedback, setClientsFeedback] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   useEffect(() => {
     getClientsFeedback();
   }, []);
 
   const getClientsFeedback = async () => {
-    setIsLoading(true);
+    setIsLoading?.(true);
     try {
       const payload = {
         UserloginInfoId: user.Id,
@@ -27,7 +26,7 @@ const ClientsFeedback: React.FC = () => {
       }
     } catch (error) {
     } finally {
-      setIsLoading(false);
+      setIsLoading?.(false);
     }
   };
   return (
@@ -42,7 +41,6 @@ const ClientsFeedback: React.FC = () => {
         )}
       />
 
-      <FullScreenLoader visible={isLoading} />
     </View>
   );
 };

@@ -394,6 +394,8 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 3,
+        borderBottomWidth: 1,
+        borderBottomColor: '#E0E0E0',
     },
     backButton: {
         padding: 5,

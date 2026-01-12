@@ -515,6 +515,7 @@ export const userUpdatedEmail = async (payload: any): Promise<any> => {
         const response = await axiosInstance.post('patients/EmailVerification', payload);
         return response.data;
     } catch (error: any) {
+        console.log(error);
         throw error;    
     }
 };

@@ -24,7 +24,7 @@ const ClientSectionScreen = () => {
     // Modal state
     const [selectedGender, setSelectedGender] = useState<any>(null);
     const [showGenderDropdown, setShowGenderDropdown] = useState(false);
-
+    const [selectedGenderError, setSelectedGenderError] = useState(false);
     // Range slider state - simple and clean
     const sliderWidth = SLIDER_WIDTH;
     const minAge = 0;
@@ -82,7 +82,7 @@ const ClientSectionScreen = () => {
         setEditingPreference(item);
         
         // Pre-fill the form with existing values
-        setSelectedGender((item.ClientGender == null || item.ClientGender == 'Both') ? null : item.ClientGender === 1 || item.ClientGender === 'Male' ? 'Male' : 'Female');
+        setSelectedGender((item.ClientGender == null || item.ClientGender == 'Both') ? 'All' : item.ClientGender === 1 || item.ClientGender === 'Male' ? 'Male' : 'Female');
         setAgeValues([item.ClientAgeLowerLimit, item.ClientAgeUperLimit]);
         
         // Open the modal
@@ -118,10 +118,14 @@ const ClientSectionScreen = () => {
 
     const handleSavePreference = async () => {
         try {
+            if(selectedGender == null) {
+                setSelectedGenderError(true);
+                return;
+            }
             setIsLoading(true);
             const payload: any = {
                 UserloginInfoId: user.Id,
-                ClientGender: selectedGender == null ? null : selectedGender == 'Male' ? 1 : 0,
+                ClientGender: selectedGender == null ? null : selectedGender == 'All' ? null : selectedGender == 'Male' ? 1 : 0,
                 ClientAgeLowerLimit: ageValues[0],
                 ClientAgeUperLimit: ageValues[1],
             };
@@ -136,6 +140,7 @@ const ClientSectionScreen = () => {
                 setIsAddPreferenceBottomSheetVisible(false);
                 setEditingPreference(null);
                 setSelectedGender(null as any);
+                setSelectedGenderError(false);
                 setAgeValues([25, 70]);
                 getServiceProviderPreferences(); // Refresh the list
             }
@@ -210,7 +215,7 @@ const ClientSectionScreen = () => {
                 <Ionicons name="arrow-back-outline" size={24} color="#333" />
 
             </TouchableOpacity>
-            <Text style={{ fontSize: 16, fontFamily: CAIRO_FONT_FAMILY.bold, color: '#333', lineHeight: Platform.OS === 'ios' ? 0 : 20 }}>Client Section</Text>
+            <Text style={{ fontSize: 16, fontFamily: CAIRO_FONT_FAMILY.bold, color: '#333', lineHeight: Platform.OS === 'ios' ? 0 : 20 }}>Client Selection</Text>
         </View>
     );
 
@@ -263,6 +268,7 @@ const ClientSectionScreen = () => {
                                 onPress={() => {
                                     setIsAddPreferenceBottomSheetVisible(false);
                                     setEditingPreference(null);
+                                    setSelectedGenderError(false);
                                 }}
                                 style={styles.closeButton}
                             >
@@ -277,10 +283,10 @@ const ClientSectionScreen = () => {
                             <Text style={styles.inputLabel}>Client Gender</Text>
                             <View style={styles.dropdownContainer}>
                                 <TouchableOpacity
-                                    style={styles.dropdownButton}
+                                    style={[styles.dropdownButton, selectedGenderError && { borderColor: '#ff4444' }]}
                                     onPress={() => setShowGenderDropdown(!showGenderDropdown)}
                                 >
-                                    <Text style={styles.dropdownText}>{selectedGender == null ? '--Select--' : selectedGender == 'Male' ? 'Male' : 'Female'}</Text>
+                                    <Text style={styles.dropdownText}>{selectedGender == null ? '--Select--' : selectedGender == 'All' ? 'All' : selectedGender == 'Male' ? 'Male' : 'Female'}</Text>
                                     <Ionicons name="chevron-down" size={16} color="#333" />
                                 </TouchableOpacity>
 
@@ -289,17 +295,19 @@ const ClientSectionScreen = () => {
                                         <TouchableOpacity
                                             style={styles.dropdownItem}
                                             onPress={() => {
-                                                setSelectedGender(null as any);
+                                                setSelectedGender('All');
                                                 setShowGenderDropdown(false);
+                                                setSelectedGenderError(false);
                                             }}
                                         >
-                                            <Text style={styles.dropdownItemText}>--Select--</Text>
+                                            <Text style={styles.dropdownItemText}>All</Text>
                                         </TouchableOpacity>
                                         <TouchableOpacity
                                             style={styles.dropdownItem}
                                             onPress={() => {
                                                 setSelectedGender('Male');
                                                 setShowGenderDropdown(false);
+                                                setSelectedGenderError(false);
                                             }}
                                         >
                                             <Text style={styles.dropdownItemText}>Male</Text>
@@ -309,6 +317,7 @@ const ClientSectionScreen = () => {
                                             onPress={() => {
                                                 setSelectedGender('Female');
                                                 setShowGenderDropdown(false);
+                                                setSelectedGenderError(false);
                                             }}
                                         >
                                             <Text style={styles.dropdownItemText}>Female</Text>

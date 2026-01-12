@@ -6,6 +6,8 @@ import {
   TouchableOpacity,
   StyleSheet,
   Dimensions,
+  Image,
+  Platform,
 } from 'react-native';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import { globalTextStyles, CAIRO_FONT_FAMILY } from '../../styles/globalStyles';
@@ -94,9 +96,13 @@ const CustomAlertModal: React.FC<CustomAlertModalProps> = ({
           )}
 
           {/* Icon */}
-          <View style={styles.iconContainer}>
-            <AntDesign name={iconConfig.name} size={64} color={iconConfig.color} />
-          </View>
+          {type == "success" ?
+            <View style={{height: 70, width: 70, alignItems: 'center', justifyContent: 'center',backgroundColor: '#28a745', borderRadius: 50}}>
+              <Image source={require('../../assets/images/TickMarkIcon.png')} style={{ width: 42, height: 30,...(Platform.OS === 'ios' ? { tintColor: '#fff' } : { tintColor: '#fff' }) }} />
+            </View> :
+            <View style={styles.iconContainer}>
+              <AntDesign name={iconConfig.name} size={64} color={iconConfig.color} />
+            </View>}
 
           {/* Title */}
           {title && (

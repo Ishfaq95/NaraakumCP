@@ -20,6 +20,9 @@ const ProfileCompletionNotice: React.FC<ProfileCompletionNoticeProps> = ({
   onCompleteProfile,
 }) => {
   const user = useSelector((state: any) => state.root.user.user);
+  const hideServiceOption = () => {
+    return (user.CatUserRoleId == 5 || user.CatUserRoleId == 8) && user.CatOrganizationModeId == 1;
+  }
   const calculateCompletionPercentage = (): number => {
     let completionPercentage = 0;
     
@@ -34,7 +37,7 @@ const ProfileCompletionNotice: React.FC<ProfileCompletionNoticeProps> = ({
     }
     
     // ServiceProfile is worth 34%
-    if (profileSummary.ServiceProfile === 'Completed' || user.CatUserRoleId == 5) {
+    if (profileSummary.ServiceProfile === 'Completed' || hideServiceOption()) {
       completionPercentage += 34;
     }
     

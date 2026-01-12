@@ -11,6 +11,7 @@ import CustomBottomSheet from '../../components/common/CustomBottomSheet';
 import Icon from 'react-native-vector-icons/Ionicons';
 import Dropdown from '../../components/common/Dropdown';
 import { settingService } from '../../services/api/settingService';
+import moment from 'moment';
 
 const ReminderTimeUnit = [
     { label: 'Minutes', value: '6' },
@@ -122,52 +123,59 @@ const ReminderList = () => {
     }
 
     const formatDate = (dateString: string) => {
-        // Convert "2025-11-17" to "17/11/2025"
-        const [year, month, day] = dateString.split('-');
-        return `${day}/${month}/${year}`;
+        // Convert UTC date to local and format as "17/11/2025"
+        const utcDate = moment.utc(dateString, 'YYYY-MM-DD');
+        const localDate = utcDate.local();
+        return localDate.format('DD/MM/YYYY');
     };
 
-    const formatTime = (timeString: string) => {
-        // Convert "17:05" to "5:05 PM"
-        const [hours, minutes] = timeString.split(':');
-        const hour = parseInt(hours);
-        const ampm = hour >= 12 ? 'PM' : 'AM';
-        const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
-        return `${displayHour}:${minutes} ${ampm}`;
+    const formatTime = (timeString: string, isLocal: boolean = false) => {
+        // Format time string as "5:05 PM"
+        // If isLocal is true, timeString is already in local time
+        // If isLocal is false, timeString is in UTC and needs conversion
+        if (isLocal) {
+            // Time is already in local time, just format it
+            const [hours, minutes] = timeString.split(':');
+            const hour = parseInt(hours);
+            const ampm = hour >= 12 ? 'PM' : 'AM';
+            const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
+            return `${displayHour}:${minutes} ${ampm}`;
+        } else {
+            // Convert UTC time to local and format as "5:05 PM"
+            const today = moment.utc().format('YYYY-MM-DD');
+            const utcDateTime = moment.utc(`${today} ${timeString}`, 'YYYY-MM-DD HH:mm');
+            const localDateTime = utcDateTime.local();
+            return localDateTime.format('h:mm A');
+        }
     };
 
-    const calculateReminderTime = (bookingTime: string, timeUnit: string, duration: string): string => {
-        // Parse booking time (format: "HH:MM" or "12:00")
-        const [bookingHours, bookingMinutes] = bookingTime.split(':').map(Number);
+    const calculateReminderTime = (bookingTime: string, bookingDate: string, timeUnit: string, duration: string): string => {
+        // Convert UTC booking time to local time first
+        const today = moment.utc().format('YYYY-MM-DD');
+        const utcDateTime = moment.utc(`${bookingDate} ${bookingTime}`, 'YYYY-MM-DD HH:mm');
+        const localDateTime = utcDateTime.local();
         
-        // Create a date object for easier calculation (using today's date)
-        const bookingDate = new Date();
-        bookingDate.setHours(bookingHours, bookingMinutes, 0, 0);
-        
-        // Calculate the reminder time based on time unit
-        let reminderDate = new Date(bookingDate);
+        // Calculate the reminder time based on time unit (in local time)
+        let reminderDateTime = localDateTime.clone();
         const durationValue = parseInt(duration);
         
         switch (timeUnit) {
             case '6': // Minutes
-                reminderDate.setMinutes(reminderDate.getMinutes() - durationValue);
+                reminderDateTime.subtract(durationValue, 'minutes');
                 break;
             case '5': // Hours
-                reminderDate.setHours(reminderDate.getHours() - durationValue);
+                reminderDateTime.subtract(durationValue, 'hours');
                 break;
             case '1': // Days
-                reminderDate.setDate(reminderDate.getDate() - durationValue);
+                reminderDateTime.subtract(durationValue, 'days');
                 break;
             default:
                 // Default to minutes
-                reminderDate.setMinutes(reminderDate.getMinutes() - durationValue);
+                reminderDateTime.subtract(durationValue, 'minutes');
         }
         
-        // Format the result back to "HH:MM" format
-        const reminderHours = reminderDate.getHours().toString().padStart(2, '0');
-        const reminderMinutes = reminderDate.getMinutes().toString().padStart(2, '0');
-        
-        return `${reminderHours}:${reminderMinutes}`;
+        // Return in "HH:MM" format (local time)
+        return reminderDateTime.format('HH:mm');
     };
 
     const renderHeader = () => (
@@ -259,6 +267,7 @@ const ReminderList = () => {
         // Calculate reminder time based on booking time and reminder settings
         const calculatedReminderTime = calculateReminderTime(
             item.SchedulingTime,
+            item.SchedulingDate,
             reminderTimeUnit,
             reminderMinutesAndHours
         );
@@ -267,7 +276,7 @@ const ReminderList = () => {
         <View style={styles.card}>
             <View style={styles.cardInner}>
                 <View style={styles.timeBadge}>
-                    <Text style={styles.timeBadgeText}>{formatTime(calculatedReminderTime)}</Text>
+                    <Text style={styles.timeBadgeText}>{formatTime(calculatedReminderTime, true)}</Text>
                 </View>
 
                 <View style={styles.cardContent}>
@@ -282,7 +291,7 @@ const ReminderList = () => {
                     <View style={styles.infoRow}>
                         <Ionicons name="time-outline" size={20} color="#14b8a6" />
                         <Text style={styles.infoLabel}>Online Session Time</Text>
-                        <Text style={styles.infoValue}>{formatTime(item.SchedulingTime)}</Text>
+                        <Text style={styles.infoValue}>{formatTime(item.SchedulingTime, false)}</Text>
                     </View>
 
                     <TouchableOpacity

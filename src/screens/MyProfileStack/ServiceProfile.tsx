@@ -101,9 +101,12 @@ const ServiceProfile = () => {
 
     const assignRoleAndSpecialty = async () => {
         try {
+            // Remove duplicate IDs before joining
+            const uniqueSpecialties = Array.from(new Set(selectedSpecialties));
+            
             const payload = {
                 CatLevelId: selectedLevelId,
-                CatSpecialtyIds: selectedSpecialties.join(','),
+                CatSpecialtyIds: uniqueSpecialties.join(','),
                 UserloginInfoId: user.Id,
             };
             const response = await profileService.assignRoleAndSpecialty(payload);
@@ -114,6 +117,12 @@ const ServiceProfile = () => {
                     title: 'Role and specialty level saved successfully',
                     message: '',
                     type: 'success',
+                });
+            }else{
+                showAlert({
+                    title: 'Error assigning role and specialty',
+                    message:'Please try again',
+                    type: 'error',
                 });
             }
         }

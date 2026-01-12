@@ -1,5 +1,5 @@
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Switch, TextInput, Alert, ActivityIndicator, Image, useColorScheme, Dimensions } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Switch, TextInput, Alert, ActivityIndicator, Image, useColorScheme, Dimensions, Modal } from 'react-native'
+import React, { useEffect, useState, useMemo } from 'react'
 import { CAIRO_FONT_FAMILY, globalTextStyles } from '../../styles/globalStyles';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -15,6 +15,7 @@ import ConfirmationModal from '../../components/common/ConfirmationModal';
 import CustomBottomSheet from '../../components/common/CustomBottomSheet';
 import CommonRadioButton from '../../components/common/CommonRadioButton';
 import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
+import Dropdown from '../../components/common/Dropdown';
 
 type ViewMode = 'Month' | 'Week' | 'Day' | 'Custom';
 
@@ -51,6 +52,7 @@ const BusinessHours = ({ route }: { route: any }) => {
     const [viewMode, setViewMode] = useState<ViewMode>('Month');
     const [selectedDate, setSelectedDate] = useState(moment());
     const [selectedDates, setSelectedDates] = useState<moment.Moment[]>([]);
+    const [hasUserSelectedDate, setHasUserSelectedDate] = useState(false);
     const { showAlert } = useAlert();
 
     // Business days state - Will be updated based on API response
@@ -67,10 +69,6 @@ const BusinessHours = ({ route }: { route: any }) => {
     // Schedule form state
     const [startTime, setStartTime] = useState('');
     const [endTime, setEndTime] = useState('');
-    const [showStartTimePicker, setShowStartTimePicker] = useState(false);
-    const [showEndTimePicker, setShowEndTimePicker] = useState(false);
-    const [tempStartTime, setTempStartTime] = useState(new Date());
-    const [tempEndTime, setTempEndTime] = useState(new Date());
     const [isSaving, setIsSaving] = useState(false);
     const [timeErrors, setTimeErrors] = useState({ start: false, end: false, date: false });
     const [customStartDate, setCustomStartDate] = useState<moment.Moment | null>(null);
@@ -78,7 +76,35 @@ const BusinessHours = ({ route }: { route: any }) => {
     const [showCustomStartPicker, setShowCustomStartPicker] = useState(false);
     const [showCustomEndPicker, setShowCustomEndPicker] = useState(false);
     const [editSlots, setEditSlots] = useState<any>(null);
+    
+    // iOS modal states for date pickers
+    const [showCustomStartDateModal, setShowCustomStartDateModal] = useState(false);
+    const [showCustomEndDateModal, setShowCustomEndDateModal] = useState(false);
+    
+    // Temporary values for iOS pickers
+    const [tempCustomStartDate, setTempCustomStartDate] = useState<Date | null>(null);
+    const [tempCustomEndDate, setTempCustomEndDate] = useState<Date | null>(null);
     const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    
+    // Start time options: 12:00 AM to 11:00 PM with 1-hour intervals (24 options, no 11:59 PM)
+    const startTimeOptions = Array.from({ length: 24 }, (_, i) => {
+        const hour = i % 12 === 0 ? 12 : i % 12;
+        const period = i < 12 ? 'AM' : 'PM';
+        const timeString = `${hour}:00 ${period}`;
+        return {
+            label: timeString,
+            value: timeString
+        };
+    });
+    
+    // End time options: Include 11:59 PM as the last option for end time only
+    const endTimeOptions = [
+        ...startTimeOptions,
+        {
+            label: '11:59 PM',
+            value: '11:59 PM'
+        }
+    ];
     const [isLoading, setIsLoading] = useState(false);
     const [enableConfirmationModal, setEnableConfirmationModal] = useState(false);
     const [conflictBottomSheetVisible, setConflictBottomSheetVisible] = useState(false);
@@ -90,6 +116,7 @@ const BusinessHours = ({ route }: { route: any }) => {
     const [selectedDateForInfo, setSelectedDateForInfo] = useState<moment.Moment | null>(null);
     const [deleteConfirmationModalVisible, setDeleteConfirmationModalVisible] = useState(false);
     const [slotToDelete, setSlotToDelete] = useState<any>(null);
+    const [deleteResolution, setDeleteResolution] = useState<'original' | 'day'>('original');
 
     const addServiceProviderHolidays = async (daysState: { [key: number]: boolean }) => {
 
@@ -113,11 +140,11 @@ const BusinessHours = ({ route }: { route: any }) => {
             if (response?.ResponseStatus?.STATUSCODE == 200) {
                 getServiceProviderHolidays();
                 getServiceProviderAvailability(selectedMonth);
-                showAlert({
-                    title: response?.ResponseStatus?.MESSAGE,
-                    message: '',
-                    type: 'success',
-                });
+                // showAlert({
+                //     title: response?.ResponseStatus?.MESSAGE,
+                //     message: '',
+                //     type: 'success',
+                // });
             }
         }
         catch (error: any) {
@@ -292,28 +319,54 @@ const BusinessHours = ({ route }: { route: any }) => {
     const formatDisplayDate = (date: moment.Moment | null) => date ? date.format('DD/MM/YYYY') : '';
 
     const handleCustomStartChange = (_event: any, date?: Date) => {
-        setShowCustomStartPicker(Platform.OS === 'ios');
-        if (date) {
-            const mDate = moment(date);
-            setCustomStartDate(mDate);
-            if (!customEndDate || mDate.isAfter(customEndDate)) {
-                setCustomEndDate(mDate);
+        if (Platform.OS === 'android') {
+            setShowCustomStartPicker(false);
+            if (_event.type === 'set' && date) {
+                const mDate = moment(date);
+                setCustomStartDate(mDate);
+                if (!customEndDate || mDate.isAfter(customEndDate)) {
+                    setCustomEndDate(mDate);
+                }
+                setSelectedDate(mDate);
+                setSelectedMonth(mDate.clone().startOf('month'));
             }
-            setSelectedDate(mDate);
-            setSelectedMonth(mDate.clone().startOf('month'));
+        } else {
+            // iOS - this is called from the Done button
+            if (date) {
+                const mDate = moment(date);
+                setCustomStartDate(mDate);
+                if (!customEndDate || mDate.isAfter(customEndDate)) {
+                    setCustomEndDate(mDate);
+                }
+                setSelectedDate(mDate);
+                setSelectedMonth(mDate.clone().startOf('month'));
+            }
         }
     };
 
     const handleCustomEndChange = (_event: any, date?: Date) => {
-        setShowCustomEndPicker(Platform.OS === 'ios');
-        if (date) {
-            const mDate = moment(date);
-            if (customStartDate && mDate.isBefore(customStartDate)) {
-                return;
+        if (Platform.OS === 'android') {
+            setShowCustomEndPicker(false);
+            if (_event.type === 'set' && date) {
+                const mDate = moment(date);
+                if (customStartDate && mDate.isBefore(customStartDate)) {
+                    return;
+                }
+                setCustomEndDate(mDate);
+                setSelectedDate(mDate);
+                setSelectedMonth(mDate.clone().startOf('month'));
             }
-            setCustomEndDate(mDate);
-            setSelectedDate(mDate);
-            setSelectedMonth(mDate.clone().startOf('month'));
+        } else {
+            // iOS - this is called from the Done button
+            if (date) {
+                const mDate = moment(date);
+                if (customStartDate && mDate.isBefore(customStartDate)) {
+                    return;
+                }
+                setCustomEndDate(mDate);
+                setSelectedDate(mDate);
+                setSelectedMonth(mDate.clone().startOf('month'));
+            }
         }
     };
 
@@ -325,8 +378,13 @@ const BusinessHours = ({ route }: { route: any }) => {
                     <View style={styles.dateInputGroup}>
                         <Text style={styles.dateLabel}>Start Date</Text>
                         <TouchableOpacity style={[styles.dateInput, timeErrors.date && styles.inputError]} onPress={() => {
-                            setShowCustomStartPicker(!showCustomStartPicker)
-                            setShowCustomEndPicker(false)
+                            if (Platform.OS === 'ios') {
+                                setTempCustomStartDate(customStartDate ? customStartDate.toDate() : new Date());
+                                setShowCustomStartDateModal(true);
+                            } else {
+                                setShowCustomStartPicker(!showCustomStartPicker);
+                                setShowCustomEndPicker(false);
+                            }
                         }}>
                             <Text style={styles.dateInputText}>{formatDisplayDate(customStartDate) || 'Select start date'}</Text>
                         </TouchableOpacity>
@@ -334,8 +392,13 @@ const BusinessHours = ({ route }: { route: any }) => {
                     <View style={styles.dateInputGroup}>
                         <Text style={styles.dateLabel}>End Date</Text>
                         <TouchableOpacity style={[styles.dateInput, timeErrors.date && styles.inputError]} onPress={() => {
-                            setShowCustomEndPicker(!showCustomEndPicker)
-                            setShowCustomStartPicker(false)
+                            if (Platform.OS === 'ios') {
+                                setTempCustomEndDate(customEndDate ? customEndDate.toDate() : new Date());
+                                setShowCustomEndDateModal(true);
+                            } else {
+                                setShowCustomEndPicker(!showCustomEndPicker);
+                                setShowCustomStartPicker(false);
+                            }
                         }}>
                             <Text style={styles.dateInputText}>{formatDisplayDate(customEndDate) || 'Select end date'}</Text>
                         </TouchableOpacity>
@@ -391,12 +454,9 @@ const BusinessHours = ({ route }: { route: any }) => {
             // Normal behavior for single or no slots
             setIsLoading(true);
             setSelectedDate(date);
-            const existingIndex = selectedDates.findIndex(d => d.isSame(date, 'day'));
-            if (existingIndex >= 0) {
-                setSelectedDates(prev => prev.filter((_, i) => i !== existingIndex));
-            } else {
-                setSelectedDates(prev => [...prev, date]);
-            }
+            setHasUserSelectedDate(true); // Mark that user has selected a date
+            // Clear previous selection and set only the new selected date
+            setSelectedDates([date]);
             setIsLoading(false);
         }
     };
@@ -412,11 +472,33 @@ const BusinessHours = ({ route }: { route: any }) => {
         setDeleteConfirmationModalVisible(false);
         try {
             setIsLoading(true);
+            
+            let deleteStartDate: moment.Moment;
+            let deleteEndDate: moment.Moment;
+            
+            if (deleteResolution === 'day') {
+                // Delete only the selected day
+                const dayOption = deleteOptions.find(opt => opt.type === 'day');
+                if (dayOption) {
+                    const dayMoment = moment(dayOption.dateText);
+                    deleteStartDate = dayMoment.clone().startOf('day');
+                    deleteEndDate = dayMoment.clone().startOf('day');
+                } else {
+                    // Fallback to original if day option not found
+                    deleteStartDate = moment(slotToDelete.StartDate);
+                    deleteEndDate = moment(slotToDelete.EndDate);
+                }
+            } else {
+                // Delete the original slot
+                deleteStartDate = moment(slotToDelete.StartDate);
+                deleteEndDate = moment(slotToDelete.EndDate);
+            }
+            
             const payload = {
                 "ServiceProviderAvailabilityIds": slotToDelete.IDs,
-                "filter": "fullslot",
-                "StartDate": moment(slotToDelete.StartDate).format("YYYY-MM-DD"),
-                "EndDate": moment(slotToDelete.EndDate).format("YYYY-MM-DD"),
+                "filter": deleteResolution === 'day' ? "singledate" : "fullslot",
+                "StartDate": deleteStartDate.format("YYYY-MM-DD"),
+                "EndDate": deleteEndDate.format("YYYY-MM-DD"),
                 "CatServiceServeTypeId": Data?.CatServiceServeTypeId
             };
             const response = await profileService.deleteServiceProviderAvailability(payload);
@@ -433,17 +515,25 @@ const BusinessHours = ({ route }: { route: any }) => {
         } finally {
             setIsLoading(false);
             setSlotToDelete(null);
+            setDeleteResolution('original');
         }
     };
 
     const handleEditButton = (slot: any) => {
-        setStartTime(moment(slot.StartTime, 'HH:mm').format('h:mm A'));
-        setEndTime(moment(slot.EndTime, 'HH:mm').format('h:mm A'));
+        const startTimeStr = moment(slot.StartTime, 'HH:mm').format('h:mm A');
+        const endTimeStr = moment(slot.EndTime, 'HH:mm').format('h:mm A');
+        setStartTime(startTimeStr);
+        setEndTime(endTimeStr);
         setEditSlots(slot);
         if (slot.CatAvailabilityTypeId == 4) {
             setViewMode('Custom');
-            setCustomStartDate(moment(slot.StartDate));
-            setCustomEndDate(moment(slot.EndDate));
+            const startDate = moment(slot.StartDate);
+            const endDate = moment(slot.EndDate);
+            setCustomStartDate(startDate);
+            setCustomEndDate(endDate);
+            // Initialize temp values for iOS date pickers
+            setTempCustomStartDate(startDate.toDate());
+            setTempCustomEndDate(endDate.toDate());
         }
         if (slot.CatAvailabilityTypeId == 3) {
             setViewMode('Month');
@@ -560,6 +650,14 @@ const BusinessHours = ({ route }: { route: any }) => {
     };
 
     const onClickSave = async () => {
+        const hasStart = !!startTime;
+        const hasEnd = !!endTime;
+
+        if (!hasStart || !hasEnd) {
+            setTimeErrors(prev => ({ ...prev, start: !hasStart, end: !hasEnd }));
+            return;
+        }
+
         setEnableConfirmationModal(true);
     }
 
@@ -641,6 +739,10 @@ const BusinessHours = ({ route }: { route: any }) => {
                     setConflictingSlots(response?.Data);
                     return;
                 }
+                setStartTime('');
+                setEndTime('');
+                setSelectedDates([]);
+                setEditSlots(null);
                 showAlert({
                     title: response?.ResponseStatus?.MESSAGE,
                     message: '',
@@ -666,6 +768,76 @@ const BusinessHours = ({ route }: { route: any }) => {
     const formatTimeForDisplay = (time: string) => {
         if (!time) return '';
         return moment(time, 'HH:mm:ss').format('h:mm A');
+    };
+
+    const renderDateTimePicker = (
+        type: 'date' | 'time',
+        value: Date,
+        tempValue: Date | null,
+        setTempValue: (date: Date) => void,
+        onChange: (event: any, date?: Date) => void,
+        showModal: boolean,
+        setShowModal: (show: boolean) => void,
+        label: string,
+        minimumDate?: Date,
+        maximumDate?: Date
+    ) => {
+        if (Platform.OS === 'ios') {
+            const displayValue = tempValue || value;
+            
+            return (
+                <Modal
+                    visible={showModal}
+                    transparent={true}
+                    animationType="slide"
+                    onRequestClose={() => {
+                        // Reset temp value on cancel
+                        setTempValue(value);
+                        setShowModal(false);
+                    }}
+                >
+                    <View style={styles.modalOverlay}>
+                        <View style={[styles.modalContent, isDarkMode && styles.modalContentDark]}>
+                            <View style={[styles.modalHeader, isDarkMode && styles.modalHeaderDark]}>
+                                <TouchableOpacity onPress={() => {
+                                    // Reset temp value on cancel
+                                    setTempValue(value);
+                                    setShowModal(false);
+                                }}>
+                                    <Text style={[styles.cancelButtonText, isDarkMode && styles.cancelButtonTextDark]}>Cancel</Text>
+                                </TouchableOpacity>
+                                <Text style={[styles.modalTitle, isDarkMode && styles.modalTitleDark]}>{label}</Text>
+                                <TouchableOpacity onPress={() => {
+                                    // Apply the temp value when Done is clicked
+                                    onChange({ type: 'set' }, displayValue);
+                                    setShowModal(false);
+                                }}>
+                                    <Text style={[styles.doneButtonText, isDarkMode && styles.doneButtonTextDark]}>Done</Text>
+                                </TouchableOpacity>
+                            </View>
+                            <View style={[styles.modalDatePickerContainer, isDarkMode && styles.modalDatePickerContainerDark]}>
+                                <DateTimePicker
+                                    value={displayValue}
+                                    mode={type}
+                                    display="spinner"
+                                    onChange={(event, selectedDate) => {
+                                        // Update temp value when picker changes, but don't call onChange yet
+                                        if (selectedDate) {
+                                            setTempValue(selectedDate);
+                                        }
+                                    }}
+                                    minimumDate={minimumDate}
+                                    maximumDate={maximumDate}
+                                    textColor={isDarkMode ? '#FFFFFF' : '#000000'}
+                                    themeVariant={isDarkMode ? 'dark' : 'light'}
+                                />
+                            </View>
+                        </View>
+                    </View>
+                </Modal>
+            );
+        }
+        return null;
     };
 
     const renderHeader = () => (
@@ -700,6 +872,7 @@ const BusinessHours = ({ route }: { route: any }) => {
 
     const handleViewModeChange = (mode: ViewMode) => {
         setViewMode(mode);
+        setHasUserSelectedDate(false); // Reset flag when view mode changes
         if (mode === 'Month') {
             setSelectedDate(selectedMonth.clone().startOf('month'));
         } else if (mode === 'Week') {
@@ -745,6 +918,7 @@ const BusinessHours = ({ route }: { route: any }) => {
     );
 
     const handlePrevNavigation = () => {
+        setHasUserSelectedDate(false); // Reset flag when navigating
         if (viewMode === 'Month') {
             setSelectedMonth(prev => {
                 const nextMonth = prev.clone().subtract(1, 'month');
@@ -767,6 +941,7 @@ const BusinessHours = ({ route }: { route: any }) => {
     };
 
     const handleNextNavigation = () => {
+        setHasUserSelectedDate(false); // Reset flag when navigating
         if (viewMode === 'Month') {
             setSelectedMonth(prev => {
                 const nextMonth = prev.clone().add(1, 'month');
@@ -795,7 +970,7 @@ const BusinessHours = ({ route }: { route: any }) => {
         if (viewMode === 'Week') {
             const start = selectedDate.clone().startOf('week');
             const end = selectedDate.clone().endOf('week');
-            return `${start.format('MM/DD/YYYY')} - ${end.format('MM/DD/YYYY')}`;
+            return `${start.format('DD/MM/YYYY')} - ${end.format('DD/MM/YYYY')}`;
         }
         return selectedDate.format('MMMM DD, YYYY');
     };
@@ -897,11 +1072,11 @@ const BusinessHours = ({ route }: { route: any }) => {
             <View style={styles.weekViewContainer}>
                 <View style={styles.weekDateRange}>
                     <Text style={styles.weekDateRangeText}>
-                        {startOfWeek.format('MM/DD/YYYY')}
+                        {startOfWeek.format('DD/MM/YYYY')}
                     </Text>
                     <Text style={styles.weekDateRangeText}> - </Text>
                     <Text style={styles.weekDateRangeText}>
-                        {startOfWeek.clone().add(6, 'days').format('MM/DD/YYYY')}
+                        {startOfWeek.clone().add(6, 'days').format('DD/MM/YYYY')}
                     </Text>
                 </View>
                 <ScrollView
@@ -1143,6 +1318,32 @@ const BusinessHours = ({ route }: { route: any }) => {
         }
     }
 
+    // Get filtered end time options based on selected start time
+    const getEndTimeOptions = useMemo(() => {
+        if (!startTime) {
+            return endTimeOptions;
+        }
+        
+        const startIndex = startTimeOptions.findIndex(option => option.value === startTime);
+        if (startIndex === -1) {
+            return endTimeOptions;
+        }
+        
+        // Minimum end time is start time + 1 hour (next index in startTimeOptions)
+        const minEndIndex = startIndex + 1;
+        
+        // Maximum end time is 11:59 PM (last index in endTimeOptions)
+        const maxEndIndex = endTimeOptions.length - 1;
+        
+        // If start time + 1 hour would exceed 11:59 PM (go to next day), return empty array
+        if (minEndIndex > maxEndIndex) {
+            return [];
+        }
+        
+        // Return options from minEndIndex to maxEndIndex (must be at least 1 hour after start time)
+        return endTimeOptions.slice(minEndIndex, maxEndIndex + 1);
+    }, [startTime]);
+
     const renderScheduleSection = () => {
         return (
             <View style={styles.scheduleSection}>
@@ -1154,107 +1355,54 @@ const BusinessHours = ({ route }: { route: any }) => {
                 </View>
 
                 {renderSelectionInfo()}
-                {showCustomStartPicker && (
-                    <View style={Platform.OS === 'ios' ? [styles.datePickerContainer, { backgroundColor: isDarkMode ? '#1C1C1E' : '#fff' }] : null}>
-                        <DateTimePicker
-                            value={(customStartDate || moment()).toDate()}
-                            mode="date"
-                            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                            onChange={handleCustomStartChange}
-                            textColor={isDarkMode ? '#FFFFFF' : '#000000'}
-                            themeVariant={isDarkMode ? 'dark' : 'light'}
-                        />
-                    </View>
+                {Platform.OS === 'android' && showCustomStartPicker && (
+                    <DateTimePicker
+                        value={tempCustomStartDate || (customStartDate ? customStartDate.toDate() : new Date())}
+                        mode="date"
+                        display="default"
+                        onChange={handleCustomStartChange}
+                    />
                 )}
-                {showCustomEndPicker && (
-                    <View style={Platform.OS === 'ios' ? [styles.datePickerContainer, { backgroundColor: isDarkMode ? '#1C1C1E' : '#fff' }] : null}>
-                        <DateTimePicker
-                            value={(customEndDate || moment()).toDate()}
-                            mode="date"
-                            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                            onChange={handleCustomEndChange}
-                            textColor={isDarkMode ? '#FFFFFF' : '#000000'}
-                            themeVariant={isDarkMode ? 'dark' : 'light'}
-                        />
-                    </View>
+                {Platform.OS === 'android' && showCustomEndPicker && (
+                    <DateTimePicker
+                        value={tempCustomEndDate || (customEndDate ? customEndDate.toDate() : new Date())}
+                        mode="date"
+                        display="default"
+                        onChange={handleCustomEndChange}
+                    />
                 )}
 
                 <View style={[styles.timeInput, timeErrors.start && styles.inputError]}>
-                    <TouchableOpacity
-                        style={{ flex: 1, justifyContent: 'center' }}
-                        activeOpacity={0.7}
-                        onPress={() => {
-                            setShowStartTimePicker(!showStartTimePicker);
-                            setShowEndTimePicker(false);
+                    <Dropdown
+                        data={startTimeOptions}
+                        value={startTime}
+                        onChange={(value) => {
+                            setStartTime(value as string);
+                            setTimeErrors(prev => ({ ...prev, start: false }));
                         }}
-                    >
-                        <Text style={styles.dateInputText}>
-                            {startTime || 'Start Time'}
-                        </Text>
-                    </TouchableOpacity>
+                        placeholder="Start Time"
+                        containerStyle={styles.timeDropdownContainer}
+                        dropdownStyle={styles.timeDropdown}
+                        error={timeErrors.start}
+                    />
                 </View>
 
-                <View style={[styles.timeInput, timeErrors.end && styles.inputError]}>
-                    <TouchableOpacity
-                        style={{ flex: 1, justifyContent: 'center' }}
-                        activeOpacity={0.7}
-                        onPress={() => {
-                            setShowEndTimePicker(!showEndTimePicker);
-                            setShowStartTimePicker(false);
+                <View style={[styles.timeInput, timeErrors.end && styles.inputError, !startTime && styles.timeInputDisabled]}>
+                    <Dropdown
+                        data={getEndTimeOptions}
+                        value={endTime}
+                        onChange={(value) => {
+                            setEndTime(value as string);
+                            setTimeErrors(prev => ({ ...prev, end: false }));
                         }}
-                    >
-                        <Text style={styles.dateInputText}>
-                            {endTime || 'End Time'}
-                        </Text>
-                    </TouchableOpacity>
+                        placeholder="End Time"
+                        containerStyle={styles.timeDropdownContainer}
+                        dropdownStyle={styles.timeDropdown}
+                        disabled={!startTime}
+                        error={timeErrors.end}
+                    />
                 </View>
 
-                {showStartTimePicker && (
-                    <View style={Platform.OS === 'ios' ? [styles.datePickerContainer, { backgroundColor: isDarkMode ? '#1C1C1E' : '#fff' }] : null}>
-                        <DateTimePicker
-                            value={tempStartTime}
-                            mode="time"
-                            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                            onChange={(event, date) => {
-                                console.log("event", event.type);
-                                if (event.type == 'set') {
-                                    setShowStartTimePicker(false);
-                                    if (date) {
-                                        setTempStartTime(date);
-                                        setStartTime(moment(date).format('h:mm A'));
-                                    }
-                                } else {
-                                    setShowStartTimePicker(false);
-                                }
-                            }}
-                            textColor={isDarkMode ? '#FFFFFF' : '#000000'}
-                            themeVariant={isDarkMode ? 'dark' : 'light'}
-                        />
-                    </View>
-                )}
-
-                {showEndTimePicker && (
-                    <View style={Platform.OS === 'ios' ? [styles.datePickerContainer, { backgroundColor: isDarkMode ? '#1C1C1E' : '#fff' }] : null}>
-                        <DateTimePicker
-                            value={tempEndTime}
-                            mode="time"
-                            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                            onChange={(event, date) => {
-                                if (event.type == 'set') {
-                                    setShowEndTimePicker(false);
-                                    if (date) {
-                                        setTempEndTime(date);
-                                        setEndTime(moment(date).format('h:mm A'));
-                                    }
-                                } else {
-                                    setShowEndTimePicker(false);
-                                }
-                            }}
-                            textColor={isDarkMode ? '#FFFFFF' : '#000000'}
-                            themeVariant={isDarkMode ? 'dark' : 'light'}
-                        />
-                    </View>
-                )}
 
                 {!checkOffDay() ? <View style={styles.scheduleButtons}>
                     <TouchableOpacity
@@ -1323,6 +1471,173 @@ const BusinessHours = ({ route }: { route: any }) => {
         );
     };
 
+    const getDeleteSlotDisplayInfo = () => {
+        if (!slotToDelete) return null;
+        
+        const catAvailabilityTypeId = slotToDelete.CatAvailabilityTypeId;
+        const startDate = moment(slotToDelete.StartDate);
+        const endDate = moment(slotToDelete.EndDate);
+        const startTime = slotToDelete.StartTime || '';
+        const endTime = slotToDelete.EndTime || '';
+        
+        // Format time to AM/PM format
+        const formatTimeToAMPM = (time: string) => {
+            if (!time) return '';
+            const [hours, minutes] = time.split(':').map(Number);
+            if (isNaN(hours) || isNaN(minutes)) return time;
+            
+            const hour12 = hours % 12 === 0 ? 12 : hours % 12;
+            const period = hours < 12 ? 'AM' : 'PM';
+            const minuteStr = minutes < 10 ? `0${minutes}` : minutes;
+            return `${hour12}:${minuteStr} ${period}`;
+        };
+        
+        // Format time range
+        const formatTimeRange = () => {
+            const startTimeFormatted = formatTimeToAMPM(startTime);
+            const endTimeFormatted = formatTimeToAMPM(endTime);
+            if (startTimeFormatted && endTimeFormatted) {
+                return `${startTimeFormatted}-${endTimeFormatted}`;
+            }
+            return '';
+        };
+        
+        const timeRange = formatTimeRange();
+        
+        if (catAvailabilityTypeId == 4) {
+            // Custom Range
+            const dateRange = `${startDate.format('YYYY-MM-DD')} To ${endDate.format('YYYY-MM-DD')}`;
+            const dateText = timeRange ? `${timeRange} At ${dateRange}` : dateRange;
+            return {
+                type: 'Custom Range',
+                dateText: dateText
+            };
+        } else if (catAvailabilityTypeId == 3) {
+            // Month
+            const dateRange = `${startDate.format('YYYY-MM-DD')} To ${endDate.format('YYYY-MM-DD')}`;
+            const dateText = timeRange ? `${timeRange} At ${dateRange}` : dateRange;
+            return {
+                type: 'Month',
+                dateText: dateText
+            };
+        } else if (catAvailabilityTypeId == 2) {
+            // Week
+            const weekStart = startDate.clone().startOf('week');
+            const weekEnd = startDate.clone().endOf('week');
+            const dateRange = `${weekStart.format('YYYY-MM-DD')} To ${weekEnd.format('YYYY-MM-DD')}`;
+            const dateText = timeRange ? `${timeRange} At ${dateRange}` : dateRange;
+            return {
+                type: 'Week',
+                dateText: dateText
+            };
+        } else if (catAvailabilityTypeId == 1) {
+            // Day
+            const dateStr = startDate.format('YYYY-MM-DD');
+            const dateText = timeRange ? `${timeRange} At ${dateStr}` : dateStr;
+            return {
+                type: 'Day',
+                dateText: dateText
+            };
+        }
+        return null;
+    };
+
+    // Get delete options based on slot month and selected date
+    const getDeleteOptions = () => {
+        if (!slotToDelete) return [];
+        
+        const slotStartDate = moment(slotToDelete.StartDate);
+        const slotEndDate = moment(slotToDelete.EndDate);
+        const currentMonth = moment();
+        const isCurrentMonth = slotStartDate.isSame(currentMonth, 'month');
+        
+        const options: Array<{ type: 'original' | 'day', label: string, dateText: string }> = [];
+        
+        // Always show the original slot type
+        const originalInfo = getDeleteSlotDisplayInfo();
+        if (originalInfo) {
+            options.push({
+                type: 'original',
+                label: originalInfo.type,
+                dateText: originalInfo.dateText
+            });
+        }
+        
+        // Helper function to check if a date is within the slot's range
+        const isDateInSlotRange = (date: moment.Moment) => {
+            return date.isBetween(slotStartDate, slotEndDate, 'day', '[]');
+        };
+        
+        // Format time to AM/PM format (helper function)
+        const formatTimeToAMPM = (time: string) => {
+            if (!time) return '';
+            const [hours, minutes] = time.split(':').map(Number);
+            if (isNaN(hours) || isNaN(minutes)) return time;
+            
+            const hour12 = hours % 12 === 0 ? 12 : hours % 12;
+            const period = hours < 12 ? 'AM' : 'PM';
+            const minuteStr = minutes < 10 ? `0${minutes}` : minutes;
+            return `${hour12}:${minuteStr} ${period}`;
+        };
+        
+        // Format time range for Day option
+        const formatDayTimeRange = () => {
+            if (!slotToDelete) return '';
+            const startTime = slotToDelete.StartTime || '';
+            const endTime = slotToDelete.EndTime || '';
+            const startTimeFormatted = formatTimeToAMPM(startTime);
+            const endTimeFormatted = formatTimeToAMPM(endTime);
+            if (startTimeFormatted && endTimeFormatted) {
+                return `${startTimeFormatted}-${endTimeFormatted}`;
+            }
+            return '';
+        };
+        
+        // Conditionally show Day option
+        let showDayOption = false;
+        let dayDateText = '';
+        const dayTimeRange = formatDayTimeRange();
+        
+        if (isCurrentMonth) {
+            // Slot is in current month
+            // If user has selected a date from calendar and it's in range, use selected date
+            if (hasUserSelectedDate && selectedDate && isDateInSlotRange(selectedDate)) {
+                showDayOption = true;
+                const dateStr = selectedDate.format('YYYY-MM-DD');
+                dayDateText = dayTimeRange ? `${dayTimeRange} At ${dateStr}` : dateStr;
+            } else {
+                // Otherwise, use current date if it's in range
+                const currentDate = moment();
+                if (isDateInSlotRange(currentDate)) {
+                    showDayOption = true;
+                    const dateStr = currentDate.format('YYYY-MM-DD');
+                    dayDateText = dayTimeRange ? `${dayTimeRange} At ${dateStr}` : dateStr;
+                }
+            }
+        } else {
+            // Slot is NOT in current month
+            // Only show Day if user has selected a date from calendar AND it's in range
+            if (hasUserSelectedDate && selectedDate && isDateInSlotRange(selectedDate)) {
+                showDayOption = true;
+                const dateStr = selectedDate.format('YYYY-MM-DD');
+                dayDateText = dayTimeRange ? `${dayTimeRange} At ${dateStr}` : dateStr;
+            }
+        }
+        
+        if (showDayOption) {
+            options.push({
+                type: 'day',
+                label: 'Day',
+                dateText: dayDateText
+            });
+        }
+        
+        return options;
+    };
+
+    const deleteSlotInfo = getDeleteSlotDisplayInfo();
+    const deleteOptions = getDeleteOptions();
+
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.mainContent}>
@@ -1385,20 +1700,72 @@ const BusinessHours = ({ route }: { route: any }) => {
                 message={`Copy Slots From ${moment(selectedMonth.clone().startOf('month')).format('MMM YYYY')} To ${moment(selectedMonth.clone().add(1, 'month').endOf('month')).format('MMM YYYY')} ?`}
             />
 
-            <ConfirmationModal
+            <CustomBottomSheet
                 visible={deleteConfirmationModalVisible}
                 onClose={() => {
                     setDeleteConfirmationModalVisible(false);
                     setSlotToDelete(null);
+                    setDeleteResolution('original');
                 }}
-                onYes={handleDelete}
-                onNo={() => {
-                    setDeleteConfirmationModalVisible(false);
-                    setSlotToDelete(null);
-                }}
-                title="Delete Confirmation"
-                message={`Are you sure you want to delete this slot from ${moment(slotToDelete?.start).format('DD/MM/YYYY')} to ${moment(slotToDelete?.end).format('DD/MM/YYYY')}?`}
-            />
+                showHandle={false}
+                maxHeight={"42%"}
+                backdropClickable={true}
+            >
+                <View style={styles.deleteSheetContainer}>
+                    {/* Title */}
+                    <Text style={styles.deleteTitle}>Confirmation</Text>
+                    
+                    {/* Message */}
+                    <Text style={styles.deleteMessage}>Are you sure want to remove?</Text>
+                    
+                    {/* Slot Information Options */}
+                    {deleteOptions.length > 0 && (
+                        <View style={styles.deleteSlotInfoContainer}>
+                            {deleteOptions.map((option, index) => (
+                                <View key={index} style={[
+                                    styles.deleteSlotInfoRow,
+                                    deleteOptions.length === 2 && styles.deleteSlotInfoRowSplit
+                                ]}>
+                                    <View style={styles.deleteSlotRadioWrapper}>
+                                        <CommonRadioButton
+                                            selected={deleteResolution === option.type}
+                                            onPress={() => setDeleteResolution(option.type)}
+                                            label={option.label}
+                                            style={styles.deleteSlotRadioButton}
+                                        />
+                                        <Text style={styles.deleteSlotDateText}>
+                                            {option.dateText}
+                                        </Text>
+                                    </View>
+                                </View>
+                            ))}
+                        </View>
+                    )}
+
+                    {/* Action Buttons */}
+                    <View style={styles.deleteButtonsContainer}>
+                        <TouchableOpacity
+                            style={styles.deleteConfirmButton}
+                            onPress={() => {
+                                setDeleteConfirmationModalVisible(false);
+                                handleDelete();
+                            }}
+                        >
+                            <Text style={styles.deleteConfirmButtonText}>Confirm</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={styles.deleteCancelButton}
+                            onPress={() => {
+                                setDeleteConfirmationModalVisible(false);
+                                setSlotToDelete(null);
+                                setDeleteResolution('original');
+                            }}
+                        >
+                            <Text style={styles.deleteCancelButtonText}>Cancel</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </CustomBottomSheet>
 
             <CustomBottomSheet
                 visible={slotsInfoModalVisible}
@@ -1559,6 +1926,10 @@ const BusinessHours = ({ route }: { route: any }) => {
                 </View>
             </CustomBottomSheet>
 
+            {/* iOS Date/Time Modals */}
+            {renderDateTimePicker('date', customStartDate ? customStartDate.toDate() : new Date(), tempCustomStartDate, setTempCustomStartDate, handleCustomStartChange, showCustomStartDateModal, setShowCustomStartDateModal, 'Start Date')}
+            {renderDateTimePicker('date', customEndDate ? customEndDate.toDate() : new Date(), tempCustomEndDate, setTempCustomEndDate, handleCustomEndChange, showCustomEndDateModal, setShowCustomEndDateModal, 'End Date')}
+
             <FullScreenLoader visible={isLoading} />
         </SafeAreaView>
     )
@@ -1623,11 +1994,9 @@ const styles = StyleSheet.create({
         paddingHorizontal: 12,
         paddingVertical: 8,
         alignItems: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
-        elevation: 2,
+        borderWidth: 1,
+        borderColor: '#E0E0E0',
+
     },
     dayText: {
         fontSize: 13,
@@ -1729,7 +2098,7 @@ const styles = StyleSheet.create({
         color: '#00A896',
     },
     dayCellTextToday: {
-        color: '#00A896',
+        color: '#191919',
         fontFamily: CAIRO_FONT_FAMILY.bold,
     },
     availabilityDot: {
@@ -2001,12 +2370,28 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#E0E0E0',
         borderRadius: 8,
-        padding: 12,
+        // padding: 12,
         marginBottom: 12,
         fontSize: 14,
         fontFamily: CAIRO_FONT_FAMILY.medium,
         lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#333',
+    },
+    timeInputDisabled: {
+        backgroundColor: '#F5F5F5',
+        borderColor: '#E0E0E0',
+        opacity: 0.6,
+    },
+    timeDropdownContainer: {
+        height: 'auto',
+    },
+    timeDropdown: {
+        height: 'auto',
+        borderWidth: 0,
+        padding: 0,
+    },
+    dateInputTextDisabled: {
+        color: '#999',
     },
     scheduleButtons: {
         flexDirection: 'row',
@@ -2242,6 +2627,144 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     slotsInfoCloseButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
+    },
+    // iOS Modal Styles
+    modalOverlay: {
+        flex: 1,
+        justifyContent: 'flex-end',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    modalContent: {
+        backgroundColor: '#fff',
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        paddingBottom: 20,
+    },
+    modalContentDark: {
+        backgroundColor: '#1C1C1E',
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: '#E0E0E0',
+    },
+    modalHeaderDark: {
+        borderBottomColor: '#38383A',
+    },
+    modalTitle: {
+        fontSize: 16,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
+        color: '#000',
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+    },
+    modalTitleDark: {
+        color: '#FFFFFF',
+    },
+    cancelButtonText: {
+        fontSize: 16,
+        color: '#999',
+        fontFamily: CAIRO_FONT_FAMILY.regular,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
+    },
+    cancelButtonTextDark: {
+        color: '#FFFFFF',
+    },
+    doneButtonText: {
+        fontSize: 16,
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
+        color: '#00A896',
+    },
+    doneButtonTextDark: {
+        color: '#00A896',
+    },
+    modalDatePickerContainer: {
+        backgroundColor: '#fff',
+    },
+    modalDatePickerContainerDark: {
+        backgroundColor: '#1C1C1E',
+    },
+    deleteSheetContainer: {
+        flex: 1,
+        padding: 20,
+        backgroundColor: '#fff',
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+    },
+    deleteTitle: {
+        fontSize: 20,
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 24,
+        color: '#000',
+        marginBottom: 12,
+    },
+    deleteMessage: {
+        fontSize: 16,
+        fontFamily: CAIRO_FONT_FAMILY.medium,
+        lineHeight: Platform.OS === 'ios' ? 0 : 22,
+        color: '#333',
+        marginBottom: 12,
+    },
+    deleteSlotInfoContainer: {
+        marginBottom: 12,
+        flexDirection: 'row',
+        gap: 12,
+    },
+    deleteSlotInfoRow: {
+        marginVertical: 8,
+    },
+    deleteSlotInfoRowSplit: {
+        flex: 1,
+    },
+    deleteSlotRadioWrapper: {
+        alignItems: 'flex-start',
+    },
+    deleteSlotRadioButton: {
+        marginVertical: 0,
+    },
+    deleteSlotDateText: {
+        fontSize: 14,
+        fontFamily: CAIRO_FONT_FAMILY.medium,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
+        color: '#666',
+        marginTop: 8,
+        marginLeft: 40,
+    },
+    deleteButtonsContainer: {
+        flexDirection: 'row',
+        gap: 12,
+        marginTop: 0,
+    },
+    deleteConfirmButton: {
+        flex: 1,
+        backgroundColor: '#00A896',
+        borderRadius: 8,
+        paddingVertical: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    deleteConfirmButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontFamily: CAIRO_FONT_FAMILY.bold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
+    },
+    deleteCancelButton: {
+        flex: 1,
+        backgroundColor: '#6C757D',
+        borderRadius: 8,
+        paddingVertical: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    deleteCancelButtonText: {
         color: '#fff',
         fontSize: 16,
         fontFamily: CAIRO_FONT_FAMILY.bold,

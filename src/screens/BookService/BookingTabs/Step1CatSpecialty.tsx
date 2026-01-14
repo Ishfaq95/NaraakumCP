@@ -294,6 +294,7 @@ const Step1 = ({ handleNext, Patient }: { handleNext: () => void, Patient: any }
       "CatCategoryTypeId": category.CatCategoryTypeId,
       "ServiceTitleSlang": service.TitleSlang,
       "ServiceTitlePlang": service.TitlePlang,
+      "CatServiceServeTypeId": service.CatServiceServeTypeId,
       "Quantity": 1,
     }
     const tempCardItems = [...existingCardItems, cardItem];
@@ -472,7 +473,16 @@ const Step1 = ({ handleNext, Patient }: { handleNext: () => void, Patient: any }
     } else {
       const selectedItem = withoutServiceProvidersList[withoutServiceProvidersList.length - 1];
       if (selectedItem.CatCategoryId != '42') {
-        setIsLocationBottomSheetVisible(true);
+        if (selectedItem.CatCategoryId == '41') {
+          if (selectedItem.CatServiceServeTypeId == '1') {
+            onPressContinue();
+
+          } else {
+            setIsLocationBottomSheetVisible(true);
+          }
+        } else {
+          setIsLocationBottomSheetVisible(true);
+        }
       } else {
         onPressContinue();
       }
@@ -773,7 +783,7 @@ const Step1 = ({ handleNext, Patient }: { handleNext: () => void, Patient: any }
               <TouchableOpacity onPress={() => onPressContinue()} style={{ backgroundColor: '#00A79D', paddingVertical: 12, borderRadius: 12, alignItems: 'center', marginHorizontal: 16 }}>
                 <Text style={{ color: '#fff', fontSize: 16, fontFamily: CAIRO_FONT_FAMILY.bold, lineHeight: Platform.OS === 'ios' ? 0 : 20 }}>Continue</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => dispatch(setSelectedLocation(null))} style={{ backgroundColor: '#00A79D', paddingVertical: 12, borderRadius: 12, alignItems: 'center', marginHorizontal: 16,marginTop: 12 }}>
+              <TouchableOpacity onPress={() => dispatch(setSelectedLocation(null))} style={{ backgroundColor: '#00A79D', paddingVertical: 12, borderRadius: 12, alignItems: 'center', marginHorizontal: 16, marginTop: 12 }}>
                 <Text style={{ color: '#fff', fontSize: 16, fontFamily: CAIRO_FONT_FAMILY.bold, lineHeight: Platform.OS === 'ios' ? 0 : 20 }}>Change Address</Text>
               </TouchableOpacity>
             </View>

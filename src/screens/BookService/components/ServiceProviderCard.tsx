@@ -10,6 +10,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { addCardItem, manageTempSlotDetail } from '../../../shared/redux/reducers/bookingReducer';
 import { CAIRO_FONT_FAMILY, globalTextStyles } from '../../../styles/globalStyles';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { categoriesList } from '../../../services/api/bookingService';
 
 interface Specialty {
   CatSpecialtyId: string;
@@ -111,7 +112,7 @@ interface ServiceProvider {
 }
 
 interface ServiceProviderCardProps {
-  provider: ServiceProvider;
+  provider: any;
   onTimeSelect?: (time: string) => void;
   selectedDate: any;
   availability: any;
@@ -246,6 +247,9 @@ const ServiceProviderCard: React.FC<ServiceProviderCardProps> = React.memo(({
           "PriceswithTax": provider.ServiceServe[0].PriceswithTax,
           "ServicePrice": provider.ServiceServe[0].Price,
           "SlotDuration": provider.SlotDuration,
+          "ImagePath": provider?.ImagePath,
+          "OrgGoogleLocation": provider?.GoogleLocation,
+          "PhoneNumber": provider?.CellNumber,
         };
       } else {
         updatedCardArray[selectedIndex] = {
@@ -257,6 +261,9 @@ const ServiceProviderCard: React.FC<ServiceProviderCardProps> = React.memo(({
           "PriceswithTax": service.PriceswithTax,
           "ServicePrice": service.Price,
           "SlotDuration": provider.SlotDuration,
+          "ImagePath": provider?.ImagePath,
+          "OrgGoogleLocation": provider?.GoogleLocation,
+          "PhoneNumber": provider?.CellNumber,
         };
       }
     }
@@ -333,13 +340,13 @@ const ServiceProviderCard: React.FC<ServiceProviderCardProps> = React.memo(({
         <>
           <View style={{ width: '100%', paddingVertical: 10, backgroundColor: '#f7f7f7', borderRadius: 10, paddingHorizontal: 10, marginVertical: 10 }}>
             <Text style={[styles.priceText, { textAlign: 'right' }]}>
-              { `Price ${calculateTotalPrice(provider?.ServiceServe).toFixed(0)}`}
+              {`Price ${calculateTotalPrice(provider?.ServiceServe).toFixed(0)}`}
             </Text>
           </View>
         </>
         : selectedCard[0]?.CatLevelId == 3 ?
 
-          <View style={{ width: '100%',paddingVertical: 10, alignItems: 'flex-end' }}>
+          <View style={{ width: '100%', paddingVertical: 10, alignItems: 'flex-end' }}>
             <Text style={[{ fontSize: 14, paddingRight: 4, color: '#000' }, { textAlign: 'right' }]}>
               {`${provider.ServiceServe[0].ServiceTitlePlang} Price`}
             </Text>
@@ -368,7 +375,7 @@ const ServiceProviderCard: React.FC<ServiceProviderCardProps> = React.memo(({
                         <Text style={[styles.priceText, { textAlign: 'left' }]}>
                           {`${item.ServiceTitlePlang}:${Number(item.Price).toFixed(0)}`}
                         </Text>
-                        
+
                       </View>
                     ) : (
                       <View style={{ width: '100%', alignItems: 'flex-end' }}>
@@ -392,7 +399,7 @@ const ServiceProviderCard: React.FC<ServiceProviderCardProps> = React.memo(({
 
           </View>}
     </>
-  ), [provider, isProviderSelected, selectedSlotInfo, selectedService, userFavorites,selectedUniqueId]);
+  ), [provider, isProviderSelected, selectedSlotInfo, selectedService, userFavorites, selectedUniqueId]);
 
 
 
@@ -444,6 +451,16 @@ const ServiceProviderCard: React.FC<ServiceProviderCardProps> = React.memo(({
       onSelectSlot(provider, time, selectedServiceValues);
       const updatedCardArray = [...CardArray];
 
+      const displayCategory = categoriesList.find((item: any) => item.Id == category.Id);
+      let imagePath: any = null;
+      if (displayCategory?.Display == "CP") {
+        imagePath = provider.ImagePath ? `${MediaBaseURL}${provider.ImagePath}` : null;
+      } else {
+        imagePath = provider.OrganizationImagePath ? `${MediaBaseURL}${provider.OrganizationImagePath}` : null;
+      }
+
+      console.log("provider",provider)
+
       // Find the index of the item that matches the selectedUniqueId
       const selectedIndex = updatedCardArray.findIndex(item => item.ItemUniqueId === selectedUniqueId);
 
@@ -465,6 +482,9 @@ const ServiceProviderCard: React.FC<ServiceProviderCardProps> = React.memo(({
             "ServiceProviderFullnameSlang": provider.FullnameSlang,
             "ServiceProviderFullnamePlang": provider.FullnamePlang,
             "SlotDuration": provider.SlotDuration,
+            "ImagePath": imagePath,
+            "OrgGoogleLocation": provider?.GoogleLocation,
+            "PhoneNumber": provider?.CellNumber,
           };
         } else {
           updatedCardArray[selectedIndex] = {
@@ -478,6 +498,9 @@ const ServiceProviderCard: React.FC<ServiceProviderCardProps> = React.memo(({
             "ServiceProviderFullnameSlang": provider.FullnameSlang,
             "ServiceProviderFullnamePlang": provider.FullnamePlang,
             "SlotDuration": provider.SlotDuration,
+            "ImagePath": imagePath,
+            "OrgGoogleLocation": provider?.GoogleLocation,
+            "PhoneNumber": provider?.CellNumber,
           };
 
           if (provider.ServiceServe.length == 1) {
@@ -490,6 +513,9 @@ const ServiceProviderCard: React.FC<ServiceProviderCardProps> = React.memo(({
               "ServicePrice": provider.ServiceServe[0].Price,
               "CatServiceId": provider.ServiceServe[0].Id,
               "SlotDuration": provider.SlotDuration,
+              "ImagePath": imagePath,
+              "OrgGoogleLocation": provider?.GoogleLocation,
+              "PhoneNumber": provider?.CellNumber,
             };
           } else if (selectedServiceValues) {
             updatedCardArray[selectedIndex] = {
@@ -501,6 +527,9 @@ const ServiceProviderCard: React.FC<ServiceProviderCardProps> = React.memo(({
               "ServicePrice": selectedServiceValues?.Price || 0,
               "CatServiceId": selectedServiceValues?.Id,
               "SlotDuration": provider.SlotDuration,
+              "ImagePath": imagePath,
+              "OrgGoogleLocation": provider?.GoogleLocation,
+              "PhoneNumber": provider?.CellNumber,
             };
           } else {
             updatedCardArray[selectedIndex] = {
@@ -512,6 +541,9 @@ const ServiceProviderCard: React.FC<ServiceProviderCardProps> = React.memo(({
               "ServicePrice": 0,
               "CatServiceId": null,
               "SlotDuration": provider.SlotDuration,
+              "ImagePath": imagePath,
+              "OrgGoogleLocation": provider?.GoogleLocation,
+              "PhoneNumber": provider?.CellNumber,
             };
           }
         }
@@ -521,6 +553,14 @@ const ServiceProviderCard: React.FC<ServiceProviderCardProps> = React.memo(({
     } else {
       onSelectSlot(provider, time);
       const updatedCardArray = [...CardArray];
+
+      const displayCategory = categoriesList.find((item: any) => item.Id == category.Id);
+      let imagePath: any = null;
+      if (displayCategory?.Display == "CP") {
+        imagePath = provider.ImagePath ? `${MediaBaseURL}${provider.ImagePath}` : null;
+      } else {
+        imagePath = provider.OrganizationImagePath ? `${MediaBaseURL}${provider.OrganizationImagePath}` : null;
+      }
 
       // Find the correct price for the selected service
       // const serviceIds = provider?.ServiceIds.split(',');
@@ -556,6 +596,9 @@ const ServiceProviderCard: React.FC<ServiceProviderCardProps> = React.memo(({
             "orgTitleSlang": provider?.FullnameSlang,
             "orgTitlePlang": provider?.FullnamePlang,
             "SlotDuration": provider.SlotDuration,
+            "ImagePath": imagePath,
+            "OrgGoogleLocation": provider?.GoogleLocation,
+            "PhoneNumber": provider?.CellNumber,
           };
         }
       });

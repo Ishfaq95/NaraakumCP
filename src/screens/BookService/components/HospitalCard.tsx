@@ -11,6 +11,7 @@ import { addCardItem, manageTempSlotDetail } from '../../../shared/redux/reducer
 import { CAIRO_FONT_FAMILY, globalTextStyles } from '../../../styles/globalStyles';
 import { convertArabicTimeTo24Hour } from '../../../shared/services/service';
 import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
+import { categoriesList } from 'services/api/bookingService';
 
 interface TimeSlot {
   date: string;
@@ -47,6 +48,7 @@ const HospitalCard: React.FC<ServiceProviderCardProps> = React.memo(({
   const selectedUniqueId = useSelector((state: any) => state.root.booking.selectedUniqueId);
   const selectedCard = CardArray.filter((item: any) => item.ItemUniqueId === selectedUniqueId);
   const user = useSelector((state: any) => state.root.user.user);
+  const category = useSelector((state: any) => state.root.booking.category);
 
   const [specialtiesScrollPosition, setSpecialtiesScrollPosition] = useState(0);
   const [timeSlotsScrollPosition, setTimeSlotsScrollPosition] = useState(0);
@@ -231,6 +233,10 @@ const HospitalCard: React.FC<ServiceProviderCardProps> = React.memo(({
         const servicePriceswithTax = servicePriceIndex !== -1 ? priceswithTax[servicePriceIndex] : "0";
         const serviceOrgId = hospital?.OrganizationServiceIds.split(',')[servicePriceIndex];
 
+        console.log("hospital",hospital)
+
+      let imagePath: any = `${MediaBaseURL}${hospital?.LogoImagePath}`;
+
         updatedCardArray[itemIndex] = {
           ...updatedCardArray[itemIndex],
           "OrganizationServiceId": serviceOrgId,
@@ -247,6 +253,9 @@ const HospitalCard: React.FC<ServiceProviderCardProps> = React.memo(({
           "ServiceProviderFullnamePlang": hospital?.TitlePlang,
           "orgTitleSlang": hospital?.TitleSlang,
           "orgTitlePlang": hospital?.TitlePlang,
+          "ImagePath": imagePath,
+          "OrgGoogleLocation": hospital?.GoogleLocation,
+          "PhoneNumber": hospital?.CellNumber,
         };
       }
     });

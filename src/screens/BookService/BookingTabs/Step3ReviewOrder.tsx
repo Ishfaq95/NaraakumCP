@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Platform, ScrollView } from 'react-native'
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Platform, ScrollView, Linking } from 'react-native'
 import React, { useCallback, useEffect, useState } from 'react'
 import { useSelector } from 'react-redux';
 import { globalTextStyles } from '../../../styles/globalStyles';
@@ -6,7 +6,11 @@ import { MediaBaseURL } from '../../../shared/utils/constants';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import moment from 'moment';
 import { convert24HourToEnglishTime, generatePayloadforOrderMainBeforePayment } from '../../../shared/utils/bookService';
-import { bookingService } from '../../../services/api/bookingService';
+import { bookingService, categoriesList } from '../../../services/api/bookingService';
+import CustomBottomSheet from '../../../components/common/CustomBottomSheet';
+import AntDesign from 'react-native-vector-icons/AntDesign';
+import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
+import AppointmentTrackingMap from '../../../components/AppointmentTrackingMap';
 
 const Step3ReviewOrder = ({ Patient, handleNext }: { Patient: any, handleNext: () => void }) => {
   const existingCardItems = useSelector((state: any) => state.root.booking.cardItems);
@@ -16,6 +20,7 @@ const Step3ReviewOrder = ({ Patient, handleNext }: { Patient: any, handleNext: (
   const [isProcessing, setIsProcessing] = useState(false);
   const user = useSelector((state: any) => state.root.user.user);
   const selectedLocation = useSelector((state: any) => state.root.booking.selectedLocation);
+  const [openGoogleMapBottomSheet, setOpenGoogleMapBottomSheet] = useState(false);
 
   const createOrderMainBeforePayment = async () => {
     if (isProcessing) return; // Prevent multiple calls
@@ -80,8 +85,9 @@ const Step3ReviewOrder = ({ Patient, handleNext }: { Patient: any, handleNext: (
   const renderDoctorTag = useCallback(({ item, index }: { item: any; index: number }) => {
     const selectedItem = item.items[0];
 
-    const imagePath = selectedItem.ServiceProviderImagePath ? `${MediaBaseURL}${selectedItem.ServiceProviderImagePath}` : selectedItem.LogoImagePath ? `${MediaBaseURL}${selectedItem.LogoImagePath}` : null;
     const name = selectedItem.ServiceProviderFullnamePlang ? selectedItem.ServiceProviderFullnamePlang : selectedItem.orgTitlePlang;
+
+    let imagePath: any = selectedItem?.ImagePath;
 
     return (
       <View style={styles.doctorTagContainer}>
@@ -145,6 +151,13 @@ const Step3ReviewOrder = ({ Patient, handleNext }: { Patient: any, handleNext: (
     }
   }
 
+  const callPatient = (appointment: any) => {
+    Linking.openURL(`tel:${appointment.PhoneNumber}`);
+  }
+
+  console.log("selectedLocation", selectedLocation);
+  console.log("selectedDoctor", selectedDoctor);
+
   return (
     <>
       <View style={styles.container}>
@@ -201,18 +214,18 @@ const Step3ReviewOrder = ({ Patient, handleNext }: { Patient: any, handleNext: (
                     <View style={styles.sessionInfoDetailItem}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                         {/* <CalendarIcon width={18} height={18} /> */}
-                        <Text style={styles.sessionInfoLabel}>{(item?.CatServiceServeTypeId == "1") ? 'Online Session Date' : 'Visit Date'}</Text>
+                        <Text style={styles.sessionInfoLabel}>{(item?.CatCategoryId == "42") ? 'Online Session Date' : 'Visit Date'}</Text>
                       </View>
                       <Text style={styles.sessionInfoValue}>{displayDate}</Text>
                     </View>
                     <View style={styles.sessionInfoDetailItem}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                         {/* <ClockIcon width={18} height={18} /> */}
-                        <Text style={styles.sessionInfoLabel}>{(item?.CatServiceServeTypeId == "1") ? 'Online Session Time' : 'Visit Time'}</Text>
+                        <Text style={styles.sessionInfoLabel}>{(item?.CatCategoryId == "42") ? 'Online Session Time' : 'Visit Time'}</Text>
                       </View>
                       <Text style={styles.sessionInfoValue}>{displayTime}</Text>
                     </View>
-                    {item?.CatServiceServeTypeId == "1" ? <View style={styles.sessionInfoDetailItem}>
+                    {item?.CatCategoryId == "42" ? <View style={styles.sessionInfoDetailItem}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                         {/* <SettingIconSelected width={18} height={18} /> */}
                         <Text style={styles.sessionInfoLabel}>Session Duration</Text>
@@ -227,6 +240,13 @@ const Step3ReviewOrder = ({ Patient, handleNext }: { Patient: any, handleNext: (
                         <Text style={{ ...globalTextStyles.bodyMedium, color: '#333', textAlign: 'left' }}>{selectedLocation?.address}</Text>
                       </View>
                     }
+
+                    {item?.CatCategoryId != "42" && <View>
+                      <TouchableOpacity onPress={() => setOpenGoogleMapBottomSheet(true)} style={{ flexDirection: 'row', height: 40, width: '100%', borderWidth: 1, borderColor: "#008080", borderRadius: 10, marginTop: 10, alignItems: 'center', justifyContent: 'center' }}>
+                        <Image source={require('../../../assets/icons/googleMapIcon.png')} style={{ width: 20, height: 20 }} />
+                        <Text style={{ ...globalTextStyles.bodySmall, color: '#008080', paddingLeft: 10 }}>Show directions on Google Maps</Text>
+                      </TouchableOpacity>
+                    </View>}
                   </View>
                 </View>
               )
@@ -272,7 +292,7 @@ const Step3ReviewOrder = ({ Patient, handleNext }: { Patient: any, handleNext: (
                 </View>
                 <View style={styles.patientInfoRow}>
                   <Text style={styles.patientInfoLabel}>Relative Relation</Text>
-                  <Text style={styles.patientInfoValue}>{Patient.RelationShipPlang || (Patient.isSelf ? 'Self' : 'NA')}</Text>
+                  <Text style={styles.patientInfoValue}>{Patient.CatRelationshipId ? Patient.RelationShipPlang : 'Self'}</Text>
                 </View>
                 <View style={styles.patientInfoRow}>
                   <Text style={styles.patientInfoLabel}>Nationality</Text>
@@ -295,6 +315,55 @@ const Step3ReviewOrder = ({ Patient, handleNext }: { Patient: any, handleNext: (
           <Text style={styles.nextButtonText}>Confirm Order</Text>
         </TouchableOpacity>
       </View>
+
+      <CustomBottomSheet
+        visible={openGoogleMapBottomSheet}
+        onClose={() => setOpenGoogleMapBottomSheet(false)}
+        maxHeight={'80%'}
+        backdropClickable={false}
+        showHandle={false}
+      >
+        <View style={{ flex: 1, backgroundColor: '#eff5f5', borderTopLeftRadius: 10, borderTopRightRadius: 10 }}>
+          <View style={{ height: 50, width: '100%', backgroundColor: "#e4f1ef", borderTopLeftRadius: 10, borderTopRightRadius: 10, justifyContent: 'space-between', alignItems: 'center', flexDirection: 'row', paddingHorizontal: 16 }}>
+            <Text style={[globalTextStyles.buttonMedium, { color: '#000' }]}>Show directions on Google Maps</Text>
+            <TouchableOpacity onPress={() => setOpenGoogleMapBottomSheet(false)}>
+              <AntDesign name="close" size={20} color="#000" />
+            </TouchableOpacity>
+          </View>
+          <View style={{ paddingHorizontal: 16 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+              <View style={{ flex: 1, alignItems: "flex-start", justifyContent: "center" }}>
+                <Text style={{ ...globalTextStyles.bodyLarge, color: '#000',lineHeight:Platform.OS == 'ios' ? 0 : 20 }}>{selectedDoctor?.items[0]?.ServiceProviderFullnamePlang}</Text>
+                <Text style={{ ...globalTextStyles.bodySmall, lineHeight:Platform.OS == 'ios' ? 0 : 15, color: '#222' }}>{selectedDoctor?.items[0]?.orgTitlePlang}</Text>
+                <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center" }}>
+
+                  {selectedDoctor?.items[0]?.PhoneNumber && <Text style={{ ...globalTextStyles.bodySmall, color: '#222' }}>{selectedDoctor?.items[0]?.PhoneNumber?.replace(/^\+/, '')}</Text>}
+                  {selectedDoctor?.items[0]?.PhoneNumber && <Text style={{ ...globalTextStyles.bodySmall, color: '#222' }}>+</Text>}
+
+                  {selectedDoctor?.items[0]?.PhoneNumber && <TouchableOpacity onPress={() => callPatient(selectedDoctor?.items[0])} style={{ width: 40, height: 20, marginLeft: 10, backgroundColor: '#2ab318', borderRadius: 10, alignItems: "center", justifyContent: "center" }}>
+                    <FontAwesome6 name="phone-volume" size={12} color="#fff" />
+                  </TouchableOpacity>}
+                </View>
+
+              </View>
+            </View>
+
+          </View>
+          <View style={{ flex: 1, borderRadius: 10, padding: 10 }}>
+            {selectedDoctor?.items[0] && (
+              <AppointmentTrackingMap
+                appointment={{
+                  "OrgGoogleLocation": selectedDoctor?.items[0]?.OrgGoogleLocation,
+                  "GoogleLocation": `${selectedLocation?.latitude},${selectedLocation?.longitude}`,
+                  "OrganizationSlang": selectedDoctor?.items[0]?.ServiceProviderFullnamePlang ? selectedDoctor?.items[0]?.ServiceProviderFullnamePlang : selectedDoctor?.items[0]?.orgTitlePlang,
+                  "Address": selectedLocation?.address,
+                }}
+                onRouteInfoUpdate={(info: any) => { }}
+              />
+            )}
+          </View>
+        </View>
+      </CustomBottomSheet>
     </>
   )
 }

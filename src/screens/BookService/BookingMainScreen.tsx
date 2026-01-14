@@ -72,7 +72,7 @@ const BookingScreen = ({ navigation, route }: any) => {
                 <TouchableOpacity onPress={backButtonPress} style={styles.backButton}>
                     <Ionicons name="arrow-back-outline" size={24} color="#333" />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>Book a Service</Text>
+                <Text style={styles.headerTitle}>{currentStep == 1 ? 'Service Selection' : currentStep == 2 ? 'Provider Listing' : 'Confirmation'}</Text>
             </View>
             <TouchableOpacity onPress={backButtonPress} style={styles.cancelButton}>
                 <Text style={styles.cancelButtonText}>Cancel</Text>

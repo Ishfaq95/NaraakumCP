@@ -28,6 +28,8 @@ const AppointmentTrackingMap: React.FC<AppointmentTrackingMapProps> = ({ appoint
   const [routeInfo, setRouteInfo] = useState<RouteInfo | null>(null);
   const [loading, setLoading] = useState(true);
 
+  console.log("appointment",appointment)
+
   useEffect(() => {
     if (appointment) {
       initializeMap();

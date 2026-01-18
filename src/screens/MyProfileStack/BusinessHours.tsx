@@ -212,8 +212,6 @@ const BusinessHours = ({ route }: { route: any }) => {
         }
     };
 
-    console.log("editSlots", editSlots)
-
     const getServiceProviderAvailability = async (monthDate: moment.Moment) => {
         try {
             setIsLoading(true);
@@ -1506,16 +1504,16 @@ const BusinessHours = ({ route }: { route: any }) => {
         
         if (catAvailabilityTypeId == 4) {
             // Custom Range
-            const dateRange = `${startDate.format('YYYY-MM-DD')} To ${endDate.format('YYYY-MM-DD')}`;
-            const dateText = timeRange ? `${timeRange} At ${dateRange}` : dateRange;
+            const dateRange = `${startDate.format('DD/MM/YYYY')} To ${endDate.format('DD/MM/YYYY')}`;
+            const dateText = timeRange ? `${timeRange} AT ${dateRange}` : dateRange;
             return {
                 type: 'Custom Range',
                 dateText: dateText
             };
         } else if (catAvailabilityTypeId == 3) {
             // Month
-            const dateRange = `${startDate.format('YYYY-MM-DD')} To ${endDate.format('YYYY-MM-DD')}`;
-            const dateText = timeRange ? `${timeRange} At ${dateRange}` : dateRange;
+            const dateRange = `${startDate.format('DD/MM/YYYY')} To ${endDate.format('DD/MM/YYYY')}`;
+            const dateText = timeRange ? `${timeRange} AT ${dateRange}` : dateRange;
             return {
                 type: 'Month',
                 dateText: dateText
@@ -1524,16 +1522,16 @@ const BusinessHours = ({ route }: { route: any }) => {
             // Week
             const weekStart = startDate.clone().startOf('week');
             const weekEnd = startDate.clone().endOf('week');
-            const dateRange = `${weekStart.format('YYYY-MM-DD')} To ${weekEnd.format('YYYY-MM-DD')}`;
-            const dateText = timeRange ? `${timeRange} At ${dateRange}` : dateRange;
+            const dateRange = `${weekStart.format('DD/MM/YYYY')} To ${weekEnd.format('DD/MM/YYYY')}`;
+            const dateText = timeRange ? `${timeRange} AT ${dateRange}` : dateRange;
             return {
                 type: 'Week',
                 dateText: dateText
             };
         } else if (catAvailabilityTypeId == 1) {
             // Day
-            const dateStr = startDate.format('YYYY-MM-DD');
-            const dateText = timeRange ? `${timeRange} At ${dateStr}` : dateStr;
+            const dateStr = startDate.format('DD/MM/YYYY');
+            const dateText = timeRange ? `${timeRange} AT ${dateStr}` : dateStr;
             return {
                 type: 'Day',
                 dateText: dateText
@@ -1603,15 +1601,15 @@ const BusinessHours = ({ route }: { route: any }) => {
             // If user has selected a date from calendar and it's in range, use selected date
             if (hasUserSelectedDate && selectedDate && isDateInSlotRange(selectedDate)) {
                 showDayOption = true;
-                const dateStr = selectedDate.format('YYYY-MM-DD');
-                dayDateText = dayTimeRange ? `${dayTimeRange} At ${dateStr}` : dateStr;
+                const dateStr = selectedDate.format('DD/MM/YYYY');
+                dayDateText = dayTimeRange ? `${dayTimeRange} AT ${dateStr}` : dateStr;
             } else {
                 // Otherwise, use current date if it's in range
                 const currentDate = moment();
                 if (isDateInSlotRange(currentDate)) {
                     showDayOption = true;
-                    const dateStr = currentDate.format('YYYY-MM-DD');
-                    dayDateText = dayTimeRange ? `${dayTimeRange} At ${dateStr}` : dateStr;
+                    const dateStr = currentDate.format('DD/MM/YYYY');
+                    dayDateText = dayTimeRange ? `${dayTimeRange} AT ${dateStr}` : dateStr;
                 }
             }
         } else {
@@ -1619,8 +1617,8 @@ const BusinessHours = ({ route }: { route: any }) => {
             // Only show Day if user has selected a date from calendar AND it's in range
             if (hasUserSelectedDate && selectedDate && isDateInSlotRange(selectedDate)) {
                 showDayOption = true;
-                const dateStr = selectedDate.format('YYYY-MM-DD');
-                dayDateText = dayTimeRange ? `${dayTimeRange} At ${dateStr}` : dateStr;
+                const dateStr = selectedDate.format('DD/MM/YYYY');
+                dayDateText = dayTimeRange ? `${dayTimeRange} AT ${dateStr}` : dateStr;
             }
         }
         
@@ -1708,7 +1706,7 @@ const BusinessHours = ({ route }: { route: any }) => {
                     setDeleteResolution('original');
                 }}
                 showHandle={false}
-                maxHeight={"42%"}
+                maxHeight={"50%"}
                 backdropClickable={true}
             >
                 <View style={styles.deleteSheetContainer}>
@@ -1724,7 +1722,7 @@ const BusinessHours = ({ route }: { route: any }) => {
                             {deleteOptions.map((option, index) => (
                                 <View key={index} style={[
                                     styles.deleteSlotInfoRow,
-                                    deleteOptions.length === 2 && styles.deleteSlotInfoRowSplit
+                                    // deleteOptions.length === 2 && styles.deleteSlotInfoRowSplit
                                 ]}>
                                     <View style={styles.deleteSlotRadioWrapper}>
                                         <CommonRadioButton
@@ -2714,7 +2712,7 @@ const styles = StyleSheet.create({
     },
     deleteSlotInfoContainer: {
         marginBottom: 12,
-        flexDirection: 'row',
+        flexDirection: 'column',
         gap: 12,
     },
     deleteSlotInfoRow: {
@@ -2731,7 +2729,7 @@ const styles = StyleSheet.create({
     },
     deleteSlotDateText: {
         fontSize: 14,
-        fontFamily: CAIRO_FONT_FAMILY.medium,
+        fontFamily: CAIRO_FONT_FAMILY.bold,
         lineHeight: Platform.OS === 'ios' ? 0 : 20,
         color: '#666',
         marginTop: 8,

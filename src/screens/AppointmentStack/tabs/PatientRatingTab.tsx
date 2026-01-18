@@ -9,6 +9,7 @@ import { useIsFocused } from '@react-navigation/native';
 import CustomBottomSheet from '../../../components/common/CustomBottomSheet';
 import { CAIRO_FONT_FAMILY } from '../../../styles/globalStyles';
 import Voice from '@dev-amirzubair/react-native-voice';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
 
 interface PatientRatingTabProps {
     data: any;
@@ -347,7 +348,7 @@ const PatientRatingTab: React.FC<PatientRatingTabProps> = ({ data }) => {
                                 <Ionicons name="mic" size={20} color="#666" />
                             </TouchableOpacity> :
                                 <TouchableOpacity style={styles.micButton} onPress={stopListening} >
-                                    <Ionicons name="mic-off" size={20} color="#666" />
+                                    <FontAwesome name="square" size={18} color="red" />
                                 </TouchableOpacity>}
                         </View>
 

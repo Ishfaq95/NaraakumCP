@@ -18,6 +18,8 @@ import { useSelector } from 'react-redux';
 import { addVisitRecordService } from '../../../services/api/addVisitRecord';
 import SvgUri from 'react-native-svg-uri';
 import PatientHistory from '../../../assets/icons/PatientHistory';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 interface Step2Props {
   onNext: () => void;
@@ -354,11 +356,7 @@ const Step2PatientHistory: React.FC<Step2Props> = ({
                 style={styles.micButton}
                 onPress={() => handleMicPress(`${sectionId}:${item.id}`)}
               >
-                <Icon
-                  name={listeningField === `${sectionId}:${item.id}` ? 'mic-off' : 'mic'}
-                  size={20}
-                  color="#666"
-                />
+                {listeningField === `${sectionId}:${item.id}` ? <FontAwesome name="square" size={18} color="red" /> : <Ionicons name="mic" size={20} color="#666" />}
               </TouchableOpacity>
               {index > 0 && (
                 <TouchableOpacity

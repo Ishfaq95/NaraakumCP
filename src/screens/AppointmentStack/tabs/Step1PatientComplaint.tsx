@@ -21,6 +21,7 @@ import { setVisitMainId } from '../../../shared/redux/reducers/generalDataReduce
 import SvgUri from 'react-native-svg-uri';
 import PatientComplaint from '../../../assets/icons/PatientComplaint';
 import Voice from '@dev-amirzubair/react-native-voice';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
 
 interface Step1Props {
   patientData: any;
@@ -64,6 +65,15 @@ const Step1PatientComplaint: React.FC<Step1Props> = ({ patientData, onNext, onDa
     { label: 'Hour', value: '5' },
     { label: 'Minutes', value: '6' },
   ];
+
+  const handleDurationValueChange = (text: string) => {
+    // Remove any non-numeric characters
+    const numericValue = text.replace(/[^0-9]/g, '');
+    // Limit to 5 digits maximum
+    if (numericValue.length <= 5) {
+      setDurationValue(numericValue);
+    }
+  };
 
   useEffect(() => {
     if (visitRecordData) {
@@ -349,7 +359,7 @@ const Step1PatientComplaint: React.FC<Step1Props> = ({ patientData, onNext, onDa
                 style={styles.iconButton}
                 onPress={() => handleMicPress('chiefComplaint')}
               >
-                {listeningField === 'chiefComplaint' ? <Ionicons name="mic-off" size={20} color="#666" /> : <Ionicons name="mic" size={20} color="#666" />}
+                {listeningField === 'chiefComplaint' ? <FontAwesome name="square" size={18} color="red" /> : <Ionicons name="mic" size={20} color="#666" />}
               </TouchableOpacity>
             </View>
           </View>
@@ -384,7 +394,7 @@ const Step1PatientComplaint: React.FC<Step1Props> = ({ patientData, onNext, onDa
                 style={styles.iconButton}
                 onPress={() => handleMicPress('presentIllness')}
               >
-                {listeningField === 'presentIllness' ? <Ionicons name="mic-off" size={20} color="#666" /> : <Ionicons name="mic" size={20} color="#666" />}
+                {listeningField === 'presentIllness' ? <FontAwesome name="square" size={18} color="red" /> : <Ionicons name="mic" size={20} color="#666" />}
               </TouchableOpacity>
             </View>
           </View>
@@ -404,8 +414,9 @@ const Step1PatientComplaint: React.FC<Step1Props> = ({ patientData, onNext, onDa
                   placeholder="0"
                   placeholderTextColor="#999"
                   value={durationValue}
-                  onChangeText={setDurationValue}
+                  onChangeText={handleDurationValueChange}
                   keyboardType="numeric"
+                  maxLength={5}
                   onFocus={() => {
                     if (Platform.OS === 'ios') {
                       pendingScrollKey.current = 'duration';
@@ -461,7 +472,7 @@ const Step1PatientComplaint: React.FC<Step1Props> = ({ patientData, onNext, onDa
                 style={styles.iconButton}
                 onPress={() => handleMicPress('otherComplaint')}
               >
-                {listeningField === 'otherComplaint' ? <Ionicons name="mic-off" size={20} color="#666" /> : <Ionicons name="mic" size={20} color="#666" />}
+                {listeningField === 'otherComplaint' ? <FontAwesome name="square" size={18} color="red" /> : <Ionicons name="mic" size={20} color="#666" />}
               </TouchableOpacity>
             </View>
           </View>
@@ -589,6 +600,8 @@ const styles = StyleSheet.create({
   iconButton: {
     padding: 8,
     marginLeft: 8,
+    backgroundColor: '#f0f8f7',
+    borderRadius: 20,
   },
   durationContainer: {
     flexDirection: 'row',

@@ -231,7 +231,7 @@ console.log("item",item)
                     {filteredPrescriptionList.length > 0 && (
                         <View style={styles.bookingDetailsSection}>
                             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 12 }}>
-                                <Text style={styles.sectionTitle}>{`${filteredPrescriptionList.length} Prescription`}</Text>
+                                <Text style={styles.sectionTitle}>{`${filteredPrescriptionList.length} ${filteredPrescriptionList.length > 1 ? 'Prescriptions' : 'Prescription'}`}</Text>
                                 <TouchableOpacity style={styles.searchButton} onPress={() => setSearchBottomSheetVisible(true)}>
                                     {searchText.length > 0 ? <Ionicons name="close" size={18} color={'#00A19D'} /> : <Ionicons name="search" size={18} color={'#00A19D'} />}
                                 </TouchableOpacity>
@@ -400,7 +400,10 @@ const styles = StyleSheet.create({
         fontFamily: CAIRO_FONT_FAMILY.regular,
         lineHeight: 20,
         color: '#666',
-        marginRight: 12,
+        marginRight: 6,
+        borderRightWidth: 1,
+        borderRightColor: '#e0e0e0',
+        paddingRight: 6,
     },
     ratingContainer: {
         flexDirection: 'row',
@@ -425,7 +428,7 @@ const styles = StyleSheet.create({
     },
     sectionTitle: {
         fontSize: 15,
-        fontFamily: CAIRO_FONT_FAMILY.bold,
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
         lineHeight: 20,
         color: '#666',
         // marginBottom: 12,

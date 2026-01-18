@@ -15,7 +15,7 @@ const TABS = [
     { key: 'list', label: 'Patient Saved Addresses' },
 ];
 
-const LocationScreen = ({ onPressLocation }: { onPressLocation: () => void }) => {
+const LocationScreen = ({ onPressLocation, patientInfo }: { onPressLocation: () => void, patientInfo: any }) => {
     const navigation = useNavigation();
     const { t } = useTranslation();
     const [activeTab, setActiveTab] = useState('map');
@@ -51,7 +51,7 @@ const LocationScreen = ({ onPressLocation }: { onPressLocation: () => void }) =>
                 ))}
             </View>
             <View style={{ flex: 1 }}>
-                {activeTab === 'map' ? <MapTab onPressLocation={() => onPressLocation()} /> : <SavedAddresses onPressLocation={() => onPressLocation()} />}
+                {activeTab === 'map' ? <MapTab onPressLocation={() => onPressLocation()} /> : <SavedAddresses onPressLocation={() => onPressLocation()} patientInfo={patientInfo} />}
             </View>
         </SafeAreaView>
 

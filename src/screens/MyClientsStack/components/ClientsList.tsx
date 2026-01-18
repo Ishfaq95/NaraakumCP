@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList, Platform, Te
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import ClientCard from './ClientCard';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { myClientsService } from '../../../services/api/myClientsService';
 import CustomBottomSheet from '../../../components/common/CustomBottomSheet';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
@@ -13,6 +13,7 @@ import { useNavigation } from '@react-navigation/native';
 import { CAIRO_FONT_FAMILY } from '../../../styles/globalStyles';
 import LoaderKit from 'react-native-loader-kit';
 import FullScreenLoader from '../../../components/FullScreenLoader';
+import { addCardItem, setSelectedLocation } from '../../../shared/redux/reducers/bookingReducer';
 
 const ClientsList: React.FC<{ onCountChange?: (n: number) => void, setIsLoading?: (isLoading: boolean) => void }> = ({ onCountChange, setIsLoading }) => {
   const [clientList, setClientList] = useState<any[]>([]);
@@ -25,6 +26,7 @@ const ClientsList: React.FC<{ onCountChange?: (n: number) => void, setIsLoading?
   const [bottomSheetHeight, setBottomSheetHeight] = useState('35%');
   const [filteredClientList, setFilteredClientList] = useState<any[]>([]);
   const scrollViewRef = React.useRef<ScrollView>(null);
+  const dispatch = useDispatch();
   useEffect(() => {
     getClients();
   }, []);
@@ -70,11 +72,15 @@ const ClientsList: React.FC<{ onCountChange?: (n: number) => void, setIsLoading?
 
   const onDirectBookServicePress = (item: any) => {
     setIsMoreOptionsBottomSheetVisible(false);
+    dispatch(addCardItem([]))
+    dispatch(setSelectedLocation(null))
     navigation.navigate(ROUTES.BookNewService as never, { Patient: item });
   };
 
   const onBookServicePress = () => {
     setIsMoreOptionsBottomSheetVisible(false);
+    dispatch(addCardItem([]))
+    dispatch(setSelectedLocation(null))
     navigation.navigate(ROUTES.BookNewService as never, { Patient: selectedClient });
   };
 

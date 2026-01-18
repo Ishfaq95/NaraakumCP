@@ -350,6 +350,16 @@ const AccountInformationScreen = () => {
 
             if (result.assets && result.assets.length > 0) {
                 const asset = result.assets[0];
+                // Check file size (10MB = 10 * 1024 * 1024 bytes)
+                const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB in bytes
+                if (asset.fileSize && asset.fileSize > MAX_FILE_SIZE) {
+                    showAlert({
+                        title: 'File Size Error',
+                        message: "You can't upload more than 10MB",
+                        type: 'error',
+                    });
+                    return;
+                }
                 await handleImageUpload(asset);
             }
         } catch (error: any) {
@@ -411,6 +421,16 @@ const AccountInformationScreen = () => {
 
             if (result.assets && result.assets.length > 0) {
                 const asset = result.assets[0];
+                // Check file size (10MB = 10 * 1024 * 1024 bytes)
+                const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB in bytes
+                if (asset.fileSize && asset.fileSize > MAX_FILE_SIZE) {
+                    showAlert({
+                        title: 'File Size Error',
+                        message: "You can't upload more than 10MB",
+                        type: 'error',
+                    });
+                    return;
+                }
                 await handleImageUpload(asset);
             }
         } catch (error: any) {

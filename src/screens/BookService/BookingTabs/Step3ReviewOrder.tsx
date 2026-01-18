@@ -155,9 +155,6 @@ const Step3ReviewOrder = ({ Patient, handleNext }: { Patient: any, handleNext: (
     Linking.openURL(`tel:${appointment.PhoneNumber}`);
   }
 
-  console.log("selectedLocation", selectedLocation);
-  console.log("selectedDoctor", selectedDoctor);
-
   return (
     <>
       <View style={styles.container}>

@@ -50,10 +50,14 @@ const BookingScreen = ({ navigation, route }: any) => {
         }, 1000);
     };
 
+    const onPressAddMoreServices = () => {
+        setCurrentStep(1);
+    };
+
     const renderStep = () => {
         switch (currentStep) {
             case 1: return <Step1CatSpecialty handleNext={handleNext} Patient={Patient} />;
-            case 2: return <Step2DoctorListing handleNext={handleNext} handleReloadNext={handleReloadNext} Patient={Patient} />;
+            case 2: return <Step2DoctorListing handleNext={handleNext} handleReloadNext={handleReloadNext} Patient={Patient} onPressAddMoreServices={onPressAddMoreServices} />;
             case 3: return <Step3ReviewOrder handleNext={handleNext} Patient={Patient} />;
             case 5: return <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                 <LoaderKit
@@ -166,7 +170,7 @@ const BookingScreen = ({ navigation, route }: any) => {
                         </TouchableOpacity>
                         <TouchableOpacity
                             onPress={handleNo}
-                            style={styles.warningButton}
+                            style={[styles.warningButton,{backgroundColor: '#6C757D'}]}
                         >
                             <Text style={styles.warningButtonText}>No</Text>
                         </TouchableOpacity>

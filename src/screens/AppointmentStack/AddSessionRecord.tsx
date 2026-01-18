@@ -14,6 +14,7 @@ import { MediaBaseURL } from '../../shared/utils/constants';
 import moment from 'moment';
 import { CAIRO_FONT_FAMILY, globalTextStyles } from '../../styles/globalStyles';
 import CustomBottomSheet from '../../components/common/CustomBottomSheet';
+import FullScreenLoader from '../../components/FullScreenLoader';
 
 interface Step1Data {
     chiefComplaint?: string;
@@ -50,6 +51,7 @@ const AddSessionRecord = ({ route }: { route: any }) => {
     const [isConfirmBottomSheetVisible, setIsConfirmBottomSheetVisible] = useState(false);
     const [selectedRating, setSelectedRating] = useState(0);
     const [commentText, setCommentText] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
     useEffect(() => {
         if (visitmainId) {
             getVisitMainRecordDetail();
@@ -65,13 +67,21 @@ const AddSessionRecord = ({ route }: { route: any }) => {
     }, [step]);
 
     const getVisitMainRecordDetail = async () => {
-        const payload = {
-            VisitMainId: visitmainId,
-        };
-        const response = await appointmentService.getVisitMainRecordDetail(payload);
-        if (response?.ResponseStatus?.STATUSCODE === 200) {
-            dispatch(setVisitMainData(response));
+        try {
+            setIsLoading(true);
+            const payload = {
+                VisitMainId: visitmainId,
+            };
+            const response = await appointmentService.getVisitMainRecordDetail(payload);
+            if (response?.ResponseStatus?.STATUSCODE === 200) {
+                dispatch(setVisitMainData(response));
+            }
+        } catch (error) {
+            setIsLoading(false);
+        } finally {
+            setIsLoading(false);
         }
+       
     };
 
     const [currentStep, setCurrentStep] = useState(1);
@@ -822,11 +832,7 @@ const AddSessionRecord = ({ route }: { route: any }) => {
 
     const renderReviewContent = () => {
         if (!visitRecordData) {
-            return (
-                <View style={styles.emptyContainer}>
-                    <Text style={styles.emptyText}>No data available</Text>
-                </View>
-            );
+            return null;
         }
 
         return (
@@ -932,6 +938,8 @@ const AddSessionRecord = ({ route }: { route: any }) => {
                     </ScrollView>
                 </KeyboardAvoidingView>
             </CustomBottomSheet>
+
+            <FullScreenLoader visible={isLoading} />
         </SafeAreaView>
     );
 };

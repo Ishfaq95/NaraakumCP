@@ -781,8 +781,9 @@ const styles = StyleSheet.create({
     // marginBottom: 8,
   },
   providerName: {
-    ...globalTextStyles.bodyMedium,
-    // fontWeight: 'bold',
+    fontSize: 14,
+    fontFamily: CAIRO_FONT_FAMILY.bold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
     marginTop: 4,
     marginBottom: 2,
     color: '#222',

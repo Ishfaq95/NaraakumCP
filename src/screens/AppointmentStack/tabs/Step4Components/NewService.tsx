@@ -13,7 +13,8 @@ import { CAIRO_FONT_FAMILY, globalTextStyles } from '../../../../styles/globalSt
 import { useNavigation } from '@react-navigation/native';
 import { ROUTES } from '../../../../shared/utils/routes';
 import { addVisitRecordService } from '../../../../services/api/addVisitRecord';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { addCardItem, setSelectedLocation } from '../../../../shared/redux/reducers/bookingReducer';
 
 export interface NewServiceData {
   serviceName?: string;
@@ -30,7 +31,7 @@ const NewService: React.FC<NewServiceProps> = ({ patientData, onDataChange }) =>
   const [services, setServices] = useState<any[]>([]);
   const navigation = useNavigation();
   const visitmainId: any = useSelector((state: any) => state.root.generalData.visitmainId);
-
+  const dispatch = useDispatch();
   useEffect(() => {
     getOrderListAddedByServiceProvider();
   }, []);
@@ -48,6 +49,8 @@ const NewService: React.FC<NewServiceProps> = ({ patientData, onDataChange }) =>
   };
 
   const onAddService = () => {
+    dispatch(addCardItem([]))
+    dispatch(setSelectedLocation(null))
     navigation.navigate(ROUTES.BookNewService as never, { Patient: patientData });
   }
 

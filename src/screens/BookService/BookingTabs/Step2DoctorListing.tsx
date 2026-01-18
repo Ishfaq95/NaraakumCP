@@ -28,6 +28,7 @@ import { addCardItem, setCategory as setCategoryRedux, setSelectedLocation, setS
 import { commonAPIService } from '../../../services/api/commonAPIService';
 import CustomBottomSheet from '../../../components/common/CustomBottomSheet';
 import LocationService from '../components/LocationService';
+import FullScreenLoader from '../../../components/FullScreenLoader';
 
 type Doctor = {
   id: string;
@@ -144,7 +145,7 @@ const ListShimmerLoader = ({ cardType = 'default' }: { cardType?: 'default' | 'h
   );
 };
 
-const Step2DoctorListing = ({ handleNext, handleReloadNext, Patient }: { handleNext: () => void, handleReloadNext: () => void, Patient: any }) => {
+const Step2DoctorListing = ({ handleNext, handleReloadNext, Patient, onPressAddMoreServices }: { handleNext: () => void, handleReloadNext: () => void, Patient: any, onPressAddMoreServices: () => void }) => {
   const [selectedDate, setSelectedDate] = useState<Moment>(moment());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [dateList, setDateList] = useState<DateItem[]>([]);
@@ -190,6 +191,7 @@ const Step2DoctorListing = ({ handleNext, handleReloadNext, Patient }: { handleN
   const [isLocationBottomSheetVisible, setIsLocationBottomSheetVisible] = useState(false);
   const [offeredServicesCategories, setOfferedServicesCategories] = useState<any[]>([]);
   const [cardBottomSheetVisible, setCardBottomSheetVisible] = useState(false);
+  const [hasInitiallyLoaded, setHasInitiallyLoaded] = useState(false);
   const dispatch = useDispatch();
   useEffect(() => {
     getAllCities();
@@ -341,6 +343,7 @@ const Step2DoctorListing = ({ handleNext, handleReloadNext, Patient }: { handleN
   const fetchData = useCallback(() => {
     if (selectedCardItem.length === 0) return;
 
+    setHasInitiallyLoaded(false);
     const displayCategory = categoriesList.find((item: any) => item.Id == selectedCardItem[0]?.CatCategoryId);
     setDisplayCategory(displayCategory);
     if (displayCategory?.Display == "CP") {
@@ -637,6 +640,7 @@ const Step2DoctorListing = ({ handleNext, handleReloadNext, Patient }: { handleN
     setSlotsLoaded(false)
 
     setProviderWithSlots(tempProvider)
+    setHasInitiallyLoaded(true)
   }, [serviceProviders, availability, selectedDate]);
 
   useEffect(() => {
@@ -687,6 +691,7 @@ const Step2DoctorListing = ({ handleNext, handleReloadNext, Patient }: { handleN
     setSlotsLoaded(false)
 
     setHospitalWithSlots(tempHospital)
+    setHasInitiallyLoaded(true)
   }
 
 
@@ -764,7 +769,9 @@ const Step2DoctorListing = ({ handleNext, handleReloadNext, Patient }: { handleN
   }, [dateListStartDate]);
 
   const getCartBottomSheetHeight = () => {
-    if (existingCardItems.length == 1) {
+    if(existingCardItems.length == 0){
+return "40%"
+    } else if (existingCardItems.length == 1) {
       return "60%"
     } else if (existingCardItems.length == 2) {
       return "80%"
@@ -1137,6 +1144,15 @@ const Step2DoctorListing = ({ handleNext, handleReloadNext, Patient }: { handleN
     }
   }, [selectedSlotInfo, existingCardItems, selectedCardItem])
 
+  // Calculate actual result count based on items with available slots
+  const resultLength = useMemo(() => {
+    if (displayCategory?.Display == "CP") {
+      return filteredProviders.filter(item => hasAvailableSlots(item.slots)).length;
+    } else {
+      return filteredHospitals.filter(item => hasAvailableSlots(item.slots)).length;
+    }
+  }, [filteredProviders, filteredHospitals, displayCategory, hasAvailableSlots]);
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
@@ -1217,7 +1233,7 @@ const Step2DoctorListing = ({ handleNext, handleReloadNext, Patient }: { handleN
           <View style={[styles.checkbox, searchNearMe && styles.checkboxActive]}>
             {searchNearMe && <Ionicons name="checkmark" size={16} color="#fff" />}
           </View>
-          <Text style={styles.checkboxLabel}>Search Doctors near me</Text>
+          <Text style={styles.checkboxLabel}>Search near me</Text>
         </TouchableOpacity>}
 
         {/* Doctor Type Selection */}
@@ -1320,6 +1336,7 @@ const Step2DoctorListing = ({ handleNext, handleReloadNext, Patient }: { handleN
             <TouchableOpacity
               style={[styles.statusFilter, selectedFilter === 'booked' && styles.statusFilterActive]}
               onPress={() => setSelectedFilter('booked')}
+              disabled={true}
               activeOpacity={0.7}
             >
               <View style={[styles.statusDot, styles.statusDotBooked]} />
@@ -1329,6 +1346,7 @@ const Step2DoctorListing = ({ handleNext, handleReloadNext, Patient }: { handleN
             <TouchableOpacity
               style={[styles.statusFilter, selectedFilter === 'available' && styles.statusFilterActive]}
               onPress={() => setSelectedFilter('available')}
+              disabled={true}
               activeOpacity={0.7}
             >
               <View style={[styles.statusDot, styles.statusDotAvailable]} />
@@ -1339,7 +1357,7 @@ const Step2DoctorListing = ({ handleNext, handleReloadNext, Patient }: { handleN
 
         {/* Results Count and Status Filter */}
         <View style={styles.resultsHeader}>
-          <Text style={styles.resultsText}>{`(${filteredProviders.length}) results found for Doctor Visit`}</Text>
+          <Text style={styles.resultsText}>{`(${resultLength}) results found`}</Text>
         </View>
 
 
@@ -1361,7 +1379,7 @@ const Step2DoctorListing = ({ handleNext, handleReloadNext, Patient }: { handleN
                   windowSize={10}
                   initialNumToRender={3}
                   ListEmptyComponent={
-                    (loading || loader2 || slotsLoaded) ? (
+                    (loading || loader2 || slotsLoaded || !hasInitiallyLoaded) ? (
                       <ListShimmerLoader cardType="default" />
                     ) : (
                       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -1409,7 +1427,7 @@ const Step2DoctorListing = ({ handleNext, handleReloadNext, Patient }: { handleN
                   windowSize={10}
                   initialNumToRender={3}
                   ListEmptyComponent={
-                    (loading || loader2 || slotsLoaded) ? (
+                    (loading || loader2 || slotsLoaded || !hasInitiallyLoaded) ? (
                       <ListShimmerLoader cardType="default" />
                     ) : (
                       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -1543,7 +1561,7 @@ const Step2DoctorListing = ({ handleNext, handleReloadNext, Patient }: { handleN
         showHandle={false}
       >
         <View style={styles.reportsBottomSheetContainer}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, width: '100%', height: 50, backgroundColor: '#fff', borderTopLeftRadius: 12, borderTopRightRadius: 12 }} >
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, width: '100%', height: 50, backgroundColor: '#fff', borderTopLeftRadius: 12, borderTopRightRadius: 12,borderBottomWidth: 1, borderBottomColor: '#ccc' }} >
             <Text style={styles.reportsBottomSheetTitle}>Cart</Text>
             <TouchableOpacity onPress={() => setCardBottomSheetVisible(false)}>
               <Ionicons name="close-outline" size={24} color="#000" />
@@ -1551,35 +1569,43 @@ const Step2DoctorListing = ({ handleNext, handleReloadNext, Patient }: { handleN
           </View>
           <View style={{ flex: 1, marginTop: 12, backgroundColor: '#fff' }}>
             <View style={{ flex: 1, marginTop: 12, backgroundColor: '#fff' }}>
-              <FlatList
+            {existingCardItems.length > 0 ? <FlatList
                 data={existingCardItems}
                 keyExtractor={item => item.ItemUniqueId}
                 renderItem={renderCartItem}
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }}
-              />
+              />: <Text style={styles.emptyLabel}>Cart is empty</Text>}
             </View>
 
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16,paddingBottom: 4 }}>
               <Text style={{ fontSize: 14, fontFamily: CAIRO_FONT_FAMILY.regular, lineHeight: Platform.OS === 'ios' ? 0 : 20, color: '#000' }}>Services</Text>
-              <Text style={{ fontSize: 14, fontFamily: CAIRO_FONT_FAMILY.regular, lineHeight: Platform.OS === 'ios' ? 0 : 20, color: '#000' }}>{calculateTotalPrice(existingCardItems).toFixed(2)} SAR</Text>
+              <Text style={{ fontSize: 14, fontFamily: CAIRO_FONT_FAMILY.bold, lineHeight: Platform.OS === 'ios' ? 0 : 20, color: '#000' }}>{calculateTotalPrice(existingCardItems).toFixed(2)} SAR</Text>
             </View>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16,paddingBottom: 4 }}>
               <Text style={{ fontSize: 14, fontFamily: CAIRO_FONT_FAMILY.regular, lineHeight: Platform.OS === 'ios' ? 0 : 20, color: '#000' }}>Tax (15%)</Text>
-              <Text style={{ fontSize: 14, fontFamily: CAIRO_FONT_FAMILY.regular, lineHeight: Platform.OS === 'ios' ? 0 : 20, color: '#000' }}>{Patient.CatNationalityId != "213" ? calculateTax(existingCardItems).toFixed(2) : '0'} SAR</Text>
+              <Text style={{ fontSize: 14, fontFamily: CAIRO_FONT_FAMILY.bold, lineHeight: Platform.OS === 'ios' ? 0 : 20, color: '#000' }}>{Patient.CatNationalityId != "213" ? calculateTax(existingCardItems).toFixed(2) : '0'} SAR</Text>
             </View>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16,paddingBottom: 4 }}>
               <Text style={{ fontSize: 14, fontFamily: CAIRO_FONT_FAMILY.regular, lineHeight: Platform.OS === 'ios' ? 0 : 20, color: '#000' }}>Total</Text>
-              <Text style={{ fontSize: 14, fontFamily: CAIRO_FONT_FAMILY.regular, lineHeight: Platform.OS === 'ios' ? 0 : 20, color: '#000' }}>{Patient.CatNationalityId != "213" ? calculateTotal(existingCardItems).toFixed(2) : calculateTotalPrice(existingCardItems).toFixed(2)} SAR</Text>
+              <Text style={{ fontSize: 14, fontFamily: CAIRO_FONT_FAMILY.bold, lineHeight: Platform.OS === 'ios' ? 0 : 20, color: '#23A2A4' }}>{Patient.CatNationalityId != "213" ? calculateTotal(existingCardItems).toFixed(2) : calculateTotalPrice(existingCardItems).toFixed(2)} SAR</Text>
             </View>
           </View>
           <View style={{ paddingHorizontal: 16, paddingVertical: 8 }}>
-            <TouchableOpacity onPress={onNextPress} style={{ backgroundColor: '#00A79D', paddingVertical: 12, borderRadius: 12, alignItems: 'center' }}>
+            <TouchableOpacity disabled={existingCardItems.length === 0} onPress={onNextPress} style={[{ backgroundColor: '#00A79D', paddingVertical: 12, borderRadius: 12, alignItems: 'center' },existingCardItems.length === 0 && { opacity: 0.5 }]}>
               <Text style={{ color: '#fff', fontSize: 16, fontFamily: CAIRO_FONT_FAMILY.bold, lineHeight: Platform.OS === 'ios' ? 0 : 20 }}>Continue</Text>
             </TouchableOpacity>
           </View>
+          <TouchableOpacity onPress={() => {
+            setCardBottomSheetVisible(true)
+            onPressAddMoreServices()
+            }} style={{ paddingHorizontal: 16, paddingVertical: 8, borderWidth: 1, borderColor: '#00A79D', borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginHorizontal: 16, marginBottom: 12 }}>
+          <Text style={{ color: '#00A79D', fontSize: 16, fontFamily: CAIRO_FONT_FAMILY.bold, lineHeight: Platform.OS === 'ios' ? 0 : 20 }}>Add More Services</Text>
+          </TouchableOpacity>
         </View>
       </CustomBottomSheet>
+
+      <FullScreenLoader visible={loading || loader2 || slotsLoaded} />
     </SafeAreaView>
   );
 };
@@ -2083,7 +2109,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 16,
+    paddingVertical: 8,
     backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
     borderTopColor: '#E0EAEA',
@@ -2138,5 +2164,13 @@ const styles = StyleSheet.create({
     color: '#191919',
     minWidth: 24,
     textAlign: 'center',
+  },
+  emptyLabel: {
+    textAlign: 'center',
+    color: '#191919',
+    marginTop: 16,
+    fontSize: 14,
+    fontFamily: CAIRO_FONT_FAMILY.bold,
+    lineHeight: Platform.OS === 'ios' ? 0 : 20,
   },
 });

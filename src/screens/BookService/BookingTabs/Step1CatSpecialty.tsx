@@ -22,6 +22,7 @@ import CustomBottomSheet from '../../../components/common/CustomBottomSheet';
 import LocationService from '../components/LocationService';
 import { CAIRO_FONT_FAMILY } from '../../../styles/globalStyles';
 import moment from 'moment';
+import FullScreenLoader from '../../../components/FullScreenLoader';
 
 type OfferedServiceCategory = {
   Id: string;
@@ -670,7 +671,9 @@ const Step1 = ({ handleNext, Patient }: { handleNext: () => void, Patient: any }
   }
 
   const getCartBottomSheetHeight = () => {
-    if (existingCardItems.length == 1) {
+    if (existingCardItems.length == 0) {
+      return "25%"
+    } else if (existingCardItems.length == 1) {
       return "35%"
     } else if (existingCardItems.length == 2) {
       return "45%"
@@ -702,20 +705,20 @@ const Step1 = ({ handleNext, Patient }: { handleNext: () => void, Patient: any }
                 data={specialties}
                 keyExtractor={item => item.Id}
                 renderItem={renderSpecialtyItem}
-                showsVerticalScrollIndicator={false}
+                showsVerticalScrollIndicator={true}
                 contentContainerStyle={styles.listContent}
-                ListEmptyComponent={() => (
-                  <Text style={styles.emptyLabel}>
-                    No specialties available for this category
-                  </Text>
-                )}
+                // ListEmptyComponent={() => (
+                //   <Text style={styles.emptyLabel}>
+                //     No specialties available for this category
+                //   </Text>
+                // )}
               />
             ) : (
               <FlatList
                 data={offeredServicesData}
                 keyExtractor={item => item.Id}
                 renderItem={renderOfferedServiceItem}
-                showsVerticalScrollIndicator={false}
+                showsVerticalScrollIndicator={true}
                 contentContainerStyle={styles.listContent}
               />
             )}
@@ -732,23 +735,23 @@ const Step1 = ({ handleNext, Patient }: { handleNext: () => void, Patient: any }
         showHandle={false}
       >
         <View style={styles.reportsBottomSheetContainer}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, width: '100%', height: 50, backgroundColor: '#fff', borderTopLeftRadius: 12, borderTopRightRadius: 12 }} >
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, width: '100%', height: 50, backgroundColor: '#fff', borderTopLeftRadius: 12, borderTopRightRadius: 12,borderBottomWidth: 1, borderBottomColor: '#ccc' }} >
             <Text style={styles.reportsBottomSheetTitle}>Cart</Text>
             <TouchableOpacity onPress={() => setCardBottomSheetVisible(false)}>
               <Ionicons name="close-outline" size={24} color="#000" />
             </TouchableOpacity>
           </View>
-          <View style={{ flex: 1, marginTop: 12, backgroundColor: '#fff' }}>
-            <FlatList
+          <View style={{ flex: 1, marginTop: 6, backgroundColor: '#fff' }}>
+            {existingCardItems.length > 0 ? <FlatList
               data={existingCardItems}
               keyExtractor={item => item.ItemUniqueId}
               renderItem={renderCartItem}
               showsVerticalScrollIndicator={false}
               contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }}
-            />
+            /> : <Text style={styles.emptyLabel}>Cart is empty</Text>}
           </View>
           <View style={{ paddingHorizontal: 16, paddingVertical: 8 }}>
-            <TouchableOpacity onPress={onNextPress} style={{ backgroundColor: '#00A79D', paddingVertical: 12, borderRadius: 12, alignItems: 'center' }}>
+            <TouchableOpacity disabled={existingCardItems.length === 0} onPress={onNextPress} style={[{ backgroundColor: '#00A79D', paddingVertical: 12, borderRadius: 12, alignItems: 'center' },existingCardItems.length === 0 && { opacity: 0.5 }]} activeOpacity={0.85}>
               <Text style={{ color: '#fff', fontSize: 16, fontFamily: CAIRO_FONT_FAMILY.bold, lineHeight: Platform.OS === 'ios' ? 0 : 20 }}>Continue</Text>
             </TouchableOpacity>
           </View>
@@ -762,7 +765,7 @@ const Step1 = ({ handleNext, Patient }: { handleNext: () => void, Patient: any }
         backdropClickable={true}
         showHandle={false}
       >
-        {!selectedLocation ? <LocationService onPressLocation={() => onPressContinue()} /> :
+        {!selectedLocation ? <LocationService onPressLocation={() => onPressContinue()} patientInfo={Patient} /> :
           <View style={styles.reportsBottomSheetContainer}>
             <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#ccc', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, width: '100%', height: 50, backgroundColor: '#fff', borderTopLeftRadius: 12, borderTopRightRadius: 12 }} >
               <Text style={styles.reportsBottomSheetTitle}>Current Visit Information</Text>
@@ -789,6 +792,8 @@ const Step1 = ({ handleNext, Patient }: { handleNext: () => void, Patient: any }
             </View>
           </View>}
       </CustomBottomSheet>
+
+      <FullScreenLoader visible={loading} />
     </SafeAreaView>
   );
 };
@@ -992,10 +997,10 @@ const styles = StyleSheet.create({
   },
   emptyLabel: {
     textAlign: 'center',
-    color: '#90A5A4',
-    marginTop: 24,
+    color: '#191919',
+    marginTop: 16,
     fontSize: 14,
-    fontFamily: CAIRO_FONT_FAMILY.semiBold,
+    fontFamily: CAIRO_FONT_FAMILY.bold,
     lineHeight: Platform.OS === 'ios' ? 0 : 20,
   },
   bottomBar: {
@@ -1184,7 +1189,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 16,
+    paddingVertical: 8,
     backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
     borderTopColor: '#E0EAEA',

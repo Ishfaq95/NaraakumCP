@@ -5,10 +5,12 @@ import {
   Easing,
   FlatList,
   Image,
+  Keyboard,
   SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -191,7 +193,12 @@ const Step2DoctorListing = ({ handleNext, handleReloadNext, Patient, onPressAddM
   const [isLocationBottomSheetVisible, setIsLocationBottomSheetVisible] = useState(false);
   const [offeredServicesCategories, setOfferedServicesCategories] = useState<any[]>([]);
   const [cardBottomSheetVisible, setCardBottomSheetVisible] = useState(false);
-  const [hasInitiallyLoaded, setHasInitiallyLoaded] = useState(false);
+  const [providersReady, setProvidersReady] = useState(false);
+  const [hospitalsReady, setHospitalsReady] = useState(false);
+  const [searchBottomSheetVisible, setSearchBottomSheetVisible] = useState(false);
+  const [searchText, setSearchText] = useState('');
+  const [bottomSheetHeight, setBottomSheetHeight] = useState('35%');
+  const scrollViewRef = React.useRef<ScrollView>(null);
   const dispatch = useDispatch();
   useEffect(() => {
     getAllCities();
@@ -209,7 +216,7 @@ const Step2DoctorListing = ({ handleNext, handleReloadNext, Patient, onPressAddM
     } else {
       const selectedItem = withoutServiceProvidersList[withoutServiceProvidersList.length - 1];
       if (selectedItem.CatCategoryId != '42') {
-        
+
         setIsLocationBottomSheetVisible(true);
       } else {
         onPressContinue();
@@ -220,6 +227,23 @@ const Step2DoctorListing = ({ handleNext, handleReloadNext, Patient, onPressAddM
 
   useEffect(() => {
     getOfferedServicesCategories();
+  }, []);
+
+  useEffect(() => {
+    if (Platform.OS === 'ios') {
+
+      const keyboardDidShow = Keyboard.addListener('keyboardDidShow', (e) => {
+        setBottomSheetHeight('60%');
+      });
+      const keyboardDidHide = Keyboard.addListener('keyboardDidHide', () => {
+        setBottomSheetHeight('35%');
+      });
+
+      return () => {
+        keyboardDidShow.remove();
+        keyboardDidHide.remove();
+      };
+    }
   }, []);
 
   useEffect(() => {
@@ -237,7 +261,7 @@ const Step2DoctorListing = ({ handleNext, handleReloadNext, Patient, onPressAddM
         abc: categoryId || selectedCardItem.catCategoryId,
         Search: '',
       });
-      
+
       dispatch(setServices(offered.OfferedServices))
     } catch (error) {
     } finally {
@@ -343,7 +367,9 @@ const Step2DoctorListing = ({ handleNext, handleReloadNext, Patient, onPressAddM
   const fetchData = useCallback(() => {
     if (selectedCardItem.length === 0) return;
 
-    setHasInitiallyLoaded(false);
+    // Reset readiness flags when starting a new fetch
+    setProvidersReady(false);
+    setHospitalsReady(false);
     const displayCategory = categoriesList.find((item: any) => item.Id == selectedCardItem[0]?.CatCategoryId);
     setDisplayCategory(displayCategory);
     if (displayCategory?.Display == "CP") {
@@ -364,7 +390,7 @@ const Step2DoctorListing = ({ handleNext, handleReloadNext, Patient, onPressAddM
       const displayCategory = categoriesList.find((item: any) => item.Id == selectedCardItem[0]?.CatCategoryId);
       setDisplayCategory(displayCategory);
       if (displayCategory?.Display == "CP") {
-       if(selectedType != "All") {
+        if (selectedType != "All") {
           const serviceId = services?.find((service: any) => service.TitlePlang == selectedType)?.Id;
           fetchServiceProviders(serviceId, selectedCityId, selectedSquareId, selectedCardItem[0]?.CatCategoryId != "42" ? searchNearMe ? `${selectedLocation?.latitude},${selectedLocation?.longitude}` : null : null);
         } else {
@@ -412,6 +438,8 @@ const Step2DoctorListing = ({ handleNext, handleReloadNext, Patient, onPressAddM
 
   const fetchServiceProviders = useCallback(async (serviceID?: string, cityId?: any, squareId?: any, patientLocation?: any, emptySearch?: boolean) => {
     try {
+      // New fetch for providers → mark as not ready
+      setProvidersReady(false);
       setLoading(true);
       let serviceIds = "";
       if (serviceID) {
@@ -470,7 +498,9 @@ const Step2DoctorListing = ({ handleNext, handleReloadNext, Patient, onPressAddM
       const response = await bookingService.getServiceProviderListByServiceByIds(requestBody);
 
       if (response?.ServiceProviderList?.length == 0) {
-        setProviderWithSlots([])
+        // No providers at all – clear slots and mark as ready so empty state can show
+        setProviderWithSlots([]);
+        setProvidersReady(true);
       }
       setServiceProviders(response?.ServiceProviderList || []);
     } catch (error) {
@@ -520,6 +550,8 @@ const Step2DoctorListing = ({ handleNext, handleReloadNext, Patient, onPressAddM
 
   const fetchHospitalListByServices = useCallback(async (cityId?: any, squareId?: any, patientLocation?: any, emptySearch?: boolean) => {
     try {
+      // New fetch for hospitals → mark as not ready
+      setHospitalsReady(false);
       setLoading(true);
       const payload = {
         CatcategoryId: selectedCardItem[0]?.CatCategoryId,
@@ -535,7 +567,9 @@ const Step2DoctorListing = ({ handleNext, handleReloadNext, Patient, onPressAddM
       const response = await bookingService.getHospitalListByServices(payload);
 
       if (response?.HospitalList.length == 0) {
-        setHospitalWithSlots([])
+        // No hospitals at all – clear slots and mark as ready so empty state can show
+        setHospitalWithSlots([]);
+        setHospitalsReady(true);
       }
 
       setHospitalList(response?.HospitalList || []);
@@ -640,7 +674,8 @@ const Step2DoctorListing = ({ handleNext, handleReloadNext, Patient, onPressAddM
     setSlotsLoaded(false)
 
     setProviderWithSlots(tempProvider)
-    setHasInitiallyLoaded(true)
+    // Providers with slots are now ready to be displayed
+    setProvidersReady(true);
   }, [serviceProviders, availability, selectedDate]);
 
   useEffect(() => {
@@ -691,14 +726,16 @@ const Step2DoctorListing = ({ handleNext, handleReloadNext, Patient, onPressAddM
     setSlotsLoaded(false)
 
     setHospitalWithSlots(tempHospital)
-    setHasInitiallyLoaded(true)
+    // Hospitals with slots are now ready to be displayed
+    setHospitalsReady(true);
   }
 
 
 
   // Memoize filtered providers to prevent unnecessary re-renders
   const filteredProviders = useMemo(() => {
-    const filtered = ProviderWithSlots.filter((item: any) => {
+    // Base filter: availability & holidays
+    let filtered = ProviderWithSlots.filter((item: any) => {
       const providerAvailability = availability.reduce((acc: any[], avail: any) => {
         const details = avail.Detail?.filter((detail: any) => detail.ServiceProviderId === item.UserId) || [];
         return [...acc, ...details];
@@ -722,9 +759,16 @@ const Step2DoctorListing = ({ handleNext, handleReloadNext, Patient, onPressAddM
       return false;
     });
 
-    // // Apply sorting if sortByValue is not 'All'
+    // Apply affiliation filter if selected
+    if (selectedAffiliation != '0') {
+      filtered = filtered.filter(
+        (item: any) => item.CatOrganizationModeId == selectedAffiliation,
+      );
+    }
+
+    // Apply sorting if needed (after all filters)
     if (sortBy != 'All') {
-      return filtered.sort((a: any, b: any) => {
+      filtered = [...filtered].sort((a: any, b: any) => {
         const priceA = parseFloat(a.ServiceServe?.[0]?.Price) || 0;
         const priceB = parseFloat(b.ServiceServe?.[0]?.Price) || 0;
 
@@ -737,15 +781,11 @@ const Step2DoctorListing = ({ handleNext, handleReloadNext, Patient, onPressAddM
       });
     }
 
-    if(selectedAffiliation != "0"){
-      return filtered.filter((item: any) => item.CatOrganizationModeId == selectedAffiliation);
-    }
-
     return filtered;
-  }, [ProviderWithSlots, availability, selectedDate, sortBy,selectedAffiliation]);
+  }, [ProviderWithSlots, availability, selectedDate, sortBy, selectedAffiliation]);
   // }, [ProviderWithSlots, availability, selectedDate, selectSpecialtyFilter, sortByValue]);
 
-  // Memoize filtered providers to prevent unnecessary re-renders
+  // Memoize filtered hospitals to prevent unnecessary re-renders
   const filteredHospitals = useMemo(() => {
     return HospitalWithSlots.filter((item: any) => {
       const hospitalAvailability = availability.flatMap(avail =>
@@ -764,13 +804,38 @@ const Step2DoctorListing = ({ handleNext, handleReloadNext, Patient, onPressAddM
     });
   }, [HospitalWithSlots, availability, selectedDate]);
 
+  // Apply search on top of all other filters
+  const normalizedSearch = searchText.trim().toLowerCase();
+
+  const searchedProviders = useMemo(() => {
+    if (!normalizedSearch) {
+      return filteredProviders;
+    }
+
+    return filteredProviders.filter((item: any) => {
+      const name = item.FullnamePlang || item.FullNamePlang || '';
+      return name.toLowerCase().includes(normalizedSearch);
+    });
+  }, [filteredProviders, normalizedSearch]);
+
+  const searchedHospitals = useMemo(() => {
+    if (!normalizedSearch) {
+      return filteredHospitals;
+    }
+
+    return filteredHospitals.filter((item: any) => {
+      const title = item.TitleSlang || item.TitlePlang || '';
+      return title.toLowerCase().includes(normalizedSearch);
+    });
+  }, [filteredHospitals, normalizedSearch]);
+
   useEffect(() => {
     generateDateList(dateListStartDate);
   }, [dateListStartDate]);
 
   const getCartBottomSheetHeight = () => {
-    if(existingCardItems.length == 0){
-return "40%"
+    if (existingCardItems.length == 0) {
+      return "40%"
     } else if (existingCardItems.length == 1) {
       return "60%"
     } else if (existingCardItems.length == 2) {
@@ -1125,15 +1190,15 @@ return "40%"
   }
 
   const calculateTotalPrice = (items: any[]) => {
-    return  items.reduce((total, item) => total + (parseFloat(item.ServicePrice)*(item.Quantity || 1) || 0), 0);
+    return items.reduce((total, item) => total + (parseFloat(item.ServicePrice) * (item.Quantity || 1) || 0), 0);
   }
 
   const calculateTax = (items: any[]) => {
-    return items.reduce((total, item) => total + (parseFloat(item.ServicePrice)*(item.Quantity || 1) || 0) * 0.15, 0);
+    return items.reduce((total, item) => total + (parseFloat(item.ServicePrice) * (item.Quantity || 1) || 0) * 0.15, 0);
   }
 
   const calculateTotal = (items: any[]) => {
-    return items.reduce((total, item) => total + (parseFloat(item.ServicePrice)*(item.Quantity || 1) || 0) + (parseFloat(item.ServicePrice)*(item.Quantity || 1) || 0) * 0.15, 0);
+    return items.reduce((total, item) => total + (parseFloat(item.ServicePrice) * (item.Quantity || 1) || 0) + (parseFloat(item.ServicePrice) * (item.Quantity || 1) || 0) * 0.15, 0);
   }
 
   const getNextButtonEnabled = useCallback(() => {
@@ -1147,15 +1212,28 @@ return "40%"
   // Calculate actual result count based on items with available slots
   const resultLength = useMemo(() => {
     if (displayCategory?.Display == "CP") {
-      return filteredProviders.filter(item => hasAvailableSlots(item.slots)).length;
+      return searchedProviders.filter(item => hasAvailableSlots(item.slots)).length;
     } else {
-      return filteredHospitals.filter(item => hasAvailableSlots(item.slots)).length;
+      return searchedHospitals.filter(item => hasAvailableSlots(item.slots)).length;
     }
-  }, [filteredProviders, filteredHospitals, displayCategory, hasAvailableSlots]);
+  }, [searchedProviders, searchedHospitals, displayCategory, hasAvailableSlots]);
+
+  const handleCloseSearch = () => {
+    Keyboard.dismiss();
+    if (searchText.length > 0) {
+      setSearchText('');
+      // setFilteredClientList(clientList);
+    }
+    setSearchBottomSheetVisible(false);
+  };
+
+  const handleSearch = () => {
+    setSearchBottomSheetVisible(false);
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.container} showsVerticalScrollIndicator={true}>
         {/* Calendar Button */}
         <TouchableOpacity
           style={styles.calendarButton}
@@ -1239,7 +1317,7 @@ return "40%"
         {/* Doctor Type Selection */}
         {(selectedCardItem[0]?.CatCategoryId == "42" || selectedCardItem[0]?.CatCategoryId == "32") && <View style={styles.radioGroup}>
           <TouchableOpacity
-            style={[styles.radioItem, { width: '20%' } , services ? false : true ? { opacity: 0.5 } : {}]}
+            style={[styles.radioItem, { width: '20%' }, services ? false : true ? { opacity: 0.5 } : {}]}
             onPress={() => {
               setSelectedType('All')
             }}
@@ -1253,11 +1331,11 @@ return "40%"
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.radioItem, { width: '40%' } , services ? false : true ? { opacity: 0.5 } : {}]}
+            style={[styles.radioItem, { width: '40%' }, services ? false : true ? { opacity: 0.5 } : {}]}
             onPress={() => {
               setSelectedType('Consultant')
             }}
-            disabled={services ?  false : true}
+            disabled={services ? false : true}
             activeOpacity={0.7}
           >
             <View style={styles.radioOuter}>
@@ -1267,7 +1345,7 @@ return "40%"
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.radioItem, { width: '30%' } , services ? false : true ? { opacity: 0.5 } : {}]}
+            style={[styles.radioItem, { width: '30%' }, services ? false : true ? { opacity: 0.5 } : {}]}
             onPress={() => {
               setSelectedType('Specialist')
             }}
@@ -1323,7 +1401,7 @@ return "40%"
             <TouchableOpacity onPress={() => setShowSortFilterBottomSheet(true)} style={styles.iconButton} activeOpacity={0.7}>
               <Ionicons name="options-outline" size={20} color="#6D7A80" />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.iconButton} activeOpacity={0.7}>
+            <TouchableOpacity onPress={() => setSearchBottomSheetVisible(true)} style={styles.iconButton} activeOpacity={0.7}>
               <Ionicons name="search-outline" size={20} color="#6D7A80" />
             </TouchableOpacity>
             <TouchableOpacity onPress={() => ApplyFilters()} style={styles.iconButton} activeOpacity={0.7}>
@@ -1372,14 +1450,14 @@ return "40%"
             {
               displayCategory?.Display == "CP" ?
                 <FlatList
-                  data={filteredProviders}
+                  data={searchedProviders}
                   keyExtractor={(item) => item.RowId}
                   removeClippedSubviews={true}
                   maxToRenderPerBatch={5}
                   windowSize={10}
                   initialNumToRender={3}
                   ListEmptyComponent={
-                    (loading || loader2 || slotsLoaded || !hasInitiallyLoaded) ? (
+                    (loading || loader2 || slotsLoaded || !providersReady) ? (
                       <ListShimmerLoader cardType="default" />
                     ) : (
                       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -1418,7 +1496,7 @@ return "40%"
                 />
                 :
                 <FlatList
-                  data={filteredHospitals}
+                  data={searchedHospitals}
                   keyExtractor={(item) => item.UserId}
                   removeClippedSubviews={true}
                   maxToRenderPerBatch={5}
@@ -1427,7 +1505,7 @@ return "40%"
                   windowSize={10}
                   initialNumToRender={3}
                   ListEmptyComponent={
-                    (loading || loader2 || slotsLoaded || !hasInitiallyLoaded) ? (
+                    (loading || loader2 || slotsLoaded || !hospitalsReady) ? (
                       <ListShimmerLoader cardType="default" />
                     ) : (
                       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -1477,38 +1555,38 @@ return "40%"
         maxHeight={'25%'}
         showHandle={false}
       >
-       <View style={styles.reportsBottomSheetContainer}>
+        <View style={styles.reportsBottomSheetContainer}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, width: '100%', height: 50, backgroundColor: '#fff', borderTopLeftRadius: 12, borderTopRightRadius: 12 }} >
             <Text style={styles.reportsBottomSheetTitle}>Sort by price</Text>
             <TouchableOpacity onPress={() => setShowSortFilterBottomSheet(false)}>
               <Ionicons name="close-outline" size={24} color="#000" />
             </TouchableOpacity>
           </View>
-          <View style={{ flex: 1, marginTop: 12,paddingHorizontal: 16, backgroundColor: '#fff' }}>
-          <TouchableOpacity
-            style={[styles.radioItem,{width:"100%", marginBottom: 12}]}
-            onPress={() => {
-              setSortBy('Asc')
-            }}
-            activeOpacity={0.7}
-          >
-            <View style={styles.radioOuter}>
-              {sortBy === 'Asc' && <View style={styles.radioInner} />}
-            </View>
-            <Text style={styles.radioLabel}>Lowest price</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.radioItem,{width:"100%", marginBottom: 12}]}
-            onPress={() => {
-              setSortBy('Desc')
-            }}
-            activeOpacity={0.7}
-          >
-            <View style={styles.radioOuter}>
-              {sortBy === 'Desc' && <View style={styles.radioInner} />}
-            </View>
-            <Text style={styles.radioLabel}>The highest price</Text>
-          </TouchableOpacity>
+          <View style={{ flex: 1, marginTop: 12, paddingHorizontal: 16, backgroundColor: '#fff' }}>
+            <TouchableOpacity
+              style={[styles.radioItem, { width: "100%", marginBottom: 12 }]}
+              onPress={() => {
+                setSortBy('Asc')
+              }}
+              activeOpacity={0.7}
+            >
+              <View style={styles.radioOuter}>
+                {sortBy === 'Asc' && <View style={styles.radioInner} />}
+              </View>
+              <Text style={styles.radioLabel}>Lowest price</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.radioItem, { width: "100%", marginBottom: 12 }]}
+              onPress={() => {
+                setSortBy('Desc')
+              }}
+              activeOpacity={0.7}
+            >
+              <View style={styles.radioOuter}>
+                {sortBy === 'Desc' && <View style={styles.radioInner} />}
+              </View>
+              <Text style={styles.radioLabel}>The highest price</Text>
+            </TouchableOpacity>
           </View>
           <View style={{ paddingHorizontal: 16, paddingVertical: 8 }}>
             <TouchableOpacity onPress={() => setShowSortFilterBottomSheet(false)} style={{ backgroundColor: '#00A79D', paddingVertical: 12, borderRadius: 12, alignItems: 'center' }}>
@@ -1546,7 +1624,7 @@ return "40%"
               <TouchableOpacity onPress={() => onPressContinue()} style={{ backgroundColor: '#00A79D', paddingVertical: 12, borderRadius: 12, alignItems: 'center', marginHorizontal: 16 }}>
                 <Text style={{ color: '#fff', fontSize: 16, fontFamily: CAIRO_FONT_FAMILY.bold, lineHeight: Platform.OS === 'ios' ? 0 : 20 }}>Continue</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => dispatch(setSelectedLocation(null))} style={{ backgroundColor: '#00A79D', paddingVertical: 12, borderRadius: 12, alignItems: 'center', marginHorizontal: 16,marginTop: 12 }}>
+              <TouchableOpacity onPress={() => dispatch(setSelectedLocation(null))} style={{ backgroundColor: '#00A79D', paddingVertical: 12, borderRadius: 12, alignItems: 'center', marginHorizontal: 16, marginTop: 12 }}>
                 <Text style={{ color: '#fff', fontSize: 16, fontFamily: CAIRO_FONT_FAMILY.bold, lineHeight: Platform.OS === 'ios' ? 0 : 20 }}>Change Address</Text>
               </TouchableOpacity>
             </View>
@@ -1561,7 +1639,7 @@ return "40%"
         showHandle={false}
       >
         <View style={styles.reportsBottomSheetContainer}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, width: '100%', height: 50, backgroundColor: '#fff', borderTopLeftRadius: 12, borderTopRightRadius: 12,borderBottomWidth: 1, borderBottomColor: '#ccc' }} >
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, width: '100%', height: 50, backgroundColor: '#fff', borderTopLeftRadius: 12, borderTopRightRadius: 12, borderBottomWidth: 1, borderBottomColor: '#ccc' }} >
             <Text style={styles.reportsBottomSheetTitle}>Cart</Text>
             <TouchableOpacity onPress={() => setCardBottomSheetVisible(false)}>
               <Ionicons name="close-outline" size={24} color="#000" />
@@ -1569,39 +1647,92 @@ return "40%"
           </View>
           <View style={{ flex: 1, marginTop: 12, backgroundColor: '#fff' }}>
             <View style={{ flex: 1, marginTop: 12, backgroundColor: '#fff' }}>
-            {existingCardItems.length > 0 ? <FlatList
+              {existingCardItems.length > 0 ? <FlatList
                 data={existingCardItems}
                 keyExtractor={item => item.ItemUniqueId}
                 renderItem={renderCartItem}
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }}
-              />: <Text style={styles.emptyLabel}>Cart is empty</Text>}
+              /> : <Text style={styles.emptyLabel}>Cart is empty</Text>}
             </View>
 
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16,paddingBottom: 4 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingBottom: 4 }}>
               <Text style={{ fontSize: 14, fontFamily: CAIRO_FONT_FAMILY.regular, lineHeight: Platform.OS === 'ios' ? 0 : 20, color: '#000' }}>Services</Text>
               <Text style={{ fontSize: 14, fontFamily: CAIRO_FONT_FAMILY.bold, lineHeight: Platform.OS === 'ios' ? 0 : 20, color: '#000' }}>{calculateTotalPrice(existingCardItems).toFixed(2)} SAR</Text>
             </View>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16,paddingBottom: 4 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingBottom: 4 }}>
               <Text style={{ fontSize: 14, fontFamily: CAIRO_FONT_FAMILY.regular, lineHeight: Platform.OS === 'ios' ? 0 : 20, color: '#000' }}>Tax (15%)</Text>
               <Text style={{ fontSize: 14, fontFamily: CAIRO_FONT_FAMILY.bold, lineHeight: Platform.OS === 'ios' ? 0 : 20, color: '#000' }}>{Patient.CatNationalityId != "213" ? calculateTax(existingCardItems).toFixed(2) : '0'} SAR</Text>
             </View>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16,paddingBottom: 4 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingBottom: 4 }}>
               <Text style={{ fontSize: 14, fontFamily: CAIRO_FONT_FAMILY.regular, lineHeight: Platform.OS === 'ios' ? 0 : 20, color: '#000' }}>Total</Text>
               <Text style={{ fontSize: 14, fontFamily: CAIRO_FONT_FAMILY.bold, lineHeight: Platform.OS === 'ios' ? 0 : 20, color: '#23A2A4' }}>{Patient.CatNationalityId != "213" ? calculateTotal(existingCardItems).toFixed(2) : calculateTotalPrice(existingCardItems).toFixed(2)} SAR</Text>
             </View>
           </View>
           <View style={{ paddingHorizontal: 16, paddingVertical: 8 }}>
-            <TouchableOpacity disabled={existingCardItems.length === 0} onPress={onNextPress} style={[{ backgroundColor: '#00A79D', paddingVertical: 12, borderRadius: 12, alignItems: 'center' },existingCardItems.length === 0 && { opacity: 0.5 }]}>
+            <TouchableOpacity disabled={existingCardItems.length === 0} onPress={onNextPress} style={[{ backgroundColor: '#00A79D', paddingVertical: 12, borderRadius: 12, alignItems: 'center' }, existingCardItems.length === 0 && { opacity: 0.5 }]}>
               <Text style={{ color: '#fff', fontSize: 16, fontFamily: CAIRO_FONT_FAMILY.bold, lineHeight: Platform.OS === 'ios' ? 0 : 20 }}>Continue</Text>
             </TouchableOpacity>
           </View>
           <TouchableOpacity onPress={() => {
             setCardBottomSheetVisible(true)
             onPressAddMoreServices()
-            }} style={{ paddingHorizontal: 16, paddingVertical: 8, borderWidth: 1, borderColor: '#00A79D', borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginHorizontal: 16, marginBottom: 12 }}>
-          <Text style={{ color: '#00A79D', fontSize: 16, fontFamily: CAIRO_FONT_FAMILY.bold, lineHeight: Platform.OS === 'ios' ? 0 : 20 }}>Add More Services</Text>
+          }} style={{ paddingHorizontal: 16, paddingVertical: 8, borderWidth: 1, borderColor: '#00A79D', borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginHorizontal: 16, marginBottom: 12 }}>
+            <Text style={{ color: '#00A79D', fontSize: 16, fontFamily: CAIRO_FONT_FAMILY.bold, lineHeight: Platform.OS === 'ios' ? 0 : 20 }}>Add More Services</Text>
           </TouchableOpacity>
+        </View>
+      </CustomBottomSheet>
+
+      <CustomBottomSheet
+        visible={searchBottomSheetVisible}
+        onClose={handleCloseSearch}
+        showHandle={false}
+        maxHeight={bottomSheetHeight}
+        backdropClickable={true}
+      >
+        <View style={styles.searchContainer}>
+          <ScrollView
+            ref={scrollViewRef}
+            style={{ flex: 1, paddingHorizontal: 16 }}
+            contentContainerStyle={{ paddingTop: 16 }}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+            bounces={false}
+          >
+            {/* Header */}
+            <View style={styles.searchHeader}>
+              <Text style={styles.searchTitle}>Search</Text>
+              <TouchableOpacity onPress={handleCloseSearch} style={styles.closeButton}>
+                <Ionicons name="close" size={24} color="#404B53" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Separator */}
+            <View style={styles.searchSeparator} />
+
+            {/* Search Input Section */}
+            <View style={styles.searchInputContainer}>
+              <Text style={styles.searchLabel}>Search By Client Name</Text>
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Client Name"
+                placeholderTextColor="#818181"
+                value={searchText}
+                onChangeText={setSearchText}
+                returnKeyType="search"
+                onSubmitEditing={handleSearch}
+              />
+            </View>
+
+            {/* Search Button */}
+            <TouchableOpacity
+              style={styles.searchButtonContainer}
+              onPress={handleSearch}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.searchButtonText}>Search</Text>
+            </TouchableOpacity>
+          </ScrollView>
         </View>
       </CustomBottomSheet>
 
@@ -2172,5 +2303,69 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: CAIRO_FONT_FAMILY.bold,
     lineHeight: Platform.OS === 'ios' ? 0 : 20,
+  },
+  searchContainer: {
+    flex: 1,
+  },
+  searchScrollContent: {
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: Platform.OS === 'ios' ? 20 : 16,
+  },
+  searchHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  searchTitle: {
+    fontSize: 18,
+    fontFamily: CAIRO_FONT_FAMILY.bold,
+    color: '#000000',
+  },
+  closeButton: {
+    padding: 4,
+  },
+  searchSeparator: {
+    height: 1,
+    backgroundColor: '#E5E7EB',
+    marginBottom: 20,
+  },
+  searchInputContainer: {
+    marginBottom: 24,
+  },
+  searchLabel: {
+    fontSize: 14,
+    fontFamily: CAIRO_FONT_FAMILY.regular,
+    color: '#000000',
+    marginBottom: 8,
+  },
+  searchInput: {
+    height: 48,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    fontSize: 16,
+    fontFamily: CAIRO_FONT_FAMILY.regular,
+    color: '#000000',
+    backgroundColor: '#FFFFFF',
+  },
+  searchButtonContainer: {
+    backgroundColor: '#00A19D',
+    borderRadius: 8,
+    height: 48,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  searchButtonText: {
+    fontSize: 16,
+    fontFamily: CAIRO_FONT_FAMILY.bold,
+    color: '#FFFFFF',
   },
 });

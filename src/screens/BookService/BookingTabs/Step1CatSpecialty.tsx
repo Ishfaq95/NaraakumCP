@@ -468,6 +468,7 @@ const Step1 = ({ handleNext, Patient }: { handleNext: () => void, Patient: any }
   };
 
   const onNextPress = () => {
+    setCardBottomSheetVisible(false);
     const withoutServiceProvidersList = existingCardItems.filter((item: any) => !item.ServiceProviderUserloginInfoId && !item.OrganizationId);
     if (withoutServiceProvidersList.length == 0) {
       onPressContinue();
@@ -1155,6 +1156,8 @@ const styles = StyleSheet.create({
   cartItemContainer: {
     marginBottom: 12,
     borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E0EAEA',
     overflow: 'hidden',
     backgroundColor: '#FFFFFF',
     shadowColor: '#000',

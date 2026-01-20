@@ -15,6 +15,7 @@ import { ROUTES } from '../../../../shared/utils/routes';
 import { addVisitRecordService } from '../../../../services/api/addVisitRecord';
 import { useDispatch, useSelector } from 'react-redux';
 import { addCardItem, setSelectedLocation } from '../../../../shared/redux/reducers/bookingReducer';
+import { useIsFocused } from '@react-navigation/native';
 
 export interface NewServiceData {
   serviceName?: string;
@@ -32,9 +33,10 @@ const NewService: React.FC<NewServiceProps> = ({ patientData, onDataChange }) =>
   const navigation = useNavigation();
   const visitmainId: any = useSelector((state: any) => state.root.generalData.visitmainId);
   const dispatch = useDispatch();
+  const isFocused = useIsFocused();
   useEffect(() => {
     getOrderListAddedByServiceProvider();
-  }, []);
+  }, [isFocused]);
 
   const getOrderListAddedByServiceProvider = async () => {
     const payload = {
@@ -51,7 +53,12 @@ const NewService: React.FC<NewServiceProps> = ({ patientData, onDataChange }) =>
   const onAddService = () => {
     dispatch(addCardItem([]))
     dispatch(setSelectedLocation(null))
-    navigation.navigate(ROUTES.BookNewService as never, { Patient: patientData });
+    navigation.navigate(ROUTES.BookNewService as never, { Patient: patientData, VisitMainId: visitmainId });
+  }
+
+  const onPressShowDetails = (item: any) => {
+    console.log("item===>", item)
+    navigation.navigate(ROUTES.OrderDetails as never, { item: item, visitmainId: visitmainId });
   }
 
   const renderServiceItem = (item: any) => {
@@ -101,7 +108,7 @@ const NewService: React.FC<NewServiceProps> = ({ patientData, onDataChange }) =>
         <TouchableOpacity
           style={styles.detailsButton}
           onPress={() => {
-            // TODO: Navigate to order details screen when available
+            onPressShowDetails(item)
           }}
         >
           <Text style={styles.detailsButtonText}>Show Details</Text>

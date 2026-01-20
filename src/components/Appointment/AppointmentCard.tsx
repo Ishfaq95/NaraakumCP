@@ -208,7 +208,7 @@ const AppointmentCard: React.FC<AppointmentCardProps> = ({
         <View style={styles.detailRow}>
           <View style={styles.iconLabelContainer}>
             <Ionicons name="calendar-outline" size={16} color="#23a2a4" />
-            <Text style={styles.detailLabel}>Online Session Date</Text>
+            <Text style={styles.detailLabel}>{item?.TaskService[0].CatServiceServeTypeId == 1 ? 'Online Session Date' : 'Appointment Date'}</Text>
           </View>
           <Text style={styles.detailValue}>{moment.utc(item?.SchedulingDate).local().format('DD/MM/YYYY')}</Text>
         </View>
@@ -216,7 +216,7 @@ const AppointmentCard: React.FC<AppointmentCardProps> = ({
         <View style={styles.detailRow}>
           <View style={styles.iconLabelContainer}>
             <Ionicons name="time-outline" size={16} color="#23a2a4" />
-            <Text style={styles.detailLabel}>Online Session Time</Text>
+            <Text style={styles.detailLabel}>{item?.TaskService[0].CatServiceServeTypeId == 1 ? 'Online Session Time' : 'Appointment Time'}</Text>
           </View>
           <Text style={styles.detailValue}>
             {item?.SchedulingTime ?

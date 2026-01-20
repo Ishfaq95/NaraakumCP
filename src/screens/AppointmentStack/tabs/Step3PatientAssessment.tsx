@@ -323,7 +323,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 2,
     paddingVertical: 4,
-    paddingHorizontal: 4,
+    // paddingHorizontal: 4,
+    overflow: 'hidden',
   },
   tabsScrollContent: {
     paddingHorizontal: 2,

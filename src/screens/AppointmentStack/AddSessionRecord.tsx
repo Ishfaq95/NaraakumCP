@@ -211,10 +211,15 @@ const AddSessionRecord = ({ route }: { route: any }) => {
 
     const renderHeader = () => (
         <View style={styles.header}>
+             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             <TouchableOpacity onPress={backButtonPress} style={styles.backButton}>
                 <Ionicons name="arrow-back-outline" size={24} color="#333" />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>{(OrderDetail?.CatCategoryId != 42 || (OrderDetail?.CatServiceServeTypeId && OrderDetail?.CatServiceServeTypeId != 1)) ? 'Visit Record' : 'Session Record'}</Text>
+           </View>
+           <TouchableOpacity onPress={backButtonPress} style={styles.cancelButton}>
+           <Text style={styles.cancelButtonText}>Cancel</Text>
+       </TouchableOpacity>
         </View>
     );
 
@@ -956,6 +961,8 @@ const styles = StyleSheet.create({
     header: {
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingRight: 8,
         height: 56,
         backgroundColor: '#fff',
         elevation: 2,
@@ -1481,6 +1488,20 @@ const styles = StyleSheet.create({
         fontFamily: CAIRO_FONT_FAMILY.bold,
         lineHeight: 20,
         color: '#fff',
+    },
+    cancelButton: {
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        backgroundColor: '#fff',
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#e82424',
+    },
+    cancelButtonText: {
+        fontSize: 14,
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
+        lineHeight: Platform.OS === 'ios' ? 0 : 20,
+        color: '#e82424',
     },
 });
 

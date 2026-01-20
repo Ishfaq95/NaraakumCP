@@ -168,7 +168,7 @@ const MedicalHistoryTab: React.FC<MedicalHistoryTabProps> = ({ data }) => {
             <View style={styles.addButtonContainer}>
                 <TouchableOpacity onPress={() => navigation.navigate(ROUTES.AddSessionRecord, { patientData: data, OrderDetail: data })} disabled={currentRecords.length > 0} style={[styles.addButton, currentRecords.length > 0 && { opacity: 0.5 }]}>
                     <Ionicons name="add-circle-outline" size={20} color="#fff" />
-                    <Text style={styles.addButtonText}>Add Session Record</Text>
+                    <Text style={styles.addButtonText}>{data?.CatCategoryId == "42" ? 'Add Session Record' : 'Add Visit Record'}</Text>
                 </TouchableOpacity>
             </View>
 

@@ -51,6 +51,7 @@ import ArabicBioScreen from '../screens/MyProfileStack/ArabicBio';
 import WorkAreas from '../screens/MyProfileStack/WorkAreas';
 import DeleteConfirmationScreen from '../screens/SettingStack/DeleteConfirmationScreen';
 import NetworkErrorScreen from '../screens/NetworkScreen';
+import OrderDetails from '../screens/AppointmentStack/tabs/OrderDetails';
 
 const Stack = createNativeStackNavigator();
 
@@ -115,6 +116,7 @@ const RootNavigator = () => {
       <Stack.Screen name={ROUTES.WorkAreas} component={WorkAreas} />
       <Stack.Screen name={ROUTES.DeleteConfirmationScreen} component={DeleteConfirmationScreen} />
       <Stack.Screen name={ROUTES.NetworkError} component={NetworkErrorScreen} />
+      <Stack.Screen name={ROUTES.OrderDetails} component={OrderDetails} />
     </Stack.Navigator>
   );
 };

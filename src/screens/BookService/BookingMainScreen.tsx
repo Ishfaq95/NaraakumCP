@@ -20,7 +20,7 @@ import CustomBottomSheet from '../../components/common/CustomBottomSheet';
 import LoaderKit from 'react-native-loader-kit';
 
 const BookingScreen = ({ navigation, route }: any) => {
-    const { Patient } = route.params;
+    const { Patient, VisitMainId } = route.params;
     const { t } = useTranslation();
     const [currentStep, setCurrentStep] = useState(1);
     const [showWarningModal, setShowWarningModal] = useState(false);
@@ -54,11 +54,13 @@ const BookingScreen = ({ navigation, route }: any) => {
         setCurrentStep(1);
     };
 
+    console.log("VisitMainId===>main", VisitMainId)
+
     const renderStep = () => {
         switch (currentStep) {
             case 1: return <Step1CatSpecialty handleNext={handleNext} Patient={Patient} />;
             case 2: return <Step2DoctorListing handleNext={handleNext} handleReloadNext={handleReloadNext} Patient={Patient} onPressAddMoreServices={onPressAddMoreServices} />;
-            case 3: return <Step3ReviewOrder handleNext={handleNext} Patient={Patient} />;
+            case 3: return <Step3ReviewOrder handleNext={handleNext} Patient={Patient} VisitMainId={VisitMainId} />;
             case 5: return <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                 <LoaderKit
                     style={{ width: 100, height: 100 }}

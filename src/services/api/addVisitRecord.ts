@@ -217,6 +217,23 @@ export const addEditVisitPatientDiagnosis = async (credentials: any) => {
     }
 };
 
+export const getOrderDetailAddedByServiceProvider = async (credentials: any) => {
+    try {
+        const response = await axiosInstance.post(
+            `visitRecord/GetOrderDetailAddedByServiceProvider`,
+            credentials
+        );
+        return response.data;
+    }
+    catch (error: any) {
+        throw {
+            message: error?.response?.data?.message || 'Get order detail added by service provider failed',
+            status: error?.response?.status,
+            code: error?.response?.data?.code
+        };
+    }
+};
+
 
 // Export all appointment related functions
 export const addVisitRecordService = {
@@ -233,4 +250,5 @@ export const addVisitRecordService = {
     getAllDiagnosisSpecialty,
     getAllIcd10Codes,
     addEditVisitPatientDiagnosis,
+    getOrderDetailAddedByServiceProvider,
 }; 

@@ -15,7 +15,7 @@ const TABS = [
     { key: 'list', label: 'Patient Saved Addresses' },
 ];
 
-const LocationScreen = ({ onPressLocation, patientInfo }: { onPressLocation: () => void, patientInfo: any }) => {
+const LocationScreen = ({ onPressLocation, patientInfo }: { onPressLocation: () => void, patientInfo?: any }) => {
     const navigation = useNavigation();
     const { t } = useTranslation();
     const [activeTab, setActiveTab] = useState('map');

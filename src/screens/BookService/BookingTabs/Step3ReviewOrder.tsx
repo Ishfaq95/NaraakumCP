@@ -12,7 +12,7 @@ import AntDesign from 'react-native-vector-icons/AntDesign';
 import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
 import AppointmentTrackingMap from '../../../components/AppointmentTrackingMap';
 
-const Step3ReviewOrder = ({ Patient, handleNext }: { Patient: any, handleNext: () => void }) => {
+const Step3ReviewOrder = ({ Patient, handleNext, VisitMainId }: { Patient: any, handleNext: () => void, VisitMainId: string }) => {
   const existingCardItems = useSelector((state: any) => state.root.booking.cardItems);
   const [showGroupedArray, setShowGroupedArray] = useState([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -21,6 +21,8 @@ const Step3ReviewOrder = ({ Patient, handleNext }: { Patient: any, handleNext: (
   const user = useSelector((state: any) => state.root.user.user);
   const selectedLocation = useSelector((state: any) => state.root.booking.selectedLocation);
   const [openGoogleMapBottomSheet, setOpenGoogleMapBottomSheet] = useState(false);
+
+  console.log("VisitMainId", VisitMainId)
 
   const createOrderMainBeforePayment = async () => {
     if (isProcessing) return; // Prevent multiple calls
@@ -32,8 +34,10 @@ const Step3ReviewOrder = ({ Patient, handleNext }: { Patient: any, handleNext: (
         "UserLoginInfoId": Patient.UserLoginInfoId,
         "CatPlatformId": Platform.OS == 'ios' ? 2 : 3,
         "OrderByCareProviderId": user.Id,
-        "OrderDetail": generatePayloadforOrderMainBeforePayment(existingCardItems, Patient)
+        "OrderDetail": generatePayloadforOrderMainBeforePayment(existingCardItems, Patient, VisitMainId)
       }
+
+      console.log('payload', payload);
 
       const response = await bookingService.createOrderMainBeforePayment(payload);
 

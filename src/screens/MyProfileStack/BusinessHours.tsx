@@ -1706,7 +1706,7 @@ const BusinessHours = ({ route }: { route: any }) => {
                     setDeleteResolution('original');
                 }}
                 showHandle={false}
-                maxHeight={"50%"}
+                maxHeight={deleteOptions.length > 1 ? "55%" : "40%"}
                 backdropClickable={true}
             >
                 <View style={styles.deleteSheetContainer}>

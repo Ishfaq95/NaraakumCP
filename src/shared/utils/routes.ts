@@ -58,5 +58,6 @@ export const ROUTES = {
     WorkAreas: 'WorkAreas',
     DeleteConfirmationScreen: 'DeleteConfirmationScreen',
     NetworkError: 'NetworkError',
+    OrderDetails: 'OrderDetails',
   };
   

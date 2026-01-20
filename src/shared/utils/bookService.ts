@@ -417,7 +417,7 @@ export const convert24HourToEnglishTime = (timeString: string): string => {
   return `${hour12.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')} ${period}`;
 };
 
-export const generatePayloadforOrderMainBeforePayment = (CardArray: any, Patient: any) => {
+export const generatePayloadforOrderMainBeforePayment = (CardArray: any, Patient: any, VisitMainId: string) => {
 
   const selectedLocation = store.getState().root.booking.selectedLocation;
   const user = store.getState().root.user.user;
@@ -454,8 +454,12 @@ export const generatePayloadforOrderMainBeforePayment = (CardArray: any, Patient
         "OrderAddressGoogleLocation": selectedLocation? selectedLocation?.latitude + "," + selectedLocation?.longitude : "",
         "UserLocationId": 0,
         "saveinAddress": false,
-        "OrderByCareProviderId": user.Id
+        "OrderByCareProviderId": user.Id,
       };
+
+      if (VisitMainId) {
+        payloadItem.VisitMainId = VisitMainId;
+      }
 
       // Add CatSpecialtyId only if it exists
       if (item.CatSpecialtyId) {

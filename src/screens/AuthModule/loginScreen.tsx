@@ -37,6 +37,7 @@ import CustomPhoneInput, { COUNTRIES } from '../../components/common/CustomPhone
 import { ROUTES } from '../../shared/utils/routes';
 import { useNavigation } from '@react-navigation/native';
 import AntDesign from 'react-native-vector-icons/AntDesign';
+import { useAlert } from '../../contexts/AlertContext';
 
 const MIN_HEIGHT = 550; // Absolute minimum height
 const OPTIMAL_HEIGHT = 750; // Height for medium screens
@@ -82,7 +83,7 @@ const LoginScreen = () => {
   });
   const [error, setError] = useState(false);
   const [apiError, setAPIError] = useState(false);
-
+  const { showAlert } = useAlert();
   const handlePhoneNumberChange = (text: string) => {
     setPhoneNumber(text);
     setError(false); // Clear error when user types
@@ -208,6 +209,7 @@ const LoginScreen = () => {
       }
       setIsLoading(false);
     } catch (error: any) {
+      setAPIError(true);
       setIsLoading(false);
       // Handle login error here (show error message, etc.)
     }

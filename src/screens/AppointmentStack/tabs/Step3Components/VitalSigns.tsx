@@ -136,19 +136,24 @@ const VitalSigns: React.FC<VitalSignsProps> = ({ data, onDataChange }) => {
   };
 
   const formatBloodPressure = (rawValue: string) => {
-    const digits = rawValue.replace(/\D/g, '').slice(0, 6);
+    // Remove all non-digits and limit to 5 digits (3 for systolic, 2 for diastolic)
+    const digits = rawValue.replace(/\D/g, '').slice(0, 5);
     if (digits.length === 0) {
       return '';
     }
+    // If 3 digits or less, just return the digits
     if (digits.length <= 3) {
       return digits;
     }
+    // If 4 or 5 digits, format as XXX/XX (systolic/diastolic)
     return `${digits.slice(0, 3)}/${digits.slice(3)}`;
   };
 
   const handleBloodPressureChange = (value: string) => {
     const formatted = formatBloodPressure(value);
-    if (errors.bloodPressure && formatted.replace(/\D/g, '').length === 6) {
+    const digitsCount = formatted.replace(/\D/g, '').length;
+    // Clear error if user has entered valid format (5 digits with slash)
+    if (errors.bloodPressure && digitsCount === 5 && formatted.includes('/')) {
       clearFieldError('bloodPressure');
     }
     syncData('bloodPressure', formatted);
@@ -160,10 +165,46 @@ const VitalSigns: React.FC<VitalSignsProps> = ({ data, onDataChange }) => {
       clearFieldError('bloodPressure');
       return;
     }
-    if (digitsCount !== 6 || !bloodPressure.includes('/')) {
-      setFieldError('bloodPressure', 'Enter BP in 123/123 format.');
+    
+    // Accept 5 digits (3+2 format like 120/80) or 6 digits (3+3 format like 120/080)
+    if ((digitsCount !== 5 && digitsCount !== 6) || !bloodPressure.includes('/')) {
+      setFieldError('bloodPressure', 'Enter BP in 120/80 format.');
       return;
     }
+
+    // Parse systolic and diastolic values
+    const parts = bloodPressure.split('/');
+    if (parts.length !== 2) {
+      setFieldError('bloodPressure', 'Enter BP in 120/80 format.');
+      return;
+    }
+
+    const systolic = parseInt(parts[0], 10);
+    const diastolic = parseInt(parts[1], 10);
+
+    // Validate ranges
+    if (isNaN(systolic) || isNaN(diastolic)) {
+      setFieldError('bloodPressure', 'Enter BP in 120/80 format.');
+      return;
+    }
+
+    if (systolic < 60 || systolic > 200) {
+      setFieldError(
+        'bloodPressure',
+        'Please enter a valid BP value. Systolic should be between 60 and 200, Diastolic between 40 and 120.'
+      );
+      return;
+    }
+
+    if (diastolic < 40 || diastolic > 120) {
+      setFieldError(
+        'bloodPressure',
+        'Please enter a valid BP value. Systolic should be between 60 and 200, Diastolic between 40 and 120.'
+      );
+      return;
+    }
+
+    // All validations passed
     clearFieldError('bloodPressure');
   };
 

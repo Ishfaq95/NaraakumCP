@@ -100,11 +100,11 @@ const SavedAddresses = ({ onPressLocation, patientInfo }: { onPressLocation: () 
       onPressLocation();
     } else {
       // Both address and lat/long exist - proceed as normal
-      const locationObject: any = {
+    const locationObject: any = {
         latitude: selectedLocationloc.Latitude,
         longitude: selectedLocationloc.Longitude,
         address: selectedLocationloc.Address,
-        city: selectedLocationloc?.City || null,
+      city: selectedLocationloc?.City || null,
       };
       dispatch(setSelectedLocation(locationObject));
       onPressLocation();

@@ -2,18 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { globalTextStyles } from '../../../../styles/globalStyles';
-// import {
-//   pick as pickDocuments,
-//   types as documentTypes,
-//   isErrorWithCode,
-//   errorCodes,
-//   type DocumentPickerResponse,
-// } from '@react-native-documents/picker';
+import { pick as pickDocument, types as documentTypes } from '@react-native-documents/picker';
 import { MediaBaseURL } from '../../../../shared/utils/constants';
 import { useSelector } from 'react-redux';
 import CustomBottomSheet from '../../../../components/common/CustomBottomSheet';
 import { addVisitRecordService } from '../../../../services/api/addVisitRecord';
 import Dropdown from '../../../../components/common/Dropdown';
+import ReactNativeBlobUtil from 'react-native-blob-util';
 
 interface LabFile {
   id: string;
@@ -24,7 +19,6 @@ interface LabFile {
 interface LabXRaysProps {
   data?: any;
   onAddFile?: () => void;
-  onDownloadFile?: (file: LabFile) => void;
   onDeleteFile?: (file: LabFile) => void;
   onDataChange?: (files: LabFile[]) => void;
   visitmainId?: number | string;
@@ -34,7 +28,6 @@ interface LabXRaysProps {
 const LabXRays: React.FC<LabXRaysProps> = ({
   data,
   onAddFile,
-  onDownloadFile,
   onDeleteFile,
   onDataChange,
   visitmainId,
@@ -109,37 +102,49 @@ const LabXRays: React.FC<LabXRaysProps> = ({
   };
 
   const handleChooseFile = async () => {
-    // try {
-    //   const pickResult = await pickDocuments({
-    //     type: [documentTypes.allFiles],
-    //     allowMultiSelection: false,
-    //   });
+    try {
+      // Pick document - supports PDFs and images
+      const result = await pickDocument({
+        type: [documentTypes.pdf, documentTypes.images],
+        allowMultiSelection: false,
+      });
 
-    //   if (!pickResult || pickResult.length === 0) {
-    //     return;
-    //   }
+      if (!result || result.length === 0) {
+        return;
+      }
 
-    //   const selected: DocumentPickerResponse = pickResult[0];
+      const file = result[0];
 
-    //   if (!selected) {
-    //     return;
-    //   }
+      // Validate file size (max 10MB)
+      const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB in bytes
+      if (file.size && file.size > MAX_FILE_SIZE) {
+        Alert.alert(
+          'File Size Error',
+          'You can\'t upload more than 10MB',
+        );
+        return;
+      }
 
-    //   setSelectedFile(selected);
-    // } catch (err) {
-    //   if (isErrorWithCode(err) && err.code === errorCodes.OPERATION_CANCELED) {
-    //     return;
-    //   }
+      setSelectedFile({
+        uri: file.uri,
+        type: file.type || 'application/octet-stream',
+        name: file.name || 'document',
+        size: file.size || 0,
+      });
+    } catch (error: any) {
+      // User cancelled the picker
+      if (error?.message?.includes('cancelled') || error?.message?.includes('canceled')) {
+        return;
+      }
 
-    //   if (err instanceof Error) {
-    //     Alert.alert(
-    //       'Error',
-    //       `Failed to select file: ${err.message}. Please try again.`,
-    //     );
-    //   } else {
-    //     Alert.alert('Error', 'Failed to select file. Please try again.');
-    //   }
-    // }
+      // Handle other errors
+      Alert.alert(
+        'Error',
+        error instanceof Error
+          ? error.message
+          : 'Failed to select file. Please try again.',
+      );
+    }
   };
 
   const handleSaveFile = async () => {
@@ -269,9 +274,73 @@ const LabXRays: React.FC<LabXRaysProps> = ({
     }
   };
 
-  const handleDownloadPress = (file: LabFile) => {
-    if (onDownloadFile) {
-      onDownloadFile(file);
+  const getFileNameFromUrl = (url: string) => {
+    // Split the URL by '/'
+    const parts = url.split('/');
+    // Get the last part, which is the filename
+    return parts.pop() || 'document';
+  };
+
+  const downloadFIleForIOS = async (url: string, fileName: string) => {
+    const { config, fs } = ReactNativeBlobUtil;
+    const DocumentDir = fs.dirs.DocumentDir;
+    const filePath = `${DocumentDir}/${fileName}`;
+
+    try {
+      const res = await config({
+        fileCache: true,
+        path: filePath,
+      }).fetch('GET', url);
+
+      Alert.alert(
+        'File downloaded successfully',
+        'The file is saved to your device.',
+      );
+      ReactNativeBlobUtil.ios.previewDocument(filePath);
+    } catch (error) {
+      Alert.alert('File downloading error.', 'Please try again.');
+    }
+  };
+
+  const downloadFile = async (url: string, fileName: string) => {
+    const { config, fs } = ReactNativeBlobUtil;
+    const DownloadDir = fs.dirs.DownloadDir;
+    const filePath = `${DownloadDir}/${fileName}`;
+
+    try {
+      const res = await config({
+        fileCache: true,
+        addAndroidDownloads: {
+          useDownloadManager: true,
+          notification: true,
+          mediaScannable: true,
+          title: fileName,
+          path: filePath,
+        },
+      }).fetch('GET', url);
+
+      Alert.alert(
+        'File downloaded successfully',
+        'The file is saved to your device.',
+      );
+    } catch (error) {
+      Alert.alert('File downloading error.', 'Please try again.');
+    }
+  };
+
+  const handleDownloadPress = (file: any) => {
+    if (!file?.FilePath) {
+      Alert.alert('Error', 'File path not available');
+      return;
+    }
+
+    const fileName = file.FileName || getFileNameFromUrl(file.FilePath);
+    const completeUrl = `${MediaBaseURL}${file.FilePath}`;
+
+    if (Platform.OS === 'ios') {
+      downloadFIleForIOS(completeUrl, fileName);
+    } else {
+      downloadFile(completeUrl, fileName);
     }
   };
 

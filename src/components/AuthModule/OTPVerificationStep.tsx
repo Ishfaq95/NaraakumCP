@@ -22,13 +22,15 @@ interface OTPVerificationStepProps {
     userInfo: any;
     onOTPVerified: (otp: string) => void;
     onEditPhoneNumber: () => void;
+    setIsLoading: (isLoading: boolean) => void;
 }
 
 const OTPVerificationStep: React.FC<OTPVerificationStepProps> = ({
     phoneNumber,
     userInfo,
     onOTPVerified,
-    onEditPhoneNumber
+    onEditPhoneNumber,
+    setIsLoading
 }) => {
     const { t } = useTranslation();
     const [otp, setOtp] = useState(['', '', '', '']);
@@ -37,7 +39,6 @@ const OTPVerificationStep: React.FC<OTPVerificationStepProps> = ({
     const inputs = useRef<(TextInput | null)[]>([]);
     const [isResendSuccess, setIsResendSuccess] = useState(false);
     const [otpError, setOtpError] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
     const [otpCodeExpired, setOTPCodeExpired] = useState(false);
     useEffect(() => {
         if (countdown > 0) {
@@ -152,6 +153,7 @@ const OTPVerificationStep: React.FC<OTPVerificationStepProps> = ({
         // inputs.current[0]?.focus();
 
         try {
+            setIsLoading(true);
             const response = await authService.resendOTP({
                 "UserId": userInfo.userid,
             });
@@ -159,6 +161,8 @@ const OTPVerificationStep: React.FC<OTPVerificationStepProps> = ({
                 setIsResendSuccess(true);
             }
         } catch (error) {
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -236,7 +240,6 @@ const OTPVerificationStep: React.FC<OTPVerificationStepProps> = ({
                 </TouchableOpacity>
             </View>
 
-            <FullScreenLoader visible={isLoading} />
         </View>
     );
 };

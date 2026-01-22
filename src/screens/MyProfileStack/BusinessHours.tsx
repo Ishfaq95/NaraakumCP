@@ -475,14 +475,12 @@ const BusinessHours = ({ route }: { route: any }) => {
             let deleteEndDate: moment.Moment;
             
             if (deleteResolution === 'day') {
-                // Delete only the selected day
-                const dayOption = deleteOptions.find(opt => opt.type === 'day');
-                if (dayOption) {
-                    const dayMoment = moment(dayOption.dateText);
-                    deleteStartDate = dayMoment.clone().startOf('day');
-                    deleteEndDate = dayMoment.clone().startOf('day');
+                // Delete only the selected day - use selectedDate directly
+                if (selectedDate) {
+                    deleteStartDate = selectedDate.clone().startOf('day');
+                    deleteEndDate = selectedDate.clone().startOf('day');
                 } else {
-                    // Fallback to original if day option not found
+                    // Fallback to original if selectedDate not available
                     deleteStartDate = moment(slotToDelete.StartDate);
                     deleteEndDate = moment(slotToDelete.EndDate);
                 }
@@ -558,6 +556,11 @@ const BusinessHours = ({ route }: { route: any }) => {
             };
             const response = await profileService.copyServiceProviderAvailabilityToNextMonth(payload);
             if (response?.ResponseStatus?.STATUSCODE == 200) {
+                if (response?.StatusCode?.STATUSCODE == 11001) {
+                    setConflictBottomSheetVisible(true);
+                    setConflictingSlots(response?.Data);
+                    return;
+                }
                 showAlert({
                     title: response?.ResponseStatus?.MESSAGE,
                     message: '',
@@ -1602,14 +1605,14 @@ const BusinessHours = ({ route }: { route: any }) => {
             if (hasUserSelectedDate && selectedDate && isDateInSlotRange(selectedDate)) {
                 showDayOption = true;
                 const dateStr = selectedDate.format('DD/MM/YYYY');
-                dayDateText = dayTimeRange ? `${dayTimeRange} AT ${dateStr}` : dateStr;
+                dayDateText = dayTimeRange ? `${dayTimeRange} ${dateStr}` : dateStr;
             } else {
                 // Otherwise, use current date if it's in range
                 const currentDate = moment();
                 if (isDateInSlotRange(currentDate)) {
                     showDayOption = true;
                     const dateStr = currentDate.format('DD/MM/YYYY');
-                    dayDateText = dayTimeRange ? `${dayTimeRange} AT ${dateStr}` : dateStr;
+                    dayDateText = dayTimeRange ? `${dayTimeRange} ${dateStr}` : dateStr;
                 }
             }
         } else {
@@ -1618,7 +1621,7 @@ const BusinessHours = ({ route }: { route: any }) => {
             if (hasUserSelectedDate && selectedDate && isDateInSlotRange(selectedDate)) {
                 showDayOption = true;
                 const dateStr = selectedDate.format('DD/MM/YYYY');
-                dayDateText = dayTimeRange ? `${dayTimeRange} AT ${dateStr}` : dateStr;
+                dayDateText = dayTimeRange ? `${dayTimeRange} ${dateStr}` : dateStr;
             }
         }
         
@@ -2729,11 +2732,11 @@ const styles = StyleSheet.create({
     },
     deleteSlotDateText: {
         fontSize: 14,
-        fontFamily: CAIRO_FONT_FAMILY.bold,
+        fontFamily: CAIRO_FONT_FAMILY.semiBold,
         lineHeight: Platform.OS === 'ios' ? 0 : 20,
-        color: '#666',
+        color: '#0f0f0f',
         marginTop: 8,
-        marginLeft: 40,
+        // marginLeft: 40,
     },
     deleteButtonsContainer: {
         flexDirection: 'row',

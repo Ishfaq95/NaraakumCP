@@ -189,7 +189,7 @@ const ForgotPassword = () => {
                     </ScrollView>
                 </TouchableWithoutFeedback>
             </KeyboardAvoidingView>
-            {/* <FullScreenLoader visible={isLoading} /> */}
+            <FullScreenLoader visible={isLoading} />
         </SafeAreaView>
     )
 }

@@ -52,6 +52,7 @@ const SignUpScreen = () => {
     const [userData, setUserData] = useState<any>(null);
     const { t } = useTranslation();
     const navigation = useNavigation();
+    const [isLoading, setIsLoading] = useState(false);
     const handleProviderSelect = (providerId: string) => {
         setSelectedProvider(providerId);
     };
@@ -107,10 +108,11 @@ const SignUpScreen = () => {
                         selectedProvider={selectedProvider}
                         onProviderSelect={handleProviderSelect}
                         onNext={handleNext}
+                        setIsLoading={setIsLoading}
                     />
                 );
             case 2:
-                return <PersonalInfoStep userRoleId={selectedProvider} onNext={handleUserInfoData} />;
+                return <PersonalInfoStep userRoleId={selectedProvider} onNext={handleUserInfoData} setIsLoading={setIsLoading} />;
             case 3:
                 return (
                     <OTPVerificationStep
@@ -118,6 +120,7 @@ const SignUpScreen = () => {
                         userInfo={userInfo}
                         onOTPVerified={handleOTPVerified}
                         onEditPhoneNumber={handleEditPhoneNumber}
+                        setIsLoading={setIsLoading}
                     />
                 );
             case 4:
@@ -130,6 +133,7 @@ const SignUpScreen = () => {
                             setUserData(form);
                             setCurrentStep(5);
                         }}
+                        setIsLoading={setIsLoading}
                     />
                 );
             default:
@@ -193,6 +197,8 @@ const SignUpScreen = () => {
                     </View>}
                 </TouchableWithoutFeedback>
             </KeyboardAvoidingView>
+
+            <FullScreenLoader visible={isLoading} />
         </SafeAreaView>
     );
 };

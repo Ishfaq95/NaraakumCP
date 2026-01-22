@@ -779,7 +779,7 @@ const AppointmentListScreen = () => {
                 {/* Availability and Calendar */}
                 <AppointmentFilter
                   onAvailabilityChange={handleAvailabilityChange}
-                  isAvailable={isAvailable}
+                  isAvailable={unAvailableBottomSheetVisible ? false : isAvailable}
                   unAvailabilityList={unAvailabilityList}
                   onEditUnavailability={handleEditUnavailability}
                 />
@@ -895,7 +895,7 @@ const AppointmentListScreen = () => {
                 }}
               >
                 <Text style={unavailabilityStyles.inputText}>
-                  {startTime ? moment(startTime).format('HH:mm') : '--:--'}
+                  {startTime ? moment(startTime).format('hh:mm A') : '--:--'}
                 </Text>
                 <Ionicons name="time-outline" size={20} color="#666" />
               </TouchableOpacity>
@@ -944,7 +944,7 @@ const AppointmentListScreen = () => {
                 }}
               >
                 <Text style={unavailabilityStyles.inputText}>
-                  {endTime ? moment(endTime).format('HH:mm') : '--:--'}
+                  {endTime ? moment(endTime).format('hh:mm A') : '--:--'}
                 </Text>
                 <Ionicons name="time-outline" size={20} color="#666" />
               </TouchableOpacity>

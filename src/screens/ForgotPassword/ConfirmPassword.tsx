@@ -109,8 +109,10 @@ const ConfirmPassword = ({ route }: any) => {
       } else {
       }
     } catch (error) {
+      setIsLoading(false);
+    }finally{
+      setIsLoading(false);
     }
-    setIsLoading(false);
   }
 
   return (
@@ -227,7 +229,7 @@ const ConfirmPassword = ({ route }: any) => {
           </ScrollView>
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
-      {/* <FullScreenLoader visible={isLoading} /> */}
+      <FullScreenLoader visible={isLoading} />
     </SafeAreaView>
   )
 }
@@ -264,11 +266,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   mainHeading: {
-    ...globalTextStyles.h2,
+    fontSize: 18,
+    fontFamily: CAIRO_FONT_FAMILY.bold,
     color: '#008080', // Teal color as shown in the image
     textAlign: 'center',
     marginBottom: 15,
-    fontWeight: 'bold',
   },
   subText: {
     ...globalTextStyles.bodyLarge,

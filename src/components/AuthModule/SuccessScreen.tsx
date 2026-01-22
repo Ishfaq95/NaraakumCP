@@ -35,6 +35,7 @@ const styles = StyleSheet.create({
     navigationContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
+        marginBottom: 20,
         // marginVertical: 10,
     },
     nextButton: {

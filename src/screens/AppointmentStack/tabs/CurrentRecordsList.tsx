@@ -7,11 +7,12 @@ import moment from 'moment';
 import { CAIRO_FONT_FAMILY } from '../../../styles/globalStyles';
 
 interface CurrentRecordsListProps {
+    data: any;
     records: any[];
     onVisitRecordPress?: (item: any) => void;
 }
 
-const CurrentRecordsList: React.FC<CurrentRecordsListProps> = ({ records, onVisitRecordPress }) => {
+const CurrentRecordsList: React.FC<CurrentRecordsListProps> = ({ data, records, onVisitRecordPress }) => {
     const renderRecordItem = ({ item }: { item: any }) => (
         <View style={styles.recordCard}>
             <View style={styles.providerHeader}>
@@ -46,7 +47,7 @@ const CurrentRecordsList: React.FC<CurrentRecordsListProps> = ({ records, onVisi
 
     const renderEmptyState = () => (
         <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No current session records</Text>
+            <Text style={styles.emptyText}>{'No records found'}</Text>
         </View>
     );
 

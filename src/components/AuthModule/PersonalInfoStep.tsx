@@ -24,12 +24,11 @@ import { useNavigation } from '@react-navigation/native';
 import LoaderKit from 'react-native-loader-kit';
 import FullScreenLoader from '../FullScreenLoader';
 
-const PersonalInfoStep: React.FC<{userRoleId: any, onNext: (userInfo: any, phoneNumber: string) => void}> = ({userRoleId, onNext}) => {
+const PersonalInfoStep: React.FC<{userRoleId: any, onNext: (userInfo: any, phoneNumber: string) => void, setIsLoading: (isLoading: boolean) => void}> = ({userRoleId, onNext, setIsLoading}) => {
     const { t } = useTranslation();
     const [phoneNumber, setPhoneNumber] = useState('');
     const step2PhoneNumber = useSelector((state: any) => state.root.user.step2PhoneNumber);
     const navigation = useNavigation();
-    const [isLoading, setIsLoading] = useState(false);
     const dispatch = useDispatch();
     const [selectedCountry, setSelectedCountry] = useState<any>({
         code: 'SA',
@@ -359,7 +358,6 @@ const PersonalInfoStep: React.FC<{userRoleId: any, onNext: (userInfo: any, phone
                 </View>
             </View>
 
-            <FullScreenLoader visible={isLoading} />
         </View>
     );
 };

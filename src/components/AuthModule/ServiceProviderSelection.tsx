@@ -27,18 +27,19 @@ interface ServiceProviderSelectionProps {
     selectedProvider: string | null;
     onProviderSelect: (providerId: string) => void;
     onNext: () => void;
+    setIsLoading: (isLoading: boolean) => void;
 }
 
 const ServiceProviderSelection: React.FC<ServiceProviderSelectionProps> = ({
     selectedProvider,
     onProviderSelect,
     onNext,
+    setIsLoading,
 }) => {
     const dispatch = useDispatch();
     const isFocused = useIsFocused();
     const isRTL = I18nManager.isRTL;
     const [serviceProviders, setServiceProviders] = useState<any[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
     const deviceIsTablet = isTablet();
 
     useEffect(() => {
@@ -123,8 +124,6 @@ const ServiceProviderSelection: React.FC<ServiceProviderSelectionProps> = ({
                     <Ionicons name="arrow-forward" size={22} color="#fff" />
                 </TouchableOpacity>
             </View>
-            
-            <FullScreenLoader visible={isLoading} />
         </View>
     );
 };

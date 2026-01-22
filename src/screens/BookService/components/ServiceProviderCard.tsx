@@ -372,9 +372,19 @@ const ServiceProviderCard: React.FC<ServiceProviderCardProps> = React.memo(({
                         <TouchableOpacity onPress={() => onServiceSelectUpdate(provider.UserId, item)} style={[styles.checkbox, checkSelectedService(item) && styles.checkedBox]}>
                           {checkSelectedService(item) && <CheckIcon width={12} height={12} />}
                         </TouchableOpacity>
-                        <Text style={[styles.priceText, { textAlign: 'left' }]}>
-                          {`${item.ServiceTitlePlang}:${Number(item.Price).toFixed(0)}`}
-                        </Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4,flexWrap: 'wrap' }}>
+                          <Text style={{ 
+                            fontSize: 14, 
+                            color: '#000', 
+                            fontFamily: CAIRO_FONT_FAMILY.semiBold, 
+                            lineHeight: Platform.OS === 'ios' ? 0 : 20 
+                          }}>
+                            {`${item.ServiceTitlePlang}:`}
+                          </Text>
+                          <Text style={[styles.priceText, { textAlign: 'left' }]}>
+                            {Number(item.Price).toFixed(0)}
+                          </Text>
+                        </View>
 
                       </View>
                     ) : (

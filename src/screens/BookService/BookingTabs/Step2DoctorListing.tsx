@@ -403,6 +403,23 @@ const Step2DoctorListing = ({ handleNext, handleReloadNext, Patient, onPressAddM
     }
   }
 
+  // Reset all filters to their initial state and refetch data
+  const handleResetFilters = () => {
+    // Reset filter state to initial values
+    setSelectedCityId('');
+    setSelectedSquareId('');
+    setSearchNearMe(true);
+    setSelectedType('All');
+    setSelectedAffiliation('0');
+    setSelectedFilter('all');
+    setSortBy('All');
+    setSearchText('');
+    setSearchQuery('');
+
+    // Refetch data as in initial load
+    fetchData();
+  };
+
   useEffect(() => {
     if (selectedCardItem[0]?.CatCategoryId == "42") {
       setSearchNearMe(false);
@@ -1404,7 +1421,7 @@ const Step2DoctorListing = ({ handleNext, handleReloadNext, Patient, onPressAddM
             <TouchableOpacity onPress={() => setSearchBottomSheetVisible(true)} style={styles.iconButton} activeOpacity={0.7}>
               <Ionicons name="search-outline" size={20} color="#6D7A80" />
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => ApplyFilters()} style={styles.iconButton} activeOpacity={0.7}>
+            <TouchableOpacity onPress={handleResetFilters} style={styles.iconButton} activeOpacity={0.7}>
               <Ionicons name="refresh-outline" size={20} color="#6D7A80" />
             </TouchableOpacity>
           </View>

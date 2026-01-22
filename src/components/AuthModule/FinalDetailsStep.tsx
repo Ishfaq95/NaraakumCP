@@ -22,6 +22,7 @@ interface FinalDetailsStepProps {
     userInfo: any;
     selectedProvider: any;
     onSubmit: (form: any) => void;
+    setIsLoading: (isLoading: boolean) => void;
 }
 
 const genderOptions = [
@@ -46,7 +47,7 @@ const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const nameRegex = /^[A-Za-z ]+$/;
 const dateRegex = /^(0?[1-9]|[12][0-9]|3[01])\/(0?[1-9]|1[012])\/(19|20)\d\d$/; // DD/MM/YYYY
 
-const FinalDetailsStep: React.FC<FinalDetailsStepProps> = ({ phoneNumber, userInfo, selectedProvider, onSubmit }) => {
+const FinalDetailsStep: React.FC<FinalDetailsStepProps> = ({ phoneNumber, userInfo, selectedProvider, onSubmit, setIsLoading }) => {
     const [fullNameEn, setFullNameEn] = useState('');
     const [fullNameAr, setFullNameAr] = useState('');
     const [experience, setExperience] = useState('');
@@ -60,7 +61,6 @@ const FinalDetailsStep: React.FC<FinalDetailsStepProps> = ({ phoneNumber, userIn
         initialDate.setFullYear(today.getFullYear() - 18);
         return initialDate;
     };
-    const [isLoading, setIsLoading] = useState(false);
     const [date, setDate] = useState(getInitialDate());
     const [gender, setGender] = useState<string | number>('Male');
     const [country, setCountry] = useState<string | number>('');
@@ -1032,7 +1032,6 @@ const FinalDetailsStep: React.FC<FinalDetailsStepProps> = ({ phoneNumber, userIn
                 </TouchableOpacity>
             </View>
 
-            <FullScreenLoader visible={isLoading} />
         </View>
     );
 };

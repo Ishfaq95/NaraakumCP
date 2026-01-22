@@ -57,6 +57,7 @@ const ForgotOTP = ({ route }: any) => {
 
     setIsLoading(true);
     try {
+      
       const payload = {
         "UserId": UserId,
         "VerificationCode": otp,
@@ -78,8 +79,9 @@ const ForgotOTP = ({ route }: any) => {
     } catch (error) {
       setIsLoading(false);
       setAPIError(true);
+    }finally{
+      setIsLoading(false);
     }
-    setIsLoading(false);
   }
 
   return (
@@ -146,7 +148,7 @@ const ForgotOTP = ({ route }: any) => {
           </ScrollView>
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
-      {/* <FullScreenLoader visible={isLoading} /> */}
+      <FullScreenLoader visible={isLoading} />
     </SafeAreaView>
   )
 }
@@ -183,7 +185,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   mainHeading: {
-    ...globalTextStyles.h2,
+    fontSize: 16,
+    fontFamily: CAIRO_FONT_FAMILY.bold,
     color: '#008080', // Teal color as shown in the image
     textAlign: 'center',
     marginBottom: 15,
@@ -280,8 +283,8 @@ const styles = StyleSheet.create({
   },
   errorText: {
     color: '#FF0000',
-    fontSize: 16,
-    fontFamily: CAIRO_FONT_FAMILY.bold,
+    fontSize: 14,
+    fontFamily: CAIRO_FONT_FAMILY.semiBold,
     textAlign: 'center',
   },
 })

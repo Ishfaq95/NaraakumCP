@@ -234,6 +234,38 @@ export const getOrderDetailAddedByServiceProvider = async (credentials: any) => 
     }
 };
 
+export const getAllProcedure = async () => {
+    try {
+        const response = await axiosInstance.get(
+            `catalogue/GetAllProcedure`
+        );
+        return response.data;
+    }
+    catch (error: any) {
+        throw {
+            message: error?.response?.data?.message || 'Get all procedure failed',
+            status: error?.response?.status,
+            code: error?.response?.data?.code
+        };
+    }
+};
+
+export const getAllSpecialization = async () => {
+    try {
+        const response = await axiosInstance.get(
+            `catalogue/GetAllSpecialization`
+        );
+        return response.data;
+    }
+    catch (error: any) {
+        throw {
+            message: error?.response?.data?.message || 'Get all specialization failed',
+            status: error?.response?.status,
+            code: error?.response?.data?.code
+        };
+    }
+};
+
 
 // Export all appointment related functions
 export const addVisitRecordService = {
@@ -251,4 +283,6 @@ export const addVisitRecordService = {
     getAllIcd10Codes,
     addEditVisitPatientDiagnosis,
     getOrderDetailAddedByServiceProvider,
+    getAllProcedure,
+    getAllSpecialization,
 }; 

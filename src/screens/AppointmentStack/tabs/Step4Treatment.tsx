@@ -20,6 +20,8 @@ import ReferralConsultation, { ReferralData } from './Step4Components/ReferralCo
 import Notes, { NotesData } from './Step4Components/Notes';
 import SvgUri from 'react-native-svg-uri';
 import TreatmentPlan from '../../../assets/icons/TreatmentPlan';
+import { useSelector } from 'react-redux';
+import { addVisitRecordService } from '../../../services/api/addVisitRecord';
 
 interface Step4Props {
   // onComplete: () => void;
@@ -33,7 +35,7 @@ interface Step4Props {
     referralConsultation?: ReferralData;
     notes?: NotesData;
   };
-  onDataChange?: (data: any) => void;
+  onSaveAndComplete?: () => void;
 }
 
 type TabType =
@@ -48,19 +50,41 @@ const Step4Treatment: React.FC<Step4Props> = ({
   patientData,
   onPrevious,
   data,
-  onDataChange,
+  onSaveAndComplete,
 }) => {
   const scrollViewRef = useRef<ScrollView>(null);
   const contentContainerRef = useRef<View>(null);
   const [activeTab, setActiveTab] = useState<TabType>('procedures');
-  const [formData, setFormData] = useState({
-    procedures: data?.procedures || {},
-    prescription: data?.prescription || {},
-    patientInstructions: data?.patientInstructions || {},
-    newService: data?.newService || {},
-    referralConsultation: data?.referralConsultation || {},
-    notes: data?.notes || {},
+  const visitRecordData: any = useSelector((state: any) => state.root.generalData.visitRecordData);
+  const isInitialized = useRef(false);
+
+  
+  const [treatmentPlanData, setTreatmentPlanData] = useState({
+    procedures: [] as any[],
+    prescription: [] as any[],
+    newService: [] as any[],
+    referralConsultation: [] as any[],
+    notes: [] as any[],
   });
+
+  useEffect(() => {
+    // Only initialize once from backend data to preserve user changes
+    if (visitRecordData && !isInitialized.current) {
+      manageTreatmentData();
+      isInitialized.current = true;
+    }
+  }, [visitRecordData]);
+
+  const manageTreatmentData = () => {
+    const TreatmentPlanData = visitRecordData?.TreatmentPlan?.[0];
+    setTreatmentPlanData({
+      procedures: TreatmentPlanData?.Procedure || [],
+      prescription: TreatmentPlanData?.Medicines || [],
+      newService: TreatmentPlanData?.AddedService || [],
+      referralConsultation: TreatmentPlanData?.Refer || [],
+      notes: TreatmentPlanData?.Notes|| [] as any[],
+    });
+  };
 
   const tabs: { key: TabType; label: string }[] = [
     { key: 'procedures', label: 'Procedures' },
@@ -76,33 +100,33 @@ const Step4Treatment: React.FC<Step4Props> = ({
   };
 
   const handleSubDataChange = useCallback((tab: TabType, subData: any) => {
-    setFormData((prev) => ({
+    setTreatmentPlanData((prev) => ({
       ...prev,
       [tab]: subData,
     }));
   }, []);
 
-  // useEffect(() => {
-  //   onDataChange?.(formData);
-  // }, [formData, onDataChange]);
-
-  // const tabChangeHandlers = useMemo(
-  //   () => ({
-  //     procedures: (subData: ProceduresData) => handleSubDataChange('procedures', subData),
-  //     prescription: (subData: PrescriptionData) => handleSubDataChange('prescription', subData),
-  //     patientInstructions: (subData: PatientInstructionsData) =>
-  //       handleSubDataChange('patientInstructions', subData),
-  //     newService: (subData: NewServiceData) => handleSubDataChange('newService', subData),
-  //     referralConsultation: (subData: ReferralData) =>
-  //       handleSubDataChange('referralConsultation', subData),
-  //     notes: (subData: NotesData) => handleSubDataChange('notes', subData),
-  //   }),
-  //   [handleSubDataChange],
-  // );
-
-  const handleComplete = () => {
-    onDataChange?.(formData);
-    // onComplete();
+  const handleComplete = async () => {
+    try{
+      const payload = {
+        VisitMainId: treatmentPlanData?.procedures?.[0]?.VisitMainId || 0,
+        Notes: treatmentPlanData.notes?.[0]?.Notes || '',
+        CatSpecializationId: treatmentPlanData.referralConsultation?.[0]?.CatSpecializationId || 0,
+        Organization: treatmentPlanData.referralConsultation?.[0]?.Organization || '',
+        ReferTo: treatmentPlanData.referralConsultation?.[0]?.ReferTo || '',
+        Instructions: treatmentPlanData.notes?.[0]?.Instructions || '',
+        CatProcedureId: treatmentPlanData?.procedures?.[0]?.CatProcedureId,
+        Comments: treatmentPlanData?.procedures?.[0]?.Comments,
+      }
+      
+      console.log("payload", payload);
+      const response = await addVisitRecordService.AddEditVisitPatientProceduresReferNotes(payload);
+      if(response.ResponseStatus.STATUSCODE === 200){
+        onSaveAndComplete?.();
+      }
+    } catch (error) {
+      console.log("error", error);
+    }
   };
 
   // Function to scroll to a TextInput when it's focused
@@ -160,6 +184,7 @@ const Step4Treatment: React.FC<Step4Props> = ({
       case 'procedures':
         return (
           <Procedures 
+            data={treatmentPlanData.procedures}
             onDataChange={(data) => handleSubDataChange('procedures', data)}
             scrollToInput={scrollToInput}
           />
@@ -167,6 +192,7 @@ const Step4Treatment: React.FC<Step4Props> = ({
       case 'prescription':
         return (
           <Prescription 
+            data={treatmentPlanData.prescription}
             onDataChange={(data) => handleSubDataChange('prescription', data)}
             scrollToInput={scrollToInput}
           />
@@ -174,14 +200,16 @@ const Step4Treatment: React.FC<Step4Props> = ({
       case 'patientInstructions':
         return (
           <PatientInstructions
-            onDataChange={(data) => handleSubDataChange('patientInstructions', data)}
+            data={treatmentPlanData?.notes }
+            onDataChange={(data) => handleSubDataChange('notes', data)}
             scrollToInput={scrollToInput}
           />
         );
       case 'newService':
         return (
           <NewService 
-            patientData={patientData} 
+            patientData={patientData}
+            data={treatmentPlanData.newService}
             onDataChange={(data) => handleSubDataChange('newService', data)}
             scrollToInput={scrollToInput}
           />
@@ -189,6 +217,7 @@ const Step4Treatment: React.FC<Step4Props> = ({
       case 'referralConsultation':
         return (
           <ReferralConsultation
+            data={treatmentPlanData.referralConsultation}
             onDataChange={(data) => handleSubDataChange('referralConsultation', data)}
             scrollToInput={scrollToInput}
           />
@@ -196,6 +225,7 @@ const Step4Treatment: React.FC<Step4Props> = ({
       case 'notes':
         return (
           <Notes 
+            data={treatmentPlanData.notes}
             onDataChange={(data) => handleSubDataChange('notes', data)}
             scrollToInput={scrollToInput}
           />

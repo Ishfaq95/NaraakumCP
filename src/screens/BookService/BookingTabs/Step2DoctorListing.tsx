@@ -310,6 +310,7 @@ const Step2DoctorListing = ({ handleNext, handleReloadNext, Patient, onPressAddM
   const getAllCities = async () => {
     const response = await commonAPIService.getAllCities();
     if (response.ResponseStatus.STATUSCODE) {
+      console.log("response.list", response.list);
       const makeList = [
         {
           label: 'All Cities',
@@ -317,7 +318,7 @@ const Step2DoctorListing = ({ handleNext, handleReloadNext, Patient, onPressAddM
         },
         ...response.list.map((city: any) => ({
           label: city.TitlePlang || '',
-          value: city.CatAreaId,
+          value: city.Id,
         })),
       ]
       setCities(makeList);

@@ -100,7 +100,7 @@ const PrescriptionView = ({ route }: { route: any }) => {
 
                         <View style={styles.detailRow}>
                             <Ionicons name="calendar-outline" size={20} color="#666" />
-                            <Text style={styles.label}>Session Date</Text>
+                            <Text style={styles.label}>{prescriptionData?.CatCategoryId == '42' ? 'Session Date' : 'Visit Date'}</Text>
                         </View>
 
                         <Text style={styles.sessionDate}>{moment.utc(hospitalInfo?.VisitDate).local().format('DD/MM/YYYY')}</Text>

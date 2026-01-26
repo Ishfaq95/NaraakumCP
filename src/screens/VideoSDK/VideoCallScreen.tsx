@@ -117,6 +117,8 @@ const VideoCallScreen = ({
     {},
   );
 
+  console.log("Data in VideoCallScreen", Data);
+
   useEffect(() => {
     if (Data?.Data) {
       setCurrentParticipantName(Data?.Data?.displayName);

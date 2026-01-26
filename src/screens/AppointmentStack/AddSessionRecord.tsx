@@ -16,33 +16,10 @@ import { CAIRO_FONT_FAMILY, globalTextStyles } from '../../styles/globalStyles';
 import CustomBottomSheet from '../../components/common/CustomBottomSheet';
 import FullScreenLoader from '../../components/FullScreenLoader';
 
-interface Step1Data {
-    chiefComplaint?: string;
-    presentIllness?: string;
-    durationValue?: string;
-    durationUnit?: string;
-    otherComplaint?: string;
-}
-
-interface Step2Data {
-    pastMedicalHistory?: string[];
-    pastSurgicalHistory?: string[];
-    allergy?: string[];
-    currentMeds?: string[];
-}
-
-interface Step3Data {
-    vitalSigns?: any;
-    oe?: any;
-    labXRays?: any;
-    dx?: any;
-}
-
 const AddSessionRecord = ({ route }: { route: any }) => {
     const navigation = useNavigation();
     const patientData: any = route?.params?.patientData || null;
     const OrderDetail: any = route?.params?.OrderDetail || null;
-    console.log("OrderDetail", OrderDetail)
     const step: any = route?.params?.step || null;
     const visitRecordData: any = useSelector((state: any) => state.root.generalData.visitRecordData);
     const visitmainId: any = useSelector((state: any) => state.root.generalData.visitmainId);
@@ -57,8 +34,6 @@ const AddSessionRecord = ({ route }: { route: any }) => {
             getVisitMainRecordDetail();
         }
     }, [visitmainId]);
-
-    console.log("visitRecordData", visitRecordData)
 
     useEffect(() => {
         if (step) {
@@ -81,21 +56,10 @@ const AddSessionRecord = ({ route }: { route: any }) => {
         } finally {
             setIsLoading(false);
         }
-       
+
     };
 
     const [currentStep, setCurrentStep] = useState(1);
-    const [formData, setFormData] = useState<{
-        step1: Step1Data;
-        step2: Step2Data;
-        step3: Step3Data;
-        step4: any;
-    }>({
-        step1: {},
-        step2: {},
-        step3: {},
-        step4: {},
-    });
 
     const handleStepPress = (step: number) => {
         setCurrentStep(step);
@@ -113,11 +77,6 @@ const AddSessionRecord = ({ route }: { route: any }) => {
             setCurrentStep(currentStep - 1);
         }
     };
-
-    // const handleComplete = () => {
-    //     // Handle form completion and save
-    //     navigation.goBack();
-    // };
 
     const handleSaveRating = async () => {
         if (selectedRating === 0) {
@@ -192,14 +151,8 @@ const AddSessionRecord = ({ route }: { route: any }) => {
         );
     };
 
-    const handleDataChange = (stepKey: string, data: any) => {
-        setFormData(prev => ({
-            ...prev,
-            [stepKey]: data,
-        }));
-    };
-
-    const handleSaveAndComplete = (data: any) => {
+    const handleSaveAndComplete = () => {
+        getVisitMainRecordDetail();
         setCurrentStep(5);
     };
 
@@ -211,15 +164,15 @@ const AddSessionRecord = ({ route }: { route: any }) => {
 
     const renderHeader = () => (
         <View style={styles.header}>
-             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <TouchableOpacity onPress={backButtonPress} style={styles.backButton}>
-                <Ionicons name="arrow-back-outline" size={24} color="#333" />
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <TouchableOpacity onPress={backButtonPress} style={styles.backButton}>
+                    <Ionicons name="arrow-back-outline" size={24} color="#333" />
+                </TouchableOpacity>
+                <Text style={styles.headerTitle}>{(OrderDetail?.CatCategoryId != 42 || (OrderDetail?.CatServiceServeTypeId && OrderDetail?.CatServiceServeTypeId != 1)) ? 'Visit Record' : 'Session Record'}</Text>
+            </View>
+            <TouchableOpacity onPress={backButtonPress} style={styles.cancelButton}>
+                <Text style={styles.cancelButtonText}>Cancel</Text>
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>{(OrderDetail?.CatCategoryId != 42 || (OrderDetail?.CatServiceServeTypeId && OrderDetail?.CatServiceServeTypeId != 1)) ? 'Visit Record' : 'Session Record'}</Text>
-           </View>
-           <TouchableOpacity onPress={backButtonPress} style={styles.cancelButton}>
-           <Text style={styles.cancelButtonText}>Cancel</Text>
-       </TouchableOpacity>
         </View>
     );
 
@@ -250,11 +203,9 @@ const AddSessionRecord = ({ route }: { route: any }) => {
             case 4:
                 return (
                     <Step4Treatment
-                        // onComplete={handleComplete}
                         patientData={patientData}
                         onPrevious={handlePrevious}
-                        data={formData.step4}
-                        onDataChange={handleSaveAndComplete}
+                        onSaveAndComplete={handleSaveAndComplete}
                     />
                 );
             case 5:
@@ -326,7 +277,7 @@ const AddSessionRecord = ({ route }: { route: any }) => {
                         )}
                     </View>
 
-                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',marginTop: 8 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
                         <View style={styles.detailRow}>
                             <Ionicons name="business-outline" size={20} color="#666" />
                             <Text style={styles.label}>Hospital</Text>
@@ -335,7 +286,7 @@ const AddSessionRecord = ({ route }: { route: any }) => {
                     </View>
 
 
-                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',marginTop: 4 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
 
                         <View style={styles.detailRow}>
                             <Ionicons name="calendar-outline" size={20} color="#666" />
@@ -354,7 +305,7 @@ const AddSessionRecord = ({ route }: { route: any }) => {
 
         return (
             <View style={styles.section}>
-                {renderSectionHeader('Patient complaint',()=>{
+                {renderSectionHeader('Patient complaint', () => {
                     setCurrentStep(1);
                 })}
                 <View style={styles.sectionContent}>
@@ -424,7 +375,7 @@ const AddSessionRecord = ({ route }: { route: any }) => {
 
         return (
             <View style={styles.section}>
-                {renderSectionHeader('Patient History',()=>{
+                {renderSectionHeader('Patient History', () => {
                     setCurrentStep(2);
                 })}
                 <View style={styles.sectionContent}>
@@ -536,7 +487,7 @@ const AddSessionRecord = ({ route }: { route: any }) => {
 
         return (
             <View style={styles.section}>
-                {renderSectionHeader('Patient assessment',()=>{
+                {renderSectionHeader('Patient assessment', () => {
                     setCurrentStep(3);
                 })}
                 <View style={styles.sectionContent}>
@@ -670,7 +621,7 @@ const AddSessionRecord = ({ route }: { route: any }) => {
 
         return (
             <View style={styles.section}>
-                {renderSectionHeader('Treatment Plan',()=>{
+                {renderSectionHeader('Treatment Plan', () => {
                     setCurrentStep(4);
                 })}
                 <View style={styles.sectionContent}>
@@ -873,9 +824,9 @@ const AddSessionRecord = ({ route }: { route: any }) => {
                     onStepPress={handleStepPress}
                 />
                 {renderStepContent()}
-                {currentStep == 5 && <View style={{position: 'absolute', bottom: 0, left: 0, right: 0, paddingHorizontal: 16, paddingVertical: 8, backgroundColor: '#fff'}}>
-                    <TouchableOpacity onPress={() => setIsConfirmBottomSheetVisible(true)} style={{backgroundColor: '#14b8a6', padding: 10, borderRadius: 10, width: '100%'}}>
-                        <Text style={{...globalTextStyles.buttonLarge, color: '#fff', textAlign: 'center'}}>Confirm & Save</Text>
+                {currentStep == 5 && <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, paddingHorizontal: 16, paddingVertical: 8, backgroundColor: '#fff' }}>
+                    <TouchableOpacity onPress={() => setIsConfirmBottomSheetVisible(true)} style={{ backgroundColor: '#14b8a6', padding: 10, borderRadius: 10, width: '100%' }}>
+                        <Text style={{ ...globalTextStyles.buttonLarge, color: '#fff', textAlign: 'center' }}>Confirm & Save</Text>
                     </TouchableOpacity>
                 </View>}
             </View>}
@@ -987,7 +938,7 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     scrollContent: {
-        paddingBottom: 20,
+        paddingBottom: 100,
     },
     section: {
         backgroundColor: '#fff',

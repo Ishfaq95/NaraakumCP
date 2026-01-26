@@ -23,7 +23,8 @@ export interface NewServiceData {
 }
 
 interface NewServiceProps { 
-  onDataChange?: (data: NewServiceData) => void;
+  data?: any[];
+  onDataChange?: (data: any[]) => void;
   patientData: any;
   scrollToInput?: (inputRef: React.RefObject<TextInput | View | null>) => void;
 }

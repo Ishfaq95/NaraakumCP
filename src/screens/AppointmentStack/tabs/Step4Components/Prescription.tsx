@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -10,18 +10,84 @@ import {
 import { globalTextStyles } from '../../../../styles/globalStyles';
 
 export interface PrescriptionData {
-  medications?: string;
-  instructions?: string;
+  Id?: number;
+  VisitMainId?: number;
+  CatDrugTypeId?: number;
+  Title?: string;
+  MedicineName?: string;
+  Description?: string;
+  Quantity?: string;
+  Dose?: string;
+  CatMedicineUnitId?: number;
+  Unit?: string;
+  CatFrequencyId?: number;
+  Frequency?: string;
+  CatRouteId?: number;
+  Route?: string;
+  Duration?: string;
+  CatTimeUnitId?: number;
+  TimeUnitSlang?: string;
+  TimeUnitPlang?: string;
 }
 
 interface PrescriptionProps {
-  onDataChange?: (data: PrescriptionData) => void;
+  data?: PrescriptionData[];
+  onDataChange?: (data: PrescriptionData[]) => void;
   scrollToInput?: (inputRef: React.RefObject<TextInput | View | null>) => void;
 }
 
-const Prescription: React.FC<PrescriptionProps> = ({ onDataChange }) => {
-  const [medications, setMedications] = useState<string>('');
-  const [instructions, setInstructions] = useState<string>('');
+const Prescription: React.FC<PrescriptionProps> = ({ data, onDataChange }) => {
+  const [medications, setMedications] = useState<PrescriptionData[]>([]);
+  const isInitialized = useRef(false);
+
+  useEffect(() => {
+    // Only initialize once from backend data, or update when data actually changes from backend
+    if (data) {
+      setMedications(data);
+      if (!isInitialized.current) {
+        isInitialized.current = true;
+      }
+    }
+  }, [data]);
+
+  const renderMedicineItem = ({ item }: { item: PrescriptionData }) => (
+    <View style={styles.card}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+        <Text style={styles.label}>Medicine:</Text>
+        <Text style={{ ...globalTextStyles.bodyMedium, color: '#1a3c40', flex: 1, textAlign: 'right' }}>
+          {item.MedicineName || '-'}
+        </Text>
+      </View>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+        <Text style={styles.label}>Type:</Text>
+        <Text style={{ ...globalTextStyles.bodyMedium, color: '#1a3c40' }}>{item.Title || '-'}</Text>
+      </View>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+        <Text style={styles.label}>Dose:</Text>
+        <Text style={{ ...globalTextStyles.bodyMedium, color: '#1a3c40' }}>
+          {item.Dose} {item.Unit}
+        </Text>
+      </View>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+        <Text style={styles.label}>Frequency:</Text>
+        <Text style={{ ...globalTextStyles.bodyMedium, color: '#1a3c40' }}>{item.Frequency || '-'}</Text>
+      </View>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+        <Text style={styles.label}>Duration:</Text>
+        <Text style={{ ...globalTextStyles.bodyMedium, color: '#1a3c40' }}>
+          {item.Duration} {item.TimeUnitPlang}
+        </Text>
+      </View>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+        <Text style={styles.label}>Route:</Text>
+        <Text style={{ ...globalTextStyles.bodyMedium, color: '#1a3c40' }}>{item.Route || '-'}</Text>
+      </View>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+        <Text style={styles.label}>Quantity:</Text>
+        <Text style={{ ...globalTextStyles.bodyMedium, color: '#1a3c40' }}>{item.Quantity || '-'}</Text>
+      </View>
+    </View>
+  );
 
   return (
     <View style={styles.container}>
@@ -32,11 +98,11 @@ const Prescription: React.FC<PrescriptionProps> = ({ onDataChange }) => {
             <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>Add Medicines</Text>
           </TouchableOpacity>
         </View>
-        <View style={{flex:1}}>
+        <View style={{flex:1, marginTop: 12}}>
           <FlatList
             data={medications}
-            renderItem={({ item }) => <Text>{item}</Text>}
-            keyExtractor={(item) => item.toString()}
+            renderItem={renderMedicineItem}
+            keyExtractor={(item) => item.Id?.toString() || Math.random().toString()}
             ListEmptyComponent={<View style={{flex:1,marginTop: '30%', justifyContent: 'center', alignItems: 'center'}}><Text style={{...globalTextStyles.bodyMedium, color: '#1a3c40'}}>No medicines added</Text></View>}
             scrollEnabled={false}
           />

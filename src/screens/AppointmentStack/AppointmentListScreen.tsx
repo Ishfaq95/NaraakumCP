@@ -76,17 +76,17 @@ const AppointmentListScreen = () => {
   const [showStartTimeModal, setShowStartTimeModal] = useState(false);
   const [showEndDateModal, setShowEndDateModal] = useState(false);
   const [showEndTimeModal, setShowEndTimeModal] = useState(false);
-  
+
   // Temporary values for iOS pickers (to hold changes until Done is clicked)
   const [tempStartDate, setTempStartDate] = useState<Date | null>(null);
   const [tempStartTime, setTempStartTime] = useState<Date | null>(null);
   const [tempEndDate, setTempEndDate] = useState<Date | null>(null);
   const [tempEndTime, setTempEndTime] = useState<Date | null>(null);
-  
+
   const [unavailabilityAPIError, setUnavailabilityAPIError] = useState('');
   const { showAlert } = useAlert();
 
-  console.log("user",topic)
+  console.log("user", topic)
 
   // Handle WebSocket connection
   useEffect(() => {
@@ -534,10 +534,10 @@ const AppointmentListScreen = () => {
 
     const response = await appointmentService.addEditServiceProviderUnAvailability(payload);
     if (response?.ResponseStatus?.STATUSCODE === 200) {
-      if(response?.StatusCode?.STATUSCODE === 11011 || response?.StatusCode?.STATUSCODE === 11012) {
+      if (response?.StatusCode?.STATUSCODE === 11011 || response?.StatusCode?.STATUSCODE === 11012) {
         setUnavailabilityAPIError(response?.StatusCode?.MESSAGE);
         return;
-      }else {
+      } else {
         setUnAvailableBottomSheetVisible(false);
         setUnavailabilityAPIError('');
         // Refresh the unavailability list
@@ -554,7 +554,7 @@ const AppointmentListScreen = () => {
         setEndTimeError(false);
         setReasonError(false);
       }
-      
+
     }
   };
 
@@ -668,7 +668,7 @@ const AppointmentListScreen = () => {
   ) => {
     if (Platform.OS === 'ios') {
       const displayValue = tempValue || value;
-      
+
       return (
         <Modal
           visible={showModal}
@@ -738,29 +738,29 @@ const AppointmentListScreen = () => {
         <View style={{ height: 100, backgroundColor: '#23a2a4' }} />
         <View style={{ flex: 1, paddingHorizontal: 16, marginTop: -80 }}>
           <View style={{ marginBottom: 10 }}>
-          {isProfileComplete() ? (
-            <AppointmentStatistics
-              stats={[
-                { count: ordersCount.new, label: 'New', color: '#33A281' },
-                { count: ordersCount.inProgress, label: 'In Progress', color: '#F29F3F' },
-                { count: ordersCount.completed, label: 'Completed', color: '#239EA0' },
-                { count: ordersCount.cancelled, label: 'Cancelled', color: '#EF6666' }
-              ]}
-            />
-          ) : (
-            <ProfileCompletionNotice
-              profileSummary={profileSummary}
-              onCompleteProfile={handleCompleteProfile}
-            />
-          )}
+            {isLoading ? <ActivityIndicator size="small" color="#23a2a4" /> : isProfileComplete() ? (
+              <AppointmentStatistics
+                stats={[
+                  { count: ordersCount.new, label: 'New', color: '#33A281' },
+                  { count: ordersCount.inProgress, label: 'In Progress', color: '#F29F3F' },
+                  { count: ordersCount.completed, label: 'Completed', color: '#239EA0' },
+                  { count: ordersCount.cancelled, label: 'Cancelled', color: '#EF6666' }
+                ]}
+              />
+            ) : (
+              <ProfileCompletionNotice
+                profileSummary={profileSummary}
+                onCompleteProfile={handleCompleteProfile}
+              />
+            )}
           </View>
 
           <FlatList
             data={appointments}
             keyExtractor={(item) => item.RowId}
             contentContainerStyle={
-              appointments.length === 0 
-                ? { flexGrow: 1 } 
+              appointments.length === 0
+                ? { flexGrow: 1 }
                 : {}
             }
             renderItem={({ item }) => renderItem({ item })}
@@ -843,149 +843,149 @@ const AppointmentListScreen = () => {
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={true}
           >
-          {/* Header */}
-          <Text style={unavailabilityStyles.title}>Switch Mode To Unavailable</Text>
+            {/* Header */}
+            <Text style={unavailabilityStyles.title}>Switch Mode To Unavailable</Text>
 
-          {/* Info Box */}
-          <View style={unavailabilityStyles.infoBox}>
-            <Text style={unavailabilityStyles.infoText}>
-              Choose the time period to pause receiving bookings through the app.
-            </Text>
-          </View>
-
-          {/* Start Date and Time Row */}
-          <View style={unavailabilityStyles.row}>
-            <View style={unavailabilityStyles.halfColumn}>
-              <Text style={unavailabilityStyles.label}>Start Date</Text>
-              <TouchableOpacity
-                style={[unavailabilityStyles.inputContainer, startDateError && unavailabilityStyles.inputError]}
-                onPress={() => {
-                  if (Platform.OS === 'ios') {
-                    // Initialize temp value when opening modal
-                    setTempStartDate(startDate ? new Date(startDate) : new Date());
-                    setShowStartDateModal(true);
-                  } else {
-                    // Initialize temp value when opening picker for Android
-                    setTempStartDate(startDate ? new Date(startDate) : new Date());
-                    setShowStartDatePicker(true);
-                  }
-                }}
-              >
-                <Text style={unavailabilityStyles.inputText}>
-                  { startDate ? moment(startDate).format('DD/MM/YYYY') : 'dd/mm/yyyy'}
-                </Text>
-                <Ionicons name="calendar-outline" size={20} color="#666" />
-              </TouchableOpacity>
+            {/* Info Box */}
+            <View style={unavailabilityStyles.infoBox}>
+              <Text style={unavailabilityStyles.infoText}>
+                Choose the time period to pause receiving bookings through the app.
+              </Text>
             </View>
 
-            <View style={unavailabilityStyles.halfColumn}>
-              <Text style={unavailabilityStyles.label}>Start Time</Text>
-              <TouchableOpacity
-                style={[unavailabilityStyles.inputContainer, startTimeError && unavailabilityStyles.inputError]}
-                onPress={() => {
-                  if (Platform.OS === 'ios') {
-                    // Initialize temp value when opening modal
-                    setTempStartTime(startTime ? new Date(startTime) : new Date());
-                    setShowStartTimeModal(true);
-                  } else {
-                    // Initialize temp value when opening picker for Android
-                    setTempStartTime(startTime ? new Date(startTime) : new Date());
-                    setShowStartTimePicker(true);
-                  }
-                }}
-              >
-                <Text style={unavailabilityStyles.inputText}>
-                  {startTime ? moment(startTime).format('hh:mm A') : '--:--'}
-                </Text>
-                <Ionicons name="time-outline" size={20} color="#666" />
-              </TouchableOpacity>
+            {/* Start Date and Time Row */}
+            <View style={unavailabilityStyles.row}>
+              <View style={unavailabilityStyles.halfColumn}>
+                <Text style={unavailabilityStyles.label}>Start Date</Text>
+                <TouchableOpacity
+                  style={[unavailabilityStyles.inputContainer, startDateError && unavailabilityStyles.inputError]}
+                  onPress={() => {
+                    if (Platform.OS === 'ios') {
+                      // Initialize temp value when opening modal
+                      setTempStartDate(startDate ? new Date(startDate) : new Date());
+                      setShowStartDateModal(true);
+                    } else {
+                      // Initialize temp value when opening picker for Android
+                      setTempStartDate(startDate ? new Date(startDate) : new Date());
+                      setShowStartDatePicker(true);
+                    }
+                  }}
+                >
+                  <Text style={unavailabilityStyles.inputText}>
+                    {startDate ? moment(startDate).format('DD/MM/YYYY') : 'dd/mm/yyyy'}
+                  </Text>
+                  <Ionicons name="calendar-outline" size={20} color="#666" />
+                </TouchableOpacity>
+              </View>
+
+              <View style={unavailabilityStyles.halfColumn}>
+                <Text style={unavailabilityStyles.label}>Start Time</Text>
+                <TouchableOpacity
+                  style={[unavailabilityStyles.inputContainer, startTimeError && unavailabilityStyles.inputError]}
+                  onPress={() => {
+                    if (Platform.OS === 'ios') {
+                      // Initialize temp value when opening modal
+                      setTempStartTime(startTime ? new Date(startTime) : new Date());
+                      setShowStartTimeModal(true);
+                    } else {
+                      // Initialize temp value when opening picker for Android
+                      setTempStartTime(startTime ? new Date(startTime) : new Date());
+                      setShowStartTimePicker(true);
+                    }
+                  }}
+                >
+                  <Text style={unavailabilityStyles.inputText}>
+                    {startTime ? moment(startTime).format('hh:mm A') : '--:--'}
+                  </Text>
+                  <Ionicons name="time-outline" size={20} color="#666" />
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
 
-          {/* End Date and Time Row */}
-          <View style={unavailabilityStyles.row}>
-            <View style={unavailabilityStyles.halfColumn}>
-              <Text style={unavailabilityStyles.label}>End Date</Text>
-              <TouchableOpacity
-                style={[unavailabilityStyles.inputContainer, endDateError && unavailabilityStyles.inputError]}
-                onPress={() => {
-                  if (Platform.OS === 'ios') {
-                    // Initialize temp value when opening modal
-                    setTempEndDate(endDate ? new Date(endDate) : new Date());
-                    setShowEndDateModal(true);
-                  } else {
-                    // Initialize temp value when opening picker for Android
-                    setTempEndDate(endDate ? new Date(endDate) : new Date());
-                    setShowEndDatePicker(true);
-                  }
-                }}
-              >
-                <Text style={unavailabilityStyles.inputText}>
-                  {endDate ? moment(endDate).format('DD/MM/YYYY') : 'dd/mm/yyyy'}
-                </Text>
-                <Ionicons name="calendar-outline" size={20} color="#666" />
-              </TouchableOpacity>
+            {/* End Date and Time Row */}
+            <View style={unavailabilityStyles.row}>
+              <View style={unavailabilityStyles.halfColumn}>
+                <Text style={unavailabilityStyles.label}>End Date</Text>
+                <TouchableOpacity
+                  style={[unavailabilityStyles.inputContainer, endDateError && unavailabilityStyles.inputError]}
+                  onPress={() => {
+                    if (Platform.OS === 'ios') {
+                      // Initialize temp value when opening modal
+                      setTempEndDate(endDate ? new Date(endDate) : new Date());
+                      setShowEndDateModal(true);
+                    } else {
+                      // Initialize temp value when opening picker for Android
+                      setTempEndDate(endDate ? new Date(endDate) : new Date());
+                      setShowEndDatePicker(true);
+                    }
+                  }}
+                >
+                  <Text style={unavailabilityStyles.inputText}>
+                    {endDate ? moment(endDate).format('DD/MM/YYYY') : 'dd/mm/yyyy'}
+                  </Text>
+                  <Ionicons name="calendar-outline" size={20} color="#666" />
+                </TouchableOpacity>
+              </View>
+
+              <View style={unavailabilityStyles.halfColumn}>
+                <Text style={unavailabilityStyles.label}>End Time</Text>
+                <TouchableOpacity
+                  style={[unavailabilityStyles.inputContainer, endTimeError && unavailabilityStyles.inputError]}
+                  onPress={() => {
+                    if (Platform.OS === 'ios') {
+                      // Initialize temp value when opening modal
+                      setTempEndTime(endTime ? new Date(endTime) : new Date());
+                      setShowEndTimeModal(true);
+                    } else {
+                      // Initialize temp value when opening picker for Android
+                      setTempEndTime(endTime ? new Date(endTime) : new Date());
+                      setShowEndTimePicker(true);
+                    }
+                  }}
+                >
+                  <Text style={unavailabilityStyles.inputText}>
+                    {endTime ? moment(endTime).format('hh:mm A') : '--:--'}
+                  </Text>
+                  <Ionicons name="time-outline" size={20} color="#666" />
+                </TouchableOpacity>
+              </View>
             </View>
 
-            <View style={unavailabilityStyles.halfColumn}>
-              <Text style={unavailabilityStyles.label}>End Time</Text>
-              <TouchableOpacity
-                style={[unavailabilityStyles.inputContainer, endTimeError && unavailabilityStyles.inputError]}
-                onPress={() => {
-                  if (Platform.OS === 'ios') {
-                    // Initialize temp value when opening modal
-                    setTempEndTime(endTime ? new Date(endTime) : new Date());
-                    setShowEndTimeModal(true);
-                  } else {
-                    // Initialize temp value when opening picker for Android
-                    setTempEndTime(endTime ? new Date(endTime) : new Date());
-                    setShowEndTimePicker(true);
-                  }
-                }}
-              >
-                <Text style={unavailabilityStyles.inputText}>
-                  {endTime ? moment(endTime).format('hh:mm A') : '--:--'}
-                </Text>
-                <Ionicons name="time-outline" size={20} color="#666" />
-              </TouchableOpacity>
+            {/* Reason Input */}
+            <View style={unavailabilityStyles.fullColumn}>
+              <Text style={unavailabilityStyles.label}>Write The Reason</Text>
+              <TextInput
+                style={[unavailabilityStyles.textArea, reasonError && unavailabilityStyles.inputError]}
+                placeholder="write the reason"
+                placeholderTextColor="#999"
+                multiline
+                numberOfLines={4}
+                value={reason}
+                onChangeText={(text) => { setReason(text); if (reasonError && text.trim()) setReasonError(false); }}
+                textAlignVertical="top"
+              />
+              {unavailabilityAPIError && (
+                <Text style={{ color: '#FF3B30', fontSize: 14, fontFamily: CAIRO_FONT_FAMILY.regular, lineHeight: Platform.OS === 'ios' ? 0 : 20, marginBottom: 10 }}>{unavailabilityAPIError}</Text>
+              )}
             </View>
-          </View>
 
-          {/* Reason Input */}
-          <View style={unavailabilityStyles.fullColumn}>
-            <Text style={unavailabilityStyles.label}>Write The Reason</Text>
-            <TextInput
-              style={[unavailabilityStyles.textArea, reasonError && unavailabilityStyles.inputError]}
-              placeholder="write the reason"
-              placeholderTextColor="#999"
-              multiline
-              numberOfLines={4}
-              value={reason}
-              onChangeText={(text)=>{setReason(text); if(reasonError && text.trim()) setReasonError(false);}}
-              textAlignVertical="top"
-            />
-             {unavailabilityAPIError && (
-            <Text style={{ color: '#FF3B30', fontSize: 14, fontFamily: CAIRO_FONT_FAMILY.regular, lineHeight: Platform.OS === 'ios' ? 0 : 20, marginBottom: 10 }}>{unavailabilityAPIError}</Text>
-          )}
-          </View>
 
-         
 
-          {/* Save Button */}
-          <TouchableOpacity
-            style={unavailabilityStyles.saveButton}
-            onPress={handleAddServiceProviderUnAvailability}
-          >
-            <Text style={unavailabilityStyles.saveButtonText}>Save</Text>
-          </TouchableOpacity>
+            {/* Save Button */}
+            <TouchableOpacity
+              style={unavailabilityStyles.saveButton}
+              onPress={handleAddServiceProviderUnAvailability}
+            >
+              <Text style={unavailabilityStyles.saveButtonText}>Save</Text>
+            </TouchableOpacity>
 
-          {/* Cancel Button */}
-          <TouchableOpacity
-            style={unavailabilityStyles.cancelButton}
-            onPress={handleCancelUnavailability}
-          >
-            <Text style={unavailabilityStyles.cancelButtonTextButton}>Cancel</Text>
-          </TouchableOpacity>
+            {/* Cancel Button */}
+            <TouchableOpacity
+              style={unavailabilityStyles.cancelButton}
+              onPress={handleCancelUnavailability}
+            >
+              <Text style={unavailabilityStyles.cancelButtonTextButton}>Cancel</Text>
+            </TouchableOpacity>
           </ScrollView>
         </KeyboardAvoidingView>
 
